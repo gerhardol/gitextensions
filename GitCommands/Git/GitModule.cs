@@ -2268,7 +2268,7 @@ namespace GitCommands
                 var files = GetUnstagedFilesWithSubmodulesStatus().Where(item => item.IsNew);
                 if (from == GitRevision.UnstagedGuid)
                 {
-                    var f2 = GetUnstagedFilesWithSubmodulesStatus().Where(item => item.IsNew);
+                    //The file is seen as "deleted" in 'to' revision
                     foreach (var item in files)
                     {
                         item.IsNew = false;
