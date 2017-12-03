@@ -15,10 +15,15 @@ namespace GitUI
     public class GitStatusMonitor : IDisposable
     {
         /// <summary>
+        /// Delay time when change detected while update is going on
+        /// </summary>
+        private static readonly int MinUpdateDelay = 500;
+
+        /// <summary>
         /// We often change several files at once.
         /// Wait a second so they're all changed before we try to get the status.
         /// </summary>
-        private const int UpdateDelay = 500;
+        private const int UpdateDelay = 1500;
 
         /// <summary>
         /// Update every 5min, just to make sure something didn't slip through the cracks.
@@ -81,7 +86,7 @@ namespace GitUI
             // timerRefresh
             // 
             this.timerRefresh.Enabled = true;
-            this.timerRefresh.Interval = 500;
+            this.timerRefresh.Interval = 200;
             this.timerRefresh.Tick += new System.EventHandler(this.timerRefresh_Tick);
             // 
             // ignoredFilesTimer
@@ -136,7 +141,7 @@ namespace GitUI
             if (e.FullPath == _globalIgnoreFilePath)
             {
                 _ignoredFilesAreStale = true;
-                ScheduleDeferredUpdate();
+                ScheduleNext(UpdateDelay);
             }
         }
 
@@ -243,7 +248,7 @@ namespace GitUI
         // it's going to be called by the GC!
         private void WorkTreeWatcherError(object sender, ErrorEventArgs e)
         {
-            ScheduleDeferredUpdate();
+            ScheduleNext(UpdateDelay);
         }
 
         private void WorkTreeChanged(object sender, FileSystemEventArgs e)
@@ -266,7 +271,7 @@ namespace GitUI
             if (e.FullPath.EndsWith("\\.git\\index.lock"))
                 return;
 
-            ScheduleDeferredUpdate();
+            ScheduleNext(UpdateDelay);
         }
 
         private void GitDirChanged(object sender, FileSystemEventArgs e)
@@ -283,7 +288,7 @@ namespace GitUI
             if (e.FullPath.StartsWith(_submodulesPath) && (Directory.Exists(e.FullPath)))
                 return;
 
-            ScheduleDeferredUpdate();
+            ScheduleNext(UpdateDelay);
         }
 
         private HashSet<string> LoadIgnoredFiles()
@@ -340,7 +345,7 @@ namespace GitUI
                 }
                 AsyncLoader.DoAsync(RunStatusCommand, UpdatedStatusReceived, OnUpdateStatusError);
                 // Always update every 5 min, even if we don't know anything changed
-                ScheduleNextJustInCaseUpdate();
+                ScheduleNext(MaxUpdatePeriod);
             }
         }
 
@@ -372,24 +377,19 @@ namespace GitUI
                 UpdateImmediately();
         }
 
-        private void ScheduleNextJustInCaseUpdate()
+        private void ScheduleNext(int delay)
         {
-            _nextUpdateTime = Environment.TickCount + MaxUpdatePeriod;
-        }
-
-        private void ScheduleDeferredUpdate()
-        {
-            _nextUpdateTime = Environment.TickCount + UpdateDelay;
-        }
-
-        private void ScheduleImmediateUpdate()
-        {
-            _nextUpdateTime = Environment.TickCount;
+            if (_nextUpdateTime <= Environment.TickCount)
+            { _nextUpdateTime = Environment.TickCount + delay; }
+            else
+            {
+                _nextUpdateTime = Math.Min(_nextUpdateTime, Environment.TickCount + delay);
+            }
         }
 
         private void UpdateImmediately()
         {
-            ScheduleImmediateUpdate();
+            ScheduleNext(MinUpdateDelay);
             Update();
         }
         
@@ -419,7 +419,7 @@ namespace GitUI
                         _workTreeWatcher.EnableRaisingEvents = true;
                         _gitDirWatcher.EnableRaisingEvents = !_gitDirWatcher.Path.StartsWith(_workTreeWatcher.Path);
                         _globalIgnoreWatcher.EnableRaisingEvents = !string.IsNullOrWhiteSpace(_globalIgnoreWatcher.Path);
-                        ScheduleDeferredUpdate();
+                        ScheduleNext(UpdateDelay);
                         _gitStatusMonitorUpdate.Visible = true;
                         return;
                     default:
