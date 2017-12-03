@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Windows.Forms;
 using GitCommands;
-using GitUI.UserControls.ToolStripClasses;
 using GitUIPluginInterfaces;
 
 namespace GitUI
 {
+    public interface IGitStatusMonitorUpdate
+    {
+        void Update(IList<GitItemStatus> status);
+        bool Visible { get; set; }
+    }
+
     public class GitStatusMonitor : IDisposable
     {
         /// <summary>
@@ -37,10 +40,7 @@ namespace GitUI
         private WorkingStatus _currentStatus;
         private HashSet<string> _ignoredFiles = new HashSet<string>(); 
 
-        public string CommitTranslatedString { get; set; }
-
         private IGitUICommandsSource _UICommandsSource;
-        private ICommitIconProvider _commitIconProvider;
 
         public IGitUICommandsSource UICommandsSource
         {
@@ -90,14 +90,11 @@ namespace GitUI
             this.ignoredFilesTimer.Tick += new System.EventHandler(this.ignoredFilesTimer_Tick);
         }
 
-        private ToolStripMenuItem _toolStripGitStatus;
-        private RevisionGrid _revisionGrid;
-        public GitStatusMonitor(ToolStripMenuItem toolStripGitStatus, RevisionGrid revisionGrid)
+        private IGitStatusMonitorUpdate _gitStatusMonitorUpdate;
+        public GitStatusMonitor(IGitStatusMonitorUpdate gitStatusMonitorUpdate)
         {
-            _toolStripGitStatus = toolStripGitStatus;
-            _revisionGrid = revisionGrid;
+            _gitStatusMonitorUpdate = gitStatusMonitorUpdate;
             InitializeComponent();
-            CommitTranslatedString = "Commit";
             ignoredFilesTimer.Interval = MaxUpdatePeriod;
             CurrentStatus = WorkingStatus.Stopped;
 
@@ -132,8 +129,6 @@ namespace GitUI
             _globalIgnoreWatcher.Error += WorkTreeWatcherError;
             _globalIgnoreWatcher.IncludeSubdirectories = false;
             _workTreeWatcher.NotifyFilter = NotifyFilters.LastWrite;
-
-            _commitIconProvider = new CommitIconProvider();
         }
 
         private void GlobalIgnoreChanged(object sender, FileSystemEventArgs e)
@@ -214,9 +209,7 @@ namespace GitUI
         private void TryStartWatchingChanges(string workTreePath, string gitDirPath)
         {
             // reset status info, it was outdated
-            _toolStripGitStatus.Text = CommitTranslatedString;
-            _toolStripGitStatus.Image = _commitIconProvider.DefaultIcon;
-            _revisionGrid.UpdateArtificialCommitCount(new List<GitItemStatus>());
+           _gitStatusMonitorUpdate.Update(new List<GitItemStatus>());
 
             try
             {
@@ -373,13 +366,7 @@ namespace GitUI
             if (_statusIsUpToDate)
             {
                 var allChangedFiles = GitCommandHelpers.GetAllChangedFilesFromString(Module, updatedStatus);
-                _toolStripGitStatus.Image = _commitIconProvider.GetCommitIcon(allChangedFiles);
-
-                if (allChangedFiles.Count == 0)
-                    _toolStripGitStatus.Text = CommitTranslatedString;
-                else
-                    _toolStripGitStatus.Text = string.Format(CommitTranslatedString + " ({0})", allChangedFiles.Count.ToString());
-                _revisionGrid.UpdateArtificialCommitCount(allChangedFiles);
+                _gitStatusMonitorUpdate.Update(allChangedFiles);
             }
             else
                 UpdateImmediately();
@@ -419,7 +406,7 @@ namespace GitUI
                         _workTreeWatcher.EnableRaisingEvents = false;
                         _gitDirWatcher.EnableRaisingEvents = false;
                         _globalIgnoreWatcher.EnableRaisingEvents = false;
-                        _toolStripGitStatus.Visible = false;
+                        _gitStatusMonitorUpdate.Visible = false;
                         return;
                     case WorkingStatus.Paused:
                         timerRefresh.Stop();
@@ -433,7 +420,7 @@ namespace GitUI
                         _gitDirWatcher.EnableRaisingEvents = !_gitDirWatcher.Path.StartsWith(_workTreeWatcher.Path);
                         _globalIgnoreWatcher.EnableRaisingEvents = !string.IsNullOrWhiteSpace(_globalIgnoreWatcher.Path);
                         ScheduleDeferredUpdate();
-                        _toolStripGitStatus.Visible = true;
+                        _gitStatusMonitorUpdate.Visible = true;
                         return;
                     default:
                         throw new NotSupportedException();
@@ -464,6 +451,9 @@ namespace GitUI
                 {
                     _workTreeWatcher.Dispose();
                     _gitDirWatcher.Dispose();
+                    _globalIgnoreWatcher.Dispose();
+                    ignoredFilesTimer.Dispose();
+                    timerRefresh.Dispose();
                 }
                 disposedValue = true;
             }
