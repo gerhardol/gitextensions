@@ -119,7 +119,8 @@ namespace GitUI.CommandsDialogs
         private ThumbnailToolBarButton _pullButton;
         private bool _toolbarButtonsCreated;
 #endif
-        private readonly ToolStripGitStatus _toolStripGitStatus;
+        private readonly ToolStripMenuItem _toolStripGitStatus;
+        private readonly GitStatusMonitor _gitStatusMonitor;
         private readonly FilterRevisionsHelper _filterRevisionsHelper;
         private readonly FilterBranchHelper _filterBranchHelper;
 
@@ -184,18 +185,19 @@ namespace GitUI.CommandsDialogs
 
             if (AppSettings.ShowGitStatusInBrowseToolbar && !Module.IsBareRepository())
             {
-                _toolStripGitStatus = new ToolStripGitStatus
+                _toolStripGitStatus = new ToolStripMenuItem
                 {
                     ImageTransparentColor = Color.Magenta,
                     ImageScaling = ToolStripItemImageScaling.SizeToFit,
                     Margin = new Padding(0, 1, 0, 2)
                 };
+                _gitStatusMonitor = new GitStatusMonitor(_toolStripGitStatus, RevisionGrid);
                 if (aCommands != null)
-                    _toolStripGitStatus.UICommandsSource = this;
+                    _gitStatusMonitor.UICommandsSource = this;
                 _toolStripGitStatus.Click += StatusClick;
                 ToolStrip.Items.Insert(ToolStrip.Items.IndexOf(toolStripButton1), _toolStripGitStatus);
                 ToolStrip.Items.Remove(toolStripButton1);
-                _toolStripGitStatus.CommitTranslatedString = toolStripButton1.Text;
+                _gitStatusMonitor.CommitTranslatedString = toolStripButton1.Text;
             }
 
             if (!EnvUtils.RunningOnWindows())
