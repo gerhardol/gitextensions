@@ -382,6 +382,7 @@
     <Compile Include="UserControls\RevisionGridUtils.cs" />
     <Compile Include="UserControls\TextEventArgs.cs" />
     <Compile Include="UserControls\ToolStripClasses\CommitIconProvider.cs" />
+    <Compile Include="UserControls\GitStatusMonitor.cs" />
     <Compile Include="UserControls\WebBrowserCtrl.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -1089,12 +1090,6 @@
     <Compile Include="UserControls\ToolStripEx.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="UserControls\ToolStripGitStatus.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="UserControls\ToolStripGitStatus.Designer.cs">
-      <DependentUpon>ToolStripGitStatus.cs</DependentUpon>
-    </Compile>
     <Compile Include="SpellChecker\TextPos.cs" />
     <Compile Include="UserControls\FolderBrowserButton.cs">
       <SubType>UserControl</SubType>
@@ -1605,10 +1600,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UserControls\RevisionGridClasses\FormQuickGitRefSelector.resx">
       <DependentUpon>FormQuickGitRefSelector.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UserControls\ToolStripGitStatus.resx">
-      <DependentUpon>ToolStripGitStatus.cs</DependentUpon>
-      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="CommandsDialogs\SearchWindow.resx">
       <DependentUpon>SearchWindow.cs</DependentUpon>
