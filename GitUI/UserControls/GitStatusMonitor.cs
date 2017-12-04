@@ -133,7 +133,7 @@ namespace GitUI
             _globalIgnoreWatcher.Renamed += GlobalIgnoreChanged;
             _globalIgnoreWatcher.Error += WorkTreeWatcherError;
             _globalIgnoreWatcher.IncludeSubdirectories = false;
-            _workTreeWatcher.NotifyFilter = NotifyFilters.LastWrite;
+            _globalIgnoreWatcher.NotifyFilter = NotifyFilters.LastWrite;
         }
 
         private void GlobalIgnoreChanged(object sender, FileSystemEventArgs e)
@@ -244,8 +244,7 @@ namespace GitUI
             catch { }
         }
 
-        // destructor shouldn't be used because it's not predictable when
-        // it's going to be called by the GC!
+        // Called for instance at buffer overflow
         private void WorkTreeWatcherError(object sender, ErrorEventArgs e)
         {
             ScheduleNext(UpdateDelay);
