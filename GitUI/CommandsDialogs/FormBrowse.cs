@@ -2500,8 +2500,8 @@ namespace GitUI.CommandsDialogs
             _previousUpdateTime = DateTime.Now;
 
             // Cancel any previous async activities:
-            _submodulesStatusCts.Cancel();
-            _submodulesStatusCts.Dispose();
+            _submodulesStatusCts?.Cancel();
+            _submodulesStatusCts?.Dispose();
             _submodulesStatusCts = new CancellationTokenSource();
 
             RemoveSubmoduleButtons();
@@ -2853,7 +2853,7 @@ namespace GitUI.CommandsDialogs
                 if (_pullButton != null)
                     _pullButton.Dispose();
 #endif
-                _submodulesStatusCts.Dispose();
+                _submodulesStatusCts?.Dispose();
                 if (_formBrowseMenus != null)
                     _formBrowseMenus.Dispose();
                 if (_filterRevisionsHelper != null)
@@ -2863,7 +2863,7 @@ namespace GitUI.CommandsDialogs
 
                 if (components != null)
                     components.Dispose();
-                _gitStatusMonitor.Dispose();
+                _gitStatusMonitor?.Dispose();
             }
             base.Dispose(disposing);
         }
