@@ -2853,7 +2853,8 @@ namespace GitUI.CommandsDialogs
                 if (_pullButton != null)
                     _pullButton.Dispose();
 #endif
-                _submodulesStatusCts?.Dispose();
+                if (_submodulesStatusCts != null)
+                    _submodulesStatusCts.Dispose();
                 if (_formBrowseMenus != null)
                     _formBrowseMenus.Dispose();
                 if (_filterRevisionsHelper != null)
@@ -2863,7 +2864,8 @@ namespace GitUI.CommandsDialogs
 
                 if (components != null)
                     components.Dispose();
-                _gitStatusMonitor?.Dispose();
+                if (_gitStatusMonitor != null)
+                    _gitStatusMonitor.Dispose();
             }
             base.Dispose(disposing);
         }
