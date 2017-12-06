@@ -218,7 +218,7 @@ namespace JenkinsIntegration
             string testResults = string.Empty;
             if (nbTests != 0)
             {
-                testResults = String.Format(" : {0} tests ( {1} failed, {2} skipped )", nbTests, nbFailedTests, nbSkippedTests);
+                testResults = String.Format(" {0} tests ({1} failed, {2} skipped)", nbTests, nbFailedTests, nbSkippedTests);
             }
 
             var isRunning = buildDescription["building"].ToObject<bool>();
@@ -232,19 +232,18 @@ namespace JenkinsIntegration
                 buildDuration = buildDescription["duration"].ToObject<long>();
             }
 
-            var status = ParseBuildStatus(statusValue);
-            var statusText = isRunning ? string.Empty : status.ToString("G");
+            var status = isRunning ? BuildInfo.BuildStatus.InProgress : ParseBuildStatus(statusValue);
+            var statusText = status.ToString("G");
             var buildInfo = new BuildInfo
                 {
                     Id = idValue,
                     StartDate = TimestampToDateTime(startDateTicks),
                     Duration = buildDuration,
-                    Status = isRunning ? BuildInfo.BuildStatus.InProgress : status,
-                    Description = displayName + " " + statusText + testResults,
+                    Status = status,
                     CommitHashList = commitHashList.ToArray(),
                     Url = webUrl
                 };
-            buildInfo.Description += _buildDurationFormatter.Format(buildInfo.Duration);
+            buildInfo.Description = "#" + idValue + _buildDurationFormatter.Format(buildInfo.Duration) + testResults + " " + statusText;
             return buildInfo;
         }
 
