@@ -15,10 +15,20 @@ namespace GitUI
     public class GitStatusMonitor : IDisposable
     {
         /// <summary>
+        /// Delay time when change detected while ongoing update
+        /// </summary>
+        private static readonly int MinUpdateDelay = 500;
+
+        /// <summary>
+        /// Minimum interval between subsequent updates
+        /// </summary>
+        private static readonly int MinUpdateInterval = 5000;
+
+        /// <summary>
         /// We often change several files at once.
         /// Wait a second so they're all changed before we try to get the status.
         /// </summary>
-        private const int UpdateDelay = 500;
+        private const int UpdateDelay = 1000;
 
         /// <summary>
         /// Update every 5min, just to make sure something didn't slip through the cracks.
@@ -37,6 +47,7 @@ namespace GitUI
         private string _gitPath;
         private string _submodulesPath;
         private int _nextUpdateTime;
+        private int _lastUpdateTime;
         private WorkingStatus _currentStatus;
         private HashSet<string> _ignoredFiles = new HashSet<string>(); 
 
@@ -94,6 +105,7 @@ namespace GitUI
         public GitStatusMonitor(IGitStatusMonitorUpdate gitStatusMonitorUpdate)
         {
             _gitStatusMonitorUpdate = gitStatusMonitorUpdate;
+            _lastUpdateTime = 0;
             InitializeComponent();
             ignoredFilesTimer.Interval = MaxUpdatePeriod;
             CurrentStatus = WorkingStatus.Stopped;
@@ -136,7 +148,7 @@ namespace GitUI
             if (e.FullPath == _globalIgnoreFilePath)
             {
                 _ignoredFilesAreStale = true;
-                ScheduleDeferredUpdate();
+                ScheduleNext(UpdateDelay);
             }
         }
 
@@ -242,11 +254,15 @@ namespace GitUI
         // Called for instance at buffer overflow
         private void WorkTreeWatcherError(object sender, ErrorEventArgs e)
         {
-            ScheduleDeferredUpdate();
+            ScheduleNext(UpdateDelay);
         }
 
         private void WorkTreeChanged(object sender, FileSystemEventArgs e)
         {
+            //Update already scheduled?
+            if (_nextUpdateTime < Environment.TickCount + UpdateDelay)
+                return;
+
             var fileName = e.FullPath.Substring(_workTreeWatcher.Path.Length).ToPosixPath();
             if (_ignoredFiles.Contains(fileName))
                 return;
@@ -265,7 +281,7 @@ namespace GitUI
             if (e.FullPath.EndsWith("\\.git\\index.lock"))
                 return;
 
-            ScheduleDeferredUpdate();
+            ScheduleNext(UpdateDelay);
         }
 
         private void GitDirChanged(object sender, FileSystemEventArgs e)
@@ -282,7 +298,7 @@ namespace GitUI
             if (e.FullPath.StartsWith(_submodulesPath) && (Directory.Exists(e.FullPath)))
                 return;
 
-            ScheduleDeferredUpdate();
+            ScheduleNext(UpdateDelay);
         }
 
         private HashSet<string> LoadIgnoredFiles()
@@ -333,13 +349,14 @@ namespace GitUI
 
                 _commandIsRunning = true;
                 _statusIsUpToDate = true;
+                _lastUpdateTime = Environment.TickCount;
                 if (_ignoredFilesAreStale)
                 {
                     UpdateIgnoredFiles(false);
                 }
                 AsyncLoader.DoAsync(RunStatusCommand, UpdatedStatusReceived, OnUpdateStatusError);
                 // Always update every 5 min, even if we don't know anything changed
-                ScheduleNextJustInCaseUpdate();
+                ScheduleNext(MaxUpdatePeriod);
             }
         }
 
@@ -368,27 +385,26 @@ namespace GitUI
                 _gitStatusMonitorUpdate.Update(allChangedFiles);
             }
             else
+            {
                 UpdateImmediately();
+            }
         }
 
-        private void ScheduleNextJustInCaseUpdate()
+        private void ScheduleNext(int delay)
         {
-            _nextUpdateTime = Environment.TickCount + MaxUpdatePeriod;
-        }
-
-        private void ScheduleDeferredUpdate()
-        {
-            _nextUpdateTime = Environment.TickCount + UpdateDelay;
-        }
-
-        private void ScheduleImmediateUpdate()
-        {
-            _nextUpdateTime = Environment.TickCount;
+            var next = Environment.TickCount + delay;
+            if(_nextUpdateTime > Environment.TickCount)
+            {
+                //A time is already set, use closest
+                next = Math.Min(_nextUpdateTime, next);
+            }
+            //Enforce a minimal time between updates, to not update too frequently
+            _nextUpdateTime = Math.Max(next, _lastUpdateTime + MinUpdateInterval);
         }
 
         private void UpdateImmediately()
         {
-            ScheduleImmediateUpdate();
+            ScheduleNext(MinUpdateDelay);
             Update();
         }
         
@@ -418,7 +434,7 @@ namespace GitUI
                         _workTreeWatcher.EnableRaisingEvents = true;
                         _gitDirWatcher.EnableRaisingEvents = !_gitDirWatcher.Path.StartsWith(_workTreeWatcher.Path);
                         _globalIgnoreWatcher.EnableRaisingEvents = !string.IsNullOrWhiteSpace(_globalIgnoreWatcher.Path);
-                        ScheduleDeferredUpdate();
+                        ScheduleNext(UpdateDelay);
                         _gitStatusMonitorUpdate.Visible = true;
                         return;
                     default:
