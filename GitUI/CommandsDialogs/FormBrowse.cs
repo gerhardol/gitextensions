@@ -166,7 +166,8 @@ namespace GitUI.CommandsDialogs
                     _toolStripGitStatus.Text = string.Format(CommitTranslatedString + " ({0})", status.Count.ToString());
 
                 _revisionGrid.UpdateArtificialCommitCount(status);
-                _revisionDiff.RefreshArtificial();
+                //The diff filelist is not updated, as the selected diff is unset
+                //_revisionDiff.RefreshArtificial();
             }
 
             public bool Visible
