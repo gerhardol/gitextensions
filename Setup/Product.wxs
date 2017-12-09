@@ -268,6 +268,8 @@
       </Component>
       <Component Id="Bitbucket.dll" Guid="*">
         <File Source="..\Plugins\Bitbucket\bin\Release\Bitbucket.dll" />
+        <!--Renamed dll, installed in versions <= 2.50.02-->
+        <RemoveFile Name="Stash.dll" Id="Stash.dll" On="both" />
       </Component>
       <Component Id="TeamCityIntegration.dll" Guid="*">
         <File Source="..\Plugins\BuildServerIntegration\TeamCityIntegration\bin\Release\TeamCityIntegration.dll" />
