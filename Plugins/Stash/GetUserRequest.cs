@@ -1,14 +1,14 @@
 ﻿using Newtonsoft.Json.Linq;
 using RestSharp;
 
-namespace Stash
+namespace Bitbucket
 {
-    public class StashUser
+    public class BitbucketUser
     {
         public string Slug { get; set; }
     }
 
-    class GetUserRequest : StashRequestBase<JObject>
+    class GetUserRequest : BitbucketRequestBase<JObject>
     {
         public GetUserRequest(Settings settings)
             : base(settings)
