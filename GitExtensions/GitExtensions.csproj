@@ -162,7 +162,7 @@
       <Name>ReleaseNotesGenerator</Name>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\Plugins\Stash\Bitbucket.csproj">
+    <ProjectReference Include="..\Plugins\Bitbucket\Bitbucket.csproj">
       <Project>{50AEAB6C-83C4-45F8-AA01-90E1405C48AF}</Project>
       <Name>Bitbucket</Name>
     </ProjectReference>
