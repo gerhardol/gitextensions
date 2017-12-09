@@ -102,7 +102,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Git.hub", "Externals\Git.hu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NBug", "Externals\NBug\NBug\NBug.csproj", "{62CED1D5-F603-40DE-8BF5-3E49D3A392F4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bitbucket", "Plugins\Stash\Bitbucket.csproj", "{50AEAB6C-83C4-45F8-AA01-90E1405C48AF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bitbucket", "Plugins\Bitbucket\Bitbucket.csproj", "{50AEAB6C-83C4-45F8-AA01-90E1405C48AF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JenkinsIntegration", "Plugins\BuildServerIntegration\JenkinsIntegration\JenkinsIntegration.csproj", "{E6AAC693-815B-4D1A-83D7-F4DE36072793}"
 EndProject
