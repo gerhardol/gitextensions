@@ -1,28 +1,42 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Windows.Forms;
 using GitCommands;
-using GitUI.UserControls.ToolStripClasses;
 using GitUIPluginInterfaces;
 
 namespace GitUI
 {
-    public sealed partial class ToolStripGitStatus : ToolStripMenuItem
+    public interface IGitStatusMonitorUpdate
     {
+        void Update(IList<GitItemStatus> status);
+        bool Visible { get; set; }
+    }
+
+    public class GitStatusMonitor : IDisposable
+    {
+        /// <summary>
+        /// Delay time when change detected while ongoing update
+        /// </summary>
+        private static readonly int MinUpdateDelay = 500;
+
+        /// <summary>
+        /// Minimum interval between subsequent updates
+        /// </summary>
+        private static readonly int MinUpdateInterval = 5000;
+
         /// <summary>
         /// We often change several files at once.
         /// Wait a second so they're all changed before we try to get the status.
         /// </summary>
-        private const int UpdateDelay = 500;
+        private const int UpdateDelay = 1000;
 
         /// <summary>
         /// Update every 5min, just to make sure something didn't slip through the cracks.
         /// </summary>
         private const int MaxUpdatePeriod = 5 * 60 * 1000;
 
+        private System.Windows.Forms.Timer timerRefresh;
+        private System.Windows.Forms.Timer ignoredFilesTimer;
         private bool _commandIsRunning = false;
         private bool _statusIsUpToDate = true;
         private readonly FileSystemWatcher _workTreeWatcher = new FileSystemWatcher();
@@ -33,13 +47,11 @@ namespace GitUI
         private string _gitPath;
         private string _submodulesPath;
         private int _nextUpdateTime;
+        private int _lastUpdateTime;
         private WorkingStatus _currentStatus;
         private HashSet<string> _ignoredFiles = new HashSet<string>(); 
 
-        public string CommitTranslatedString { get; set; }
-
         private IGitUICommandsSource _UICommandsSource;
-        private ICommitIconProvider _commitIconProvider;
 
         public IGitUICommandsSource UICommandsSource
         {
@@ -72,12 +84,29 @@ namespace GitUI
             }
         }
 
-        public ToolStripGitStatus()
+        private void InitializeComponent()
         {
+            this.timerRefresh = new System.Windows.Forms.Timer();
+            this.ignoredFilesTimer = new System.Windows.Forms.Timer();
+            // 
+            // timerRefresh
+            // 
+            this.timerRefresh.Enabled = true;
+            this.timerRefresh.Interval = 500;
+            this.timerRefresh.Tick += new System.EventHandler(this.timerRefresh_Tick);
+            // 
+            // ignoredFilesTimer
+            // 
+            this.ignoredFilesTimer.Interval = 600000;
+            this.ignoredFilesTimer.Tick += new System.EventHandler(this.ignoredFilesTimer_Tick);
+        }
+
+        private IGitStatusMonitorUpdate _gitStatusMonitorUpdate;
+        public GitStatusMonitor(IGitStatusMonitorUpdate gitStatusMonitorUpdate)
+        {
+            _gitStatusMonitorUpdate = gitStatusMonitorUpdate;
+            _lastUpdateTime = 0;
             InitializeComponent();
-            components.Add(_workTreeWatcher);
-            components.Add(_gitDirWatcher);
-            CommitTranslatedString = "Commit";
             ignoredFilesTimer.Interval = MaxUpdatePeriod;
             CurrentStatus = WorkingStatus.Stopped;
 
@@ -111,9 +140,7 @@ namespace GitUI
             _globalIgnoreWatcher.Renamed += GlobalIgnoreChanged;
             _globalIgnoreWatcher.Error += WorkTreeWatcherError;
             _globalIgnoreWatcher.IncludeSubdirectories = false;
-            _workTreeWatcher.NotifyFilter = NotifyFilters.LastWrite;
-
-            _commitIconProvider = new CommitIconProvider();
+            _globalIgnoreWatcher.NotifyFilter = NotifyFilters.LastWrite;
         }
 
         private void GlobalIgnoreChanged(object sender, FileSystemEventArgs e)
@@ -121,7 +148,7 @@ namespace GitUI
             if (e.FullPath == _globalIgnoreFilePath)
             {
                 _ignoredFilesAreStale = true;
-                ScheduleDeferredUpdate();
+                ScheduleNext(UpdateDelay);
             }
         }
 
@@ -194,8 +221,7 @@ namespace GitUI
         private void TryStartWatchingChanges(string workTreePath, string gitDirPath)
         {
             // reset status info, it was outdated
-            Text = CommitTranslatedString;
-            Image = _commitIconProvider.DefaultIcon;
+           _gitStatusMonitorUpdate.Update(new List<GitItemStatus>());
 
             try
             {
@@ -225,15 +251,18 @@ namespace GitUI
             catch { }
         }
 
-        // destructor shouldn't be used because it's not predictable when
-        // it's going to be called by the GC!
+        // Called for instance at buffer overflow
         private void WorkTreeWatcherError(object sender, ErrorEventArgs e)
         {
-            ScheduleDeferredUpdate();
+            ScheduleNext(UpdateDelay);
         }
 
         private void WorkTreeChanged(object sender, FileSystemEventArgs e)
         {
+            //Update already scheduled?
+            if (_nextUpdateTime < Environment.TickCount + UpdateDelay)
+                return;
+
             var fileName = e.FullPath.Substring(_workTreeWatcher.Path.Length).ToPosixPath();
             if (_ignoredFiles.Contains(fileName))
                 return;
@@ -252,7 +281,7 @@ namespace GitUI
             if (e.FullPath.EndsWith("\\.git\\index.lock"))
                 return;
 
-            ScheduleDeferredUpdate();
+            ScheduleNext(UpdateDelay);
         }
 
         private void GitDirChanged(object sender, FileSystemEventArgs e)
@@ -269,7 +298,7 @@ namespace GitUI
             if (e.FullPath.StartsWith(_submodulesPath) && (Directory.Exists(e.FullPath)))
                 return;
 
-            ScheduleDeferredUpdate();
+            ScheduleNext(UpdateDelay);
         }
 
         private HashSet<string> LoadIgnoredFiles()
@@ -320,13 +349,14 @@ namespace GitUI
 
                 _commandIsRunning = true;
                 _statusIsUpToDate = true;
+                _lastUpdateTime = Environment.TickCount;
                 if (_ignoredFilesAreStale)
                 {
                     UpdateIgnoredFiles(false);
                 }
                 AsyncLoader.DoAsync(RunStatusCommand, UpdatedStatusReceived, OnUpdateStatusError);
                 // Always update every 5 min, even if we don't know anything changed
-                ScheduleNextJustInCaseUpdate();
+                ScheduleNext(MaxUpdatePeriod);
             }
         }
 
@@ -352,35 +382,29 @@ namespace GitUI
             if (_statusIsUpToDate)
             {
                 var allChangedFiles = GitCommandHelpers.GetAllChangedFilesFromString(Module, updatedStatus);
-                Image = _commitIconProvider.GetCommitIcon(allChangedFiles);
-
-                if (allChangedFiles.Count == 0)
-                    Text = CommitTranslatedString;
-                else
-                    Text = string.Format(CommitTranslatedString + " ({0})", allChangedFiles.Count.ToString());
+                _gitStatusMonitorUpdate.Update(allChangedFiles);
             }
             else
+            {
                 UpdateImmediately();
+            }
         }
 
-        private void ScheduleNextJustInCaseUpdate()
+        private void ScheduleNext(int delay)
         {
-            _nextUpdateTime = Environment.TickCount + MaxUpdatePeriod;
-        }
-
-        private void ScheduleDeferredUpdate()
-        {
-            _nextUpdateTime = Environment.TickCount + UpdateDelay;
-        }
-
-        private void ScheduleImmediateUpdate()
-        {
-            _nextUpdateTime = Environment.TickCount;
+            var next = Environment.TickCount + delay;
+            if(_nextUpdateTime > Environment.TickCount)
+            {
+                //A time is already set, use closest
+                next = Math.Min(_nextUpdateTime, next);
+            }
+            //Enforce a minimal time between updates, to not update too frequently
+            _nextUpdateTime = Math.Max(next, _lastUpdateTime + MinUpdateInterval);
         }
 
         private void UpdateImmediately()
         {
-            ScheduleImmediateUpdate();
+            ScheduleNext(MinUpdateDelay);
             Update();
         }
         
@@ -397,7 +421,7 @@ namespace GitUI
                         _workTreeWatcher.EnableRaisingEvents = false;
                         _gitDirWatcher.EnableRaisingEvents = false;
                         _globalIgnoreWatcher.EnableRaisingEvents = false;
-                        Visible = false;
+                        _gitStatusMonitorUpdate.Visible = false;
                         return;
                     case WorkingStatus.Paused:
                         timerRefresh.Stop();
@@ -410,8 +434,8 @@ namespace GitUI
                         _workTreeWatcher.EnableRaisingEvents = true;
                         _gitDirWatcher.EnableRaisingEvents = !_gitDirWatcher.Path.StartsWith(_workTreeWatcher.Path);
                         _globalIgnoreWatcher.EnableRaisingEvents = !string.IsNullOrWhiteSpace(_globalIgnoreWatcher.Path);
-                        ScheduleDeferredUpdate();
-                        Visible = true;
+                        ScheduleNext(UpdateDelay);
+                        _gitStatusMonitorUpdate.Visible = true;
                         return;
                     default:
                         throw new NotSupportedException();
@@ -430,5 +454,30 @@ namespace GitUI
         {
             UpdateIgnoredFiles(false);
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    _workTreeWatcher.Dispose();
+                    _gitDirWatcher.Dispose();
+                    _globalIgnoreWatcher.Dispose();
+                    ignoredFilesTimer.Dispose();
+                    timerRefresh.Dispose();
+                }
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+        #endregion
     }
 }
