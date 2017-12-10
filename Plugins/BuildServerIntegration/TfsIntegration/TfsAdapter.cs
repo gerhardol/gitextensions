@@ -47,7 +47,7 @@ namespace TfsIntegration
         string _projectName;
         Regex _tfsBuildDefinitionNameFilter;
 
-        public void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config, Func<string, bool> isCommitInRevisionGrid)
+        public void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config, Func<string, bool> isCommitInRevisionGrid, string repoName, string branchName)
         {
             if (_buildServerWatcher != null)
                 throw new InvalidOperationException("Already initialized");

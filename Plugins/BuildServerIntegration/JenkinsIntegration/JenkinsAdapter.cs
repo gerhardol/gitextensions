@@ -51,7 +51,7 @@ namespace JenkinsIntegration
         private IList<Task<IEnumerable<string>>> _getBuildUrls;
         private static readonly Dictionary<string, BuildInfo> _finishedBuildsInfo = new Dictionary<string, BuildInfo>();    
 
-        public void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config, Func<string, bool> isCommitInRevisionGrid)
+        public void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config, Func<string, bool> isCommitInRevisionGrid, string repoName, string branchName)
         {
             if (_buildServerWatcher != null)
                 throw new InvalidOperationException("Already initialized");
@@ -75,7 +75,8 @@ namespace JenkinsIntegration
 
                 UpdateHttpClientOptions(buildServerCredentials);
 
-                string[] projectUrls = projectName.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+                string[] projectUrls = projectName.Replace("%repo%", repoName).Replace("%branch%",branchName).
+                    Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var projectUrl in projectUrls.Select(s => baseAdress + "job/" + s.Trim() + "/"))
                 {
                     AddGetBuildUrl(projectUrl);
@@ -298,21 +299,28 @@ namespace JenkinsIntegration
 
             if (!retry)
             {
-                if (task.Result.IsSuccessStatusCode)
+                try
                 {
-                    var httpContent = task.Result.Content;
-
-                    if (httpContent.Headers.ContentType.MediaType == "text/html")
+                    if (task.Result.IsSuccessStatusCode)
                     {
-                        // Jenkins responds with an HTML login page when guest access is denied.
+                        var httpContent = task.Result.Content;
+
+                        if (httpContent.Headers.ContentType.MediaType == "text/html")
+                        {
+                            // Jenkins responds with an HTML login page when guest access is denied.
+                            unauthorized = true;
+                        }
+                        else
+                        {
+                            return httpContent.ReadAsStreamAsync();
+                        }
+                    }
+                    else if (task.Result.StatusCode == HttpStatusCode.Forbidden)
+                    {
                         unauthorized = true;
                     }
-                    else
-                    {
-                        return httpContent.ReadAsStreamAsync();
-                    }
                 }
-                else if (task.Result.StatusCode == HttpStatusCode.Forbidden)
+                catch
                 {
                     unauthorized = true;
                 }
