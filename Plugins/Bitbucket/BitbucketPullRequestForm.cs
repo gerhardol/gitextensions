@@ -33,6 +33,8 @@ namespace Bitbucket
             _plugin = plugin;
             _settingsContainer = settings;
             _gitUiCommands = gitUiCommands;
+            this.Load += BitbucketPullRequestFormLoad;
+            //BitbucketPullRequestFormLoad(null, null);
         }
 
         private void BitbucketPullRequestFormLoad(object sender, EventArgs e)
@@ -116,6 +118,11 @@ namespace Bitbucket
 
         private void BtnCreateClick(object sender, EventArgs e)
         {
+            if (ddlBranchTarget.SelectedValue == null)
+            {
+                BitbucketViewPullRequestFormLoad(null, null);
+                if (ddlBranchSource.SelectedValue == null) return;
+            }
             var info = new PullRequestInfo
             {
                 Title = txtTitle.Text,
