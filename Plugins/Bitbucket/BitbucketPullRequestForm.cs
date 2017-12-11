@@ -118,11 +118,6 @@ namespace Bitbucket
 
         private void BtnCreateClick(object sender, EventArgs e)
         {
-            if (ddlBranchTarget.SelectedValue == null)
-            {
-                BitbucketViewPullRequestFormLoad(null, null);
-                if (ddlBranchSource.SelectedValue == null) return;
-            }
             var info = new PullRequestInfo
             {
                 Title = txtTitle.Text,
@@ -297,6 +292,8 @@ namespace Bitbucket
         private void BtnMergeClick(object sender, EventArgs e)
         {
             var curItem = lbxPullRequests.SelectedItem as PullRequest;
+            if (curItem == null) return;
+
             var mergeInfo = new MergeRequestInfo
             {
                 Id = curItem.Id,
@@ -320,6 +317,8 @@ namespace Bitbucket
         private void BtnApproveClick(object sender, EventArgs e)
         {
             var curItem = lbxPullRequests.SelectedItem as PullRequest;
+            if (curItem == null) return;
+
             var mergeInfo = new MergeRequestInfo
             {
                 Id = curItem.Id,
