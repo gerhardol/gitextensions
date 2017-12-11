@@ -9,7 +9,6 @@ namespace Bitbucket
     class Settings
     {
         private const string BitbucketHttpRegex =
-//            @"https?:\/\/([\w\.\:]+\@)?(?<url>([a-zA-Z0-9\.\-\/]+?)):?(\d+)?\/.*\/(?<project>~?([\w\-]+?))\/(?<repo>([\w\-]+)).git";
             @"https?:\/\/([\w\.\:]+\@)?(?<url>([a-zA-Z0-9\.\-\/]+?)):?(\d+)?\/(scm\/)?(?<project>~?([\w\-]+?))\/(?<repo>([\w\-]+)).git";
         private const string BitbucketSshRegex =
             @"ssh:\/\/([\w\.]+\@)(?<url>([a-zA-Z0-9\.\-]+)):?(\d+)?\/(?<project>~?([\w\-]+))\/(?<repo>([\w\-]+)).git";
@@ -27,13 +26,11 @@ namespace Bitbucket
             var module = ((GitModule)gitModule);
 
             var remotes = module.GetRemotes()
-                .Select(r => module.GetSetting(string.Format(SettingKeyString.RemoteUrl, r)))
-                .ToArray();//empty
+                .Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().Select(r => module.GetSetting(string.Format(SettingKeyString.RemoteUrl, r)))
+                .ToArray();
 
             foreach (var url in remotes)
             {
-         //       string BitbucketHttpRegex2 =
-           // @"https?:\/\/([\w\.\:]+\@)?(?<url>([a-zA-Z0-9\.\-\/]+?)):?(\d+)?\/(?<project>~?([\w\-]+?))\/(?<repo>([\w\-]+)).git";
                 var pattern = url.Contains("http") ? BitbucketHttpRegex : BitbucketSshRegex;
                 var match = Regex.Match(url, pattern);
                 if (match.Success && result.BitbucketUrl.Contains(match.Groups["url"].Value))
