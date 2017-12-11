@@ -153,25 +153,34 @@ namespace GitCommands
             var startInfo = CreateProcessStartInfo(fileName, arguments, workingDirectory, outputEncoding);
             var startProcess = Process.Start(startInfo);
             startProcess.EnableRaisingEvents = true;
-            startProcess.Exited += (sender, args) =>
+            EventHandler processExited = null;
+            processExited = (sender, args) =>
             {
-                var executionEndTimestamp = DateTime.Now;
+                startProcess.Exited -= processExited;
+
                 string quotedCmd = fileName;
                 if (quotedCmd.IndexOf(' ') != -1)
                     quotedCmd = quotedCmd.Quote();
-
                 //GitHub #4213 Commands are duplicated in GE Gitcommand log
-                string duplicate = "";
+                string duplicate = " ";
                 if (_lastLogArguments == arguments && (_lastLogTimestamp - executionStartTimestamp).TotalMilliseconds == 0)
                 {
-                    duplicate = " #Duplicate?";
+                    duplicate = "D";
+                }
+                try
+                {
+                    var executionEndTimestamp = DateTime.Now;
+                    AppSettings.GitLog.Log("1" + duplicate + quotedCmd + " " + arguments, executionStartTimestamp, executionEndTimestamp);
+                }
+                catch
+                {
+                    var executionEndTimestamp = DateTime.Now;
+                    AppSettings.GitLog.Log("2" + duplicate + quotedCmd + " " + arguments, executionStartTimestamp, executionEndTimestamp);
                 }
                 _lastLogArguments = arguments;
                 _lastLogTimestamp = executionStartTimestamp;
-
-                AppSettings.GitLog.Log(quotedCmd + " " + arguments + duplicate, executionStartTimestamp, executionEndTimestamp);
             };
-
+            startProcess.Exited += processExited;
             return startProcess;
         }
 
