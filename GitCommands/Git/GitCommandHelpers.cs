@@ -144,11 +144,13 @@ namespace GitCommands
 
         static string _lastLogArguments = "";
         static DateTime _lastLogTimestamp = DateTime.MinValue;
+        static int counter = 0;
         internal static Process StartProcess(string fileName, string arguments, string workingDirectory, Encoding outputEncoding)
         {
             SetEnvironmentVariable();
 
             var executionStartTimestamp = DateTime.Now;
+            int c = counter++;
 
             var startInfo = CreateProcessStartInfo(fileName, arguments, workingDirectory, outputEncoding);
             var startProcess = Process.Start(startInfo);
@@ -170,12 +172,12 @@ namespace GitCommands
                 try
                 {
                     var executionEndTimestamp = DateTime.Now;
-                    AppSettings.GitLog.Log("1" + duplicate + quotedCmd + " " + arguments, executionStartTimestamp, executionEndTimestamp);
+                    AppSettings.GitLog.Log("1 "+c + duplicate + quotedCmd + " " + arguments, executionStartTimestamp, executionEndTimestamp);
                 }
                 catch
                 {
                     var executionEndTimestamp = DateTime.Now;
-                    AppSettings.GitLog.Log("2" + duplicate + quotedCmd + " " + arguments, executionStartTimestamp, executionEndTimestamp);
+                    AppSettings.GitLog.Log("2 "+c + duplicate + quotedCmd + " " + arguments, executionStartTimestamp, executionEndTimestamp);
                 }
                 _lastLogArguments = arguments;
                 _lastLogTimestamp = executionStartTimestamp;
