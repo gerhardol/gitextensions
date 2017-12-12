@@ -35,6 +35,7 @@ namespace Bitbucket
             _settingsContainer = settings;
             _gitUiCommands = gitUiCommands;
             //BitbucketPullRequestFormLoad(null, null);
+            ReviewersDataGrid.Enabled = false;
         }
 
         private void BitbucketPullRequestFormLoad(object sender, EventArgs e)
