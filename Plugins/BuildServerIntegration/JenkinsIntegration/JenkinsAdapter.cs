@@ -101,7 +101,7 @@ namespace JenkinsIntegration
                             JObject jobDescription = JObject.Parse(task.Result);
                             return jobDescription["builds"].Select(b => b["url"].ToObject<string>());
                         },
-                        TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.AttachedToParent)).ToList();
+                        TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.AttachedToParent | TaskContinuationOptions.NotOnFaulted)).ToList();
             }
             return _getBuildUrls;
         }

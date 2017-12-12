@@ -58,7 +58,11 @@ namespace GitUI.CommandsDialogs
                         if (revision.BuildStatus.ShowInBuildReportTab)
                         {
                             url = null;
-                            buildReportWebBrowser.Navigate(revision.BuildStatus.Url);
+                            try
+                            {
+                                buildReportWebBrowser.Navigate(revision.BuildStatus.Url);
+                            }
+                            catch { }
                         }
                         else
                         {
