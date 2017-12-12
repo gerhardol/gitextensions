@@ -1056,10 +1056,7 @@ namespace GitUI.CommandsDialogs
                 FillFileTree();
                 FillDiff();
                 FillCommitInfo();
-                if (AppSettings.ShowGpgInformation.ValueOrDefault)
-                {
-                    FillGpgInfo();
-                }
+                FillGpgInfo();
                 FillBuildReport();
             }
             RevisionGrid.IndexWatcher.Reset();
@@ -1113,6 +1110,10 @@ namespace GitUI.CommandsDialogs
 
         private async void FillGpgInfo()
         {
+            if (!AppSettings.ShowGpgInformation.ValueOrDefault)
+            {
+                return;
+            }
             var revisions = RevisionGrid.GetSelectedRevisions();
             var revision = revisions.FirstOrDefault();
             if (revision == null)
@@ -1130,7 +1131,7 @@ namespace GitUI.CommandsDialogs
 
             var selectedRevisions = RevisionGrid.GetSelectedRevisions();
             var revision = selectedRevisions.Count == 1 ? selectedRevisions[0] : null;
-
+            
             if (_buildReportTabPageExtension == null)
                 _buildReportTabPageExtension = new BuildReportTabPageExtension(CommitInfoTabControl, _buildReportTabCaption.Text);
 
@@ -1204,10 +1205,7 @@ namespace GitUI.CommandsDialogs
                 FillFileTree();
                 FillDiff();
                 FillCommitInfo();
-                if (AppSettings.ShowGpgInformation.ValueOrDefault)
-                {
-                    FillGpgInfo();
-                }
+                FillGpgInfo();
                 FillBuildReport();
             }
             catch (Exception ex)
@@ -1532,10 +1530,7 @@ namespace GitUI.CommandsDialogs
             FillFileTree();
             FillDiff();
             FillCommitInfo();
-            if (AppSettings.ShowGpgInformation.ValueOrDefault)
-            {
-                FillGpgInfo();
-            }
+            FillGpgInfo();
             FillBuildReport();
             FillTerminalTab();
         }
