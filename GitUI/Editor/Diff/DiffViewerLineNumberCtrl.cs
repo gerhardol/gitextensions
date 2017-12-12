@@ -113,11 +113,12 @@ namespace GitUI.Editor.Diff
 
         private Dictionary<int, DiffLineNum> DiffLines { get; set; }
 
-        public void DisplayLineNumFor(string diff)
+        public int DisplayLineNumFor(string diff)
         {
             var result = new DiffLineNumAnalyzer().Analyze(diff);
             DiffLines = result.LineNumbers;
             _maxValueOfLineNum = result.MaxLineNumber;
+            return result.LineNumbers.Count;
         }
 
         public void Clear(bool forDiff)
