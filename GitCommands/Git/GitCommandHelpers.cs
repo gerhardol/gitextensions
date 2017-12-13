@@ -142,8 +142,6 @@ namespace GitCommands
             };
         }
 
-        static string _lastLogArguments = "";
-        static DateTime _lastLogTimestamp = DateTime.MinValue;
         static int counter = 0;
         internal static Process StartProcess(string fileName, string arguments, string workingDirectory, Encoding outputEncoding)
         {
@@ -151,6 +149,11 @@ namespace GitCommands
 
             var executionStartTimestamp = DateTime.Now;
             int c = counter++;
+
+            string quotedCmd = fileName;
+            if (quotedCmd.IndexOf(' ') != -1)
+                quotedCmd = quotedCmd.Quote();
+            AppSettings.GitLog.Log("x"+c + quotedCmd + " " + arguments, executionStartTimestamp, executionStartTimestamp);
 
             var startInfo = CreateProcessStartInfo(fileName, arguments, workingDirectory, outputEncoding);
             var startProcess = Process.Start(startInfo);
@@ -161,27 +164,9 @@ namespace GitCommands
             {
                 startProcess.Exited -= processExited;
 
-                string quotedCmd = fileName;
-                if (quotedCmd.IndexOf(' ') != -1)
-                    quotedCmd = quotedCmd.Quote();
-                //GitHub #4213 Commands are duplicated in GE Gitcommand log
-                string duplicate = " ";
-                if (_lastLogArguments == arguments && (_lastLogTimestamp - executionStartTimestamp).TotalMilliseconds == 0)
-                {
-                    duplicate = "D";
-                }
-                try
-                {
+                 //GitHub #4213 Commands are duplicated in GE Gitcommand log
                     var executionEndTimestamp = DateTime.Now;
-                    AppSettings.GitLog.Log("1 "+c + duplicate + quotedCmd + " " + arguments, executionStartTimestamp, executionEndTimestamp);
-                }
-                catch
-                {
-                    var executionEndTimestamp = DateTime.Now;
-                    AppSettings.GitLog.Log("2 "+c + duplicate + quotedCmd + " " + arguments, executionStartTimestamp, executionEndTimestamp);
-                }
-                _lastLogArguments = arguments;
-                _lastLogTimestamp = executionStartTimestamp;
+                    AppSettings.GitLog.Log(" "+c + quotedCmd + " " + arguments, executionStartTimestamp, executionEndTimestamp);
             };
             startProcess.Exited += processExited;
             return startProcess;
