@@ -155,6 +155,7 @@ namespace GitCommands
             var startInfo = CreateProcessStartInfo(fileName, arguments, workingDirectory, outputEncoding);
             var startProcess = Process.Start(startInfo);
             startProcess.EnableRaisingEvents = true;
+
             EventHandler processExited = null;
             processExited = (sender, args) =>
             {
@@ -608,9 +609,16 @@ namespace GitCommands
             }
         }
 
-        public static string MergedBranches()
+        public static string MergedBranches(bool includeRemote = false)
         {
-            return "branch --merged";
+            if (includeRemote)
+            {
+                return "branch -a --merged";
+            }
+            else
+            {
+                return "branch --merged";
+            }
         }
 
         /// <summary>Un-sets the git SSH command path.</summary>
