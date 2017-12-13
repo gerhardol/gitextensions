@@ -119,6 +119,14 @@ namespace Bitbucket
 
         private void BtnCreateClick(object sender, EventArgs e)
         {
+            if (ddlBranchSource.SelectedValue == null ||
+                ddlBranchTarget.SelectedValue == null ||
+                ddlRepositorySource.SelectedValue == null ||
+                ddlRepositoryTarget.SelectedValue == null)
+            {
+                return;
+            }
+
             var info = new PullRequestInfo
             {
                 Title = txtTitle.Text,
