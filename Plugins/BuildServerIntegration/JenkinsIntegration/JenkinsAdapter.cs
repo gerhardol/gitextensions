@@ -75,7 +75,7 @@ namespace JenkinsIntegration
 
                 UpdateHttpClientOptions(buildServerCredentials);
 
-                string[] projectUrls = projectName.Replace("%REPO%", repoName.ToUpper()).Replace("%REPOM%", repoName.ToUpper().Replace("_","-")).Replace("%repo%", repoName).Replace("%branch%",branchName).
+                string[] projectUrls = projectName.Replace("%REPO_SHORTNAME_U%", repoName.ToUpper()).Replace("%REPO_SHORTNAME_M%", repoName.ToUpper().Replace("_","-")).Replace("%REPO_SHORTNAME%", repoName).Replace("%ACTIVE_BRANCHNAME%",branchName).
                     Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var projectUrl in projectUrls.Select(s => baseAdress + "job/" + s.Trim() + "/"))
                 {
