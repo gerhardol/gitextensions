@@ -151,14 +151,19 @@ namespace GitCommands
             var startInfo = CreateProcessStartInfo(fileName, arguments, workingDirectory, outputEncoding);
             var startProcess = Process.Start(startInfo);
             startProcess.EnableRaisingEvents = true;
-            startProcess.Exited += (sender, args) =>
+
+            EventHandler processExited = null;
+            processExited = (sender, args) =>
             {
+                startProcess.Exited -= processExited;
+
                 string quotedCmd = fileName;
                 if (quotedCmd.IndexOf(' ') != -1)
                     quotedCmd = quotedCmd.Quote();
                 var executionEndTimestamp = DateTime.Now;
                 AppSettings.GitLog.Log(quotedCmd + " " + arguments, executionStartTimestamp, executionEndTimestamp);
             };
+            startProcess.Exited += processExited;
 
             return startProcess;
         }
@@ -585,9 +590,16 @@ namespace GitCommands
             }
         }
 
-        public static string MergedBranches()
+        public static string MergedBranches(bool includeRemote = false)
         {
-            return "branch --merged";
+            if (includeRemote)
+            {
+                return "branch -a --merged";
+            }
+            else
+            {
+                return "branch --merged";
+            }
         }
 
         /// <summary>Un-sets the git SSH command path.</summary>
@@ -1061,7 +1073,7 @@ namespace GitCommands
             return diffFiles;
         }
 
-        public static List<GitItemStatus> GetAssumeUnchangedFilesFromString(GitModule module, string lsString)
+        public static List<GitItemStatus> GetAssumeUnchangedFilesFromString(string lsString)
         {
             List<GitItemStatus> result = new List<GitItemStatus>();
             string[] lines = lsString.SplitLines();
@@ -1076,6 +1088,26 @@ namespace GitCommands
                 gitItemStatus.IsStaged = false;
                 gitItemStatus.IsAssumeUnchanged = true;
                 result.Add(gitItemStatus);
+            }
+
+            return result;
+        }
+
+        public static List<GitItemStatus> GetSkipWorktreeFilesFromString(string lsString)
+        {
+            List<GitItemStatus> result = new List<GitItemStatus>();
+            string[] lines = lsString.SplitLines();
+            foreach (string line in lines)
+            {
+                char statusCharacter = line[0];
+
+                string fileName = line.Substring(line.IndexOf(' ') + 1);
+                GitItemStatus gitItemStatus = GitItemStatusFromStatusCharacter(fileName, statusCharacter);
+                if (gitItemStatus.IsSkipWorktree)
+                {
+                    gitItemStatus.IsStaged = false;
+                    result.Add(gitItemStatus);
+                }
             }
 
             return result;
@@ -1115,6 +1147,7 @@ namespace GitCommands
             gitItemStatus.IsNew = x == 'A' || x == '?' || x == '!';
             gitItemStatus.IsChanged = x == 'M';
             gitItemStatus.IsDeleted = x == 'D';
+            gitItemStatus.IsSkipWorktree = x == 'S';
             gitItemStatus.IsRenamed = false;
             gitItemStatus.IsTracked = x != '?' && x != '!' && x != ' ' || !gitItemStatus.IsNew;
             gitItemStatus.IsConflict = x == 'U';
