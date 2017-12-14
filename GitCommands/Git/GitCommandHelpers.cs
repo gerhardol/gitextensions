@@ -153,7 +153,7 @@ namespace GitCommands
             string quotedCmd = fileName;
             if (quotedCmd.IndexOf(' ') != -1)
                 quotedCmd = quotedCmd.Quote();
-            AppSettings.GitLog.Log("x"+c + quotedCmd + " " + arguments, executionStartTimestamp, executionStartTimestamp);
+            AppSettings.GitLog.Log("x" + c + quotedCmd + " " + arguments, executionStartTimestamp, executionStartTimestamp);
 
             var startInfo = CreateProcessStartInfo(fileName, arguments, workingDirectory, outputEncoding);
             var startProcess = Process.Start(startInfo);
@@ -164,9 +164,9 @@ namespace GitCommands
             {
                 startProcess.Exited -= processExited;
 
-                 //GitHub #4213 Commands are duplicated in GE Gitcommand log
-                    var executionEndTimestamp = DateTime.Now;
-                    AppSettings.GitLog.Log(" "+c + quotedCmd + " " + arguments, executionStartTimestamp, executionEndTimestamp);
+                //GitHub #4213 Commands are duplicated in GE Gitcommand log
+                var executionEndTimestamp = DateTime.Now;
+                AppSettings.GitLog.Log(" " + c + quotedCmd + " " + arguments, executionStartTimestamp, executionEndTimestamp);
             };
             startProcess.Exited += processExited;
             return startProcess;
