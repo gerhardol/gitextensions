@@ -90,7 +90,8 @@ namespace JenkinsIntegration
 
         private void AddGetBuildUrl(string projectUrl)
         {
-            _projectsUrls.Add(projectUrl);
+            if (!_projectsUrls.Contains(projectUrl))
+                _projectsUrls.Add(projectUrl);
         }
 
         private IList<Task<IEnumerable<string>>> GetBuildUrls(bool forceUpdate)
