@@ -102,8 +102,16 @@ namespace JenkinsIntegration
                     .ContinueWith(
                         task =>
                         {
-                            JObject jobDescription = JObject.Parse(task.Result);
-                            return jobDescription["builds"].Select(b => b["url"].ToObject<string>());
+                            IEnumerable<string>  s = new List<string> { "" };
+                            //if (task.Result.IsNotNullOrWhitespace)
+                            try
+                            {
+                                JObject jobDescription = JObject.Parse(task.Result);
+                                s = jobDescription["builds"].Select(b => b["url"].ToObject<string>());
+                            }
+                            catch (Newtonsoft.Json.JsonException)
+                            { }
+                            return s;
                         },
                         TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.AttachedToParent | TaskContinuationOptions.NotOnFaulted)).ToList();
             }
@@ -285,7 +293,7 @@ namespace JenkinsIntegration
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return _httpClient.GetAsync(restServicePath, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+            return _httpClient?.GetAsync(restServicePath, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
                              .ContinueWith(
                                  task => GetStreamFromHttpResponseAsync(task, restServicePath, cancellationToken),
                                  cancellationToken,
@@ -303,7 +311,7 @@ namespace JenkinsIntegration
 
             if (!retry)
             {
-                try
+                //try
                 {
                     if (task.Result.IsSuccessStatusCode)
                     {
@@ -324,9 +332,9 @@ namespace JenkinsIntegration
                         unauthorized = true;
                     }
                 }
-                catch
+                //catch
                 {
-                    unauthorized = true;
+                  //  unauthorized = true;
                 }
             }
 
@@ -349,6 +357,7 @@ namespace JenkinsIntegration
                 throw new OperationCanceledException(task.Result.ReasonPhrase);
             }
 
+            if (task.Result.StatusCode == HttpStatusCode.NotFound) return null;// @"{build:"";
             throw new HttpRequestException(task.Result.ReasonPhrase);
 #else
             return null;
