@@ -298,10 +298,11 @@ namespace GitUI.CommandsDialogs
                 RevisionsSplitContainer.SplitterDistance = RevisionsSplitContainer.Width - 420;
                 RevisionInfo.DisplayAvatarOnRight();
                 CommitInfoTabControl.SuspendLayout();
+                if (CommitInfoTabControl.SelectedTab == CommitInfoTabPage)
+                    CommitInfoTabControl.SelectedTab = DiffTabPage;
                 CommitInfoTabControl.RemoveIfExists(CommitInfoTabPage);
                 CommitInfoTabControl.RemoveIfExists(TreeTabPage);
                 CommitInfoTabControl.TabPages.Insert(0, TreeTabPage);
-                CommitInfoTabControl.SelectedTab = DiffTabPage;
                 CommitInfoTabControl.ResumeLayout(true);
                 RevisionsSplitContainer.Panel2Collapsed = false;
             }
@@ -1164,7 +1165,7 @@ namespace GitUI.CommandsDialogs
                 var revisions = RevisionGrid.GetSelectedRevisions();
 
                 CommitInfoTabControl.SelectedIndexChanged -= CommitInfoTabControl_SelectedIndexChanged;
-                if (!revisions.Any() || GitRevision.IsArtificial(revisions[0].Guid))
+                if (revisions.Any() && GitRevision.IsArtificial(revisions[0].Guid))
                 {
                     //Artificial commits cannot show tree (ls-tree) and has no commit info 
                     CommitInfoTabControl.RemoveIfExists(CommitInfoTabPage);
