@@ -102,18 +102,18 @@ namespace JenkinsIntegration
                     .ContinueWith(
                         task =>
                         {
-                            IEnumerable<string>  s = new List<string> { "" };
-                            //if (task.Result.IsNotNullOrWhitespace)
-                            try
+                            IEnumerable<string> s = new List<string> { "" };
+                            string t = task.Result;
+                            if (t.IsNotNullOrWhitespace())
                             {
-                                JObject jobDescription = JObject.Parse(task.Result);
+                                JObject jobDescription = JObject.Parse(t);
                                 s = jobDescription["builds"].Select(b => b["url"].ToObject<string>());
                             }
-                            catch (Newtonsoft.Json.JsonException)
-                            { }
                             return s;
                         },
-                        TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.AttachedToParent | TaskContinuationOptions.NotOnFaulted)).ToList();
+                        TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.AttachedToParent))
+                        //.Where(t => t != null)
+                        .ToList();
             }
             return _getBuildUrls;
         }
@@ -177,19 +177,31 @@ namespace JenkinsIntegration
 
                     var mutableBuilds = currentGetBuildUrls.Result.Where(buildUrl => !_finishedBuildsInfo.ContainsKey(buildUrl));
                     var buildContents = mutableBuilds
+                        //.Where(s => !string.IsNullOrEmpty(s))
                         .Select(buildUrl => GetResponseAsync(FormatToGetJson(buildUrl), cancellationToken).Result)
-                        .Where(s => !string.IsNullOrEmpty(s)).ToArray();
+                        .Where(s => !string.IsNullOrEmpty(s))
+                        .ToArray();
 
                     foreach (var buildDetails in buildContents)
                     {
-                        JObject buildDescription = JObject.Parse(buildDetails);
-
-                        var buildInfo = CreateBuildInfo(buildDescription);
-                        if (buildInfo.Status != BuildInfo.BuildStatus.InProgress)
+                        if (buildDetails.IsNotNullOrWhitespace())
                         {
-                            _finishedBuildsInfo[buildInfo.Url] = buildInfo;
+                            try
+                            {
+                                JObject buildDescription = JObject.Parse(buildDetails);
+
+                                var buildInfo = CreateBuildInfo(buildDescription);
+                                if (buildInfo.Status != BuildInfo.BuildStatus.InProgress)
+                                {
+                                    _finishedBuildsInfo[buildInfo.Url] = buildInfo;
+                                }
+                                observer.OnNext(buildInfo);
+                            }
+                            catch(Exception ex)
+                            {
+                                observer.OnError(ex);
+                            }
                         }
-                        observer.OnNext(buildInfo);
                     }
                 }
                 observer.OnCompleted();
@@ -200,7 +212,8 @@ namespace JenkinsIntegration
             }
             catch (Exception ex)
             {
-                observer.OnError(ex);
+                if (ex.InnerException == null || !(ex.InnerException is OperationCanceledException))
+                    observer.OnError(ex);
             }
         }
 
@@ -311,36 +324,35 @@ namespace JenkinsIntegration
 
             if (!retry)
             {
-                //try
+                if (task.Result.IsSuccessStatusCode)
                 {
-                    if (task.Result.IsSuccessStatusCode)
-                    {
-                        var httpContent = task.Result.Content;
+                    var httpContent = task.Result.Content;
 
-                        if (httpContent.Headers.ContentType.MediaType == "text/html")
-                        {
-                            // Jenkins responds with an HTML login page when guest access is denied.
-                            unauthorized = true;
-                        }
-                        else
-                        {
-                            return httpContent.ReadAsStreamAsync();
-                        }
-                    }
-                    else if (task.Result.StatusCode == HttpStatusCode.Forbidden)
+                    if (httpContent.Headers.ContentType.MediaType == "text/html")
                     {
+                        // Jenkins responds with an HTML login page when guest access is denied.
                         unauthorized = true;
                     }
+                    else
+                    {
+                        return httpContent.ReadAsStreamAsync();
+                    }
                 }
-                //catch
+                else if (task.Result.StatusCode == HttpStatusCode.NotFound)
                 {
-                  //  unauthorized = true;
+                    //The url does not exist, no jobs to retrieve
+                    return null;
+                }
+                else if (task.Result.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    unauthorized = true;
                 }
             }
 
             if (retry)
             {
-                return GetStreamAsync(restServicePath, cancellationToken);
+               return null;
+               //return GetStreamAsync(restServicePath, cancellationToken);
             }
 
             if (unauthorized)
@@ -357,7 +369,6 @@ namespace JenkinsIntegration
                 throw new OperationCanceledException(task.Result.ReasonPhrase);
             }
 
-            if (task.Result.StatusCode == HttpStatusCode.NotFound) return null;// @"{build:"";
             throw new HttpRequestException(task.Result.ReasonPhrase);
 #else
             return null;
