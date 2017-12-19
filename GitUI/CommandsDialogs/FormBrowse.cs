@@ -288,6 +288,13 @@ namespace GitUI.CommandsDialogs
 
             FillTerminalTab();
             ManageWorktreeSupport();
+            if (_showRevisionInfoNextToRevisionGrid)
+            {
+                CommitInfoTabControl.SelectedTab = DiffTabPage;
+            } else
+            {
+                CommitInfoTabControl.SelectedTab = CommitInfoTabPage;
+            }
         }
 
         private void LayoutRevisionInfo()
@@ -298,11 +305,9 @@ namespace GitUI.CommandsDialogs
                 RevisionsSplitContainer.SplitterDistance = RevisionsSplitContainer.Width - 420;
                 RevisionInfo.DisplayAvatarOnRight();
                 CommitInfoTabControl.SuspendLayout();
-                if (CommitInfoTabControl.SelectedTab == CommitInfoTabPage)
-                    CommitInfoTabControl.SelectedTab = DiffTabPage;
                 CommitInfoTabControl.RemoveIfExists(CommitInfoTabPage);
-                CommitInfoTabControl.RemoveIfExists(TreeTabPage);
-                CommitInfoTabControl.TabPages.Insert(0, TreeTabPage);
+                //CommitInfoTabControl.RemoveIfExists(TreeTabPage);
+                //CommitInfoTabControl.TabPages.Insert(0, TreeTabPage);
                 CommitInfoTabControl.ResumeLayout(true);
                 RevisionsSplitContainer.Panel2Collapsed = false;
             }
@@ -1113,7 +1118,7 @@ namespace GitUI.CommandsDialogs
 
         private async void FillGpgInfo()
         {
-            if (!AppSettings.ShowGpgInformation.ValueOrDefault)
+            if (!AppSettings.ShowGpgInformation.ValueOrDefault || CommitInfoTabControl.SelectedTab != GpgInfoTabPage)
             {
                 return;
             }
@@ -1134,10 +1139,11 @@ namespace GitUI.CommandsDialogs
 
             var selectedRevisions = RevisionGrid.GetSelectedRevisions();
             var revision = selectedRevisions.Count == 1 ? selectedRevisions[0] : null;
-            
+
             if (_buildReportTabPageExtension == null)
                 _buildReportTabPageExtension = new BuildReportTabPageExtension(CommitInfoTabControl, _buildReportTabCaption.Text);
 
+            //Note: FillBuildReport will check if tab is visible and revision is OK
             _buildReportTabPageExtension.FillBuildReport(revision);
         }
 
