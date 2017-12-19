@@ -103,7 +103,7 @@ namespace JenkinsIntegration
                     .ContinueWith(
                         task =>
                         {
-                            IEnumerable<string> s = new List<string> { "" };
+                            IEnumerable<string> s = null;
                             string t = task.Result;
                             if (t.IsNotNullOrWhitespace())
                             {
@@ -113,7 +113,7 @@ namespace JenkinsIntegration
                             return s;
                         },
                         TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.AttachedToParent))
-                        //.Where(t => t != null)
+                        .Where(buildUrl => buildUrl != null)
                         .ToList();
             }
             return _getBuildUrls;
@@ -129,7 +129,8 @@ namespace JenkinsIntegration
 
         public IObservable<BuildInfo> GetFinishedBuildsSince(IScheduler scheduler, DateTime? sinceDate = null)
         {
-            return GetBuilds(scheduler, sinceDate, false);
+            //return GetBuilds(scheduler, sinceDate, false);
+            return Observable.Empty<BuildInfo>();
         }
 
         public IObservable<BuildInfo> GetRunningBuilds(IScheduler scheduler)
@@ -178,30 +179,26 @@ namespace JenkinsIntegration
 
                     var mutableBuilds = currentGetBuildUrls.Result.Where(buildUrl => !_finishedBuildsInfo.ContainsKey(buildUrl));
                     var buildContents = mutableBuilds
-                        //.Where(s => !string.IsNullOrEmpty(s))
                         .Select(buildUrl => GetResponseAsync(FormatToGetJson(buildUrl), cancellationToken).Result)
-                        .Where(s => !string.IsNullOrEmpty(s))
+                        .Where(s => s.IsNotNullOrWhitespace())
                         .ToArray();
 
                     foreach (var buildDetails in buildContents)
                     {
-                        if (buildDetails.IsNotNullOrWhitespace())
+                        try
                         {
-                            try
-                            {
-                                JObject buildDescription = JObject.Parse(buildDetails);
+                            JObject buildDescription = JObject.Parse(buildDetails);
 
-                                var buildInfo = CreateBuildInfo(buildDescription);
-                                if (buildInfo.Status != BuildInfo.BuildStatus.InProgress)
-                                {
-                                    _finishedBuildsInfo[buildInfo.Url] = buildInfo;
-                                }
-                                observer.OnNext(buildInfo);
-                            }
-                            catch(Exception ex)
+                            var buildInfo = CreateBuildInfo(buildDescription);
+                            if (buildInfo.Status != BuildInfo.BuildStatus.InProgress)
                             {
-                                observer.OnError(ex);
+                                _finishedBuildsInfo[buildInfo.Url] = buildInfo;
                             }
+                            observer.OnNext(buildInfo);
+                        }
+                        catch (Exception ex)
+                        {
+                            observer.OnError(ex);
                         }
                     }
                 }
@@ -220,48 +217,51 @@ namespace JenkinsIntegration
 
         private static BuildInfo CreateBuildInfo(JObject buildDescription)
         {
-            var idValue = buildDescription["number"].ToObject<string>();
-            var statusValue = buildDescription["result"].ToObject<string>();
-            var startDateTicks = buildDescription["timestamp"].ToObject<long>();
-            var displayName = buildDescription["fullDisplayName"].ToObject<string>();
-            var webUrl = buildDescription["url"].ToObject<string>();
-            var action = buildDescription["actions"];
-            var commitHashList = new List<string>();
-            int nbTests = 0;
-            int nbFailedTests = 0;
-            int nbSkippedTests = 0;
-            foreach (var element in action)
+            if (buildDescription["number"] != null)
             {
-                if (element["lastBuiltRevision"] != null)
-                    commitHashList.Add(element["lastBuiltRevision"]["SHA1"].ToObject<string>());
-                if (element["totalCount"] != null)
+                var idValue = buildDescription["number"].ToObject<string>();
+                var statusValue = buildDescription["result"].ToObject<string>();
+                var startDateTicks = buildDescription["timestamp"].ToObject<long>();
+                //var displayName = buildDescription["fullDisplayName"].ToObject<string>();
+                var webUrl = buildDescription["url"].ToObject<string>();
+
+                var action = buildDescription["actions"];
+                var commitHashList = new List<string>();
+                int nbTests = 0;
+                int nbFailedTests = 0;
+                int nbSkippedTests = 0;
+                foreach (var element in action)
                 {
-                    nbTests = element["totalCount"].ToObject<int>();
-                    nbFailedTests = element["failCount"].ToObject<int>();
-                    nbSkippedTests = element["skipCount"].ToObject<int>();
+                    if (element["lastBuiltRevision"] != null)
+                        commitHashList.Add(element["lastBuiltRevision"]["SHA1"].ToObject<string>());
+                    if (element["totalCount"] != null)
+                    {
+                        nbTests = element["totalCount"].ToObject<int>();
+                        nbFailedTests = element["failCount"].ToObject<int>();
+                        nbSkippedTests = element["skipCount"].ToObject<int>();
+                    }
                 }
-            }
 
-            string testResults = string.Empty;
-            if (nbTests != 0)
-            {
-                testResults = $"{nbTests} tests ({nbFailedTests} failed, {nbSkippedTests} skipped)";
-            }
+                string testResults = string.Empty;
+                if (nbTests != 0)
+                {
+                    testResults = $"{nbTests} tests ({nbFailedTests} failed, {nbSkippedTests} skipped)";
+                }
 
-            var isRunning = buildDescription["building"].ToObject<bool>();
-            long? buildDuration;
-            if (isRunning)
-            {
-                buildDuration = null;
-            }
-            else
-            {
-                buildDuration = buildDescription["duration"].ToObject<long>();
-            }
+                var isRunning = buildDescription["building"].ToObject<bool>();
+                long? buildDuration;
+                if (isRunning)
+                {
+                    buildDuration = null;
+                }
+                else
+                {
+                    buildDuration = buildDescription["duration"].ToObject<long>();
+                }
 
-            var status = isRunning ? BuildInfo.BuildStatus.InProgress : ParseBuildStatus(statusValue);
-            var statusText = status.ToString("G");
-            var buildInfo = new BuildInfo
+                var status = isRunning ? BuildInfo.BuildStatus.InProgress : ParseBuildStatus(statusValue);
+                var statusText = status.ToString("G");
+                var buildInfo = new BuildInfo
                 {
                     Id = idValue,
                     StartDate = TimestampToDateTime(startDateTicks),
@@ -270,9 +270,25 @@ namespace JenkinsIntegration
                     CommitHashList = commitHashList.ToArray(),
                     Url = webUrl
                 };
-            var durationText = _buildDurationFormatter.Format(buildInfo.Duration);
-            buildInfo.Description = $"#{idValue} {durationText} {testResults} {statusText}";
-            return buildInfo;
+                var durationText = _buildDurationFormatter.Format(buildInfo.Duration);
+                buildInfo.Description = $"#{idValue} {durationText} {testResults} {statusText}";
+                return buildInfo;
+            } else
+            {
+                //Assume this is a multi pipeline buildinfo
+                var buildInfo = new BuildInfo
+                {
+                    Id = "1",
+                    StartDate = TimestampToDateTime(0),
+                    Duration = 3000,
+                    Status = BuildInfo.BuildStatus.InProgress,
+                    CommitHashList = new string[] { },
+                    Url = "http://xxx"
+                };
+                var durationText = _buildDurationFormatter.Format(buildInfo.Duration);
+                buildInfo.Description = $"#xxx";
+                return buildInfo;
+            }
         }
 
         public static DateTime TimestampToDateTime(long timestamp)
@@ -352,8 +368,8 @@ namespace JenkinsIntegration
 
             if (retry)
             {
-               return null;
-               //return GetStreamAsync(restServicePath, cancellationToken);
+               //return null;
+               return GetStreamAsync(restServicePath, cancellationToken);
             }
 
             if (unauthorized)

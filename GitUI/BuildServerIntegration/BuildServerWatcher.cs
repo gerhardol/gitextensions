@@ -48,7 +48,6 @@ namespace GitUI.BuildServerIntegration
 
             DisposeBuildServerAdapter();
 
-            // Extract the project name from the last part of the directory path. It is assumed that it matches the project name in the CI build server.
             GetBuildServerAdapter().ContinueWith((Task<IBuildServerAdapter> task) =>
             {
                 if (revisions.IsDisposed)
@@ -64,10 +63,11 @@ namespace GitUI.BuildServerIntegration
                     return;
 
                 var scheduler = NewThreadScheduler.Default;
+                //Run this first, other cancels the 
+                var runningBuildsObservable = buildServerAdapter.GetRunningBuilds(scheduler);
                 var fullDayObservable = buildServerAdapter.GetFinishedBuildsSince(scheduler, DateTime.Today - TimeSpan.FromDays(3));
                 var fullObservable = buildServerAdapter.GetFinishedBuildsSince(scheduler);
                 var fromNowObservable = buildServerAdapter.GetFinishedBuildsSince(scheduler, DateTime.Now);
-                var runningBuildsObservable = buildServerAdapter.GetRunningBuilds(scheduler);
 
                 var cancellationToken = new CompositeDisposable
                 {
