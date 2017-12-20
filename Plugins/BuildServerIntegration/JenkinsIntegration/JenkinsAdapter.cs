@@ -51,7 +51,7 @@ namespace JenkinsIntegration
         private IList<Task<IEnumerable<string>>> _getBuildUrls;
         private static readonly Dictionary<string, BuildInfo> _finishedBuildsInfo = new Dictionary<string, BuildInfo>();    
 
-        public void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config, Func<string, bool> isCommitInRevisionGrid, string repoName, string branchName)
+        public void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config, Func<string, bool> isCommitInRevisionGrid, string repoName)
         {
             if (_buildServerWatcher != null)
                 throw new InvalidOperationException("Already initialized");
@@ -77,9 +77,7 @@ namespace JenkinsIntegration
 
                 string[] projectUrls = projectName
                     .Replace("%REPO_SHORTNAME_U%", repoName.ToUpper())
-                    .Replace("%REPO_SHORTNAME_M%", repoName.ToUpper().Replace("_","-"))
                     .Replace("%REPO_SHORTNAME%", repoName)
-                    .Replace("%ACTIVE_BRANCHNAME%", branchName.Replace("/", "%2f"))
                     .Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var projectUrl in projectUrls.Select(s => baseAdress + "job/" + s.Trim() + "/"))
                 {
@@ -203,21 +201,14 @@ namespace JenkinsIntegration
 
                     foreach (var buildDetails in buildContents)
                     {
-                        try
-                        {
-                            JObject buildDescription = JObject.Parse(buildDetails);
+                        JObject buildDescription = JObject.Parse(buildDetails);
 
-                            var buildInfo = CreateBuildInfo(buildDescription);
-                            if (buildInfo.Status != BuildInfo.BuildStatus.InProgress)
-                            {
-                                _finishedBuildsInfo[buildInfo.Url] = buildInfo;
-                            }
-                            observer.OnNext(buildInfo);
-                        }
-                        catch (Exception ex)
+                        var buildInfo = CreateBuildInfo(buildDescription);
+                        if (buildInfo.Status != BuildInfo.BuildStatus.InProgress)
                         {
-                            observer.OnError(ex);
+                            _finishedBuildsInfo[buildInfo.Url] = buildInfo;
                         }
+                        observer.OnNext(buildInfo);
                     }
                 }
                 observer.OnCompleted();
@@ -323,7 +314,7 @@ namespace JenkinsIntegration
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return _httpClient?.GetAsync(restServicePath, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+            return _httpClient.GetAsync(restServicePath, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
                              .ContinueWith(
                                  task => GetStreamFromHttpResponseAsync(task, restServicePath, cancellationToken),
                                  cancellationToken,
@@ -368,7 +359,6 @@ namespace JenkinsIntegration
 
             if (retry)
             {
-               //return null;
                return GetStreamAsync(restServicePath, cancellationToken);
             }
 

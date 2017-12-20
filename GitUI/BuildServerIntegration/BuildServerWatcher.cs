@@ -301,7 +301,6 @@ namespace GitUI.BuildServerIntegration
                             return null;
                         }
                         var buildServerAdapter = export.Value;
-                        string branch = Module.GetSelectedBranch();
 
                         //Extract "name of repo" from remote url
                         string remoteName = Module.GetCurrentRemote();
@@ -311,7 +310,7 @@ namespace GitUI.BuildServerIntegration
                         if (remoteUrl.EndsWith(".git")) { len -= 4; }
                         if (start>=0) { remoteUrl = remoteUrl.Substring(start, len); }
 
-                        buildServerAdapter.Initialize(this, Module.EffectiveSettings.BuildServer.TypeSettings, sha1 => revisionGrid.GetRevision(sha1) != null, remoteUrl, branch);
+                        buildServerAdapter.Initialize(this, Module.EffectiveSettings.BuildServer.TypeSettings, sha1 => revisionGrid.GetRevision(sha1) != null, remoteUrl);
                         return buildServerAdapter;
                     }
                     catch (InvalidOperationException ex)

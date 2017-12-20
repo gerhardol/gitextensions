@@ -97,7 +97,7 @@ namespace TeamCityIntegration
 
         public string LogAsGuestUrlParameter { get; set; }
 
-        public void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config, Func<string, bool> isCommitInRevisionGrid, string repoName, string branchName)
+        public void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config, Func<string, bool> isCommitInRevisionGrid, string repoName)
         {
             if (this.buildServerWatcher != null)
                 throw new InvalidOperationException("Already initialized");

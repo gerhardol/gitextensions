@@ -31,7 +31,7 @@ namespace JenkinsIntegration.Settings
             if (buildServerConfig != null)
             {
                 JenkinsServerUrl.Text = buildServerConfig.GetString("BuildServerUrl", string.Empty);
-                JenkinsProjectName.Text = buildServerConfig.GetString("ProjectName", "%REPO_SHORTNAME%/job/%ACTIVE_BRANCHNAME%");
+                JenkinsProjectName.Text = buildServerConfig.GetString("ProjectName", "%REPO_SHORTNAME%");
             }
         }
 
