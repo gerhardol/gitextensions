@@ -91,39 +91,42 @@ namespace JenkinsIntegration
             if (!_projectsUrls.Contains(projectUrl))
                 _projectsUrls.Add(projectUrl);
         }
-
+        private readonly object syncLock = new object();
         private IList<Task<IEnumerable<string>>> GetBuildUrls(bool forceUpdate)
         {
-            if (_getBuildUrls == null || forceUpdate)
+            lock (syncLock)
             {
-                _getBuildUrls = _projectsUrls.Select(
-                    projectUrl => GetResponseAsync(FormatToGetJson(projectUrl), CancellationToken.None)
-                    .ContinueWith(
-                        task =>
-                        {
-                            IEnumerable<string> s = Enumerable.Empty<string>();
-                            string t = task.Result;
-                            if (t.IsNotNullOrWhitespace())
+                if (_getBuildUrls == null || forceUpdate)
+                {
+                    _getBuildUrls = _projectsUrls.Select(
+                        projectUrl => GetResponseAsync(FormatToGetJson(projectUrl), CancellationToken.None)
+                        .ContinueWith(
+                            task =>
                             {
-                                JObject jobDescription = JObject.Parse(t);
-                                if (jobDescription["builds"] != null)
+                                IEnumerable<string> s = Enumerable.Empty<string>();
+                                string t = task.Result;
+                                if (t.IsNotNullOrWhitespace())
                                 {
+                                    JObject jobDescription = JObject.Parse(t);
+                                    if (jobDescription["builds"] != null)
+                                    {
                                     //Freestyle jobs
                                     s = jobDescription["builds"]
-                                        .Select(b => b["url"].ToObject<string>());
-                                }
-                                else if (jobDescription["jobs"] != null)
-                                {
+                                            .Select(b => b["url"].ToObject<string>());
+                                    }
+                                    else if (jobDescription["jobs"] != null)
+                                    {
                                     //Multi pipeline
-                                   s = jobDescription["jobs"]
-                                       .SelectMany(j => j["builds"]
-                                       .Select(b => b["url"].ToObject<string>()));
+                                    s = jobDescription["jobs"]
+                                        .SelectMany(j => j["builds"]
+                                        .Select(b => b["url"].ToObject<string>()));
+                                    }
                                 }
-                            }
-                            return s;
-                        },
-                        TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.AttachedToParent))
-                        .ToList();
+                                return s;
+                            },
+                            TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.AttachedToParent))
+                            .ToList();
+                }
             }
             return _getBuildUrls;
         }
@@ -138,8 +141,8 @@ namespace JenkinsIntegration
 
         public IObservable<BuildInfo> GetFinishedBuildsSince(IScheduler scheduler, DateTime? sinceDate = null)
         {
-            //return GetBuilds(scheduler, sinceDate, false);
-            return Observable.Empty<BuildInfo>();
+            return GetBuilds(scheduler, sinceDate, false);
+            //return Observable.Empty<BuildInfo>();
         }
 
         public IObservable<BuildInfo> GetRunningBuilds(IScheduler scheduler)
@@ -147,7 +150,7 @@ namespace JenkinsIntegration
             return GetBuilds(scheduler, null, true);
         }
 
-        public IObservable<BuildInfo> GetBuilds(IScheduler scheduler, DateTime? sinceDate = null, bool? running = null)
+        private IObservable<BuildInfo> GetBuilds(IScheduler scheduler, DateTime? sinceDate = null, bool? running = null)
         {
             return Observable.Create<BuildInfo>((observer, cancellationToken) =>
                 Task<IDisposable>.Factory.StartNew(
@@ -191,26 +194,29 @@ namespace JenkinsIntegration
                         //This is temporary while GetFinishedBuildsSince is empty
                         foreach (var buildInfo in _finishedBuildsInfo.Values)
                         {
-                            observer.OnNext(buildInfo);
+                           // observer.OnNext(buildInfo);
                         }
                     }
 
-                    var mutableBuilds = currentGetBuildUrls.Result.Where(buildUrl => !_finishedBuildsInfo.ContainsKey(buildUrl));
-                    var buildContents = mutableBuilds
-                        .Select(buildUrl => GetResponseAsync(FormatToGetJson(buildUrl), cancellationToken).Result)
-                        .Where(s => s.IsNotNullOrWhitespace())
-                        .ToArray();
-
-                    foreach (var buildDetails in buildContents)
+                    lock (syncLock)
                     {
-                        JObject buildDescription = JObject.Parse(buildDetails);
+                        var mutableBuilds = currentGetBuildUrls.Result.Where(buildUrl => !_finishedBuildsInfo.ContainsKey(buildUrl));
+                        var buildContents = mutableBuilds
+                            .Select(buildUrl => GetResponseAsync(FormatToGetJson(buildUrl), cancellationToken).Result)
+                            .Where(s => s.IsNotNullOrWhitespace())
+                            .ToArray();
 
-                        var buildInfo = CreateBuildInfo(buildDescription);
-                        if (buildInfo.Status != BuildInfo.BuildStatus.InProgress)
+                        foreach (var buildDetails in buildContents)
                         {
-                            _finishedBuildsInfo[buildInfo.Url] = buildInfo;
+                            JObject buildDescription = JObject.Parse(buildDetails);
+
+                            var buildInfo = CreateBuildInfo(buildDescription);
+                            if (buildInfo.Status != BuildInfo.BuildStatus.InProgress)
+                            {
+                                _finishedBuildsInfo[buildInfo.Url] = buildInfo;
+                            }
+                            observer.OnNext(buildInfo);
                         }
-                        observer.OnNext(buildInfo);
                     }
                 }
                 observer.OnCompleted();
