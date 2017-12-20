@@ -103,17 +103,27 @@ namespace JenkinsIntegration
                     .ContinueWith(
                         task =>
                         {
-                            IEnumerable<string> s = null;
+                            IEnumerable<string> s = Enumerable.Empty<string>();
                             string t = task.Result;
                             if (t.IsNotNullOrWhitespace())
                             {
                                 JObject jobDescription = JObject.Parse(t);
-                                s = jobDescription["builds"].Select(b => b["url"].ToObject<string>());
+                                if (jobDescription["builds"] != null)
+                                {
+                                    //Freestyle jobs
+                                    s = jobDescription["builds"].Select(b => b["url"].ToObject<string>());
+                                }
+                                else if (jobDescription["jobs"] != null)
+                                {
+                                    //Multi pipeline
+                                   s = jobDescription["jobs"]
+                                        .SelectMany(j => j["builds"]
+                                        .Select(b => b["url"].ToObject<string>()));
+                                }
                             }
                             return s;
                         },
                         TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.AttachedToParent))
-                        .Where(buildUrl => buildUrl != null)
                         .ToList();
             }
             return _getBuildUrls;
@@ -176,6 +186,14 @@ namespace JenkinsIntegration
                             observer.OnNext(buildInfo);
                         }
                     }
+                    else if (running != null && (bool)running)
+                    {
+                        //Refresh cached build results
+                        foreach (var buildInfo in _finishedBuildsInfo.Values)
+                        {
+                            observer.OnNext(buildInfo);
+                        }
+                    }
 
                     var mutableBuilds = currentGetBuildUrls.Result.Where(buildUrl => !_finishedBuildsInfo.ContainsKey(buildUrl));
                     var buildContents = mutableBuilds
@@ -217,78 +235,60 @@ namespace JenkinsIntegration
 
         private static BuildInfo CreateBuildInfo(JObject buildDescription)
         {
-            if (buildDescription["number"] != null)
+            var idValue = buildDescription["number"].ToObject<string>();
+            var statusValue = buildDescription["result"].ToObject<string>();
+            var startDateTicks = buildDescription["timestamp"].ToObject<long>();
+            //var displayName = buildDescription["fullDisplayName"].ToObject<string>();
+            var webUrl = buildDescription["url"].ToObject<string>();
+
+            var action = buildDescription["actions"];
+            var commitHashList = new List<string>();
+            int nbTests = 0;
+            int nbFailedTests = 0;
+            int nbSkippedTests = 0;
+            foreach (var element in action)
             {
-                var idValue = buildDescription["number"].ToObject<string>();
-                var statusValue = buildDescription["result"].ToObject<string>();
-                var startDateTicks = buildDescription["timestamp"].ToObject<long>();
-                //var displayName = buildDescription["fullDisplayName"].ToObject<string>();
-                var webUrl = buildDescription["url"].ToObject<string>();
-
-                var action = buildDescription["actions"];
-                var commitHashList = new List<string>();
-                int nbTests = 0;
-                int nbFailedTests = 0;
-                int nbSkippedTests = 0;
-                foreach (var element in action)
+                if (element["lastBuiltRevision"] != null)
+                    commitHashList.Add(element["lastBuiltRevision"]["SHA1"].ToObject<string>());
+                if (element["totalCount"] != null)
                 {
-                    if (element["lastBuiltRevision"] != null)
-                        commitHashList.Add(element["lastBuiltRevision"]["SHA1"].ToObject<string>());
-                    if (element["totalCount"] != null)
-                    {
-                        nbTests = element["totalCount"].ToObject<int>();
-                        nbFailedTests = element["failCount"].ToObject<int>();
-                        nbSkippedTests = element["skipCount"].ToObject<int>();
-                    }
+                    nbTests = element["totalCount"].ToObject<int>();
+                    nbFailedTests = element["failCount"].ToObject<int>();
+                    nbSkippedTests = element["skipCount"].ToObject<int>();
                 }
-
-                string testResults = string.Empty;
-                if (nbTests != 0)
-                {
-                    testResults = $"{nbTests} tests ({nbFailedTests} failed, {nbSkippedTests} skipped)";
-                }
-
-                var isRunning = buildDescription["building"].ToObject<bool>();
-                long? buildDuration;
-                if (isRunning)
-                {
-                    buildDuration = null;
-                }
-                else
-                {
-                    buildDuration = buildDescription["duration"].ToObject<long>();
-                }
-
-                var status = isRunning ? BuildInfo.BuildStatus.InProgress : ParseBuildStatus(statusValue);
-                var statusText = status.ToString("G");
-                var buildInfo = new BuildInfo
-                {
-                    Id = idValue,
-                    StartDate = TimestampToDateTime(startDateTicks),
-                    Duration = buildDuration,
-                    Status = status,
-                    CommitHashList = commitHashList.ToArray(),
-                    Url = webUrl
-                };
-                var durationText = _buildDurationFormatter.Format(buildInfo.Duration);
-                buildInfo.Description = $"#{idValue} {durationText} {testResults} {statusText}";
-                return buildInfo;
-            } else
-            {
-                //Assume this is a multi pipeline buildinfo
-                var buildInfo = new BuildInfo
-                {
-                    Id = "1",
-                    StartDate = TimestampToDateTime(0),
-                    Duration = 3000,
-                    Status = BuildInfo.BuildStatus.InProgress,
-                    CommitHashList = new string[] { },
-                    Url = "http://xxx"
-                };
-                var durationText = _buildDurationFormatter.Format(buildInfo.Duration);
-                buildInfo.Description = $"#xxx";
-                return buildInfo;
             }
+
+            string testResults = string.Empty;
+            if (nbTests != 0)
+            {
+                testResults = $"{nbTests} tests ({nbFailedTests} failed, {nbSkippedTests} skipped)";
+            }
+
+            var isRunning = buildDescription["building"].ToObject<bool>();
+            long? buildDuration;
+            if (isRunning)
+            {
+                buildDuration = null;
+            }
+            else
+            {
+                buildDuration = buildDescription["duration"].ToObject<long>();
+            }
+
+            var status = isRunning ? BuildInfo.BuildStatus.InProgress : ParseBuildStatus(statusValue);
+            var statusText = status.ToString("G");
+            var buildInfo = new BuildInfo
+            {
+                Id = idValue,
+                StartDate = TimestampToDateTime(startDateTicks),
+                Duration = buildDuration,
+                Status = status,
+                CommitHashList = commitHashList.ToArray(),
+                Url = webUrl
+            };
+            var durationText = _buildDurationFormatter.Format(buildInfo.Duration);
+            buildInfo.Description = $"#{idValue} {durationText} {testResults} {statusText}";
+            return buildInfo;
         }
 
         public static DateTime TimestampToDateTime(long timestamp)
@@ -421,9 +421,26 @@ namespace JenkinsIntegration
 
         private string FormatToGetJson(string restServicePath)
         {
+            string post;
+            int postIndex = restServicePath.IndexOf('?');
+            if (postIndex >= 0)
+            {
+                int endLen = restServicePath.Length - postIndex;
+                if (restServicePath.EndsWith("/"))
+                {
+                    endLen--;
+                }
+                post = restServicePath.Substring(postIndex, endLen);
+                restServicePath = restServicePath.Substring(0, postIndex);
+            }
+            else
+            {
+                post = "";
+            }
+
             if (!restServicePath.EndsWith("/"))
-                restServicePath += "/";
-            return restServicePath + "api/json";
+                    restServicePath += "/";
+            return restServicePath + "api/json" + post;
         }
 
         public void Dispose()
