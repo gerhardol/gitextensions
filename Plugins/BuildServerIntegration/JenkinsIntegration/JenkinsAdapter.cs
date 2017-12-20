@@ -109,14 +109,15 @@ namespace JenkinsIntegration
                                 if (jobDescription["builds"] != null)
                                 {
                                     //Freestyle jobs
-                                    s = jobDescription["builds"].Select(b => b["url"].ToObject<string>());
+                                    s = jobDescription["builds"]
+                                        .Select(b => b["url"].ToObject<string>());
                                 }
                                 else if (jobDescription["jobs"] != null)
                                 {
                                     //Multi pipeline
                                    s = jobDescription["jobs"]
-                                        .SelectMany(j => j["builds"]
-                                        .Select(b => b["url"].ToObject<string>()));
+                                       .SelectMany(j => j["builds"]
+                                       .Select(b => b["url"].ToObject<string>()));
                                 }
                             }
                             return s;
@@ -187,6 +188,7 @@ namespace JenkinsIntegration
                     else if (running != null && (bool)running)
                     {
                         //Refresh cached build results
+                        //This is temporary while GetFinishedBuildsSince is empty
                         foreach (var buildInfo in _finishedBuildsInfo.Values)
                         {
                             observer.OnNext(buildInfo);
@@ -332,6 +334,10 @@ namespace JenkinsIntegration
 
             if (!retry)
             {
+                if (task.IsFaulted)
+                {
+                    return null;
+                }
                 if (task.Result.IsSuccessStatusCode)
                 {
                     var httpContent = task.Result.Content;
@@ -359,7 +365,7 @@ namespace JenkinsIntegration
 
             if (retry)
             {
-               return GetStreamAsync(restServicePath, cancellationToken);
+                return null;// GetStreamAsync(restServicePath, cancellationToken);
             }
 
             if (unauthorized)
