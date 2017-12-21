@@ -49,7 +49,9 @@ namespace JenkinsIntegration
 
         private IList<string> _projectsUrls = new List<string>();
         private IList<Task<IEnumerable<string>>> _getBuildUrls;
-        private static readonly Dictionary<string, BuildInfo> _finishedBuildsInfo = new Dictionary<string, BuildInfo>();    
+        private static readonly Dictionary<string, BuildInfo> _finishedBuildsInfo = new Dictionary<string, BuildInfo>();
+        private readonly object _buildUrlLock = new object();
+        private readonly object _finishedBuildsLock = new object();
 
         public void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config, Func<string, bool> isCommitInRevisionGrid, string repoName)
         {
@@ -91,10 +93,10 @@ namespace JenkinsIntegration
             if (!_projectsUrls.Contains(projectUrl))
                 _projectsUrls.Add(projectUrl);
         }
-        private readonly object syncLock = new object();
+
         private IList<Task<IEnumerable<string>>> GetBuildUrls(bool forceUpdate)
         {
-            lock (syncLock)
+            lock (_buildUrlLock)
             {
                 if (_getBuildUrls == null || forceUpdate)
                 {
@@ -110,22 +112,22 @@ namespace JenkinsIntegration
                                     JObject jobDescription = JObject.Parse(t);
                                     if (jobDescription["builds"] != null)
                                     {
-                                    //Freestyle jobs
-                                    s = jobDescription["builds"]
+                                        //Freestyle jobs
+                                        s = jobDescription["builds"]
                                             .Select(b => b["url"].ToObject<string>());
                                     }
                                     else if (jobDescription["jobs"] != null)
                                     {
-                                    //Multi pipeline
-                                    s = jobDescription["jobs"]
-                                        .SelectMany(j => j["builds"]
-                                        .Select(b => b["url"].ToObject<string>()));
+                                        //Multi pipeline
+                                        s = jobDescription["jobs"]
+                                            .SelectMany(j => j["builds"]
+                                            .Select(b => b["url"].ToObject<string>()));
                                     }
                                 }
                                 return s;
                             },
                             TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.AttachedToParent))
-                            .ToList();
+                               .ToList();
                 }
             }
             return _getBuildUrls;
@@ -141,7 +143,8 @@ namespace JenkinsIntegration
 
         public IObservable<BuildInfo> GetFinishedBuildsSince(IScheduler scheduler, DateTime? sinceDate = null)
         {
-            //return GetBuilds(scheduler, sinceDate, false);
+            //GetBuilds() will return the same builds as for GetRunningBuilds(). The code should handle it but it will not add anything
+            //  (just make debugging very confusing and make unnecessary updates)
             return Observable.Empty<BuildInfo>();
         }
 
@@ -178,7 +181,7 @@ namespace JenkinsIntegration
                         continue;
                     }
 
-                    //update the status for all existing build info
+                    //update the status for all existing build info (if switching back to a module, existing builds are cached)
                     var immutableBuilds = currentGetBuildUrls.Result.Where(buildUrl => _finishedBuildsInfo.ContainsKey(buildUrl));
                     foreach (var buildInfo in immutableBuilds.Select(url => _finishedBuildsInfo[url]))
                     {
@@ -187,7 +190,7 @@ namespace JenkinsIntegration
                         observer.OnNext(buildInfo);
                     }
 
-                    lock (syncLock)
+                    lock (_finishedBuildsLock)
                     {
                         var mutableBuilds = currentGetBuildUrls.Result.Where(buildUrl => !_finishedBuildsInfo.ContainsKey(buildUrl));
                         var buildContents = mutableBuilds
@@ -216,6 +219,7 @@ namespace JenkinsIntegration
             }
             catch (Exception ex)
             {
+                //Cancelling a subtask is similar to cancelling this task
                 if (ex.InnerException == null || !(ex.InnerException is OperationCanceledException))
                     observer.OnError(ex);
             }
@@ -323,44 +327,37 @@ namespace JenkinsIntegration
         private Task<Stream> GetStreamFromHttpResponseAsync(Task<HttpResponseMessage> task, string restServicePath, CancellationToken cancellationToken)
         {
 #if !__MonoCS__
-            bool retry = task.IsCanceled && !cancellationToken.IsCancellationRequested;
             bool unauthorized = task.Status == TaskStatus.RanToCompletion &&
                                 task.Result.StatusCode == HttpStatusCode.Unauthorized;
 
-            if (!retry)
+            if (task.IsFaulted || task.IsCanceled)
             {
-                if (task.IsFaulted)
-                {
-                    return null;
-                }
-                if (task.Result.IsSuccessStatusCode)
-                {
-                    var httpContent = task.Result.Content;
-
-                    if (httpContent.Headers.ContentType.MediaType == "text/html")
-                    {
-                        // Jenkins responds with an HTML login page when guest access is denied.
-                        unauthorized = true;
-                    }
-                    else
-                    {
-                        return httpContent.ReadAsStreamAsync();
-                    }
-                }
-                else if (task.Result.StatusCode == HttpStatusCode.NotFound)
-                {
-                    //The url does not exist, no jobs to retrieve
-                    return null;
-                }
-                else if (task.Result.StatusCode == HttpStatusCode.Forbidden)
-                {
-                    unauthorized = true;
-                }
+                //No results for this task
+                return null;
             }
 
-            if (retry)
+            if (task.Result.IsSuccessStatusCode)
             {
-                return null;// GetStreamAsync(restServicePath, cancellationToken);
+                var httpContent = task.Result.Content;
+
+                if (httpContent.Headers.ContentType.MediaType == "text/html")
+                {
+                    // Jenkins responds with an HTML login page when guest access is denied.
+                    unauthorized = true;
+                }
+                else
+                {
+                    return httpContent.ReadAsStreamAsync();
+                }
+            }
+            else if (task.Result.StatusCode == HttpStatusCode.NotFound)
+            {
+                //The url does not exist, no jobs to retrieve
+                return null;
+            }
+            else if (task.Result.StatusCode == HttpStatusCode.Forbidden)
+            {
+                unauthorized = true;
             }
 
             if (unauthorized)
