@@ -141,8 +141,8 @@ namespace JenkinsIntegration
 
         public IObservable<BuildInfo> GetFinishedBuildsSince(IScheduler scheduler, DateTime? sinceDate = null)
         {
-            return GetBuilds(scheduler, sinceDate, false);
-            //return Observable.Empty<BuildInfo>();
+            //return GetBuilds(scheduler, sinceDate, false);
+            return Observable.Empty<BuildInfo>();
         }
 
         public IObservable<BuildInfo> GetRunningBuilds(IScheduler scheduler)
@@ -178,24 +178,13 @@ namespace JenkinsIntegration
                         continue;
                     }
 
-                    if (!running.Value)
+                    //update the status for all existing build info
+                    var immutableBuilds = currentGetBuildUrls.Result.Where(buildUrl => _finishedBuildsInfo.ContainsKey(buildUrl));
+                    foreach (var buildInfo in immutableBuilds.Select(url => _finishedBuildsInfo[url]))
                     {
-                        var immutableBuilds = currentGetBuildUrls.Result.Where(buildUrl => _finishedBuildsInfo.ContainsKey(buildUrl));
-                        foreach (var buildInfo in immutableBuilds.Select(url => _finishedBuildsInfo[url]))
-                        {
-                            if (sinceDate.HasValue && (sinceDate.Value - buildInfo.StartDate).TotalMilliseconds <= buildInfo.Duration)
-                                continue;
-                            observer.OnNext(buildInfo);
-                        }
-                    }
-                    else if (running != null && (bool)running)
-                    {
-                        //Refresh cached build results
-                        //This is temporary while GetFinishedBuildsSince is empty
-                        foreach (var buildInfo in _finishedBuildsInfo.Values)
-                        {
-                           // observer.OnNext(buildInfo);
-                        }
+                        if (sinceDate.HasValue && (sinceDate.Value - buildInfo.StartDate).TotalMilliseconds <= buildInfo.Duration)
+                            continue;
+                        observer.OnNext(buildInfo);
                     }
 
                     lock (syncLock)
