@@ -50,8 +50,10 @@ namespace JenkinsIntegration
         private IList<string> _projectsUrls = new List<string>();
         private IList<Task<IEnumerable<string>>> _getBuildUrls;
         private static readonly Dictionary<string, BuildInfo> _finishedBuildsInfo = new Dictionary<string, BuildInfo>();
+        //protect access to httpClient and shared resources like _finishedBuildsInfo and _getBuildUrls
         private readonly object _buildUrlLock = new object();
         private readonly object _finishedBuildsLock = new object();
+        private readonly object _httpClientLock = new object();
 
         public void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config, Func<string, bool> isCommitInRevisionGrid)
         {
@@ -312,14 +314,16 @@ namespace JenkinsIntegration
         private Task<Stream> GetStreamAsync(string restServicePath, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-
-            return _httpClient.GetAsync(restServicePath, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
-                             .ContinueWith(
-                                 task => GetStreamFromHttpResponseAsync(task, restServicePath, cancellationToken),
-                                 cancellationToken,
-                                 TaskContinuationOptions.AttachedToParent,
-                                 TaskScheduler.Current)
-                             .Unwrap();
+            lock (_httpClientLock)
+            {
+                return _httpClient.GetAsync(restServicePath, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+                                 .ContinueWith(
+                                     task => GetStreamFromHttpResponseAsync(task, restServicePath, cancellationToken),
+                                     cancellationToken,
+                                     TaskContinuationOptions.AttachedToParent,
+                                     TaskScheduler.Current)
+                                 .Unwrap();
+            }
         }
 
         private Task<Stream> GetStreamFromHttpResponseAsync(Task<HttpResponseMessage> task, string restServicePath, CancellationToken cancellationToken)
