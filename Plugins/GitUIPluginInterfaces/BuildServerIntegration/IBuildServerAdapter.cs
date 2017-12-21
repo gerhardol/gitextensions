@@ -5,7 +5,7 @@ namespace GitUIPluginInterfaces.BuildServerIntegration
 {
     public interface IBuildServerAdapter : IDisposable
     {
-        void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config, Func<string, bool> isCommitInRevisionGrid = null, string repoName = null);
+        void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config, Func<string, bool> isCommitInRevisionGrid = null);
 
         /// <summary>
         /// Gets a unique key which identifies this build server.

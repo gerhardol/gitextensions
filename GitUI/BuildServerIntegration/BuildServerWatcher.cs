@@ -200,6 +200,21 @@ namespace GitUI.BuildServerIntegration
             }
         }
 
+        public string ReplaceVariables(string projects)
+        {
+            //Extract "name of repo" from remote url
+            string remoteName = Module.GetCurrentRemote();
+            var remoteUrl = Module.GetSetting(string.Format(SettingKeyString.RemoteUrl, remoteName));
+            var start = 1 + remoteUrl.LastIndexOfAny(new char[] { '/', Path.DirectorySeparatorChar });
+            var len = remoteUrl.Length - start;
+            if (remoteUrl.EndsWith(".git")) { len -= 4; }
+            if (start >= 0) { remoteUrl = remoteUrl.Substring(start, len); }
+
+            return projects
+                .Replace("%REPO_SHORTNAME_U%", repoName.ToUpper())
+                .Replace("%REPO_SHORTNAME%", repoName);
+        }
+
         private IBuildServerCredentials ShowBuildServerCredentialsForm(string buildServerUniqueKey, IBuildServerCredentials buildServerCredentials)
         {
             if (revisionGrid.InvokeRequired)
@@ -301,14 +316,6 @@ namespace GitUI.BuildServerIntegration
                             return null;
                         }
                         var buildServerAdapter = export.Value;
-
-                        //Extract "name of repo" from remote url
-                        string remoteName = Module.GetCurrentRemote();
-                        var remoteUrl = Module.GetSetting(string.Format(SettingKeyString.RemoteUrl, remoteName));
-                        var start = 1 + remoteUrl.LastIndexOfAny(new char[] { '/', Path.DirectorySeparatorChar });
-                        var len = remoteUrl.Length - start;
-                        if (remoteUrl.EndsWith(".git")) { len -= 4; }
-                        if (start>=0) { remoteUrl = remoteUrl.Substring(start, len); }
 
                         buildServerAdapter.Initialize(this, Module.EffectiveSettings.BuildServer.TypeSettings, sha1 => revisionGrid.GetRevision(sha1) != null, remoteUrl);
                         return buildServerAdapter;

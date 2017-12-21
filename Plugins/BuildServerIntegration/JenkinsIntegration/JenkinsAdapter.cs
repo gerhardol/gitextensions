@@ -53,7 +53,7 @@ namespace JenkinsIntegration
         private readonly object _buildUrlLock = new object();
         private readonly object _finishedBuildsLock = new object();
 
-        public void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config, Func<string, bool> isCommitInRevisionGrid, string repoName)
+        public void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config, Func<string, bool> isCommitInRevisionGrid)
         {
             if (_buildServerWatcher != null)
                 throw new InvalidOperationException("Already initialized");
@@ -77,9 +77,7 @@ namespace JenkinsIntegration
 
                 UpdateHttpClientOptions(buildServerCredentials);
 
-                string[] projectUrls = projectName
-                    .Replace("%REPO_SHORTNAME_U%", repoName.ToUpper())
-                    .Replace("%REPO_SHORTNAME%", repoName)
+                string[] projectUrls = _buildServerWatcher.ReplaceVariables(projectName)
                     .Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var projectUrl in projectUrls.Select(s => baseAdress + "job/" + s.Trim() + "/"))
                 {

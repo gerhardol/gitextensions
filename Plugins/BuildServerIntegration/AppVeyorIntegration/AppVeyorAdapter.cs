@@ -62,7 +62,7 @@ namespace AppVeyorIntegration
         private string _gitHubToken;
 
         public void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config,
-            Func<string, bool> isCommitInRevisionGrid, string repoName)
+            Func<string, bool> isCommitInRevisionGrid)
         {
             if (_buildServerWatcher != null)
                 throw new InvalidOperationException("Already initialized");
