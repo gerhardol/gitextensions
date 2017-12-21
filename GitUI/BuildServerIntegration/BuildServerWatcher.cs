@@ -211,8 +211,8 @@ namespace GitUI.BuildServerIntegration
             if (start >= 0) { remoteUrl = remoteUrl.Substring(start, len); }
 
             return projects
-                .Replace("%REPO_SHORTNAME_U%", repoName.ToUpper())
-                .Replace("%REPO_SHORTNAME%", repoName);
+                .Replace("%REPO_SHORTNAME_U%", remoteUrl.ToUpper())
+                .Replace("%REPO_SHORTNAME%", remoteUrl);
         }
 
         private IBuildServerCredentials ShowBuildServerCredentialsForm(string buildServerUniqueKey, IBuildServerCredentials buildServerCredentials)
@@ -317,7 +317,7 @@ namespace GitUI.BuildServerIntegration
                         }
                         var buildServerAdapter = export.Value;
 
-                        buildServerAdapter.Initialize(this, Module.EffectiveSettings.BuildServer.TypeSettings, sha1 => revisionGrid.GetRevision(sha1) != null, remoteUrl);
+                        buildServerAdapter.Initialize(this, Module.EffectiveSettings.BuildServer.TypeSettings, sha1 => revisionGrid.GetRevision(sha1) != null);
                         return buildServerAdapter;
                     }
                     catch (InvalidOperationException ex)
