@@ -48,7 +48,7 @@ namespace JenkinsIntegration
         private HttpClient _httpClient;
 
         private IList<string> _projectsUrls = new List<string>();
-        private IList<Task<IEnumerable<string>>> _getBuildUrls;
+        private IList<Task<IEnumerable<JToken>>> _getBuildUrls;
         private static readonly Dictionary<string, BuildInfo> _finishedBuildsInfo = new Dictionary<string, BuildInfo>();
         //protect access to httpClient and shared resources like _finishedBuildsInfo and _getBuildUrls
         private readonly object _buildUrlLock = new object();
@@ -94,7 +94,7 @@ namespace JenkinsIntegration
                 _projectsUrls.Add(projectUrl);
         }
 
-        private IList<Task<IEnumerable<string>>> GetBuildUrls(bool forceUpdate)
+        private IList<Task<IEnumerable<JToken>>> GetBuildUrls(bool forceUpdate)
         {
             lock (_buildUrlLock)
             {
@@ -105,7 +105,7 @@ namespace JenkinsIntegration
                         .ContinueWith(
                             task =>
                             {
-                                IEnumerable<string> s = Enumerable.Empty<string>();
+                                IEnumerable<JToken> s = Enumerable.Empty<JToken>();
                                 string t = task.Result;
                                 if (t.IsNotNullOrWhitespace())
                                 {
@@ -114,14 +114,14 @@ namespace JenkinsIntegration
                                     {
                                         //Freestyle jobs
                                         s = jobDescription["builds"]
-                                            .Select(b => b["url"].ToObject<string>());
+                                            ;//.Select(b => b["url"].ToObject<string>());
                                     }
                                     else if (jobDescription["jobs"] != null)
                                     {
                                         //Multi pipeline
                                         s = jobDescription["jobs"]
                                             .SelectMany(j => j["builds"]
-                                            .Select(b => b["url"].ToObject<string>()));
+                                            );//.Select(b => b["url"].ToObject<string>()));
                                     }
                                 }
                                 return s;
@@ -182,27 +182,27 @@ namespace JenkinsIntegration
                     }
 
                     //update the status for all existing build info (if switching back to a module, existing builds are cached)
-                    var immutableBuilds = currentGetBuildUrls.Result.Where(buildUrl => _finishedBuildsInfo.ContainsKey(buildUrl));
+ /*                   var immutableBuilds = currentGetBuildUrls.Result.Where(buildUrl => _finishedBuildsInfo.ContainsKey(buildUrl));
                     foreach (var buildInfo in immutableBuilds.Select(url => _finishedBuildsInfo[url]))
                     {
                         if (sinceDate.HasValue && (sinceDate.Value - buildInfo.StartDate).TotalMilliseconds <= buildInfo.Duration)
                             continue;
                         observer.OnNext(buildInfo);
                     }
-
+                    */
                     lock (_finishedBuildsLock)
                     {
-                        var mutableBuilds = currentGetBuildUrls.Result.Where(buildUrl => !_finishedBuildsInfo.ContainsKey(buildUrl));
+                       /* var mutableBuilds = currentGetBuildUrls.Result.Where(buildUrl => !_finishedBuildsInfo.ContainsKey(buildUrl));
                         var buildContents = mutableBuilds
                             .Select(buildUrl => GetResponseAsync(FormatToGetJson(buildUrl), cancellationToken).Result)
                             .Where(s => s.IsNotNullOrWhitespace())
                             .ToArray();
-
-                        foreach (var buildDetails in buildContents)
+                            */
+                        foreach (var buildDetails in currentGetBuildUrls.Result)
                         {
-                            JObject buildDescription = JObject.Parse(buildDetails);
+                            //JObject buildDescription = JObject.Parse(buildDetails);
 
-                            var buildInfo = CreateBuildInfo(buildDescription);
+                            var buildInfo = CreateBuildInfo((JObject)buildDetails);
                             if (buildInfo.Status != BuildInfo.BuildStatus.InProgress)
                             {
                                 _finishedBuildsInfo[buildInfo.Url] = buildInfo;
@@ -225,6 +225,7 @@ namespace JenkinsIntegration
             }
         }
 
+        private readonly string JenkinsTreeBuildInfo = "number,result,timestamp,url,actions[lastBuiltRevision[SHA1],totalCount,failCount,skipCount],building,duration";
         private static BuildInfo CreateBuildInfo(JObject buildDescription)
         {
             var idValue = buildDescription["number"].ToObject<string>();
@@ -421,11 +422,12 @@ namespace JenkinsIntegration
                     endLen--;
                 }
                 post = restServicePath.Substring(postIndex, endLen);
+                post = "?depth=2&tree=jobs[builds[" + JenkinsTreeBuildInfo + "]]";
                 restServicePath = restServicePath.Substring(0, postIndex);
             }
             else
             {
-                post = "";
+                post = "?depth=1&tree=builds["+ JenkinsTreeBuildInfo+"]";
             }
 
             if (!restServicePath.EndsWith("/"))
