@@ -48,7 +48,6 @@ namespace GitUI.BuildServerIntegration
 
             DisposeBuildServerAdapter();
 
-            // Extract the project name from the last part of the directory path. It is assumed that it matches the project name in the CI build server.
             GetBuildServerAdapter().ContinueWith((Task<IBuildServerAdapter> task) =>
             {
                 if (revisions.IsDisposed)
@@ -64,28 +63,32 @@ namespace GitUI.BuildServerIntegration
                     return;
 
                 var scheduler = NewThreadScheduler.Default;
+                //Run this first as it (may) force start queries
+                var runningBuildsObservable = buildServerAdapter.GetRunningBuilds(scheduler);
+
                 var fullDayObservable = buildServerAdapter.GetFinishedBuildsSince(scheduler, DateTime.Today - TimeSpan.FromDays(3));
                 var fullObservable = buildServerAdapter.GetFinishedBuildsSince(scheduler);
                 var fromNowObservable = buildServerAdapter.GetFinishedBuildsSince(scheduler, DateTime.Now);
-                var runningBuildsObservable = buildServerAdapter.GetRunningBuilds(scheduler);
 
                 var cancellationToken = new CompositeDisposable
                 {
-                    fullDayObservable.OnErrorResumeNext(fullObservable)
-                                     .OnErrorResumeNext(Observable.Empty<BuildInfo>()
-                                                                  .DelaySubscription(TimeSpan.FromMinutes(1))
-                                                                  .OnErrorResumeNext(fromNowObservable)
-                                                                  .Retry()
-                                                                  .Repeat())
-                                     .ObserveOn(SynchronizationContext.Current)
-                                     .Subscribe(OnBuildInfoUpdate),
+                    fullDayObservable
+                        .OnErrorResumeNext(fullObservable)
+                        .OnErrorResumeNext(Observable.Empty<BuildInfo>()
+                            .DelaySubscription(TimeSpan.FromMinutes(1))
+                            .OnErrorResumeNext(fromNowObservable)
+                            .Retry()
+                            .Repeat())
+                        .ObserveOn(SynchronizationContext.Current)
+                        .Subscribe(OnBuildInfoUpdate),
 
-                    runningBuildsObservable.OnErrorResumeNext(Observable.Empty<BuildInfo>()
-                                                                        .DelaySubscription(TimeSpan.FromSeconds(10)))
-                                           .Retry()
-                                           .Repeat()
-                                           .ObserveOn(SynchronizationContext.Current)
-                                           .Subscribe(OnBuildInfoUpdate)
+                    runningBuildsObservable
+                        .OnErrorResumeNext(Observable.Empty<BuildInfo>()
+                            .DelaySubscription(TimeSpan.FromSeconds(10)))
+                        .Retry()
+                        .Repeat()
+                        .ObserveOn(SynchronizationContext.Current)
+                        .Subscribe(OnBuildInfoUpdate)
                 };
 
                 buildStatusCancellationToken = cancellationToken;
@@ -200,6 +203,21 @@ namespace GitUI.BuildServerIntegration
             }
         }
 
+        public string ReplaceVariables(string projects)
+        {
+            //Extract "name of repo" from remote url
+            string remoteName = Module.GetCurrentRemote();
+            var remoteUrl = Module.GetSetting(string.Format(SettingKeyString.RemoteUrl, remoteName));
+            var start = 1 + remoteUrl.LastIndexOfAny(new char[] { '/', Path.DirectorySeparatorChar });
+            var len = remoteUrl.Length - start;
+            if (remoteUrl.EndsWith(".git")) { len -= 4; }
+            if (start >= 0) { remoteUrl = remoteUrl.Substring(start, len); }
+
+            return projects
+                .Replace("%REPO_SHORTNAME_U%", remoteUrl.ToUpper())
+                .Replace("%REPO_SHORTNAME%", remoteUrl);
+        }
+
         private IBuildServerCredentials ShowBuildServerCredentialsForm(string buildServerUniqueKey, IBuildServerCredentials buildServerCredentials)
         {
             if (revisionGrid.InvokeRequired)
@@ -301,6 +319,7 @@ namespace GitUI.BuildServerIntegration
                             return null;
                         }
                         var buildServerAdapter = export.Value;
+
                         buildServerAdapter.Initialize(this, Module.EffectiveSettings.BuildServer.TypeSettings, sha1 => revisionGrid.GetRevision(sha1) != null);
                         return buildServerAdapter;
                     }
