@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using GitCommands.Utils;
 using GitUIPluginInterfaces;
 using GitUIPluginInterfaces.BuildServerIntegration;
+using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
 
 namespace JenkinsIntegration
@@ -47,9 +48,11 @@ namespace JenkinsIntegration
 
         private HttpClient _httpClient;
 
-        private static readonly Dictionary<string, JenkinsCacheInfo> _buildCache = new Dictionary<string, JenkinsCacheInfo>();
+        //Build info cache, surviving repo switch
+        private static readonly Dictionary<string, JenkinsCacheInfo> BuildCache = new Dictionary<string, JenkinsCacheInfo>();
         private readonly IList<string> _projectsUrls = new List<string>();
-        private IList<Task<JenkinsInfo>> _getBuildUrls;
+        private bool _firstQueryAfterInit = true;
+        
         public void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config, Func<string, bool> isCommitInRevisionGrid)
         {
             if (_buildServerWatcher != null)
@@ -81,6 +84,15 @@ namespace JenkinsIntegration
                     AddGetBuildUrl(projectUrl);
                 }
             }
+            _firstQueryAfterInit = true;
+        }
+
+        /// <summary>
+        /// Gets a unique key which identifies this build server.
+        /// </summary>
+        public string UniqueKey
+        {
+            get { return _httpClient.BaseAddress.Host; }
         }
 
         private void AddGetBuildUrl(string projectUrl)
@@ -88,37 +100,30 @@ namespace JenkinsIntegration
             if (!_projectsUrls.Contains(projectUrl))
             {
                 _projectsUrls.Add(projectUrl);
-                if (_buildCache.ContainsKey(projectUrl))
+                if (BuildCache.ContainsKey(projectUrl))
                 {
-                    //Make sure the cache is recalculated but not invalidated
-                    _buildCache[projectUrl].Timestamp = -1;
+                    //Make sure the cache is recalculated
+                    BuildCache[projectUrl].Timestamp = 0;
                 }
             }
         }
 
-        public class JenkinsInfo
+        public class ResponseInfo
         {
             public string Url { get; set; }
             public long Timestamp { get; set; }
-            public IEnumerable<JToken> JobDesc { get; set; }
+            public IEnumerable<JToken> JobDescription { get; set; }
         }
 
         public class JenkinsCacheInfo
         {
             public long Timestamp = -1;
-            public IList<BuildInfo> BuildInfo = new List<BuildInfo>();
+            public readonly IList<BuildInfo> BuildInfo = new List<BuildInfo>();
         }
 
-        private IList<Task<JenkinsInfo>> GetBuildInfo(bool fullInfo)
+        private Task<ResponseInfo> GetBuildInfoTask(string projectUrl, bool fullInfo, CancellationToken cancellationToken)
         {
-            return _projectsUrls.Select(
-                        projectUrl => GetBuildInfoTask(projectUrl, fullInfo))
-                        .ToList();
-        }
-
-        private Task<JenkinsInfo> GetBuildInfoTask(string projectUrl, bool fullInfo)
-        {
-            return GetResponseAsync(FormatToGetJson(projectUrl, fullInfo), CancellationToken.None)
+            return GetResponseAsync(FormatToGetJson(projectUrl, fullInfo), cancellationToken)
                 .ContinueWith(
                     task =>
                     {
@@ -144,7 +149,7 @@ namespace JenkinsIntegration
                                     timestamp = Math.Max(timestamp, ts);
                                 }
                             }
-                            //else: The server is overloaded or a multibranch pipeline is not configured
+                            //else: The server had no response (overloaded?) or a multibranch pipeline is not configured
 
                             if (jobDescription["lastBuild"] != null)
                             {
@@ -152,43 +157,21 @@ namespace JenkinsIntegration
                             }
                         }
 
-                        return new JenkinsInfo
+                        return new ResponseInfo
                         {
                             Url = projectUrl,
                             Timestamp = timestamp,
-                            JobDesc = s
+                            JobDescription = s
                         };
                     },
                     TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.AttachedToParent);
         }
 
-        private IList<Task<JenkinsInfo>> GetBuildUrls(bool forceUpdate)
-        {
-            if (_getBuildUrls == null || forceUpdate)
-            {
-                _getBuildUrls = GetBuildInfo(true);
-            }
-            return _getBuildUrls;
-        }
-
-        private IList<Task<JenkinsInfo>> GetLastBuildInfo()
-        {
-            return GetBuildInfo(false);
-        }
-
-        /// <summary>
-        /// Gets a unique key which identifies this build server.
-        /// </summary>
-        public string UniqueKey
-        {
-            get { return _httpClient.BaseAddress.Host; }
-        }
-
         public IObservable<BuildInfo> GetFinishedBuildsSince(IScheduler scheduler, DateTime? sinceDate = null)
         {
-            //Similar as for AppVeyor
             //GetBuilds() will return the same builds as for GetRunningBuilds().
             //Multiple calls will fetch same info multiple times and make debugging very confusing
+            //Similar as for AppVeyor
             return Observable.Empty<BuildInfo>();
         }
 
@@ -204,74 +187,93 @@ namespace JenkinsIntegration
                     () => scheduler.Schedule(() => ObserveBuilds(sinceDate, running, observer, cancellationToken))));
         }
 
+        //Jenkins builds are retrieved with latest build first
+        //If there are many builds on the same commit, it is normally the latest that is interesting, ignore the following
+        private bool DifferFromPrev(BuildInfo curr, [CanBeNull] ref BuildInfo prev)
+        {
+            bool res = false;
+            if (prev == null
+                || prev.CommitHashList.Length != curr.CommitHashList.Length
+                || prev.CommitHashList.Length != 1
+                || prev.CommitHashList[0] != curr.CommitHashList[0])
+            {
+                res = true;
+            }
+
+            prev = curr;
+            return res;
+        }
+
         private void ObserveBuilds(DateTime? sinceDate, bool? running, IObserver<BuildInfo> observer, CancellationToken cancellationToken)
         {
+            //Note that 'running' is ignored (attempt to fetch data when updated) 
+            //Similar for 'sinceDate', not supported in Jenkins API
             try
             {
-                //Fetch information about all builds for a project only if the cha
-                //Wait for new builds and for inprogress builds to complete
-                //There is no need to let this job complete until there has been an updated build,
-                //complete and let the Observe.Retry() requery all builds (every 10th second)
-
-                IList<Task<JenkinsInfo>> buildUrls = new List<Task<JenkinsInfo>>();
-                IList<Task<JenkinsInfo>> cacheUrls = new List<Task<JenkinsInfo>>();
+                IList<Task<ResponseInfo>> allBuildInfos = new List<Task<ResponseInfo>>();
+                IList<Task<ResponseInfo>> latestBuildInfos = new List<Task<ResponseInfo>>();
                 foreach (var projectUrl in _projectsUrls)
                 {
-                    bool added = false;
-                    if (_buildCache.ContainsKey(projectUrl))
+                    //Update the build info from the cache and find if (inprogress) jobs may need to be requeried
+                    bool hasInProgress = false;
+                    if (BuildCache.ContainsKey(projectUrl))
                     {
-                        //Update build info from the cache, also if refreshing
-                        foreach (var buildInfo in _buildCache[projectUrl].BuildInfo)
+                        BuildInfo prevBuild = null;
+                        foreach (var buildInfo in BuildCache[projectUrl].BuildInfo)
                         {
-                            observer.OnNext(buildInfo);
-                            //If any job is InProgress, it has to be requeried
-                            //This could be done per job too, probably not adding anything
-                            if (buildInfo.Status == BuildInfo.BuildStatus.InProgress && !added)
+                            //Update revision grid from the cache when switching back to this repo
+                            if (_firstQueryAfterInit && DifferFromPrev(buildInfo, ref prevBuild))
                             {
-                                added = true;
-                                buildUrls.Add(GetBuildInfoTask(projectUrl, true));
+                                observer.OnNext(buildInfo);
+                            }
+
+                            //If any build is InProgress, it has to be requeried
+                            //This could be done per build too, probably decreasing load only in special situations
+                            //(Updating all builds individually increases the total load)
+                            if (buildInfo.Status == BuildInfo.BuildStatus.InProgress)
+                            {
+                                hasInProgress = true;
                             }
                         }
                     }
 
-                    //Note that the cache is not invalidated when 'running' is set,
-                    //but the cache is force updated when switching repos
-                    if (!added)
+                    if (hasInProgress || !BuildCache.ContainsKey(projectUrl)
+                                   || BuildCache[projectUrl].Timestamp <= 0)
                     {
-                        if (!_buildCache.ContainsKey(projectUrl)
-                            || _buildCache[projectUrl].Timestamp < 0)
-                        {
-                            _buildCache[projectUrl] = new JenkinsCacheInfo();
-                            buildUrls.Add(GetBuildInfoTask(projectUrl, true));
-                        }
-                        else
-                        {
-                            cacheUrls.Add(GetBuildInfoTask(projectUrl, false));
-                        }
+                        //This job must be updated, no need to to check the cache
+                        BuildCache[projectUrl] = new JenkinsCacheInfo();
+                        allBuildInfos.Add(GetBuildInfoTask(projectUrl, true, cancellationToken));
+                    }
+                    else
+                    {
+                        //Check the existing build cache
+                        latestBuildInfos.Add(GetBuildInfoTask(projectUrl, false, cancellationToken));
                     }
                 }
+                _firstQueryAfterInit = false;
 
-                foreach (var url in cacheUrls)
+                //Query the latest builds, to find if the cache has all builds
+                foreach (var url in latestBuildInfos)
                 {
                     if (!url.IsFaulted)
                     {
-                        if (url.Result.Timestamp > _buildCache[url.Result.Url].Timestamp)
+                        if (url.Result.Timestamp > BuildCache[url.Result.Url].Timestamp)
                         {
-                            buildUrls.Add(GetBuildInfoTask(url.Result.Url, true));
+                            //The cache has at least one newer job, query the status
+                            allBuildInfos.Add(GetBuildInfoTask(url.Result.Url, true, cancellationToken));
                         }
                     }
                 }
 
-                if (buildUrls.All(t => t.IsCanceled))
+                if (allBuildInfos.All(t => t.IsCanceled))
                 {
                     observer.OnCompleted();
                     return;
                 }
 
 
-                foreach (var currentGetBuildUrls in buildUrls)
+                foreach (var currentGetBuildUrls in allBuildInfos)
                 {
-                    //Update from cache if newer
                     if (currentGetBuildUrls.IsFaulted)
                     {
                         Debug.Assert(currentGetBuildUrls.Exception != null);
@@ -280,52 +282,23 @@ namespace JenkinsIntegration
                         continue;
                     }
 
-                    _buildCache[currentGetBuildUrls.Result.Url].Timestamp = currentGetBuildUrls.Result.Timestamp;
-                    _buildCache[currentGetBuildUrls.Result.Url].BuildInfo.Clear();
-
-                    foreach (var buildDetails in currentGetBuildUrls.Result.JobDesc)
+                    //Information for all builds for the job
+                    BuildCache[currentGetBuildUrls.Result.Url].Timestamp = currentGetBuildUrls.Result.Timestamp;
+                    BuildCache[currentGetBuildUrls.Result.Url].BuildInfo.Clear();
+                    BuildInfo prevBuild = null;
+                    foreach (var buildDetails in currentGetBuildUrls.Result.JobDescription)
                     {
                         var buildInfo = CreateBuildInfo((JObject) buildDetails);
-                        _buildCache[currentGetBuildUrls.Result.Url].BuildInfo.Add(buildInfo);
-                        observer.OnNext(buildInfo);
-                    }
-                }
-
-/*                //Wait for new builds and for inprogress builds to complete
-                //There is no need to let this job complete until there has been an updated build,
-                //complete and let the Observe.Retry() requery all builds (every 10th second)
-                bool doContinue = true;
-                while (doContinue)
-                {
-                    try
-                    {
-                        Thread.Sleep(10000);
-
-                        foreach (var task in GetLastBuildInfo())
+                        BuildCache[currentGetBuildUrls.Result.Url].BuildInfo.Add(buildInfo);
+                        if (DifferFromPrev(buildInfo, ref prevBuild))
                         {
-                            doContinue = task.Result.Timestamp <= timestamp;
-                            if (!doContinue)
-                            {
-                                break;
-                            }
+                            observer.OnNext(buildInfo);
                         }
-
-                        foreach (var task in inProgress
-                            .Where(b => b.Status == BuildInfo.BuildStatus.InProgress)
-                         .Select(b => GetResponseAsync(FormatToGetJson(b.Url, true), cancellationToken).Result)
-                            .Where(s => !string.IsNullOrEmpty(s)).ToArray())
-                        {
-                            JObject build = JObject.Parse(task.Result);
-                            if (build["building"] == null || !build["building"].ToObject<bool>())                        }
-                    }
-                    catch
-                    {
-                        //This step will give exception for instance when switching repo, not critical
-                        doContinue = false;
                     }
                 }
-                */
 
+                //Complete the job, it will be run again with Observe.Retry() (every 10th sec)
+                //(this will find new builds and update InProgress jobs)
                 observer.OnCompleted();
             }
             catch (OperationCanceledException)
