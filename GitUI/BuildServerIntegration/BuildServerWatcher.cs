@@ -71,21 +71,23 @@ namespace GitUI.BuildServerIntegration
 
                 var cancellationToken = new CompositeDisposable
                 {
-                    fullDayObservable.OnErrorResumeNext(fullObservable)
-                                     .OnErrorResumeNext(Observable.Empty<BuildInfo>()
-                                                                  .DelaySubscription(TimeSpan.FromMinutes(1))
-                                                                  .OnErrorResumeNext(fromNowObservable)
-                                                                  .Retry()
-                                                                  .Repeat())
-                                     .ObserveOn(SynchronizationContext.Current)
-                                     .Subscribe(OnBuildInfoUpdate),
+                    fullDayObservable
+                        .OnErrorResumeNext(fullObservable)
+                        .OnErrorResumeNext(Observable.Empty<BuildInfo>()
+                            .DelaySubscription(TimeSpan.FromMinutes(1))
+                            .OnErrorResumeNext(fromNowObservable)
+                            .Retry()
+                            .Repeat())
+                        .ObserveOn(SynchronizationContext.Current)
+                        .Subscribe(OnBuildInfoUpdate),
 
-                    runningBuildsObservable.OnErrorResumeNext(Observable.Empty<BuildInfo>()
-                                                                        .DelaySubscription(TimeSpan.FromSeconds(10)))
-                                           .Retry()
-                                           .Repeat()
-                                           .ObserveOn(SynchronizationContext.Current)
-                                           .Subscribe(OnBuildInfoUpdate)
+                    runningBuildsObservable
+                        .OnErrorResumeNext(Observable.Empty<BuildInfo>()
+                            .DelaySubscription(TimeSpan.FromSeconds(10)))
+                        .Retry()
+                        .Repeat()
+                        .ObserveOn(SynchronizationContext.Current)
+                        .Subscribe(OnBuildInfoUpdate)
                 };
 
                 buildStatusCancellationToken = cancellationToken;
