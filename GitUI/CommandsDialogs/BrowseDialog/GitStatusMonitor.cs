@@ -2,16 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using GitCommands;
+using GitUI.CommandsDialogs;
 using GitUIPluginInterfaces;
 
 namespace GitUI
 {
-    public interface IGitStatusMonitorUpdate
-    {
-        void Update(IList<GitItemStatus> status);
-        bool Visible { get; set; }
-    }
-
     public class GitStatusMonitor : IDisposable
     {
         /// <summary>
@@ -25,10 +20,11 @@ namespace GitUI
         /// </summary>
         private const int MaxUpdatePeriod = 5 * 60 * 1000;
 
-        private System.Windows.Forms.Timer timerRefresh;
-        private System.Windows.Forms.Timer ignoredFilesTimer;
+        private System.Windows.Forms.Timer _timerRefresh;
+        private System.Windows.Forms.Timer _ignoredFilesTimer;
         private bool _commandIsRunning = false;
         private bool _statusIsUpToDate = true;
+        private readonly IGitStatusMonitorUpdate _gitStatusMonitorUpdate;
         private readonly FileSystemWatcher _workTreeWatcher = new FileSystemWatcher();
         private readonly FileSystemWatcher _gitDirWatcher = new FileSystemWatcher();
         private readonly FileSystemWatcher _globalIgnoreWatcher = new FileSystemWatcher();
@@ -38,7 +34,7 @@ namespace GitUI
         private string _submodulesPath;
         private int _nextUpdateTime;
         private WorkingStatus _currentStatus;
-        private HashSet<string> _ignoredFiles = new HashSet<string>(); 
+        private HashSet<string> _ignoredFiles = new HashSet<string>();
 
         private IGitUICommandsSource _UICommandsSource;
 
@@ -56,8 +52,8 @@ namespace GitUI
                 GitUICommandsChanged(UICommandsSource, new GitUICommandsChangedEventArgs(oldCommands: null));
             }
         }
-        
-        public GitUICommands UICommands 
+
+        private GitUICommands UICommands 
         {
             get
             {
@@ -65,7 +61,7 @@ namespace GitUI
             }
         }
 
-        public GitModule Module 
+        private GitModule Module 
         {
             get
             {
@@ -75,27 +71,26 @@ namespace GitUI
 
         private void InitializeComponent()
         {
-            this.timerRefresh = new System.Windows.Forms.Timer();
-            this.ignoredFilesTimer = new System.Windows.Forms.Timer();
+            this._timerRefresh = new System.Windows.Forms.Timer();
+            this._ignoredFilesTimer = new System.Windows.Forms.Timer();
             // 
-            // timerRefresh
+            // _timerRefresh
             // 
-            this.timerRefresh.Enabled = true;
-            this.timerRefresh.Interval = 500;
-            this.timerRefresh.Tick += new System.EventHandler(this.timerRefresh_Tick);
+            this._timerRefresh.Enabled = true;
+            this._timerRefresh.Interval = 500;
+            this._timerRefresh.Tick += new System.EventHandler(this.timerRefresh_Tick);
             // 
-            // ignoredFilesTimer
+            // _ignoredFilesTimer
             // 
-            this.ignoredFilesTimer.Interval = 600000;
-            this.ignoredFilesTimer.Tick += new System.EventHandler(this.ignoredFilesTimer_Tick);
+            this._ignoredFilesTimer.Interval = 600000;
+            this._ignoredFilesTimer.Tick += new System.EventHandler(this.ignoredFilesTimer_Tick);
         }
 
-        private IGitStatusMonitorUpdate _gitStatusMonitorUpdate;
         public GitStatusMonitor(IGitStatusMonitorUpdate gitStatusMonitorUpdate)
         {
             _gitStatusMonitorUpdate = gitStatusMonitorUpdate;
             InitializeComponent();
-            ignoredFilesTimer.Interval = MaxUpdatePeriod;
+            _ignoredFilesTimer.Interval = MaxUpdatePeriod;
             CurrentStatus = WorkingStatus.Stopped;
 
             // Setup a file watcher to detect changes to our files. When they
@@ -227,8 +222,8 @@ namespace GitUI
                     _gitPath = Path.GetDirectoryName(gitDirPath);
                     _submodulesPath = Path.Combine(_gitPath, "modules");
                     UpdateIgnoredFiles(true);
-                    ignoredFilesTimer.Stop();
-                    ignoredFilesTimer.Start();
+                    _ignoredFilesTimer.Stop();
+                    _ignoredFilesTimer.Start();
                     CurrentStatus = WorkingStatus.Started;
                 }
                 else
@@ -401,25 +396,25 @@ namespace GitUI
                 switch (_currentStatus)
                 {
                     case WorkingStatus.Stopped:
-                        timerRefresh.Stop();
+                        _timerRefresh.Stop();
                         _workTreeWatcher.EnableRaisingEvents = false;
                         _gitDirWatcher.EnableRaisingEvents = false;
                         _globalIgnoreWatcher.EnableRaisingEvents = false;
-                        _gitStatusMonitorUpdate.Visible = false;
+                        _gitStatusMonitorUpdate.VisibilityChanged(false);
                         return;
                     case WorkingStatus.Paused:
-                        timerRefresh.Stop();
+                        _timerRefresh.Stop();
                         _workTreeWatcher.EnableRaisingEvents = false;
                         _gitDirWatcher.EnableRaisingEvents = false;
                         _globalIgnoreWatcher.EnableRaisingEvents = false;
                         return;
                     case WorkingStatus.Started:
-                        timerRefresh.Start();
+                        _timerRefresh.Start();
                         _workTreeWatcher.EnableRaisingEvents = true;
                         _gitDirWatcher.EnableRaisingEvents = !_gitDirWatcher.Path.StartsWith(_workTreeWatcher.Path);
                         _globalIgnoreWatcher.EnableRaisingEvents = !string.IsNullOrWhiteSpace(_globalIgnoreWatcher.Path);
                         ScheduleDeferredUpdate();
-                        _gitStatusMonitorUpdate.Visible = true;
+                        _gitStatusMonitorUpdate.VisibilityChanged(true);
                         return;
                     default:
                         throw new NotSupportedException();
@@ -451,8 +446,10 @@ namespace GitUI
                     _workTreeWatcher.Dispose();
                     _gitDirWatcher.Dispose();
                     _globalIgnoreWatcher.Dispose();
-                    ignoredFilesTimer.Dispose();
-                    timerRefresh.Dispose();
+                    _ignoredFilesTimer.Dispose();
+                    _ignoredFilesTimer = null;
+                    _timerRefresh.Dispose();
+                    _timerRefresh = null;
                 }
                 disposedValue = true;
             }
