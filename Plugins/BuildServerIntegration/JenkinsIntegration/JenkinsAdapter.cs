@@ -15,7 +15,6 @@ using System.Threading.Tasks;
 using GitCommands.Utils;
 using GitUIPluginInterfaces;
 using GitUIPluginInterfaces.BuildServerIntegration;
-using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
 
 namespace JenkinsIntegration
@@ -51,7 +50,7 @@ namespace JenkinsIntegration
         //Build info cache, surviving repo switch
         private static readonly Dictionary<string, JenkinsCacheInfo> BuildCache = new Dictionary<string, JenkinsCacheInfo>();
         private readonly IList<string> _projectsUrls = new List<string>();
-        private bool _firstQueryAfterInit = true;
+        private bool _firstQueryAfterInit;
         
         public void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config, Func<string, bool> isCommitInRevisionGrid)
         {
@@ -189,7 +188,7 @@ namespace JenkinsIntegration
 
         //Jenkins builds are retrieved with latest build first
         //If there are many builds on the same commit, it is normally the latest that is interesting, ignore the following
-        private bool DifferFromPrev(BuildInfo curr, [CanBeNull] ref BuildInfo prev)
+        private bool DifferFromPrev(BuildInfo curr, ref BuildInfo prev)
         {
             bool res = false;
             if (prev == null
