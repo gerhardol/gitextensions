@@ -191,10 +191,12 @@ namespace GitUI.CommandsDialogs
                     ImageScaling = ToolStripItemImageScaling.SizeToFit,
                     Margin = new Padding(0, 1, 0, 2)
                 };
-                IGitStatusMonitorUpdate gitStatusMonitorUpdate = new FormBrowseGitStatusMonitorUpdate(_toolStripGitStatus, RevisionGrid, revisionDiff, toolStripButton1.Text);
-                _gitStatusMonitor = new GitStatusMonitor(gitStatusMonitorUpdate);
-                if (aCommands != null)
-                    _gitStatusMonitor.UICommandsSource = this;
+
+                _gitStatusMonitor = new GitStatusMonitor();
+                _gitStatusMonitor.Init(this);
+                _gitStatusMonitor.GitStatusMonitorStateChanged += (s, e) => { /* do something */ };
+                _gitStatusMonitor.GitWorkingDirectoryStatusChanged += (s, e) => { /* do something */ };
+
                 _toolStripGitStatus.Click += StatusClick;
                 ToolStrip.Items.Insert(ToolStrip.Items.IndexOf(toolStripButton1), _toolStripGitStatus);
                 ToolStrip.Items.Remove(toolStripButton1);
