@@ -122,9 +122,9 @@ namespace JenkinsIntegration
             public readonly IList<BuildInfo> BuildInfo = new List<BuildInfo>();
         }
 
-        private Task<ResponseInfo> GetBuildInfoTask(string projectUrl, bool fullInfo, CancellationToken cancellationToken)
+        private Task<ResponseInfo> GetBuildInfoTask(string projectUrl, CancellationToken cancellationToken)
         {
-            return GetResponseAsync(FormatToGetJson(projectUrl, fullInfo), cancellationToken)
+            return GetResponseAsync(FormatToGetJson(projectUrl), cancellationToken)
                 .ContinueWith(
                     task =>
                     {
@@ -214,52 +214,20 @@ namespace JenkinsIntegration
             try
             {
                 IList<Task<ResponseInfo>> allBuildInfos = new List<Task<ResponseInfo>>();
-                IList<Task<ResponseInfo>> latestBuildInfos = new List<Task<ResponseInfo>>();
                 HashSet<string> inProgressDisplayed = new HashSet<string>();
                 HashSet<string> finishedDisplayed = new HashSet<string>();
                 foreach (var projectUrl in _projectsUrls)
                 {
-                    //Update the build info from the cache and find if (inprogress) jobs may need to be requeried
-                    bool hasInProgress = false;
+                    //Update the build info from the cache
                     foreach (var buildInfo in BuildCache[projectUrl].BuildInfo)
                     {
                         if (DisplayBuild(buildInfo, inProgressDisplayed, finishedDisplayed))
                         {
                             observer.OnNext(buildInfo);
                         }
-
-                        //If any displayed build is InProgress, it has to be requeried
-                        //This could be done per build too, but probably decreasing load only in special situations
-                        //(Updating all builds individually increases the total load)
-                        if (buildInfo.Status == BuildInfo.BuildStatus.InProgress)
-                        {
-                            hasInProgress = true;
-                        }
                     }
 
-                    if (hasInProgress || BuildCache[projectUrl].Timestamp <= 0)
-                    {
-                        //This job must be updated, no need to to check the latest builds
-                        allBuildInfos.Add(GetBuildInfoTask(projectUrl, true, cancellationToken));
-                    }
-                    else
-                    {
-                        //Check the latest build on the server to the existing build cache
-                        latestBuildInfos.Add(GetBuildInfoTask(projectUrl, false, cancellationToken));
-                    }
-                }
-
-                //Query the latest builds, to find if the cache has all builds
-                foreach (var url in latestBuildInfos)
-                {
-                    if (!url.IsFaulted)
-                    {
-                        if (url.Result.Timestamp > BuildCache[url.Result.Url].Timestamp)
-                        {
-                            //The cache has at least one newer job, query the status
-                            allBuildInfos.Add(GetBuildInfoTask(url.Result.Url, true, cancellationToken));
-                        }
-                    }
+                    allBuildInfos.Add(GetBuildInfoTask(projectUrl, cancellationToken));
                 }
 
                 if (allBuildInfos.All(t => t.IsCanceled))
@@ -500,7 +468,7 @@ namespace JenkinsIntegration
                 TaskScheduler.Current);
         }
 
-        private string FormatToGetJson(string restServicePath, bool buildsInfo = false)
+        private string FormatToGetJson(string restServicePath)
         {
             string buildTree = "lastBuild[timestamp]";
             int depth = 1;
@@ -517,13 +485,8 @@ namespace JenkinsIntegration
                 if (post == "?m")
                 {
                     //Multi pipeline project
-                    buildTree = "jobs[" + buildTree;
-                    if (buildsInfo)
-                    {
-                        depth = 2;
-                        buildTree += ",builds[" + JenkinsTreeBuildInfo + "]";
-                    }
-                    buildTree += "]";
+                    buildTree = "jobs[" + buildTree + ",builds[" + JenkinsTreeBuildInfo + "]]";
+                    depth = 2;
                 }
                 else
                 {
@@ -536,10 +499,7 @@ namespace JenkinsIntegration
             else
             {
                 //Freestyle project
-                if (buildsInfo)
-                {
-                    buildTree += ",builds[" + JenkinsTreeBuildInfo + "]";
-                }
+                buildTree += ",builds[" + JenkinsTreeBuildInfo + "]";
             }
 
             if (!restServicePath.EndsWith("/"))
