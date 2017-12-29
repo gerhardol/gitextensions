@@ -47,8 +47,6 @@ namespace JenkinsIntegration
 
         private HttpClient _httpClient;
 
-        //Build info cache, surviving repo switch
-        private static readonly Dictionary<string, JenkinsCacheInfo> BuildCache = new Dictionary<string, JenkinsCacheInfo>();
         private readonly IList<string> _projectsUrls = new List<string>();
         
         public void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config, Func<string, bool> isCommitInRevisionGrid)
@@ -96,16 +94,6 @@ namespace JenkinsIntegration
             if (!_projectsUrls.Contains(projectUrl))
             {
                 _projectsUrls.Add(projectUrl);
-                if (BuildCache.ContainsKey(projectUrl))
-                {
-                    //Make sure the cache is recalculated
-                    BuildCache[projectUrl].Timestamp = 0;
-                }
-                else
-                {
-                    BuildCache[projectUrl] = new JenkinsCacheInfo();
-                }
-
             }
         }
 
@@ -118,7 +106,6 @@ namespace JenkinsIntegration
 
         public class JenkinsCacheInfo
         {
-            public long Timestamp = -1;
             public readonly IList<BuildInfo> BuildInfo = new List<BuildInfo>();
         }
 
@@ -188,86 +175,20 @@ namespace JenkinsIntegration
                     () => scheduler.Schedule(() => ObserveBuilds(sinceDate, running, observer, cancellationToken))));
         }
 
-        //Jenkins builds are retrieved with latest build first
-        //Prefer the inprogress builds to the finished
-        //If there are many builds on the same commit, it is normally the latest that is interesting, ignore the following
-        private bool DisplayBuild(BuildInfo curr, HashSet<string> inProgressDisplayed, HashSet<string> finishedDisplayed)
-        {
-            bool res = false;
-            if (curr != null
-                && curr.CommitHashList.Length >= 1
-                && (curr.Status == BuildInfo.BuildStatus.InProgress
-                    && inProgressDisplayed.Add(curr.CommitHashList[0])
-                  || !inProgressDisplayed.Contains(curr.CommitHashList[0])
-                    && finishedDisplayed.Add(curr.CommitHashList[0])))
-            {
-                res = true;
-            }
-
-            return res;
-        }
-
         private void ObserveBuilds(DateTime? sinceDate, bool? running, IObserver<BuildInfo> observer, CancellationToken cancellationToken)
         {
             //Note that 'running' is ignored (attempt to fetch data when updated) 
             //Similar for 'sinceDate', not supported in Jenkins API
             try
             {
-                IList<Task<ResponseInfo>> allBuildInfos = new List<Task<ResponseInfo>>();
-                IList<Task<ResponseInfo>> latestBuildInfos = new List<Task<ResponseInfo>>();
-                HashSet<string> inProgressDisplayed = new HashSet<string>();
-                HashSet<string> finishedDisplayed = new HashSet<string>();
-                foreach (var projectUrl in _projectsUrls)
-                {
-                    //Update the build info from the cache and find if (inprogress) jobs may need to be requeried
-                    bool hasInProgress = false;
-                    foreach (var buildInfo in BuildCache[projectUrl].BuildInfo)
-                    {
-                        if (DisplayBuild(buildInfo, inProgressDisplayed, finishedDisplayed))
-                        {
-                            observer.OnNext(buildInfo);
-                        }
-
-                        //If any displayed build is InProgress, it has to be requeried
-                        //This could be done per build too, but probably decreasing load only in special situations
-                        //(Updating all builds individually increases the total load)
-                        if (buildInfo.Status == BuildInfo.BuildStatus.InProgress)
-                        {
-                            hasInProgress = true;
-                        }
-                    }
-
-                    if (hasInProgress || BuildCache[projectUrl].Timestamp <= 0)
-                    {
-                        //This job must be updated, no need to to check the latest builds
-                        allBuildInfos.Add(GetBuildInfoTask(projectUrl, true, cancellationToken));
-                    }
-                    else
-                    {
-                        //Check the latest build on the server to the existing build cache
-                        latestBuildInfos.Add(GetBuildInfoTask(projectUrl, false, cancellationToken));
-                    }
-                }
-
-                //Query the latest builds, to find if the cache has all builds
-                foreach (var url in latestBuildInfos)
-                {
-                    if (!url.IsFaulted)
-                    {
-                        if (url.Result.Timestamp > BuildCache[url.Result.Url].Timestamp)
-                        {
-                            //The cache has at least one newer job, query the status
-                            allBuildInfos.Add(GetBuildInfoTask(url.Result.Url, true, cancellationToken));
-                        }
-                    }
-                }
+                IEnumerable<Task<ResponseInfo>> allBuildInfos = 
+                    _projectsUrls.Select(url => GetBuildInfoTask(url, true, cancellationToken)).ToArray();
 
                 if (allBuildInfos.All(t => t.IsCanceled))
                 {
                     observer.OnCompleted();
                     return;
                 }
-
 
                 foreach (var currentGetBuildUrls in allBuildInfos)
                 {
@@ -279,32 +200,17 @@ namespace JenkinsIntegration
                         continue;
                     }
 
-                    if (currentGetBuildUrls.Result.Timestamp <= 0)
+                    foreach (var buildDetails in currentGetBuildUrls.Result.JobDescription.Reverse())
                     {
-                        //No valid information received for the build, keep the cache
-                        continue;
-                    }
-
-                    //InProgress may have finished. Clear the status about display so it can be overridden
-                    //If "display order" should have been changed, this is updated at next update
-                    inProgressDisplayed.Clear();
-
-                    //Information for all builds for the job
-                    BuildCache[currentGetBuildUrls.Result.Url].Timestamp = currentGetBuildUrls.Result.Timestamp;
-                    BuildCache[currentGetBuildUrls.Result.Url].BuildInfo.Clear();
-                    foreach (var buildDetails in currentGetBuildUrls.Result.JobDescription)
-                    {
-                        var buildInfo = CreateBuildInfo((JObject) buildDetails);
-                        BuildCache[currentGetBuildUrls.Result.Url].BuildInfo.Add(buildInfo);
-                        if (DisplayBuild(buildInfo, inProgressDisplayed, finishedDisplayed))
+                        if (cancellationToken.IsCancellationRequested)
                         {
-                            observer.OnNext(buildInfo);
+                            return;
                         }
+                        var buildInfo = CreateBuildInfo((JObject)buildDetails);
+                        observer.OnNext(buildInfo);
                     }
                 }
 
-                //Complete the job, it will be run again with Observe.Retry() (every 10th sec)
-                //(this will find new builds and update InProgress jobs)
                 observer.OnCompleted();
             }
             catch (OperationCanceledException)
@@ -327,7 +233,6 @@ namespace JenkinsIntegration
             var idValue = buildDescription["number"].ToObject<string>();
             var statusValue = buildDescription["result"].ToObject<string>();
             var startDateTicks = buildDescription["timestamp"].ToObject<long>();
-            //var displayName = buildDescription["fullDisplayName"].ToObject<string>();
             var webUrl = buildDescription["url"].ToObject<string>();
 
             var action = buildDescription["actions"];
