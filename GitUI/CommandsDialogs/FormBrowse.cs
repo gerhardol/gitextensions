@@ -23,6 +23,7 @@ using GitUI.Properties;
 using GitUI.Script;
 using GitUI.UserControls;
 using GitUI.UserControls.RevisionGridClasses;
+using GitUI.UserControls.ToolStripClasses;
 using GitUIPluginInterfaces;
 using Microsoft.Win32;
 using ResourceManager;
@@ -106,6 +107,9 @@ namespace GitUI.CommandsDialogs
             new TranslationString("Build Report");
         private readonly TranslationString _consoleTabCaption =
             new TranslationString("Console");
+
+        private readonly TranslationString _commitButtonText =
+            new TranslationString("Commit");
         #endregion
 
         private Dashboard _dashboard;
@@ -191,11 +195,38 @@ namespace GitUI.CommandsDialogs
                     ImageScaling = ToolStripItemImageScaling.SizeToFit,
                     Margin = new Padding(0, 1, 0, 2)
                 };
+                ICommitIconProvider commitIconProvider = new CommitIconProvider();
 
                 _gitStatusMonitor = new GitStatusMonitor();
                 _gitStatusMonitor.Init(this);
-                _gitStatusMonitor.GitStatusMonitorStateChanged += (s, e) => { /* do something */ };
-                _gitStatusMonitor.GitWorkingDirectoryStatusChanged += (s, e) => { /* do something */ };
+
+                _gitStatusMonitor.GitStatusMonitorStateChanged += (s, e) =>
+                {
+                    var status = e.State;
+                    if (status == GitStatusMonitorState.Stopped)
+                    {
+                        _toolStripGitStatus.Visible = false;
+                        _toolStripGitStatus.Text = String.Empty;
+                    }
+                    else if(status == GitStatusMonitorState.Running)
+                    {
+                        _toolStripGitStatus.Visible = true;
+                    }
+                };
+
+                _gitStatusMonitor.GitWorkingDirectoryStatusChanged += (s, e) => {
+                    var status = e.ItemStatuses.ToList();
+                    _toolStripGitStatus.Image = commitIconProvider.GetCommitIcon(status);
+
+                    if (status.Count == 0)
+                        _toolStripGitStatus.Text = _commitButtonText.Text;
+                    else
+                        _toolStripGitStatus.Text = string.Format(_commitButtonText + " ({0})", status.Count.ToString());
+
+                    RevisionGrid.UpdateArtificialCommitCount(status);
+                    //The diff filelist is not updated, as the selected diff is unset
+                    //_revisionDiff.RefreshArtificial();
+                };
 
                 _toolStripGitStatus.Click += StatusClick;
                 ToolStrip.Items.Insert(ToolStrip.Items.IndexOf(toolStripButton1), _toolStripGitStatus);
