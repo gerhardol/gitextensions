@@ -229,7 +229,6 @@ namespace GitUI.CommandsDialogs
             revisionDiff.Bind(RevisionGrid, fileTree);
 
             Translate();
-            LayoutRevisionInfo();
 
             if (AppSettings.ShowGitStatusInBrowseToolbar && !Module.IsBareRepository())
             {
@@ -306,8 +305,9 @@ namespace GitUI.CommandsDialogs
                 RevisionInfo.DisplayAvatarOnRight();
                 CommitInfoTabControl.SuspendLayout();
                 CommitInfoTabControl.RemoveIfExists(CommitInfoTabPage);
-                //CommitInfoTabControl.RemoveIfExists(TreeTabPage);
-                //CommitInfoTabControl.TabPages.Insert(0, TreeTabPage);
+                CommitInfoTabControl.RemoveIfExists(DiffTabPage);
+                CommitInfoTabControl.TabPages.Insert(0, DiffTabPage);
+                CommitInfoTabControl.SelectedTab = DiffTabPage;
                 CommitInfoTabControl.ResumeLayout(true);
                 RevisionsSplitContainer.Panel2Collapsed = false;
             }
@@ -417,6 +417,7 @@ namespace GitUI.CommandsDialogs
             _filterBranchHelper.InitToolStripBranchFilter();
 
             Cursor.Current = Cursors.WaitCursor;
+            LayoutRevisionInfo();
             InternalInitialize(false);
             RevisionGrid.Focus();
             RevisionGrid.IndexWatcher.Reset();
@@ -1122,6 +1123,7 @@ namespace GitUI.CommandsDialogs
             {
                 return;
             }
+
             var revisions = RevisionGrid.GetSelectedRevisions();
             var revision = revisions.FirstOrDefault();
             if (revision == null)
@@ -1159,57 +1161,9 @@ namespace GitUI.CommandsDialogs
         private UpdateTargets _selectedRevisionUpdatedTargets = UpdateTargets.None;
         private void RevisionGridSelectionChanged(object sender, EventArgs e)
         {
-            if (_showRevisionInfoNextToRevisionGrid != AppSettings.ShowRevisionInfoNextToRevisionGrid)
-            {
-                _showRevisionInfoNextToRevisionGrid = AppSettings.ShowRevisionInfoNextToRevisionGrid;
-                LayoutRevisionInfo();
-            }
             try
             {
                 _selectedRevisionUpdatedTargets = UpdateTargets.None;
-
-                var revisions = RevisionGrid.GetSelectedRevisions();
-
-                CommitInfoTabControl.SelectedIndexChanged -= CommitInfoTabControl_SelectedIndexChanged;
-                if (revisions.Any() && GitRevision.IsArtificial(revisions[0].Guid))
-                {
-                    //Artificial commits cannot show tree (ls-tree) and has no commit info 
-                    CommitInfoTabControl.RemoveIfExists(CommitInfoTabPage);
-                    CommitInfoTabControl.RemoveIfExists(TreeTabPage);
-                    CommitInfoTabControl.RemoveIfExists(GpgInfoTabPage);
-
-                    if (_showRevisionInfoNextToRevisionGrid)
-                    {
-                        RevisionsSplitContainer.Panel2Collapsed = true;
-
-                    }
-                }
-                else
-                {
-                    int i = 0;
-                    if (!_showRevisionInfoNextToRevisionGrid)
-                    {
-                        CommitInfoTabControl.InsertIfNotExists(i, CommitInfoTabPage);
-                        i++;
-                    }
-                    CommitInfoTabControl.InsertIfNotExists(i, TreeTabPage);
-                    if (AppSettings.ShowGpgInformation.ValueOrDefault)
-                    {
-                        CommitInfoTabControl.InsertIfNotExists(i + 2, GpgInfoTabPage);
-                    }
-                    else
-                    {
-                        CommitInfoTabControl.RemoveIfExists(GpgInfoTabPage);
-                    }
-
-                    if (_showRevisionInfoNextToRevisionGrid)
-                    {
-                        RevisionsSplitContainer.Panel2Collapsed = false;
-                    }
-                }
-                CommitInfoTabControl.SelectedIndexChanged += CommitInfoTabControl_SelectedIndexChanged;
-
-                //RevisionGrid.HighlightSelectedBranch();
 
                 FillFileTree();
                 FillDiff();
@@ -1406,6 +1360,11 @@ namespace GitUI.CommandsDialogs
             RevisionGrid.ReloadTranslation();
             fileTree.ReloadHotkeys();
             revisionDiff.ReloadHotkeys();
+            if (_showRevisionInfoNextToRevisionGrid != AppSettings.ShowRevisionInfoNextToRevisionGrid)
+            {
+                _showRevisionInfoNextToRevisionGrid = AppSettings.ShowRevisionInfoNextToRevisionGrid;
+                LayoutRevisionInfo();
+            }
         }
 
         private void TagToolStripMenuItemClick(object sender, EventArgs e)
@@ -2146,7 +2105,7 @@ namespace GitUI.CommandsDialogs
             this.mergeBranchToolStripMenuItem.Enabled =
             this.rebaseToolStripMenuItem.Enabled =
             this.stashToolStripMenuItem.Enabled =
-              selectedRevisions.Count>0 && !Module.IsBareRepository();
+              selectedRevisions.Count > 0 && !Module.IsBareRepository();
 
             this.resetToolStripMenuItem.Enabled =
             this.checkoutBranchToolStripMenuItem.Enabled =
