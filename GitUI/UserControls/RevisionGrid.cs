@@ -2755,7 +2755,6 @@ namespace GitUI
                 Committer = userName,
                 CommitDate = DateTime.MaxValue,
                 CommitterEmail = userEmail,
-                SubjectCount = unstageCount,
                 Subject = Strings.GetCurrentUnstagedChanges(),
                 ParentGuids = new[] { GitRevision.IndexGuid }
             };
@@ -2770,7 +2769,6 @@ namespace GitUI
                 Committer = userName,
                 CommitDate = DateTime.MaxValue,
                 CommitterEmail = userEmail,
-                SubjectCount = stageCount,
                 Subject = Strings.GetCurrentIndex(),
                 ParentGuids = new[] { filtredCurrentCheckout }
             };

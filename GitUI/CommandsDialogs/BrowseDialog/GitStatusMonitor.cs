@@ -4,15 +4,9 @@ using System.IO;
 using GitCommands;
 using GitUIPluginInterfaces;
 
-namespace GitUI
+namespace GitUI.CommandsDialogs.BrowseDialog
 {
-    public interface IGitStatusMonitorUpdate
-    {
-        void Update(IList<GitItemStatus> status);
-        bool Visible { get; set; }
-    }
-
-    public class GitStatusMonitor : IDisposable
+    public partial class GitStatusMonitor : IDisposable
     {
         /// <summary>
         /// Delay time when change detected while ongoing update
@@ -35,9 +29,7 @@ namespace GitUI
         /// </summary>
         private const int MaxUpdatePeriod = 5 * 60 * 1000;
 
-        private System.Windows.Forms.Timer timerRefresh;
-        private System.Windows.Forms.Timer ignoredFilesTimer;
-        private bool _commandIsRunning = false;
+        private bool _commandIsRunning;
         private bool _statusIsUpToDate = true;
         private readonly FileSystemWatcher _workTreeWatcher = new FileSystemWatcher();
         private readonly FileSystemWatcher _gitDirWatcher = new FileSystemWatcher();
@@ -48,67 +40,28 @@ namespace GitUI
         private string _submodulesPath;
         private int _nextUpdateTime;
         private int _lastUpdateTime;
-        private WorkingStatus _currentStatus;
-        private HashSet<string> _ignoredFiles = new HashSet<string>(); 
+        private GitStatusMonitorState _currentStatus;
+        private HashSet<string> _ignoredFiles = new HashSet<string>();
 
-        private IGitUICommandsSource _UICommandsSource;
 
-        public IGitUICommandsSource UICommandsSource
+        /// <summary>
+        /// Occurs whenever git status monitor state changes.
+        /// </summary>
+        public event EventHandler<GitStatusMonitorStateEventArgs> GitStatusMonitorStateChanged;
+
+        /// <summary>
+        /// Occurs whenever current working directory status changes.
+        /// </summary>
+        public event EventHandler<GitWorkingDirectoryStatusEventArgs> GitWorkingDirectoryStatusChanged;
+
+
+        public GitStatusMonitor()
         {
-            get
-            {
-                return _UICommandsSource;
-            }
-
-            set
-            {
-                _UICommandsSource = value;
-                _UICommandsSource.GitUICommandsChanged += GitUICommandsChanged;
-                GitUICommandsChanged(UICommandsSource, new GitUICommandsChangedEventArgs(oldCommands: null));
-            }
-        }
-        
-        public GitUICommands UICommands 
-        {
-            get
-            {
-                return UICommandsSource.UICommands;
-            }
-        }
-
-        public GitModule Module 
-        {
-            get
-            {
-                return UICommands.Module;
-            }
-        }
-
-        private void InitializeComponent()
-        {
-            this.timerRefresh = new System.Windows.Forms.Timer();
-            this.ignoredFilesTimer = new System.Windows.Forms.Timer();
-            // 
-            // timerRefresh
-            // 
-            this.timerRefresh.Enabled = true;
-            this.timerRefresh.Interval = 500;
-            this.timerRefresh.Tick += new System.EventHandler(this.timerRefresh_Tick);
-            // 
-            // ignoredFilesTimer
-            // 
-            this.ignoredFilesTimer.Interval = 600000;
-            this.ignoredFilesTimer.Tick += new System.EventHandler(this.ignoredFilesTimer_Tick);
-        }
-
-        private IGitStatusMonitorUpdate _gitStatusMonitorUpdate;
-        public GitStatusMonitor(IGitStatusMonitorUpdate gitStatusMonitorUpdate)
-        {
-            _gitStatusMonitorUpdate = gitStatusMonitorUpdate;
             _lastUpdateTime = 0;
             InitializeComponent();
+
             ignoredFilesTimer.Interval = MaxUpdatePeriod;
-            CurrentStatus = WorkingStatus.Stopped;
+            CurrentStatus = GitStatusMonitorState.Stopped;
 
             // Setup a file watcher to detect changes to our files. When they
             // change, we'll update our status.
@@ -143,6 +96,74 @@ namespace GitUI
             _globalIgnoreWatcher.NotifyFilter = NotifyFilters.LastWrite;
         }
 
+
+        private GitStatusMonitorState CurrentStatus
+        {
+            get { return _currentStatus; }
+            set
+            {
+                _currentStatus = value;
+                switch (_currentStatus)
+                {
+                    case GitStatusMonitorState.Stopped:
+                        {
+                            timerRefresh.Stop();
+                            _workTreeWatcher.EnableRaisingEvents = false;
+                            _gitDirWatcher.EnableRaisingEvents = false;
+                            _globalIgnoreWatcher.EnableRaisingEvents = false;
+                        }
+                        break;
+
+                    case GitStatusMonitorState.Paused:
+                        {
+                            timerRefresh.Stop();
+                            _workTreeWatcher.EnableRaisingEvents = false;
+                            _gitDirWatcher.EnableRaisingEvents = false;
+                            _globalIgnoreWatcher.EnableRaisingEvents = false;
+                        }
+                        break;
+
+                    case GitStatusMonitorState.Running:
+                        {
+                            timerRefresh.Start();
+                            _workTreeWatcher.EnableRaisingEvents = true;
+                            _gitDirWatcher.EnableRaisingEvents = !_gitDirWatcher.Path.StartsWith(_workTreeWatcher.Path);
+                            _globalIgnoreWatcher.EnableRaisingEvents = !string.IsNullOrWhiteSpace(_globalIgnoreWatcher.Path);
+                            ScheduleNext(UpdateDelay);
+                        }
+                        break;
+
+                    default:
+                        throw new NotSupportedException();
+                }
+                OnGitStatusMonitorStateChanged(new GitStatusMonitorStateEventArgs(_currentStatus));
+            }
+        }
+
+        private IGitModule Module => UICommandsSource.UICommands.Module;
+
+        private IGitUICommandsSource UICommandsSource { get; set; }
+        
+        public void Init(IGitUICommandsSource commandsSource)
+        {
+            if (commandsSource == null)
+            {
+                throw new ArgumentNullException(nameof(commandsSource));
+            }
+            UICommandsSource = commandsSource;
+            UICommandsSource.GitUICommandsChanged += commandsSource_GitUICommandsChanged;
+        }
+        
+        protected void OnGitStatusMonitorStateChanged(GitStatusMonitorStateEventArgs e)
+        {
+            GitStatusMonitorStateChanged?.Invoke(this, e);
+        }
+
+        protected void OnGitWorkingDirectoryStatusChanged(GitWorkingDirectoryStatusEventArgs e)
+        {
+            GitWorkingDirectoryStatusChanged?.Invoke(this, e);
+        }
+        
         private void GlobalIgnoreChanged(object sender, FileSystemEventArgs e)
         {
             if (e.FullPath == _globalIgnoreFilePath)
@@ -178,50 +199,10 @@ namespace GitUI
             return Path.GetFullPath(Path.Combine(GitCommandHelpers.GetHomeDir(), ".config/git/ignore"));
         }
 
-        private void GitUICommandsChanged(object sender, GitUICommandsChangedEventArgs e)
-        {
-            var oldCommands = e.OldCommands;
-
-            if (oldCommands != null)
-            {
-                oldCommands.PreCheckoutBranch -= GitUICommands_PreCheckout;
-                oldCommands.PreCheckoutRevision -= GitUICommands_PreCheckout;
-                oldCommands.PostCheckoutBranch -= GitUICommands_PostCheckout;
-                oldCommands.PostCheckoutRevision -= GitUICommands_PostCheckout;
-                oldCommands.PostEditGitIgnore -= GitUICommands_PostEditGitIgnore;
-            }
-
-            if (UICommands != null)
-            {
-                UICommands.PreCheckoutBranch += GitUICommands_PreCheckout;
-                UICommands.PreCheckoutRevision += GitUICommands_PreCheckout;
-                UICommands.PostCheckoutBranch += GitUICommands_PostCheckout;
-                UICommands.PostCheckoutRevision += GitUICommands_PostCheckout;
-                UICommands.PostEditGitIgnore += GitUICommands_PostEditGitIgnore;
-                
-                TryStartWatchingChanges(Module.WorkingDir, Module.WorkingDirGitDir);
-            }
-        }
-
-        private void GitUICommands_PreCheckout(object sender, GitUIBaseEventArgs e)
-        {
-            CurrentStatus = WorkingStatus.Paused;
-        }
-
-        private void GitUICommands_PostCheckout(object sender, GitUIPostActionEventArgs e)
-        {
-            CurrentStatus = WorkingStatus.Started;
-        }
-
-        private void GitUICommands_PostEditGitIgnore(object sender, GitUIBaseEventArgs e)
-        {
-            UpdateIgnoredFiles(true);
-        }
-        
-        private void TryStartWatchingChanges(string workTreePath, string gitDirPath)
+        private void StartWatchingChanges(string workTreePath, string gitDirPath)
         {
             // reset status info, it was outdated
-           _gitStatusMonitorUpdate.Update(new List<GitItemStatus>());
+            OnGitWorkingDirectoryStatusChanged(new GitWorkingDirectoryStatusEventArgs());
 
             try
             {
@@ -241,14 +222,192 @@ namespace GitUI
                     UpdateIgnoredFiles(true);
                     ignoredFilesTimer.Stop();
                     ignoredFilesTimer.Start();
-                    CurrentStatus = WorkingStatus.Started;
+                    CurrentStatus = GitStatusMonitorState.Running;
                 }
                 else
                 {
-                    CurrentStatus = WorkingStatus.Stopped;
+                    CurrentStatus = GitStatusMonitorState.Stopped;
                 }
             }
-            catch { }
+            catch
+            {
+                // no-op
+            }
+        }
+
+        private HashSet<string> LoadIgnoredFiles()
+        {
+            string lsOutput = Module.RunGitCmd("ls-files -o -i --exclude-standard");
+            string[] tab = lsOutput.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            return new HashSet<string>(tab);
+        }
+
+        private void UpdateIgnoredFiles(bool clearImmediately)
+        {
+            if (clearImmediately)
+                _ignoredFiles = new HashSet<string>();
+
+            AsyncLoader.DoAsync(
+                LoadIgnoredFiles,
+                (ignoredSet) =>
+                {
+                    _ignoredFiles = ignoredSet;
+                    _ignoredFilesAreStale = false;
+                },
+                (e) => { _ignoredFiles = new HashSet<string>(); }
+            );
+        }
+
+        private void Update()
+        {
+            if (CurrentStatus != GitStatusMonitorState.Running)
+                return;
+
+            if (Environment.TickCount >= _nextUpdateTime ||
+                (Environment.TickCount < 0 && _nextUpdateTime > 0))
+            {
+                // If the previous status call hasn't exited yet, we'll wait until it is
+                // so we don't queue up a bunch of commands
+                if (_commandIsRunning ||
+                    //don't update status while repository is being modyfied by GitExt
+                    //or while any git process is running, mostly repository status will change
+                    //after these actions. Moreover, calling git status while other git command is performed
+                    //can cause repository crash
+                    UICommandsSource.UICommands.RepoChangedNotifier.IsLocked ||
+                    GitCommandHelpers.VersionInUse.RaceConditionWhenGitStatusIsUpdatingIndex && Module.IsRunningGitProcess())
+                {
+                    _statusIsUpToDate = false; //tell that computed status isn't up to date
+                    return;
+                }
+
+                _commandIsRunning = true;
+                _statusIsUpToDate = true;
+                _lastUpdateTime = Environment.TickCount;
+                if (_ignoredFilesAreStale)
+                {
+                    UpdateIgnoredFiles(false);
+                }
+                AsyncLoader.DoAsync(RunStatusCommand, UpdatedStatusReceived, OnUpdateStatusError);
+                // Always update every 5 min, even if we don't know anything changed
+                ScheduleNext(MaxUpdatePeriod);
+            }
+        }
+
+        private string RunStatusCommand()
+        {
+            string command = GitCommandHelpers.GetAllChangedFilesCmd(true, UntrackedFilesMode.Default);
+            return Module.RunGitCmd(command);
+        }
+
+        private void OnUpdateStatusError(AsyncErrorEventArgs e)
+        {
+            _commandIsRunning = false;
+            CurrentStatus = GitStatusMonitorState.Stopped;
+        }
+
+        private void UpdatedStatusReceived(string updatedStatus)
+        {
+            _commandIsRunning = false;
+
+            if (CurrentStatus != GitStatusMonitorState.Running)
+                return;
+
+            if (_statusIsUpToDate)
+            {
+                var allChangedFiles = GitCommandHelpers.GetAllChangedFilesFromString(Module, updatedStatus);
+                OnGitWorkingDirectoryStatusChanged(new GitWorkingDirectoryStatusEventArgs(allChangedFiles));
+            }
+            else
+            {
+                UpdateImmediately();
+            }
+        }
+
+        private void ScheduleNext(int delay)
+        {
+            var next = Environment.TickCount + delay;
+            if(_nextUpdateTime > Environment.TickCount)
+            {
+                //A time is already set, use closest
+                next = Math.Min(_nextUpdateTime, next);
+            }
+            //Enforce a minimal time between updates, to not update too frequently
+            _nextUpdateTime = Math.Max(next, _lastUpdateTime + MinUpdateInterval);
+        }
+
+        private void UpdateImmediately()
+        {
+            ScheduleNext(MinUpdateDelay);
+            Update();
+        }
+
+
+        private void commandsSource_GitUICommandsChanged(object sender, GitUICommandsChangedEventArgs e)
+        {
+            var oldCommands = e.OldCommands;
+            if (oldCommands != null)
+            {
+                oldCommands.PreCheckoutBranch -= GitUICommands_PreCheckout;
+                oldCommands.PreCheckoutRevision -= GitUICommands_PreCheckout;
+                oldCommands.PostCheckoutBranch -= GitUICommands_PostCheckout;
+                oldCommands.PostCheckoutRevision -= GitUICommands_PostCheckout;
+                oldCommands.PostEditGitIgnore -= GitUICommands_PostEditGitIgnore;
+            }
+
+            var newCommands = sender as GitUICommands;
+            if (newCommands != null)
+            {
+                newCommands.PreCheckoutBranch += GitUICommands_PreCheckout;
+                newCommands.PreCheckoutRevision += GitUICommands_PreCheckout;
+                newCommands.PostCheckoutBranch += GitUICommands_PostCheckout;
+                newCommands.PostCheckoutRevision += GitUICommands_PostCheckout;
+                newCommands.PostEditGitIgnore += GitUICommands_PostEditGitIgnore;
+
+                var module = newCommands.Module;
+                StartWatchingChanges(module.WorkingDir, module.WorkingDirGitDir);
+            }
+        }
+
+        private void GitDirChanged(object sender, FileSystemEventArgs e)
+        {
+            // git directory changed
+            if (e.FullPath.Length == _gitPath.Length)
+                return;
+
+            if (e.FullPath.EndsWith("\\index.lock"))
+                return;
+
+            // submodules directory's subdir changed
+            // cut/paste/rename/delete operations are not expected on directories inside nested .git dirs
+            if (e.FullPath.StartsWith(_submodulesPath) && (Directory.Exists(e.FullPath)))
+                return;
+
+            ScheduleNext(UpdateDelay);
+        }
+
+        private void GitUICommands_PreCheckout(object sender, GitUIBaseEventArgs e)
+        {
+            CurrentStatus = GitStatusMonitorState.Paused;
+        }
+
+        private void GitUICommands_PostCheckout(object sender, GitUIPostActionEventArgs e)
+        {
+            CurrentStatus = GitStatusMonitorState.Running;
+        }
+
+        private void GitUICommands_PostEditGitIgnore(object sender, GitUIBaseEventArgs e)
+        {
+            UpdateIgnoredFiles(true);
+        }
+
+        private void ignoredFilesTimer_Tick(object sender, EventArgs e)
+        {
+            UpdateIgnoredFiles(false);
+        }
+
+        private void timerRefresh_Tick(object sender, EventArgs e)
+        {
+            Update();
         }
 
         // Called for instance at buffer overflow
@@ -283,201 +442,5 @@ namespace GitUI
 
             ScheduleNext(UpdateDelay);
         }
-
-        private void GitDirChanged(object sender, FileSystemEventArgs e)
-        {
-            // git directory changed
-            if (e.FullPath.Length == _gitPath.Length)
-                return;
-
-            if (e.FullPath.EndsWith("\\index.lock"))
-                return;
-
-            // submodules directory's subdir changed
-            // cut/paste/rename/delete operations are not expected on directories inside nested .git dirs
-            if (e.FullPath.StartsWith(_submodulesPath) && (Directory.Exists(e.FullPath)))
-                return;
-
-            ScheduleNext(UpdateDelay);
-        }
-
-        private HashSet<string> LoadIgnoredFiles()
-        { 
-            string lsOutput = Module.RunGitCmd("ls-files -o -i --exclude-standard");
-            string[] tab = lsOutput.Split(new char[] {'\n'}, StringSplitOptions.RemoveEmptyEntries);
-            return new HashSet<string>(tab);
-        }
-
-        private void UpdateIgnoredFiles(bool clearImmediately)
-        {
-            if (clearImmediately)
-                _ignoredFiles = new HashSet<string>();
-
-            AsyncLoader.DoAsync(
-                LoadIgnoredFiles, 
-                (ignoredSet) => { _ignoredFiles = ignoredSet; _ignoredFilesAreStale = false; },
-                (e) => { _ignoredFiles = new HashSet<string>(); }
-                );   
-        }
-
-        private void timerRefresh_Tick(object sender, EventArgs e)
-        {
-            Update();
-        }
-
-        private void Update()
-        {
-            if (CurrentStatus != WorkingStatus.Started)
-                return;
-
-            if (Environment.TickCount >= _nextUpdateTime || 
-                (Environment.TickCount < 0 && _nextUpdateTime > 0))
-            {
-                // If the previous status call hasn't exited yet, we'll wait until it is
-                // so we don't queue up a bunch of commands
-                if (_commandIsRunning ||
-                    //don't update status while repository is being modyfied by GitExt
-                    //or while any git process is running, mostly repository status will change
-                    //after these actions. Moreover, calling git status while other git command is performed
-                    //can cause repository crash
-                    UICommands.RepoChangedNotifier.IsLocked ||
-                    GitCommandHelpers.VersionInUse.RaceConditionWhenGitStatusIsUpdatingIndex && Module.IsRunningGitProcess())
-                {
-                    _statusIsUpToDate = false;//tell that computed status isn't up to date
-                    return;
-                }
-
-                _commandIsRunning = true;
-                _statusIsUpToDate = true;
-                _lastUpdateTime = Environment.TickCount;
-                if (_ignoredFilesAreStale)
-                {
-                    UpdateIgnoredFiles(false);
-                }
-                AsyncLoader.DoAsync(RunStatusCommand, UpdatedStatusReceived, OnUpdateStatusError);
-                // Always update every 5 min, even if we don't know anything changed
-                ScheduleNext(MaxUpdatePeriod);
-            }
-        }
-
-        private String RunStatusCommand()
-        {
-            string command = GitCommandHelpers.GetAllChangedFilesCmd(true, UntrackedFilesMode.Default);
-            return Module.RunGitCmd(command);
-        }
-
-        private void OnUpdateStatusError(AsyncErrorEventArgs e)
-        {
-            _commandIsRunning = false;
-            CurrentStatus = WorkingStatus.Stopped;
-        }
-
-        private void UpdatedStatusReceived(string updatedStatus)
-        {
-            _commandIsRunning = false;
-
-            if (CurrentStatus != WorkingStatus.Started)
-                return;
-
-            if (_statusIsUpToDate)
-            {
-                var allChangedFiles = GitCommandHelpers.GetAllChangedFilesFromString(Module, updatedStatus);
-                _gitStatusMonitorUpdate.Update(allChangedFiles);
-            }
-            else
-            {
-                UpdateImmediately();
-            }
-        }
-
-        private void ScheduleNext(int delay)
-        {
-            var next = Environment.TickCount + delay;
-            if(_nextUpdateTime > Environment.TickCount)
-            {
-                //A time is already set, use closest
-                next = Math.Min(_nextUpdateTime, next);
-            }
-            //Enforce a minimal time between updates, to not update too frequently
-            _nextUpdateTime = Math.Max(next, _lastUpdateTime + MinUpdateInterval);
-        }
-
-        private void UpdateImmediately()
-        {
-            ScheduleNext(MinUpdateDelay);
-            Update();
-        }
-        
-        private WorkingStatus CurrentStatus
-        {
-            get { return _currentStatus; }
-            set
-            {
-                _currentStatus = value;
-                switch (_currentStatus)
-                {
-                    case WorkingStatus.Stopped:
-                        timerRefresh.Stop();
-                        _workTreeWatcher.EnableRaisingEvents = false;
-                        _gitDirWatcher.EnableRaisingEvents = false;
-                        _globalIgnoreWatcher.EnableRaisingEvents = false;
-                        _gitStatusMonitorUpdate.Visible = false;
-                        return;
-                    case WorkingStatus.Paused:
-                        timerRefresh.Stop();
-                        _workTreeWatcher.EnableRaisingEvents = false;
-                        _gitDirWatcher.EnableRaisingEvents = false;
-                        _globalIgnoreWatcher.EnableRaisingEvents = false;
-                        return;
-                    case WorkingStatus.Started:
-                        timerRefresh.Start();
-                        _workTreeWatcher.EnableRaisingEvents = true;
-                        _gitDirWatcher.EnableRaisingEvents = !_gitDirWatcher.Path.StartsWith(_workTreeWatcher.Path);
-                        _globalIgnoreWatcher.EnableRaisingEvents = !string.IsNullOrWhiteSpace(_globalIgnoreWatcher.Path);
-                        ScheduleNext(UpdateDelay);
-                        _gitStatusMonitorUpdate.Visible = true;
-                        return;
-                    default:
-                        throw new NotSupportedException();
-                }
-            }
-        }
-
-        private enum WorkingStatus
-        {
-            Stopped,
-            Paused,
-            Started
-        }
-
-        private void ignoredFilesTimer_Tick(object sender, EventArgs e)
-        {
-            UpdateIgnoredFiles(false);
-        }
-
-        #region IDisposable Support
-        private bool disposedValue = false;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    _workTreeWatcher.Dispose();
-                    _gitDirWatcher.Dispose();
-                    _globalIgnoreWatcher.Dispose();
-                    ignoredFilesTimer.Dispose();
-                    timerRefresh.Dispose();
-                }
-                disposedValue = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-        #endregion
     }
 }

@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using GitCommands.Git;
 using GitCommands.Utils;
+using GitUIPluginInterfaces;
 using JetBrains.Annotations;
 
 namespace GitCommands
@@ -981,7 +982,7 @@ namespace GitCommands
         /*
                source: https://git-scm.com/docs/git-status
         */
-        public static List<GitItemStatus> GetAllChangedFilesFromString(GitModule module, string statusString, bool fromDiff = false)
+        public static List<GitItemStatus> GetAllChangedFilesFromString(IGitModule module, string statusString, bool fromDiff = false)
         {
             var diffFiles = new List<GitItemStatus>();
 

@@ -23,7 +23,6 @@ using GitUI.Properties;
 using GitUI.Script;
 using GitUI.UserControls;
 using GitUI.UserControls.RevisionGridClasses;
-using GitUI.UserControls.ToolStripClasses;
 using GitUIPluginInterfaces;
 using Microsoft.Win32;
 using ResourceManager;
@@ -122,7 +121,6 @@ namespace GitUI.CommandsDialogs
 #endif
         private readonly ToolStripMenuItem _toolStripGitStatus;
         private readonly GitStatusMonitor _gitStatusMonitor;
-        private readonly GitStatusMonitorUpdate _gitStatusMonitorUpdate;
         private readonly FilterRevisionsHelper _filterRevisionsHelper;
         private readonly FilterBranchHelper _filterBranchHelper;
 
@@ -144,51 +142,6 @@ namespace GitUI.CommandsDialogs
         {
             InitializeComponent();
             Translate();
-        }
-
-        //Handle objects that are updated at Git status changes
-        public sealed class GitStatusMonitorUpdate : IGitStatusMonitorUpdate
-        {
-            public GitStatusMonitorUpdate(ToolStripMenuItem toolStripGitStatus, RevisionGrid revisionGrid, RevisionDiff revisionDiff)
-            {
-                _toolStripGitStatus = toolStripGitStatus;
-                _revisionGrid = revisionGrid;
-                _revisionDiff = revisionDiff;
-                CommitTranslatedString = "Commit";
-                _commitIconProvider = new CommitIconProvider();
-            }
-            public void Update(IList<GitItemStatus> status)
-            {
-                _toolStripGitStatus.Image = _commitIconProvider.GetCommitIcon(status);
-
-                if (status.Count == 0)
-                    _toolStripGitStatus.Text = CommitTranslatedString;
-                else
-                    _toolStripGitStatus.Text = string.Format(CommitTranslatedString + " ({0})", status.Count.ToString());
-
-                _revisionGrid.UpdateArtificialCommitCount(status);
-                //The diff filelist is not updated, as the selected diff is unset
-                //_revisionDiff.RefreshArtificial();
-            }
-
-            public bool Visible
-            {
-                get
-                {
-                    return _toolStripGitStatus.Visible;
-                }
-                set
-                {
-                    _toolStripGitStatus.Visible = value;
-                }
-            }
-
-            public string CommitTranslatedString { get; set; }
-
-            private ToolStripMenuItem _toolStripGitStatus;
-            private RevisionGrid _revisionGrid;
-            private RevisionDiff _revisionDiff;
-            private ICommitIconProvider _commitIconProvider;
         }
 
         public FormBrowse(GitUICommands aCommands, string filter)
@@ -238,14 +191,15 @@ namespace GitUI.CommandsDialogs
                     ImageScaling = ToolStripItemImageScaling.SizeToFit,
                     Margin = new Padding(0, 1, 0, 2)
                 };
-                _gitStatusMonitorUpdate = new GitStatusMonitorUpdate(_toolStripGitStatus, RevisionGrid, revisionDiff);
-                _gitStatusMonitor = new GitStatusMonitor(_gitStatusMonitorUpdate);
-                if (aCommands != null)
-                    _gitStatusMonitor.UICommandsSource = this;
+
+                _gitStatusMonitor = new GitStatusMonitor();
+                _gitStatusMonitor.Init(this);
+                _gitStatusMonitor.GitStatusMonitorStateChanged += (s, e) => { /* do something */ };
+                _gitStatusMonitor.GitWorkingDirectoryStatusChanged += (s, e) => { /* do something */ };
+
                 _toolStripGitStatus.Click += StatusClick;
                 ToolStrip.Items.Insert(ToolStrip.Items.IndexOf(toolStripButton1), _toolStripGitStatus);
                 ToolStrip.Items.Remove(toolStripButton1);
-                _gitStatusMonitorUpdate.CommitTranslatedString = toolStripButton1.Text;
             }
 
             if (!EnvUtils.RunningOnWindows())
