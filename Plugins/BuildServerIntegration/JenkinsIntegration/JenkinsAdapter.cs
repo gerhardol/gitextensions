@@ -48,8 +48,8 @@ namespace JenkinsIntegration
         private HttpClient _httpClient;
 
         private readonly Dictionary<string, JenkinsCacheInfo> LastBuildCache = new Dictionary<string, JenkinsCacheInfo>();
-        private bool _firstQueryAfterInit;
-        
+        private readonly IList<string> _projectsUrls = new List<string>();
+
         public void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config, Func<string, bool> isCommitInRevisionGrid)
         {
             if (_buildServerWatcher != null)
@@ -81,7 +81,6 @@ namespace JenkinsIntegration
                     AddGetBuildUrl(projectUrl);
                 }
             }
-            _firstQueryAfterInit = true;
         }
 
         /// <summary>
@@ -99,6 +98,18 @@ namespace JenkinsIntegration
                 _projectsUrls.Add(projectUrl);
                 LastBuildCache[projectUrl] = new JenkinsCacheInfo();
             }
+        }
+
+        public class ResponseInfo
+        {
+            public string Url { get; set; }
+            public long Timestamp { get; set; }
+            public IEnumerable<JToken> JobDescription { get; set; }
+        }
+
+        public class JenkinsCacheInfo
+        {
+            public long Timestamp = -1;
         }
 
         private Task<ResponseInfo> GetBuildInfoTask(string projectUrl, bool fullInfo, CancellationToken cancellationToken)
