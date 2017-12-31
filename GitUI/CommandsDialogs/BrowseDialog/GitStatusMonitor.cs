@@ -102,6 +102,10 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             get { return _currentStatus; }
             set
             {
+                if (value == _currentStatus)
+                {
+                    return;
+                }
                 _currentStatus = value;
                 switch (_currentStatus)
                 {
