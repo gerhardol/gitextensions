@@ -21,7 +21,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             GC.SuppressFinalize(this);
         }
 
-        protected void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
             if (!disposed)
             {
@@ -34,6 +34,8 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                     ignoredFilesTimer = null;
                     timerRefresh.Dispose();
                     timerRefresh = null;
+                    if (components != null)
+                        components.Dispose();
                 }
                 disposed = true;
             }

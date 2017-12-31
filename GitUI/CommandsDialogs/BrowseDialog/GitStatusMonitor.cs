@@ -152,6 +152,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             }
             UICommandsSource = commandsSource;
             UICommandsSource.GitUICommandsChanged += commandsSource_GitUICommandsChanged;
+            commandsSource_activate(commandsSource);
         }
         
         protected void OnGitStatusMonitorStateChanged(GitStatusMonitorStateEventArgs e)
@@ -341,7 +342,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             Update();
         }
 
-
         private void commandsSource_GitUICommandsChanged(object sender, GitUICommandsChangedEventArgs e)
         {
             var oldCommands = e.OldCommands;
@@ -354,7 +354,12 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                 oldCommands.PostEditGitIgnore -= GitUICommands_PostEditGitIgnore;
             }
 
-            var newCommands = (sender as IGitUICommandsSource).UICommands;
+            commandsSource_activate(sender as IGitUICommandsSource);
+        }
+
+        private void commandsSource_activate(IGitUICommandsSource sender)
+        {
+            var newCommands = sender.UICommands;
             if (newCommands != null)
             {
                 newCommands.PreCheckoutBranch += GitUICommands_PreCheckout;
