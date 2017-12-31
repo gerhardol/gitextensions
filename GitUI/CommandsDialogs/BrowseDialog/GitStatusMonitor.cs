@@ -354,7 +354,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                 oldCommands.PostEditGitIgnore -= GitUICommands_PostEditGitIgnore;
             }
 
-            var newCommands = (sender as GitModuleForm).UICommands;
+            var newCommands = (sender as IGitUICommandsSource).UICommands;
             if (newCommands != null)
             {
                 newCommands.PreCheckoutBranch += GitUICommands_PreCheckout;
