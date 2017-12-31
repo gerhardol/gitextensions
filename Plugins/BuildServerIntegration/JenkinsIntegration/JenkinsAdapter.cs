@@ -262,7 +262,6 @@ namespace JenkinsIntegration
                 }
 
                 //Complete the job, it will be run again with Observe.Retry() (every 10th sec)
-                //(this will find new builds and update InProgress jobs)
                 observer.OnCompleted();
             }
             catch (OperationCanceledException)
