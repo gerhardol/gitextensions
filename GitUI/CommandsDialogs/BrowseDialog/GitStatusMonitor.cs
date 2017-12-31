@@ -348,6 +348,26 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
         private void commandsSource_GitUICommandsChanged(object sender, GitUICommandsChangedEventArgs e)
         {
+        }
+
+        private void ScheduleDeferredUpdate()
+        {
+            _nextUpdateTime = Environment.TickCount + UpdateDelay;
+        }
+
+        private void ScheduleImmediateUpdate()
+        {
+            _nextUpdateTime = Environment.TickCount;
+        }
+
+        private void UpdateImmediately()
+        {
+            ScheduleImmediateUpdate();
+            Update();
+        }
+
+        private void commandsSource_GitUICommandsChanged(object sender, GitUICommandsChangedEventArgs e)
+        {
             var oldCommands = e.OldCommands;
             if (oldCommands != null)
             {
@@ -392,6 +412,31 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                 return;
 
             ScheduleNext(UpdateDelay);
+                newCommands.PreCheckoutBranch += GitUICommands_PreCheckout;
+                newCommands.PreCheckoutRevision += GitUICommands_PreCheckout;
+                newCommands.PostCheckoutBranch += GitUICommands_PostCheckout;
+                newCommands.PostCheckoutRevision += GitUICommands_PostCheckout;
+                newCommands.PostEditGitIgnore += GitUICommands_PostEditGitIgnore;
+
+                var module = newCommands.Module;
+                StartWatchingChanges(module.WorkingDir, module.WorkingDirGitDir);
+        }
+
+        private void GitDirChanged(object sender, FileSystemEventArgs e)
+        {
+            // git directory changed
+            if (e.FullPath.Length == _gitPath.Length)
+                return;
+
+            if (e.FullPath.EndsWith("\\index.lock"))
+                return;
+
+            // submodules directory's subdir changed
+            // cut/paste/rename/delete operations are not expected on directories inside nested .git dirs
+            if (e.FullPath.StartsWith(_submodulesPath) && (Directory.Exists(e.FullPath)))
+                return;
+
+            ScheduleDeferredUpdate();
         }
 
         private void GitUICommands_PreCheckout(object sender, GitUIBaseEventArgs e)
