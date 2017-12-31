@@ -207,6 +207,15 @@ namespace GitUI.BuildServerIntegration
         {
             //Extract "name of repo" from remote url
             string remoteName = Module.GetCurrentRemote();
+            if (remoteName.IsNullOrWhiteSpace())
+            {
+                //No remote for the branch, for instance submodule. Use first remote 
+                var remotes = Module.GetRemotes();
+                if (remotes.Length > 0)
+                {
+                    remoteName = remotes[0];
+                }
+            }
             var remoteUrl = Module.GetSetting(string.Format(SettingKeyString.RemoteUrl, remoteName));
             var start = 1 + remoteUrl.LastIndexOfAny(new char[] { '/', Path.DirectorySeparatorChar });
             var len = remoteUrl.Length - start;
