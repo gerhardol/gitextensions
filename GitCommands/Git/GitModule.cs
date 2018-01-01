@@ -2597,10 +2597,6 @@ namespace GitCommands
         public string GetCurrentRemote()
         {
             string remote = GetSetting(string.Format(SettingKeyString.BranchRemote, GetSelectedBranch()));
-            if (remote.IsNullOrWhiteSpace())
-            {
-                remote = "origin";
-            }
             return remote;
         }
 
