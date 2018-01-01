@@ -54,17 +54,11 @@ namespace GitUI.Editor.Diff
                     };
 
                     var lineNumbers = regex.Match(line);
-                    if (lineNumbers.Groups["leftStart"].Success && lineNumbers.Groups["rightStart"].Success)
-                    {
-                        leftLineNum = int.Parse(lineNumbers.Groups["leftStart"].Value);
-                        rightLineNum = int.Parse(lineNumbers.Groups["rightStart"].Value);
-                        AddToResult(ret, meta);
-                        isHeaderLineLocated = true;
-                    } else
-                    {
-                        //break;
-                    }
+                    leftLineNum = int.Parse(lineNumbers.Groups["leftStart"].Value);
+                    rightLineNum = int.Parse(lineNumbers.Groups["rightStart"].Value);
 
+                    AddToResult(ret, meta);
+                    isHeaderLineLocated = true;
                 }
                 else if (isHeaderLineLocated && isCombinedDiff)
                 {

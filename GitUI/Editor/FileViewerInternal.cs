@@ -160,11 +160,7 @@ namespace GitUI.Editor
 
             if (isDiff)
             {
-                if (_lineNumbersControl.DisplayLineNumFor(text)==0)
-                {
-                    TextEditor.Text = "";
-                }
-                //if(_lineNumbersControl.)
+                _lineNumbersControl.DisplayLineNumFor(text);
             }
             TextEditor.Refresh();
         }
