@@ -100,7 +100,7 @@ namespace GitUI
 
         public static void ViewChanges(this FileViewer diffViewer, string revision, string parentRevision, GitItemStatus file, string defaultText)
         {
-            if (parentRevision == null || !file.IsTracked)
+            if (!file.IsTracked)
             {
                 //Untracked files have no diff, view complete file
                 diffViewer.ViewGitItemRevision(file, revision);

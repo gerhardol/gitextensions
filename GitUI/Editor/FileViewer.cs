@@ -498,7 +498,9 @@ namespace GitUI.Editor
             if (file.TreeGuid.IsNullOrEmpty())
             {
                 //No blob, just view the physical file
-                Debug.Assert(GitRevision.IsArtificial(guid) && File.Exists(Path.Combine(Module.WorkingDir, file.Name)));
+                Debug.Assert(GitRevision.IsArtificial(guid) &&
+                             (File.Exists(Path.Combine(Module.WorkingDir, file.Name)) ||
+                              Directory.Exists(Path.Combine(Module.WorkingDir, file.Name))));
                 ViewFile(file.Name);
             }
             else
