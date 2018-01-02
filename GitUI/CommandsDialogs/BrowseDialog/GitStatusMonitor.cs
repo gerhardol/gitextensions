@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using GitCommands;
@@ -97,10 +97,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             get { return _currentStatus; }
             set
             {
-                if (value == _currentStatus)
-                {
-                    return;
-                }
                 _currentStatus = value;
                 switch (_currentStatus)
                 {
@@ -128,6 +124,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                             _workTreeWatcher.EnableRaisingEvents = true;
                             _gitDirWatcher.EnableRaisingEvents = !_gitDirWatcher.Path.StartsWith(_workTreeWatcher.Path);
                             _globalIgnoreWatcher.EnableRaisingEvents = !string.IsNullOrWhiteSpace(_globalIgnoreWatcher.Path);
+                            _prevUpdateTime = 0;
                             ScheduleNext(UpdateDelay);
                         }
                         break;
