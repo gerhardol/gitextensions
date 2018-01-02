@@ -46,10 +46,10 @@ namespace GitUI
             {
                 return true;
             }
-            else if (firstRevision == GitRevision.UnstagedGuid) //working directory changes
+            else if (firstRevision == GitRevision.UnstagedGuid &&
+                (secondRevision == null || secondRevision == GitRevision.IndexGuid))
             {
-                if (secondRevision == null || secondRevision == GitRevision.IndexGuid)
-                    return !file.IsTracked;
+                return !file.IsTracked;
             }
             return false;
         }
@@ -91,7 +91,7 @@ namespace GitUI
         public static void ViewChanges(this FileViewer diffViewer, IList<GitRevision> revisions, GitItemStatus file, string defaultText)
         {
             var firstRevision = revisions.Count > 0 ? revisions[0] : null;
-            string firstRevisionGuid = firstRevision == null ? null : firstRevision.Guid;
+            string firstRevisionGuid = firstRevision?.Guid;
             string parentRevisionGuid = revisions.Count == 2 ? revisions[1].Guid : null;
             if (parentRevisionGuid == null && firstRevision != null)
                 parentRevisionGuid = firstRevision.FirstParentGuid;
@@ -100,15 +100,10 @@ namespace GitUI
 
         public static void ViewChanges(this FileViewer diffViewer, string revision, string parentRevision, GitItemStatus file, string defaultText)
         {
-            if (parentRevision == null)
+            if (parentRevision == null || !file.IsTracked)
             {
-                if (file.TreeGuid.IsNullOrEmpty())
-                    diffViewer.ViewGitItemRevision(file.Name, revision);
-                else if (!file.IsSubmodule)
-                    diffViewer.ViewGitItem(file.Name, file.TreeGuid);
-                else
-                    diffViewer.ViewText(file.Name,
-                        LocalizationHelpers.GetSubmoduleText(diffViewer.Module, file.Name, file.TreeGuid));
+                //Untracked files have no diff, view complete file
+                diffViewer.ViewGitItemRevision(file, revision);
             }
             else
             {

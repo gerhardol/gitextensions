@@ -288,7 +288,10 @@ namespace GitUI.CommandsDialogs
                 var scrollpos = View.ScrollPos;
 
                 View.Encoding = Diff.Encoding;
-                View.ViewGitItemRevision(fileName, revision.Guid);
+                GitItemStatus file = new GitItemStatus();
+                file.IsTracked = true; //If file history could be opened, it must be tracked
+                file.Name = fileName;
+                View.ViewGitItemRevision(file, revision.Guid);
                 View.ScrollPos = scrollpos;
             }
             else if (tabControl1.SelectedTab == DiffTab)

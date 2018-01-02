@@ -16,6 +16,7 @@ using GitCommands.Settings;
 using GitUI.CommandsDialogs.SettingsDialog.Pages;
 using GitUI.Editor.Diff;
 using ResourceManager;
+using System.Diagnostics;
 
 namespace GitUI.Editor
 {
@@ -482,16 +483,27 @@ namespace GitUI.Editor
             RestoreCurrentScrollPos();
         }
 
-        public void ViewGitItemRevision(string fileName, string guid)
+        public void ViewGitItemRevision(GitItemStatus file, string guid)
         {
-            if (guid == GitRevision.UnstagedGuid) //working directory changes
+            if (file.TreeGuid.IsNullOrEmpty())
             {
-                ViewFile(fileName);
+                if (file.IsTracked && GitRevision.IsArtificial(guid))
+                {
+                    //The blob is the same as in HEAD
+                    guid = "HEAD";
+                }
+                file.TreeGuid = Module.GetFileBlobHash(file.Name, guid);
+            }
+
+            if (file.TreeGuid.IsNullOrEmpty())
+            {
+                //No blob, just view the physical file
+                Debug.Assert(GitRevision.IsArtificial(guid) && File.Exists(Path.Combine(Module.WorkingDir, file.Name)));
+                ViewFile(file.Name);
             }
             else
             {
-                string blob = Module.GetFileBlobHash(fileName, guid);
-                ViewGitItem(fileName, blob);
+                ViewGitItem(file.Name, file.TreeGuid);
             }
         }
 
