@@ -485,26 +485,18 @@ namespace GitUI.Editor
 
         public void ViewGitItemRevision(GitItemStatus file, string guid)
         {
-            if (file.TreeGuid.IsNullOrEmpty())
+            if (GitRevision.UnstagedGuid == guid)
             {
-                if (file.IsTracked && GitRevision.IsArtificial(guid))
-                {
-                    //The blob is the same as in HEAD
-                    guid = "HEAD";
-                }
-                file.TreeGuid = Module.GetFileBlobHash(file.Name, guid);
-            }
-
-            if (file.TreeGuid.IsNullOrEmpty())
-            {
-                //No blob, just view the physical file
-                Debug.Assert(GitRevision.IsArtificial(guid) &&
-                             (File.Exists(Path.Combine(Module.WorkingDir, file.Name)) ||
-                              Directory.Exists(Path.Combine(Module.WorkingDir, file.Name))));
+                //No blob exists (special handling for staged), just view the physical file
+                //If the file has been deleted this will return null (nothing can be displayed)
                 ViewFile(file.Name);
             }
             else
             {
+                if (file.TreeGuid.IsNullOrEmpty())
+                {
+                    file.TreeGuid = Module.GetFileBlobHash(file.Name, guid);
+                }
                 ViewGitItem(file.Name, file.TreeGuid);
             }
         }

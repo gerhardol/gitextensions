@@ -3019,6 +3019,8 @@ namespace GitCommands
         {
             if (revision == GitRevision.UnstagedGuid) //working directory changes
             {
+                //This file has no blob
+                Debug.Assert(false);
                 return null;
             }
             if (revision == GitRevision.IndexGuid) //index

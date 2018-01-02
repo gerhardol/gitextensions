@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -100,18 +102,22 @@ namespace GitUI
 
         public static void ViewChanges(this FileViewer diffViewer, string revision, string parentRevision, GitItemStatus file, string defaultText)
         {
-            if (!file.IsTracked)
+            if (!IsItemUntracked(file, parentRevision, revision))//tracked just?
             {
-                //Untracked files have no diff, view complete file
-                diffViewer.ViewGitItemRevision(file, revision);
+                //The preferred way to view changes (for new/deleted, show complete file as changed to /dev/null)
+                diffViewer.ViewPatch(() =>
+                {
+                    string selectedPatch = diffViewer.GetSelectedPatch(parentRevision, revision, file);
+                    return selectedPatch ?? defaultText;
+                });
             }
             else
             {
-                diffViewer.ViewPatch(() =>
-                    {
-                        string selectedPatch = diffViewer.GetSelectedPatch(parentRevision, revision, file);
-                        return selectedPatch ?? defaultText;
-                    });
+                //Untracked files cannot be viewed with diff, view complete physical file (empty if deleted)
+                Debug.Assert(GitRevision.UnstagedGuid == revision &&
+                             (File.Exists(Path.Combine(diffViewer.Module.WorkingDir, file.Name)) ||
+                              Directory.Exists(Path.Combine(diffViewer.Module.WorkingDir, file.Name))));
+                diffViewer.ViewFile(file.Name);
             }
         }
 
