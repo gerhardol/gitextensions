@@ -419,8 +419,10 @@ namespace GitUI.Editor
             else if (status != null)
                 _async.Load(() =>
                     {
+                        if (status.IsFaulted || status.IsCanceled)
+                            return string.Format("Submodule \"{0}\" failure to get status", fileName);
                         if (status.Result == null)
-                            return string.Format("Submodule \"{0}\" has unresolved conflicts", fileName);
+                            return string.Format("Submodule \"{0}\" has unexpectedly no result", fileName);
                         return LocalizationHelpers.ProcessSubmoduleStatus(Module, status.Result);
                     }, ViewPatch);
             else
@@ -549,6 +551,7 @@ namespace GitUI.Editor
                                 PictureBox.Image = image;
                             });
             }
+            //Check binary from extension/attributes (a secondary check for file contents before display)
             else if (IsBinaryFile(fileName))
             {
                 ViewText(null, "Binary file: " + fileName);

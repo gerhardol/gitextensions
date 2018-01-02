@@ -74,7 +74,7 @@ namespace GitUI
                 return FileReader.ReadFileContent(fullPath, diffViewer.Encoding);
             }
 
-            if (file.IsSubmodule && file.SubmoduleStatus != null)
+            if (file.IsSubmodule && file.SubmoduleStatus != null && file.SubmoduleStatus.Result != null)
                 return LocalizationHelpers.ProcessSubmoduleStatus(diffViewer.Module, file.SubmoduleStatus.Result);
 
             PatchApply.Patch patch = GetItemPatch(diffViewer.Module, file, firstRevision, secondRevision,

@@ -2406,8 +2406,10 @@ namespace GitCommands
                     item.SubmoduleStatus = Task.Factory.StartNew(() =>
                     {
                         Patch patch = GetSingleDiff(from, to, item.Name, item.OldName, "", SystemEncoding, true);
-                        string text = patch != null ? patch.Text : "";
-                        var submoduleStatus = GitCommandHelpers.GetSubmoduleStatus(text, this, item.Name);
+                        //git-diff can return empty result for submodules in some situations, likely a git bug. Do not make exception on this
+                        if (patch == null || patch.Text.IsNullOrEmpty())
+                            return null;
+                        var submoduleStatus = GitCommandHelpers.GetSubmoduleStatus(patch.Text, this, item.Name);
                         if (submoduleStatus.Commit != submoduleStatus.OldCommit)
                         {
                             var submodule = submoduleStatus.GetSubmodule(this);

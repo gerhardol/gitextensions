@@ -231,7 +231,7 @@ namespace GitUI
         {
             if (item.IsSubmodule &&
                 item.SubmoduleStatus != null &&
-                item.SubmoduleStatus.IsCompleted &&
+                item.SubmoduleStatus.Status == TaskStatus.RanToCompletion &&
                 item.SubmoduleStatus.Result != null)
             {
                 text += item.SubmoduleStatus.Result.AddedAndRemovedString();
@@ -623,12 +623,11 @@ namespace GitUI
             if (gitItemStatus.IsChanged || gitItemStatus.IsConflict)
             {
                 if (!gitItemStatus.IsSubmodule || gitItemStatus.SubmoduleStatus == null ||
-                    !gitItemStatus.SubmoduleStatus.IsCompleted)
+                    gitItemStatus.SubmoduleStatus.Status != TaskStatus.RanToCompletion ||
+                    gitItemStatus.SubmoduleStatus.Result == null)
                     return 2;
 
                 var status = gitItemStatus.SubmoduleStatus.Result;
-                if (status == null)
-                    return 2;
                 if (status.Status == SubmoduleStatus.FastForward)
                     return 6 + (status.IsDirty ? 1 : 0);
                 if (status.Status == SubmoduleStatus.Rewind)

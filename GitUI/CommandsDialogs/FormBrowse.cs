@@ -2480,7 +2480,8 @@ namespace GitUI.CommandsDialogs
                 // Add all submodules inside the current repository:
                 foreach (var submodule in threadModule.GetSubmodulesLocalPaths().OrderBy(submoduleName => submoduleName))
                 {
-                    cancelToken.ThrowIfCancellationRequested();
+                    if (cancelToken.IsCancellationRequested)
+                        break;
                     var name = submodule;
                     string path = threadModule.GetSubmoduleFullPath(submodule);
                     if (AppSettings.DashboardShowCurrentBranch && !GitModule.IsBareRepository(path))
