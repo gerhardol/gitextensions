@@ -40,42 +40,15 @@ namespace GitUI
             }
         }
 
-        public static bool IsItemUntracked(GitItemStatus file,
-            string firstRevision, string secondRevision)
-        {
-            if (firstRevision == GitRevision.UnstagedGuid && file.IsDeleted ||
-                secondRevision == GitRevision.UnstagedGuid && file.IsNew)
-            {
-                return true;
-            }
-            else if (firstRevision == GitRevision.UnstagedGuid &&
-                (secondRevision == null || secondRevision == GitRevision.IndexGuid))
-            {
-                return !file.IsTracked;
-            }
-            return false;
-        }
-
         private static PatchApply.Patch GetItemPatch(GitModule module, GitItemStatus file,
             string firstRevision, string secondRevision, string diffArgs, Encoding encoding)
         {
             return module.GetSingleDiff(firstRevision, secondRevision, file.Name, file.OldName,
-                    diffArgs, encoding, true);
+                    diffArgs, encoding, true, file.IsTracked);
         }
 
         public static string GetSelectedPatch(this FileViewer diffViewer, string firstRevision, string secondRevision, GitItemStatus file)
         {
-            if (firstRevision == null)
-                return null;
-
-            if (IsItemUntracked(file, firstRevision, secondRevision))
-            {
-                var fullPath = Path.Combine(diffViewer.Module.WorkingDir, file.Name);
-                if (Directory.Exists(fullPath) && GitModule.IsValidGitWorkingDir(fullPath))
-                    return LocalizationHelpers.GetSubmoduleText(diffViewer.Module, file.Name.TrimEnd('/'), "");
-                return FileReader.ReadFileContent(fullPath, diffViewer.Encoding);
-            }
-
             if (file.IsSubmodule && file.SubmoduleStatus != null && file.SubmoduleStatus.Result != null)
                 return LocalizationHelpers.ProcessSubmoduleStatus(diffViewer.Module, file.SubmoduleStatus.Result);
 
@@ -102,23 +75,11 @@ namespace GitUI
 
         public static void ViewChanges(this FileViewer diffViewer, string revision, string parentRevision, GitItemStatus file, string defaultText)
         {
-            if (!IsItemUntracked(file, parentRevision, revision))//tracked just?
+            diffViewer.ViewPatch(() =>
             {
-                //The preferred way to view changes (for new/deleted, show complete file as changed to /dev/null)
-                diffViewer.ViewPatch(() =>
-                {
-                    string selectedPatch = diffViewer.GetSelectedPatch(parentRevision, revision, file);
-                    return selectedPatch ?? defaultText;
-                });
-            }
-            else
-            {
-                //Untracked files cannot be viewed with diff, view complete physical file (empty if deleted)
-                Debug.Assert(GitRevision.UnstagedGuid == revision &&
-                             (File.Exists(Path.Combine(diffViewer.Module.WorkingDir, file.Name)) ||
-                              Directory.Exists(Path.Combine(diffViewer.Module.WorkingDir, file.Name))));
-                diffViewer.ViewFile(file.Name);
-            }
+                string selectedPatch = diffViewer.GetSelectedPatch(parentRevision, revision, file);
+                return selectedPatch ?? defaultText;
+            });
         }
 
         public static void RemoveIfExists(this TabControl tabControl, TabPage page)
