@@ -1,4 +1,5 @@
 @echo off
+echo on
 
 cd /d "%~p0"
 
