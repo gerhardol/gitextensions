@@ -485,12 +485,14 @@ namespace GitUI.Editor
 
         public void ViewGitItemRevision(string fileName, string guid)
         {
-            if (guid == GitRevision.UnstagedGuid) //working directory changes
+            if (guid == GitRevision.UnstagedGuid)
             {
+                //No blob exists for unstaged, just present from file system
                 ViewFile(fileName);
             }
             else
             {
+                //Retrieve blob, same as GitItemStatus.TreeGuid
                 string blob = Module.GetFileBlobHash(fileName, guid);
                 ViewGitItem(fileName, blob);
             }
