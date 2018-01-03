@@ -483,21 +483,16 @@ namespace GitUI.Editor
             RestoreCurrentScrollPos();
         }
 
-        public void ViewGitItemRevision(GitItemStatus file, string guid)
+        public void ViewGitItemRevision(string fileName, string guid)
         {
-            if (GitRevision.UnstagedGuid == guid)
+            if (guid == GitRevision.UnstagedGuid) //working directory changes
             {
-                //No blob exists (special handling for staged), just view the physical file
-                //If the file has been deleted this will return null (nothing can be displayed)
-                ViewFile(file.Name);
+                ViewFile(fileName);
             }
             else
             {
-                if (file.TreeGuid.IsNullOrEmpty())
-                {
-                    file.TreeGuid = Module.GetFileBlobHash(file.Name, guid);
-                }
-                ViewGitItem(file.Name, file.TreeGuid);
+                string blob = Module.GetFileBlobHash(fileName, guid);
+                ViewGitItem(fileName, blob);
             }
         }
 
