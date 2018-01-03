@@ -49,6 +49,16 @@ namespace GitUI
 
         public static string GetSelectedPatch(this FileViewer diffViewer, string firstRevision, string secondRevision, GitItemStatus file)
         {
+            if (!file.IsTracked)
+            {
+                var fullPath = Path.Combine(diffViewer.Module.WorkingDir, file.Name);
+                if (Directory.Exists(fullPath) && GitModule.IsValidGitWorkingDir(fullPath))
+                {
+                    //git-status does not detect details for untracked and git-diff --no-index will not give info
+                    return LocalizationHelpers.GetSubmoduleText(diffViewer.Module, file.Name.TrimEnd('/'), "");
+                }
+            }
+
             if (file.IsSubmodule && file.SubmoduleStatus != null && file.SubmoduleStatus.Result != null)
                 return LocalizationHelpers.ProcessSubmoduleStatus(diffViewer.Module, file.SubmoduleStatus.Result);
 

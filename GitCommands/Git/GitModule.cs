@@ -2225,8 +2225,8 @@ namespace GitCommands
             }
 
             //fix refs slashes
-            from = from.ToPosixPath();
-            to = to == null ? "":to.ToPosixPath();
+            from = from == null ? "" : from.ToPosixPath();
+            to = to == null ? "" : to.ToPosixPath();
             string commitRange = _revisionDiffProvider.Get(from, to);
             if (AppSettings.UsePatienceDiffAlgorithm)
                 extraDiffArguments = string.Concat(extraDiffArguments, " --patience");
