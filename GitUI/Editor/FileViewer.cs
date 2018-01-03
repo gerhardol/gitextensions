@@ -16,7 +16,6 @@ using GitCommands.Settings;
 using GitUI.CommandsDialogs.SettingsDialog.Pages;
 using GitUI.Editor.Diff;
 using ResourceManager;
-using System.Diagnostics;
 
 namespace GitUI.Editor
 {
@@ -487,7 +486,7 @@ namespace GitUI.Editor
         {
             if (guid == GitRevision.UnstagedGuid)
             {
-                //No blob exists for unstaged, just present from file system
+                //No blob exists for unstaged, present contents from file system
                 ViewFile(fileName);
             }
             else
