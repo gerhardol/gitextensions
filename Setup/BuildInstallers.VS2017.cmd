@@ -8,9 +8,6 @@ IF "%Configuration%"=="" SET Configuration=Release
 REM https://github.com/3F/hMSBuild
 set msbuild="hMSBuild.bat"
 set project=..\GitExtensions.VS2015.sln
-set projectShellEx=..\GitExtensionsShellEx\GitExtensionsShellEx.vcxproj
-set projectSshAskPass=..\GitExtSshAskPass\SshAskPass.vcxproj
-set SkipShellExtRegistration=1
 set EnableNuGetPackageRestore=true
 ..\.nuget\nuget.exe restore %project%
 set msbuildparams=/p:Configuration=%Configuration% /t:restore /t:Rebuild /nologo /v:m
