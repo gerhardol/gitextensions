@@ -2,14 +2,14 @@
 
 cd /d "%~p0"
 
-REM Visual Studio Version is set in Developer Command Prompt, set manually if run externally
-IF "%VisualStudioVersion%"=="" SET VisualStudioVersion=14.0
 SET Configuration=%1
 IF "%Configuration%"=="" SET Configuration=Release
+
 SET BuildType=%2
 IF "%BuildType%"=="" SET BuildType=Rebuild
- 
-set msbuild="%programfiles(x86)%\MSBuild\%VisualStudioVersion%\Bin\MSBuild.exe"
+
+REM https://github.com/3F/hMSBuild
+set msbuild="hMSBuild.bat"
 set projectShellEx=..\GitExtensionsShellEx\GitExtensionsShellEx.VS2015.sln
 set projectSshAskPass=..\GitExtSshAskPass\GitExtSshAskPass.VS2015.sln
 set SkipShellExtRegistration=1
