@@ -19,7 +19,7 @@ IF "%BuildType%"=="" SET BuildType=Rebuild
 
 set normal=GitExtensions-%Version%-Setup.msi
 set complete=GitExtensions-%Version%-SetupComplete.msi
-set msbuild=hMSBuild.bat -notamd64
+for /f "tokens=*" %%i in ('hMSBuild.bat -only-path -notamd64') do set msbuild="%%i"
 set output=bin\%Configuration%\GitExtensions.msi
 set project=Setup.wixproj
 

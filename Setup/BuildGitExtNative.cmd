@@ -8,7 +8,7 @@ IF "%Configuration%"=="" SET Configuration=Release
 SET BuildType=%2
 IF "%BuildType%"=="" SET BuildType=Rebuild
 
-set msbuild=hMSBuild.bat -notamd64
+for /f "tokens=*" %%i in ('hMSBuild.bat -only-path -notamd64') do set msbuild="%%i"
 set projectShellEx=..\GitExtensionsShellEx\GitExtensionsShellEx.VS2015.sln
 set projectSshAskPass=..\GitExtSshAskPass\GitExtSshAskPass.VS2015.sln
 set SkipShellExtRegistration=1
