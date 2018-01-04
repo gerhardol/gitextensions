@@ -5,7 +5,7 @@ cd /d "%~p0"
 SET Configuration=%1
 IF "%Configuration%"=="" SET Configuration=Release
 
-set msbuild="hMSBuild.bat -only-path -notamd64"
+set msbuild=hMSBuild.bat -notamd64
 set project=..\GitExtensions.VS2015.sln
 set EnableNuGetPackageRestore=true
 ..\.nuget\nuget.exe restore %project%
