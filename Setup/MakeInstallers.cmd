@@ -1,6 +1,5 @@
 @echo off
-
-call DownloadExternals.cmd
+echo on
 
 rem
 rem Update this version number with every release
@@ -22,8 +21,7 @@ IF "%BuildType%"=="" SET BuildType=Rebuild
 set normal=GitExtensions-%Version%-Setup.msi
 set complete=GitExtensions-%Version%-SetupComplete.msi
 
-REM https://github.com/3F/hMSBuild
-set msbuild="hMSBuild.bat"
+for /f "tokens=*" %%i in ('hMSBuild.bat -only-path -notamd64') do set msbuild="%%i"
 set output=bin\%Configuration%\GitExtensions.msi
 set project=Setup.wixproj
 
@@ -43,11 +41,11 @@ echo.
 echo Building %normal%
 %build% /p:IncludeRequiredSoftware=0
 IF ERRORLEVEL 1 EXIT /B 1
-copy bin\%Configuration%\GitExtensions.msi %normal%
+copy %output% %normal%
 IF ERRORLEVEL 1 EXIT /B 1
 
 echo Building %complete%
 %build% /p:IncludeRequiredSoftware=1
 IF ERRORLEVEL 1 EXIT /B 1
-copy bin\%Configuration%\GitExtensions.msi %complete%
+copy %output% %complete%
 IF ERRORLEVEL 1 EXIT /B 1

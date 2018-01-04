@@ -6,22 +6,16 @@ cd /d "%~p0"
 SET Configuration=%1
 IF "%Configuration%"=="" SET Configuration=Release
 
-REM https://github.com/3F/hMSBuild
-set msbuild="hMSBuild.bat"
+for /f "tokens=*" %%i in ('hMSBuild.bat -only-path -notamd64') do set msbuild="%%i"
 set project=..\GitExtensions.VS2015.sln
 set EnableNuGetPackageRestore=true
 ..\.nuget\nuget.exe restore %project%
-set msbuildparams=/p:Configuration=%Configuration% /t:Clean /nologo /v:m
+set msbuildparams=/p:Configuration=%Configuration% /t:Rebuild /nologo /v:m
 
-REM Clean the solution, it is built with the installer
+call BuildGitExtNative.cmd %Configuration% Rebuild
+IF ERRORLEVEL 1 EXIT /B 1
 %msbuild% %project% /p:Platform="Any CPU" %msbuildparams%
 IF ERRORLEVEL 1 EXIT /B 1
-
-call BuildGitExtNative.cmd %Configuration% Clean
-IF ERRORLEVEL 1 EXIT /B 1
-
-rem keep cached packages
-rem call DownloadExternals.cmd
 
 call MakeInstallers.cmd %Configuration% Rebuild
 IF ERRORLEVEL 1 EXIT /B 1
