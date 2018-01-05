@@ -22,30 +22,30 @@ namespace GitUI
         {
             //Note: Order in revisions is that first clicked is last in array
             string extraDiffArgs;
-            string firstRevision;
-            string secondRevision;
+            string revA;
+            string revB;
 
-            string error = RevisionDiffInfoProvider.Get(grid.GetSelectedRevisions(), diffKind, out extraDiffArgs, out firstRevision, out secondRevision);
+            string error = RevisionDiffInfoProvider.Get(grid.GetSelectedRevisions(), diffKind, out extraDiffArgs, out revA, out revB);
             if (!string.IsNullOrEmpty(error))
             {
                 MessageBox.Show(grid, error);
             }
             else
             {
-                string output = grid.Module.OpenWithDifftool(fileName, oldFileName, firstRevision, secondRevision, extraDiffArgs, isTracked);
+                string output = grid.Module.OpenWithDifftool(fileName, oldFileName, revA, revB, extraDiffArgs, isTracked);
                 if (!string.IsNullOrEmpty(output))
                     MessageBox.Show(grid, output);
             }
         }
 
         private static PatchApply.Patch GetItemPatch(GitModule module, GitItemStatus file,
-            string firstRevision, string secondRevision, string diffArgs, Encoding encoding)
+            string revA, string revB, string diffArgs, Encoding encoding)
         {
-            return module.GetSingleDiff(firstRevision, secondRevision, file.Name, file.OldName,
+            return module.GetSingleDiff(revA, revB, file.Name, file.OldName,
                     diffArgs, encoding, true, file.IsTracked);
         }
 
-        public static string GetSelectedPatch(this FileViewer diffViewer, string firstRevision, string secondRevision, GitItemStatus file)
+        public static string GetSelectedPatch(this FileViewer diffViewer, string revA, string revB, GitItemStatus file)
         {
             if (!file.IsTracked)
             {
@@ -60,7 +60,7 @@ namespace GitUI
             if (file.IsSubmodule && file.SubmoduleStatus != null)
                 return LocalizationHelpers.ProcessSubmoduleStatus(diffViewer.Module, file.SubmoduleStatus.Result);
 
-            PatchApply.Patch patch = GetItemPatch(diffViewer.Module, file, firstRevision, secondRevision,
+            PatchApply.Patch patch = GetItemPatch(diffViewer.Module, file, revA, revB,
                 diffViewer.GetExtraDiffArguments(), diffViewer.Encoding);
 
             if (patch == null)
@@ -76,18 +76,18 @@ namespace GitUI
             if (revisions.Count == 0)
                 return;
             var firstRevision = revisions[0];
-            string firstRevisionGuid = firstRevision?.Guid;
-            string parentRevisionGuid = revisions.Count == 2 ? revisions[1].Guid : null;
-            if (parentRevisionGuid == null && firstRevision != null)
-                parentRevisionGuid = firstRevision.FirstParentGuid;
-            ViewChanges(diffViewer, firstRevisionGuid, parentRevisionGuid, file, defaultText);
+            string revB = firstRevision?.Guid;
+            string revA = revisions.Count == 2 ? revisions[1].Guid : null;
+            if (revA == null && firstRevision != null)
+                revA = firstRevision.FirstParentGuid;
+            ViewChanges(diffViewer, revA, revB, file, defaultText);
         }
 
-        public static void ViewChanges(this FileViewer diffViewer, string revision, string parentRevision, GitItemStatus file, string defaultText)
+        public static void ViewChanges(this FileViewer diffViewer, string revA, string revB, GitItemStatus file, string defaultText)
         {
             diffViewer.ViewPatch(() =>
             {
-                string selectedPatch = diffViewer.GetSelectedPatch(parentRevision, revision, file);
+                string selectedPatch = diffViewer.GetSelectedPatch(revA, revB, file);
                 return selectedPatch ?? defaultText;
             });
         }

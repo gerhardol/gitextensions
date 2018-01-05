@@ -2015,11 +2015,11 @@ namespace GitUI.CommandsDialogs
             Clipboard.SetText(fileNames.ToString());
         }
 
-        private void OpenFilesWithDiffTool(IEnumerable<GitItemStatus> items, string from, string to)
+        private void OpenFilesWithDiffTool(IEnumerable<GitItemStatus> items, string revA, string revB)
         {
             foreach (var item in items)
             {
-                string output = Module.OpenWithDifftool(item.Name, null, from, to, "", item.IsTracked);
+                string output = Module.OpenWithDifftool(item.Name, null, revA, revB, "", item.IsTracked);
                 if (!string.IsNullOrEmpty(output))
                     MessageBox.Show(this, output);
             }

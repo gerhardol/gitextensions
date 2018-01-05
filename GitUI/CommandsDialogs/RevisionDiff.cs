@@ -211,9 +211,9 @@ namespace GitUI.CommandsDialogs
 
         private string GetSelectedPatch(IList<GitRevision> revisions, GitItemStatus file)
         {
-            string firstRevision = revisions.Count > 0 ? revisions[0].Guid : null;
-            string secondRevision = revisions.Count == 2 ? revisions[1].Guid : null;
-            return DiffText.GetSelectedPatch(firstRevision, secondRevision, file);
+            string revA = revisions.Count > 0 ? revisions[0].Guid : null;
+            string revB = revisions.Count == 2 ? revisions[1].Guid : null;
+            return DiffText.GetSelectedPatch(revA, revB, file);
         }
 
         private ContextMenuSelectionInfo GetSelectionInfo()
