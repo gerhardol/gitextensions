@@ -8,21 +8,21 @@ namespace GitCommands.Git
         /// <summary>
         /// options to git-diff from GE arguments, including artificial commits
         /// </summary>
-        /// <param name="parentRev">The first revision</param>
-        /// <param name="currentRev">The second "current" revision</param>
+        /// <param name="revA">The first revision</param>
+        /// <param name="revB">The second "current" revision</param>
         /// <returns></returns>
-        string Get(string parentRev, string currentRev);
+        string Get(string revA, string revB);
 
         /// <summary>
         /// options to git-diff from GE arguments, including artificial commits
         /// </summary>
-        /// <param name="parentRev">The first revision</param>
-        /// <param name="currentRev">The second "current" revision</param>
+        /// <param name="revA">The first revision</param>
+        /// <param name="revB">The second "current" revision</param>
         /// <param name="fileName">The file to compare</param>
         /// <param name="oldFileName">The old name of the file</param>
         /// <param name="isTracked">The file is tracked</param>
         /// <returns></returns>
-        string Get(string parentRev, string currentRev, string fileName, string oldFileName, bool isTracked);
+        string Get(string revA, string revB, string fileName, string oldFileName, bool isTracked);
     }
 
     /// <summary>
@@ -37,75 +37,75 @@ namespace GitCommands.Git
         /// <summary>
         /// options to git-diff from GE arguments, including artificial commits
         /// </summary>
-        /// <param name="parentRev">The first revision</param>
-        /// <param name="currentRev">The second "current" revision</param>
+        /// <param name="revA">The first revision</param>
+        /// <param name="revB">The second "current" revision</param>
         /// <returns></returns>
-        public string Get(string parentRev, string currentRev)
+        public string Get(string revA, string revB)
         {
-            return GetInternal(parentRev, currentRev);
+            return GetInternal(revA, revB);
         }
 
         /// <summary>
         /// options to git-diff from GE arguments, including artificial commits
         /// </summary>
-        /// <param name="parentRev">The first revision</param>
-        /// <param name="currentRev">The second "current" revision</param>
+        /// <param name="revA">The first revision</param>
+        /// <param name="revB">The second "current" revision</param>
         /// <param name="fileName">The file to compare</param>
         /// <param name="oldFileName">The old name of the file</param>
         /// <param name="isTracked">The file is tracked</param>
         /// <returns></returns>
-        public string Get(string parentRev, string currentRev, string fileName, string oldFileName, bool isTracked)
+        public string Get(string revA, string revB, string fileName, string oldFileName, bool isTracked)
         {
-            return GetInternal(parentRev, currentRev, fileName, oldFileName, isTracked);
+            return GetInternal(revA, revB, fileName, oldFileName, isTracked);
         }
 
         /// <summary>
         /// options to git-diff from GE arguments, including artificial commits
         /// </summary>
-        /// <param name="parentRev">The first revision</param>
-        /// <param name="currentRev">The second "current" revision</param>
+        /// <param name="revA">The first revision</param>
+        /// <param name="revB">The second "current" revision</param>
         /// <param name="fileName">The file to compare</param>
         /// <param name="oldFileName">The old name of the file</param>
         /// <param name="isTracked">The file is tracked</param>
         /// <returns></returns>
-        private string GetInternal(string parentRev, string currentRev, string fileName = null, string oldFileName = null, bool isTracked = true)
+        private string GetInternal(string revA, string revB, string fileName = null, string oldFileName = null, bool isTracked = true)
         {
             string extra = string.Empty;
-            parentRev = ArtificialToDiffOptions(parentRev);
-            currentRev = ArtificialToDiffOptions(currentRev);
+            revA = ArtificialToDiffOptions(revA);
+            revB = ArtificialToDiffOptions(revB);
 
             //Note: As artificial are options, diff unstage..unstage and 
             // stage..stage will show output, different from e.g. HEAD..HEAD
             //Diff-to-itself is not always disabled or is transient why this is not handled as error in release builds
-            Debug.Assert(!(parentRev == currentRev && (parentRev.IsNullOrEmpty() || parentRev == StagedOpt)),
-                "Unexpectedly two identical artificial revisions to diff: " + parentRev +
+            Debug.Assert(!(revA == revB && (revA.IsNullOrEmpty() || revA == StagedOpt)),
+                "Unexpectedly two identical artificial revisions to diff: " + revA +
                 ". This will be displayed as diff to HEAD, not an identical diff.");
 
             //As empty (unstaged) and --cached (staged) are options (not revisions),
             // order must be preserved with -R
-            if (parentRev != currentRev && (parentRev.IsNullOrEmpty() ||
-                               parentRev == StagedOpt && !currentRev.IsNullOrEmpty()))
+            if (revA != revB && (revA.IsNullOrEmpty() ||
+                               revA == StagedOpt && !revB.IsNullOrEmpty()))
             {
                 extra = "-R";
             }
 
             //Special case: Remove options comparing unstaged-staged
-            if (parentRev.IsNullOrEmpty() && currentRev == StagedOpt ||
-                parentRev == StagedOpt && currentRev.IsNullOrEmpty())
+            if (revA.IsNullOrEmpty() && revB == StagedOpt ||
+                revA == StagedOpt && revB.IsNullOrEmpty())
             {
-                parentRev = currentRev = string.Empty;
+                revA = revB = string.Empty;
             }
 
             //Reorder options - not strictly required
-            if (currentRev == StagedOpt)
+            if (revB == StagedOpt)
             {
                 extra += " " + StagedOpt;
-                currentRev = String.Empty;
+                revB = String.Empty;
             }
 
             if (fileName.IsNullOrWhiteSpace())
             {
-                extra = string.Join(" ", extra, parentRev, currentRev);
+                extra = string.Join(" ", extra, revA, revB);
             }
             else
             {
@@ -119,7 +119,7 @@ namespace GitCommands.Git
                 }
                 else
                 {
-                    extra += " " + parentRev + " " + currentRev;
+                    extra += " " + revA + " " + revB;
                 }
 
                 extra += " -- " + fileName.QuoteNE() + " " + oldFileName.QuoteNE();
