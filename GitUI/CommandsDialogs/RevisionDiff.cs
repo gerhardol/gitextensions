@@ -226,12 +226,13 @@ namespace GitUI.CommandsDialogs
             bool isAnyCombinedDiff = DiffFiles.SelectedItemParents.Any(item => item == DiffFiles.CombinedDiff.Text);
             bool isExactlyOneItemSelected = DiffFiles.SelectedItems.Count() == 1;
             bool isAnyItemSelected = DiffFiles.SelectedItems.Count() > 0;
-            var isCombinedDiff = isExactlyOneItemSelected && DiffFiles.CombinedDiff.Text == DiffFiles.SelectedItemParent;
+            bool isCombinedDiff = isExactlyOneItemSelected && DiffFiles.CombinedDiff.Text == DiffFiles.SelectedItemParent;
             var selectedItemStatus = DiffFiles.SelectedItem;
             bool isBareRepository = Module.IsBareRepository();
             bool singleFileExists = isExactlyOneItemSelected && File.Exists(FormBrowseUtil.GetFullPathFromGitItemStatus(Module, DiffFiles.SelectedItem));
+            bool isAnyTracked = DiffFiles.SelectedItems.Any(item => item.IsTracked);
 
-            var selectionInfo = new ContextMenuSelectionInfo(selectedRevisions, selectedItemStatus, isAnyCombinedDiff, isExactlyOneItemSelected, isCombinedDiff, isAnyItemSelected, isBareRepository, singleFileExists);
+            var selectionInfo = new ContextMenuSelectionInfo(selectedRevisions, selectedItemStatus, isAnyCombinedDiff, isExactlyOneItemSelected, isCombinedDiff, isAnyItemSelected, isBareRepository, singleFileExists, isAnyTracked);
             return selectionInfo;
         }
 
@@ -536,22 +537,20 @@ namespace GitUI.CommandsDialogs
             bool multipleRevisionsSelected = selectedRevisions.Count == 2;
 
             bool localExists = false;
-            bool bIsNormal = false; //B is assumed to be new or deleted (check from DiffFiles)
+            bool isAnyTracked = DiffFiles.SelectedItems.Any(item => item.IsTracked);
 
             //enable *<->Local items only when (any) local file exists
             foreach (var item in DiffFiles.SelectedItems)
             {
-                bIsNormal = bIsNormal || !(item.IsNew || item.IsDeleted);
                 string filePath = FormBrowseUtil.GetFullPathFromGitItemStatus(Module, item);
-                if (File.Exists(filePath) || Directory.Exists(filePath))
+                if (!item.IsTracked || File.Exists(filePath) || Directory.Exists(filePath))
                 {
                     localExists = true;
-                    if (localExists && bIsNormal)
-                        break;
+                    break;
                 }
             }
 
-            var selectionInfo = new ContextMenuDiffToolInfo(aIsLocal, bIsLocal, bIsNormal, localExists, multipleRevisionsSelected);
+            var selectionInfo = new ContextMenuDiffToolInfo(aIsLocal, bIsLocal, isAnyTracked, localExists, multipleRevisionsSelected);
             return selectionInfo;
         }
 

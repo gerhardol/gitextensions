@@ -228,14 +228,20 @@ namespace GitUI.CommandsDialogs
             PickAnotherCommit(_headRevision, ref _headCommitDisplayStr, ref _headRevision);
         }
 
-        private void openWithDifftoolToolStripMenuItem_DropDownOpening(object sender, System.ComponentModel.CancelEventArgs e)
+        private void diffContextToolStripMenuItem_Opening(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            bool isAnyTracked = DiffFiles.SelectedItems.Any(item => item.IsTracked);
+            bool isExactlyOneItemSelected = DiffFiles.SelectedItems.Count() == 1;
+            openWithDifftoolToolStripMenuItem.Enabled = isAnyTracked;
+            blameToolStripMenuItem.Enabled = isExactlyOneItemSelected && !DiffFiles.SelectedItem.IsSubmodule && isAnyTracked;
+            fileHistoryDiffToolstripMenuItem.Enabled = isAnyTracked;
+        }
+
+        private void openWithDifftoolToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             aLocalToolStripMenuItem.Enabled = _baseRevision != null && _baseRevision.Guid != GitRevision.UnstagedGuid && !Module.IsBareRepository();
             bLocalToolStripMenuItem.Enabled = _headRevision != null && _headRevision.Guid != GitRevision.UnstagedGuid && !Module.IsBareRepository();
             parentOfALocalToolStripMenuItem.Enabled = parentOfBLocalToolStripMenuItem.Enabled = !Module.IsBareRepository();
-
-            bool isExactlyOneItemSelected = DiffFiles.SelectedItems.Count() == 1;
-            blameToolStripMenuItem.Visible = isExactlyOneItemSelected && !(DiffFiles.SelectedItem.IsSubmodule || _baseRevision.IsArtificial());
         }
 
         private void PickAnotherBranch(GitRevision preSelectCommit, ref string displayStr, ref GitRevision revision)
