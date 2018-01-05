@@ -7,24 +7,22 @@ namespace GitCommands.Git
     {
         /// <summary>
         /// options to git-diff from GE arguments, including artificial commits
-        /// This is an instance class to not have static dependencies in GitModule
         /// </summary>
-        /// <param name="from">The first revision</param>
-        /// <param name="to">The second "current" revision</param>
+        /// <param name="revA">The first revision</param>
+        /// <param name="revB">The second "current" revision</param>
         /// <returns></returns>
-        string Get(string from, string to);
+        string Get(string revA, string revB);
 
         /// <summary>
         /// options to git-diff from GE arguments, including artificial commits
-        /// This is an instance class to not have static dependencies in GitModule
         /// </summary>
-        /// <param name="from">The first revision</param>
-        /// <param name="to">The second "current" revision</param>
+        /// <param name="revA">The first revision</param>
+        /// <param name="revB">The second "current" revision</param>
         /// <param name="fileName">The file to compare</param>
         /// <param name="oldFileName">The old name of the file</param>
         /// <param name="isTracked">The file is tracked</param>
         /// <returns></returns>
-        string Get(string from, string to, string fileName, string oldFileName, bool isTracked);
+        string Get(string revA, string revB, string fileName, string oldFileName, bool isTracked);
     }
 
     /// <summary>
@@ -33,83 +31,83 @@ namespace GitCommands.Git
     /// </summary>
     public sealed class RevisionDiffProvider : IRevisionDiffProvider
     {
+        // This is an instance class to not have static dependencies in GitModule
         private static readonly string StagedOpt = "--cached";
 
         /// <summary>
         /// options to git-diff from GE arguments, including artificial commits
-        /// This is an instance class to not have static dependencies in GitModule
         /// </summary>
-        /// <param name="from">The first revision</param>
-        /// <param name="to">The second "current" revision</param>
+        /// <param name="revA">The first revision</param>
+        /// <param name="revB">The second "current" revision</param>
         /// <returns></returns>
-        public string Get(string from, string to)
+        public string Get(string revA, string revB)
         {
-            return GetInternal(from, to);
+            return GetInternal(revA, revB);
         }
 
         /// <summary>
         /// options to git-diff from GE arguments, including artificial commits
-        /// This is an instance class to not have static dependencies in GitModule
         /// </summary>
-        /// <param name="from">The first revision</param>
-        /// <param name="to">The second "current" revision</param>
+        /// <param name="revA">The first revision</param>
+        /// <param name="revB">The second "current" revision</param>
         /// <param name="fileName">The file to compare</param>
         /// <param name="oldFileName">The old name of the file</param>
         /// <param name="isTracked">The file is tracked</param>
         /// <returns></returns>
-        public string Get(string from, string to, string fileName, string oldFileName, bool isTracked)
+        public string Get(string revA, string revB, string fileName, string oldFileName, bool isTracked)
         {
-            return GetInternal(from, to, fileName, oldFileName, isTracked);
+            return GetInternal(revA, revB, fileName, oldFileName, isTracked);
         }
 
         /// <summary>
         /// options to git-diff from GE arguments, including artificial commits
-        /// This is an instance class to not have static dependencies in GitModule
         /// </summary>
-        /// <param name="from">The first revision</param>
-        /// <param name="to">The second "current" revision</param>
+        /// <param name="revA">The first revision</param>
+        /// <param name="revB">The second "current" revision</param>
         /// <param name="fileName">The file to compare</param>
         /// <param name="oldFileName">The old name of the file</param>
         /// <param name="isTracked">The file is tracked</param>
         /// <returns></returns>
-        private string GetInternal(string from, string to, string fileName = null, string oldFileName = null, bool isTracked = true)
+        private string GetInternal(string revA, string revB, string fileName = null, string oldFileName = null, bool isTracked = true)
         {
-
-
             string extra = string.Empty;
-            from = ArtificialToDiffOptions(from);
-            to = ArtificialToDiffOptions(to);
+            revA = ArtificialToDiffOptions(revA);
+            revB = ArtificialToDiffOptions(revB);
 
             //Note: As artificial are options, diff unstage..unstage and 
             // stage..stage will show output, different from e.g. HEAD..HEAD
             //Diff-to-itself is not always disabled or is transient why this is not handled as error in release builds
-            Debug.Assert(!(from == to && (from.IsNullOrEmpty() || from == StagedOpt)),
-                "Unexpectedly two identical artificial revisions to diff: " + from +
+            Debug.Assert(!(revA == revB && (revA.IsNullOrEmpty() || revA == StagedOpt)),
+                "Unexpectedly two identical artificial revisions to diff: " + revA +
                 ". This will be displayed as diff to HEAD, not an identical diff.");
 
             //As empty (unstaged) and --cached (staged) are options (not revisions),
             // order must be preserved with -R
-            if (from != to && (from.IsNullOrEmpty() ||
-                               from == StagedOpt && !to.IsNullOrEmpty()))
+            if (revA != revB && (revA.IsNullOrEmpty() ||
+                               revA == StagedOpt && !revB.IsNullOrEmpty()))
             {
                 extra = "-R";
             }
 
             //Special case: Remove options comparing unstaged-staged
-            if (from.IsNullOrEmpty() && to == StagedOpt ||
-                from == StagedOpt && to.IsNullOrEmpty())
+            if (revA.IsNullOrEmpty() && revB == StagedOpt ||
+                revA == StagedOpt && revB.IsNullOrEmpty())
             {
-                from = to = string.Empty;
+                revA = revB = string.Empty;
             }
 
             //Reorder options - not strictly required
-            if (to == StagedOpt)
+            if (revB == StagedOpt)
             {
                 extra += " " + StagedOpt;
-                to = String.Empty;
+                revB = String.Empty;
             }
 
-            if (fileName.IsNotNullOrWhitespace())
+            if (fileName.IsNullOrWhiteSpace())
+            {
+                extra = string.Join(" ", extra, revA, revB);
+            }
+            else
             {
                 //Untracked files can only be compared to /dev/null
                 //The UI should normall only allow this for unstaged to staged, but it can be included in multi selections
@@ -121,14 +119,10 @@ namespace GitCommands.Git
                 }
                 else
                 {
-                    extra += " " + from + " " + to;
+                    extra += " " + revA + " " + revB;
                 }
 
                 extra += " -- " + fileName.QuoteNE() + " " + oldFileName.QuoteNE();
-            }
-            else
-            {
-                extra = string.Join(" ", extra, from, to);
             }
 
             return extra.Trim();
