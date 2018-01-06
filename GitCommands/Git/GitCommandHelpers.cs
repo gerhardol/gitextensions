@@ -1155,6 +1155,7 @@ namespace GitCommands
             gitItemStatus.IsSkipWorktree = x == 'S';
             gitItemStatus.IsRenamed = false;
             gitItemStatus.IsTracked = x != '?' && x != '!' && x != ' ' || !gitItemStatus.IsNew;
+            gitItemStatus.IsIgnored = x == '!';
             gitItemStatus.IsConflict = x == 'U';
             return gitItemStatus;
         }

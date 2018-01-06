@@ -1195,10 +1195,10 @@ namespace GitUI.CommandsDialogs
             e.Cancel = !Unstaged.SelectedItems.Any() || Module.IsBareRepository();
 
             var isTrackedSelected = Unstaged.SelectedItems.Any(s => s.IsTracked);
-            var isSkipWorktreeExist = Unstaged.SelectedItems.Any(s => s.IsSkipWorktree);
-            var isAssumeUnchangedExist = Unstaged.SelectedItems.Any(s => s.IsAssumeUnchanged);
             var isAssumeUnchangedAll = Unstaged.SelectedItems.All(s => s.IsAssumeUnchanged);
+            var isAssumeUnchangedExist = Unstaged.SelectedItems.Any(s => s.IsAssumeUnchanged);
             var isSkipWorktreeAll = Unstaged.SelectedItems.All(s => s.IsSkipWorktree);
+            var isSkipWorktreeExist = Unstaged.SelectedItems.Any(s => s.IsSkipWorktree);
 
             openWithDifftoolToolStripMenuItem.Enabled = isTrackedSelected;
             assumeUnchangedToolStripMenuItem.Visible = isTrackedSelected && !isSkipWorktreeExist && !isAssumeUnchangedAll;
