@@ -17,7 +17,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
         /// <summary>
         /// Minimum interval between subsequent updates
         /// </summary>
-        private static readonly int MinUpdateInterval = 5000;
+        private static readonly int MinUpdateInterval = 3000;
 
         /// <summary>
         /// Update every 5min, just to make sure something didn't slip through the cracks.
@@ -33,8 +33,10 @@ namespace GitUI.CommandsDialogs.BrowseDialog
         private bool _ignoredFilesAreStale;
         private string _gitPath;
         private string _submodulesPath;
+        //Timestamps to schedule status updates, limit the update interval dynamically
         private int _nextUpdateTime;
         private int _prevUpdateTime;
+        private int _currUpdateInterval = MinUpdateInterval;
         private GitStatusMonitorState _currentStatus;
         private HashSet<string> _ignoredFiles = new HashSet<string>();
 
@@ -124,6 +126,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                             _workTreeWatcher.EnableRaisingEvents = true;
                             _gitDirWatcher.EnableRaisingEvents = !_gitDirWatcher.Path.StartsWith(_workTreeWatcher.Path);
                             _globalIgnoreWatcher.EnableRaisingEvents = !string.IsNullOrWhiteSpace(_globalIgnoreWatcher.Path);
+                            _currUpdateInterval = MinUpdateInterval;
                             _prevUpdateTime = 0;
                             ScheduleNext(UpdateDelay);
                         }
@@ -304,6 +307,8 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
         private void UpdatedStatusReceived(string updatedStatus)
         {
+            //Adjust the interval between updates. (This does not affect an update already scheculed).
+            _currUpdateInterval = Math.Max(MinUpdateInterval, 3 * (Environment.TickCount - _prevUpdateTime));
             _commandIsRunning = false;
 
             if (CurrentStatus != GitStatusMonitorState.Running)
@@ -327,7 +332,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                 next = Math.Min(_nextUpdateTime, next);
             }
             //Enforce a minimal time between updates, to not update too frequently
-            _nextUpdateTime = Math.Max(next, _prevUpdateTime + MinUpdateInterval);
+            _nextUpdateTime = Math.Max(next, _prevUpdateTime + _currUpdateInterval);
         }
 
         private void commandsSource_GitUICommandsChanged(object sender, GitUICommandsChangedEventArgs e)
