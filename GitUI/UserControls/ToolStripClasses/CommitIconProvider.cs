@@ -27,9 +27,9 @@ namespace GitUI.UserControls.ToolStripClasses
         public Image GetCommitIcon(IList<GitItemStatus> allChangedFiles)
         {
             var stagedCount = allChangedFiles.Count(status => status.IsStaged);
-            var unstagedCount = allChangedFiles.Count - stagedCount;
+            var unstagedCount = allChangedFiles.Count(status => !status.IsIgnored && !status.IsAssumeUnchanged && !status.IsSkipWorktree) - stagedCount;
             var unstagedSubmodulesCount = allChangedFiles.Count(status => status.IsSubmodule && !status.IsStaged);
-            var notTrackedCount = allChangedFiles.Count(status => !status.IsTracked);
+            var notTrackedCount = allChangedFiles.Count(status => !status.IsTracked && !status.IsIgnored && !status.IsAssumeUnchanged && !status.IsSkipWorktree);
 
             return GetStatusIcon(stagedCount, unstagedCount, unstagedSubmodulesCount, notTrackedCount);
         }
