@@ -36,10 +36,6 @@ namespace Bitbucket
             _gitUiCommands = gitUiCommands;
             //TODO Retrieve all users and set default reviewers
             ReviewersDataGrid.Visible = false;
-        }
-
-        private void BitbucketPullRequestFormLoad(object sender, EventArgs e)
-        {
             _settings = Settings.Parse(_gitUiCommands.GitModule, _settingsContainer, _plugin);
             if (_settings == null)
             {
@@ -47,6 +43,17 @@ namespace Bitbucket
                 Close();
                 return;
             }
+            Load += BitbucketPullRequestFormLoad;
+            Load += BitbucketViewPullRequestFormLoad;
+            createPullLinkLabel.Text = string.Format("{0}/projects/{1}/repos/{2}/pull-requests?create",
+                                           _settings.BitbucketUrl, _settings.ProjectKey, _settings.RepoSlug);
+            viewPullLinkLabel.Text = string.Format("{0}/projects/{1}/repos/{2}/pull-requests",
+                _settings.BitbucketUrl, _settings.ProjectKey, _settings.RepoSlug);
+        }
+
+        private void BitbucketPullRequestFormLoad(object sender, EventArgs e)
+        {
+
             //_bitbucketUsers.AddRange(GetBitbucketUsers().Select(a => a.Slug));
             ThreadPool.QueueUserWorkItem(state =>
             {
@@ -148,7 +155,7 @@ namespace Bitbucket
                 MessageBox.Show(string.Join(Environment.NewLine, response.Messages),
                     _error.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
-
+/*
         private IEnumerable<BitbucketUser> GetBitbucketUsers()
         {
             var list = new List<BitbucketUser>();
@@ -163,7 +170,7 @@ namespace Bitbucket
             }
             return list;
         }
-
+        */
         Dictionary<Repository, IEnumerable<string>> Branches = new Dictionary<Repository,IEnumerable<string>>();
         private IEnumerable<string> GetBitbucketBranches(Repository selectedRepo)
         {
@@ -300,6 +307,9 @@ namespace Bitbucket
             lblPRSourceBranch.Text = curItem.SrcBranch;
             lblPRDestRepo.Text = curItem.DestDisplayName;
             lblPRDestBranch.Text = curItem.DestBranch;
+
+            viewPullLinkLabel.Text = string.Format("{0}/projects/{1}/repos/{2}/pull-requests/{3}/overview",
+                _settings.BitbucketUrl, _settings.ProjectKey, _settings.RepoSlug, curItem.Id);
         }
 
         private void BtnMergeClick(object sender, EventArgs e)
@@ -351,6 +361,17 @@ namespace Bitbucket
             else
                 MessageBox.Show(string.Join(Environment.NewLine, response.Messages),
                     _error.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
+        private void textLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start((sender as LinkLabel).Text);
+            }
+            catch
+            {
+            }
         }
     }
 }
