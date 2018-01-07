@@ -3,11 +3,11 @@ using RestSharp;
 
 namespace Bitbucket
 {
-    class Commit
+    class BBCommit
     {
-        public static Commit Parse(JObject json)
+        public static BBCommit Parse(JObject json)
         {
-            return new Commit
+            return new BBCommit
             {
                 Hash = json["id"].ToString(),
                 Message = json["message"].ToString(),
@@ -20,15 +20,15 @@ namespace Bitbucket
         public string AuthorName { get; set; }
         public bool IsMerge { get; set; }
     }
-    class GetHeadCommitRequest : BitbucketRequestBase<Commit>
+    class GetHeadCommitRequest : BitbucketRequestBase<BBCommit>
     {
-        private readonly Repository _repo;
+        private readonly BBRepository _repo;
         private readonly string _branch;
 
-        public GetHeadCommitRequest(Repository repository, string branchName, Settings settings)
+        public GetHeadCommitRequest(BBRepository bbRepository, string branchName, Settings settings)
             : base(settings)
         {
-            _repo = repository;
+            _repo = bbRepository;
             _branch = branchName;
         }
 
@@ -51,9 +51,9 @@ namespace Bitbucket
             }
         }
 
-        protected override Commit ParseResponse(JObject json)
+        protected override BBCommit ParseResponse(JObject json)
         {
-            return Commit.Parse(json);
+            return BBCommit.Parse(json);
         }
     }
 }

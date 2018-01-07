@@ -6,12 +6,12 @@ using System;
 
 namespace Bitbucket
 {
-    class PullRequest
+    class BBPullRequest
     {
         //public string Ref { get; set; }
-        public static PullRequest Parse(JObject json)
+        public static BBPullRequest Parse(JObject json)
         {
-            var request = new PullRequest
+            var request = new BBPullRequest
             {
                 Id = json["id"].ToString(),
                 Version = json["version"].ToString(),
@@ -87,7 +87,7 @@ namespace Bitbucket
         }
     }
 
-    class GetPullRequest : BitbucketRequestBase<List<PullRequest>>
+    class GetPullRequest : BitbucketRequestBase<List<BBPullRequest>>
     {
         private readonly string _projectKey;
         private readonly string _repoName;
@@ -117,12 +117,12 @@ namespace Bitbucket
             }
         }
 
-        protected override List<PullRequest> ParseResponse(JObject json)
+        protected override List<BBPullRequest> ParseResponse(JObject json)
         {
-            var result = new List<PullRequest>();
+            var result = new List<BBPullRequest>();
             foreach (JObject val in json["values"])
             {
-                result.Add(PullRequest.Parse(val));
+                result.Add(BBPullRequest.Parse(val));
             }
             return result;
         }

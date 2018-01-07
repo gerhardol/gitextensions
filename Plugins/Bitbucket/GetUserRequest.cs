@@ -3,7 +3,7 @@ using RestSharp;
 
 namespace Bitbucket
 {
-    public class BitbucketUser
+    public class BBBitbucketUser
     {
         public string Slug { get; set; }
     }

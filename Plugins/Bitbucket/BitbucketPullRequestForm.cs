@@ -5,9 +5,16 @@ using System.Text;
 using System.Windows.Forms;
 using GitUIPluginInterfaces;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading;
+using Atlassian.Stash;
 using ResourceManager;
 using GitCommands;
+using Atlassian.Stash.Api;
+using Atlassian.Stash.Entities;
+using Atlassian.Stash.Helpers;
+using Atlassian.Stash.Api.Entities;
+using Atlassian.Stash.Api.Exceptions;
 
 namespace Bitbucket
 {
@@ -22,8 +29,9 @@ namespace Bitbucket
         private readonly BitbucketPlugin _plugin;
         private readonly GitUIBaseEventArgs _gitUiCommands;
         private readonly ISettingsSource _settingsContainer;
-        private readonly BindingList<BitbucketUser> _reviewers = new BindingList<BitbucketUser>();
+        private readonly AuthorWrapper[] _reviewers = new AuthorWrapper[]{};
         private readonly List<string> _bitbucketUsers = new List<string>();
+        private readonly StashClient _stashClient;
 
 
         public BitbucketPullRequestForm(BitbucketPlugin plugin, ISettingsSource settings, GitUIBaseEventArgs gitUiCommands)
@@ -36,10 +44,6 @@ namespace Bitbucket
             _gitUiCommands = gitUiCommands;
             //TODO Retrieve all users and set default reviewers
             ReviewersDataGrid.Visible = false;
-        }
-
-        private void BitbucketPullRequestFormLoad(object sender, EventArgs e)
-        {
             _settings = Settings.Parse(_gitUiCommands.GitModule, _settingsContainer, _plugin);
             if (_settings == null)
             {
@@ -47,7 +51,11 @@ namespace Bitbucket
                 Close();
                 return;
             }
-            //_bitbucketUsers.AddRange(GetBitbucketUsers().Select(a => a.Slug));
+            _stashClient = new StashClient(_settings.BitbucketUrl, _settings.Username, _settings.Password);
+        }
+
+        private void BitbucketPullRequestFormLoad(object sender, EventArgs e)
+        {
             ThreadPool.QueueUserWorkItem(state =>
             {
                 var repositories = GetRepositories();
@@ -55,8 +63,8 @@ namespace Bitbucket
                 {
                     this.Invoke((MethodInvoker)delegate
                     {
-                        ddlRepositorySource.DataSource = repositories.ToList();
-                        ddlRepositoryTarget.DataSource = repositories.ToList();
+                        ddlRepositorySource.DataSource = repositories;
+                        ddlRepositoryTarget.DataSource = repositories;
                         ddlRepositorySource.Enabled = true;
                         ddlRepositoryTarget.Enabled = true;
                     });
@@ -85,36 +93,23 @@ namespace Bitbucket
                 catch(System.InvalidOperationException){
                     return;
                 }
-
             });
         }
 
-        private List<Repository> GetRepositories()
+        private IList<Repository> GetRepositories()
         {
             var list = new List<Repository>();
-            var getDefaultRepo = new GetRepoRequest(_settings.ProjectKey, _settings.RepoSlug, _settings);
-            var defaultRepo = getDefaultRepo.Send();
-            if (defaultRepo.Success)
+            var defaultRepo = _stashClient.Repositories.GetById(_settings.ProjectKey, _settings.RepoSlug);
+            if (defaultRepo.Result!=null)
                 list.Add(defaultRepo.Result);
-            //var getRelatedRepos = new GetRelatedRepoRequest(_settings);
-            //var result = getRelatedRepos.Send();
-            //if (result.Success)
-            //{
-            //    list.AddRange(result.Result);
-            //}
             return list;
         }
 
-        private List<PullRequest> GetPullRequests()
+        private IEnumerable<PullRequest> GetPullRequests()
         {
-            var list = new List<PullRequest>();
-            var getPullReqs = new GetPullRequest(_settings.ProjectKey, _settings.RepoSlug, _settings);
-            var result = getPullReqs.Send();
-            if (result.Success)
-            {
-                list.AddRange(result.Result);
-            }
-            return list;
+            var response = _stashClient.PullRequests.Get(_settings.ProjectKey, _settings.RepoSlug, state: PullRequestState.OPEN);
+            var pullRequests = response.Result.Values;
+            return pullRequests;
         }
 
         private void BtnCreateClick(object sender, EventArgs e)
@@ -127,61 +122,61 @@ namespace Bitbucket
                 return;
             }
 
-            var info = new PullRequestInfo
+            //var response = _stashClient.Repositories.GetPullRequestSettings(_settings.ProjectKey, _settings.RepoSlug);
+
+            var pullRequest = new PullRequest
             {
                 Title = txtTitle.Text,
                 Description = txtDescription.Text,
-                SourceBranch = ddlBranchSource.SelectedValue.ToString(),
-                TargetBranch = ddlBranchTarget.SelectedValue.ToString(),
-                SourceRepo = (Repository)ddlRepositorySource.SelectedValue,
-                TargetRepo = (Repository)ddlRepositoryTarget.SelectedValue,
-                Reviewers = _reviewers
+                FromRef = new Ref
+                {
+                    Repository = (Repository)ddlRepositorySource.SelectedValue,
+                    Id = ddlBranchSource.SelectedValue.ToString()
+                },
+                ToRef = new Ref
+                {
+                Repository = (Repository)ddlRepositoryTarget.SelectedValue,
+                Id = ddlBranchTarget.SelectedValue.ToString()
+            },
+                 Reviewers = _reviewers
             };
-            var pullRequest = new CreatePullRequestRequest(_settings, info);
-            var response = pullRequest.Send();
-            if (response.Success)
+            var response2 = _stashClient.PullRequests.Create(_settings.ProjectKey, _settings.RepoSlug, pullRequest);
+            //var pullRequest = new CreatePullRequestRequest(_settings, info);
+            if (response2.IsCompleted)
             {
                 MessageBox.Show(_success.Text);
                 BitbucketViewPullRequestFormLoad(null, null);
             }
             else
-                MessageBox.Show(string.Join(Environment.NewLine, response.Messages),
+                MessageBox.Show(string.Join(Environment.NewLine, response2.Status),
                     _error.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
-
-        private IEnumerable<BitbucketUser> GetBitbucketUsers()
+        /*
+        private IEnumerable<BBBitbucketUser> GetBitbucketUsers()
         {
-            var list = new List<BitbucketUser>();
+            var list = new List<BBBitbucketUser>();
             var getUser = new GetUserRequest(_settings);
             var result = getUser.Send();
             if (result.Success)
             {
                 foreach (var value in result.Result["values"])
                 {
-                    list.Add(new BitbucketUser { Slug = value["slug"].ToString() });
+                    list.Add(new BBBitbucketUser { Slug = value["slug"].ToString() });
                 }
             }
             return list;
         }
-
-        Dictionary<Repository, IEnumerable<string>> Branches = new Dictionary<Repository,IEnumerable<string>>();
-        private IEnumerable<string> GetBitbucketBranches(Repository selectedRepo)
+        */
+        readonly Dictionary<Repository, IEnumerable<Branch>> _branches = new Dictionary<Repository,IEnumerable<Branch>>();
+        private IEnumerable<Branch> GetBitbucketBranches(Repository selectedRepo)
         {
-            if (Branches.ContainsKey(selectedRepo))
+            if (_branches.ContainsKey(selectedRepo))
             {
-                return Branches[selectedRepo];
+                return _branches[selectedRepo];
             }
-            var list = new List<string>();
-            var getBranches = new GetBranchesRequest(selectedRepo, _settings);
-            var result = getBranches.Send();
-            if (result.Success)
-            {
-                foreach (var value in result.Result["values"])
-                {
-                    list.Add(value["displayId"].ToString());
-                }
-            }
-            Branches.Add(selectedRepo, list);
+            var response = _stashClient.Branches.Get(_settings.ProjectKey, _settings.RepoSlug);
+            var list = response.Result.Values.ToList();
+            _branches.Add(selectedRepo, list);
             return list;
         }
 
@@ -209,7 +204,7 @@ namespace Bitbucket
 
         private void RefreshDDLBranch(ComboBox branchComboBox, object selectedValue)
         {
-            List<string> branchNames = (GetBitbucketBranches((Repository)selectedValue)).ToList();
+            List<string> branchNames = GetBitbucketBranches((Repository)selectedValue).Select(i => i.Name).ToList();
             if (AppSettings.BranchOrderingCriteria == BranchOrdering.Alphabetically)
             {
                 branchNames.Sort();
@@ -243,11 +238,13 @@ namespace Bitbucket
 
         private Commit GetCommitInfo(Repository repo, string branch)
         {
-            if (repo == null || string.IsNullOrWhiteSpace(branch))
+            //if (repo == null || string.IsNullOrWhiteSpace(branch))
                 return null;
-            var getCommit = new GetHeadCommitRequest(repo, branch, _settings);
+            //TODO
+            /*var getCommit = new GetHeadCommitRequest(repo, branch, _settings); //TODO Not accepted refs/hesd
             var result = getCommit.Send();
             return result.Success ? result.Result : null;
+            */
         }
 
         private void UpdateCommitInfo(Label label, Commit commit)
@@ -256,7 +253,7 @@ namespace Bitbucket
                 label.Text = string.Empty;
             else
                 label.Text = string.Format(_commited.Text,
-                    commit.AuthorName, commit.Message);
+                    commit.Author, commit.Message);
         }
 
         private void UpdatePullRequestDescription()
@@ -266,7 +263,7 @@ namespace Bitbucket
                 || ddlBranchSource.Tag == null
                 || ddlBranchTarget.Tag == null)
                 return;
-
+            /*
             var getCommitsInBetween = new GetInBetweenCommitsRequest(
                 (Repository)ddlRepositorySource.SelectedValue,
                 (Repository)ddlRepositoryTarget.SelectedValue,
@@ -286,10 +283,11 @@ namespace Bitbucket
                 }
                 txtDescription.Text = sb.ToString();
             }
+            */
         }
         private void PullRequestChanged(object sender, EventArgs e)
         {
-            var curItem = lbxPullRequests.SelectedItem as PullRequest;
+            var curItem = lbxPullRequests.SelectedItem as BBPullRequest;
 
             txtPRTitle.Text = curItem.Title;
             txtPRDescription.Text = curItem.Description;
@@ -304,7 +302,7 @@ namespace Bitbucket
 
         private void BtnMergeClick(object sender, EventArgs e)
         {
-            var curItem = lbxPullRequests.SelectedItem as PullRequest;
+          /* var curItem = lbxPullRequests.SelectedItem as PullRequest;
             if (curItem == null) return;
 
             var mergeInfo = new MergeRequestInfo
@@ -326,31 +324,34 @@ namespace Bitbucket
             else
                 MessageBox.Show(string.Join(Environment.NewLine, response.Messages),
                     _error.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    */
         }
+
         private void BtnApproveClick(object sender, EventArgs e)
         {
-            var curItem = lbxPullRequests.SelectedItem as PullRequest;
-            if (curItem == null) return;
-
-            var mergeInfo = new MergeRequestInfo
-            {
-                Id = curItem.Id,
-                Version = curItem.Version,
-                ProjectKey = curItem.DestProjectKey,
-                TargetRepo = curItem.DestRepo,
-            };
-
-            //Approve
-            var approveRequest = new ApprovePullRequest(_settings, mergeInfo);
-            var response = approveRequest.Send();
-            if (response.Success)
-            {
-                MessageBox.Show(_success.Text);
-                    BitbucketViewPullRequestFormLoad(null, null);
-            }
-            else
-                MessageBox.Show(string.Join(Environment.NewLine, response.Messages),
-                    _error.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            /*   var curItem = lbxPullRequests.SelectedItem as PullRequest;
+               if (curItem == null) return;
+   
+               var mergeInfo = new MergeRequestInfo
+               {
+                   Id = curItem.Id,
+                   Version = curItem.Version,
+                   ProjectKey = curItem.DestProjectKey,
+                   TargetRepo = curItem.DestRepo,
+               };
+   
+               //Approve
+               var approveRequest = new ApprovePullRequest(_settings, mergeInfo);
+               var response = approveRequest.Send();
+               if (response.Success)
+               {
+                   MessageBox.Show(_success.Text);
+                       BitbucketViewPullRequestFormLoad(null, null);
+               }
+               else
+                   MessageBox.Show(string.Join(Environment.NewLine, response.Messages),
+                       _error.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+           */
         }
     }
 }

@@ -3,7 +3,7 @@ using RestSharp;
 
 namespace Bitbucket
 {
-    class GetRepoRequest : BitbucketRequestBase<Repository>
+    class GetRepoRequest : BitbucketRequestBase<BBRepository>
     {
         private readonly string _projectKey;
         private readonly string _repoName;
@@ -33,9 +33,9 @@ namespace Bitbucket
             }
         }
 
-        protected override Repository ParseResponse(JObject json)
+        protected override BBRepository ParseResponse(JObject json)
         {
-            return Repository.Parse(json);
+            return BBRepository.Parse(json);
         }
     }
 }

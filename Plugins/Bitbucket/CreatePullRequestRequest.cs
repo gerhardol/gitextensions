@@ -8,11 +8,11 @@ namespace Bitbucket
     {
         public string Title { get; set; }
         public string Description { get; set; }
-        public Repository SourceRepo { get; set; }
-        public Repository TargetRepo { get; set; }
+        public BBRepository SourceRepo { get; set; }
+        public BBRepository TargetRepo { get; set; }
         public string SourceBranch { get; set; }
         public string TargetBranch { get; set; }
-        public IEnumerable<BitbucketUser> Reviewers { get; set; }
+        public IEnumerable<BBBitbucketUser> Reviewers { get; set; }
     }
 
     class CreatePullRequestRequest : BitbucketRequestBase<JObject>

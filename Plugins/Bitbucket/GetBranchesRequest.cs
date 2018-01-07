@@ -5,9 +5,9 @@ namespace Bitbucket
 {
     class GetBranchesRequest : BitbucketRequestBase<JObject>
     {
-        private readonly Repository _repo;
+        private readonly BBRepository _repo;
 
-        public GetBranchesRequest(Repository repo, Settings settings)
+        public GetBranchesRequest(BBRepository repo, Settings settings)
             : base(settings)
         {
             _repo = repo;

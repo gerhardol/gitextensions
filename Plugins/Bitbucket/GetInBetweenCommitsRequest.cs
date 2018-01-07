@@ -4,21 +4,21 @@ using RestSharp;
 
 namespace Bitbucket
 {
-    class GetInBetweenCommitsRequest : BitbucketRequestBase<List<Commit>>
+    class GetInBetweenCommitsRequest : BitbucketRequestBase<List<BBCommit>>
     {
-        private readonly Repository _sourceRepo;
-        private readonly Repository _targetRepo;
-        private readonly Commit _sourceCommit;
-        private readonly Commit _targetCommit;
+        private readonly BBRepository _sourceRepo;
+        private readonly BBRepository _targetRepo;
+        private readonly BBCommit _sourceBbCommit;
+        private readonly BBCommit _targetBbCommit;
 
-        public GetInBetweenCommitsRequest(Repository sourceRepo, Repository targetRepo,
-            Commit sourceCommit, Commit targetCommit,Settings settings)
+        public GetInBetweenCommitsRequest(BBRepository sourceRepo, BBRepository targetRepo,
+            BBCommit sourceBbCommit, BBCommit targetBbCommit,Settings settings)
             : base(settings)
         {
             _sourceRepo = sourceRepo;
             _targetRepo = targetRepo;
-            _sourceCommit = sourceCommit;
-            _targetCommit = targetCommit;
+            _sourceBbCommit = sourceBbCommit;
+            _targetBbCommit = targetBbCommit;
         }
 
         protected override object RequestBody
@@ -38,16 +38,16 @@ namespace Bitbucket
                 return string.Format(
                     "/projects/{0}/repos/{1}/commits?until={2}&since={3}&secondaryRepositoryId={4}&start=0&limit=10",
                     _sourceRepo.ProjectKey, _sourceRepo.RepoName, 
-                    _sourceCommit.Hash, _targetCommit.Hash, _targetRepo.Id);
+                    _sourceBbCommit.Hash, _targetBbCommit.Hash, _targetRepo.Id);
             }
         }
 
-        protected override List<Commit> ParseResponse(JObject json)
+        protected override List<BBCommit> ParseResponse(JObject json)
         {
-            var result = new List<Commit>();
+            var result = new List<BBCommit>();
             foreach(JObject commit in json["values"])
             {
-                result.Add(Commit.Parse(commit));
+                result.Add(BBCommit.Parse(commit));
             }
             return result;
         }

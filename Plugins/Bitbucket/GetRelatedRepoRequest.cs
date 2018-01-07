@@ -4,11 +4,11 @@ using RestSharp;
 
 namespace Bitbucket
 {
-    class Repository
+    class BBRepository
     {
-        public static Repository Parse(JObject json)
+        public static BBRepository Parse(JObject json)
         {
-            return new Repository
+            return new BBRepository
                        {
                            Id = json["id"].ToString(),
                            RepoName = json["name"].ToString(),
@@ -26,7 +26,7 @@ namespace Bitbucket
         }
     }
     
-    class GetRelatedRepoRequest : BitbucketRequestBase<List<Repository>>
+    class GetRelatedRepoRequest : BitbucketRequestBase<List<BBRepository>>
     {
         public GetRelatedRepoRequest(Settings settings) : base(settings)
         {
@@ -52,12 +52,12 @@ namespace Bitbucket
             }
         }
 
-        protected override List<Repository> ParseResponse(JObject json)
+        protected override List<BBRepository> ParseResponse(JObject json)
         {
-            var result = new List<Repository>();
+            var result = new List<BBRepository>();
             foreach (JObject val in json["values"])
             {
-                result.Add(Repository.Parse(val));
+                result.Add(BBRepository.Parse(val));
             }
             return result;
         }
