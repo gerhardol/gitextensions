@@ -38,7 +38,7 @@ namespace GitUI.CommandsDialogs
             if (selectedGitRevision != null) selectedGitRevision.PropertyChanged += RevisionPropertyChanged;
 
             var buildInfoIsAvailable =
-                !(revision == null || revision.IsArtificial() || revision.BuildStatus == null || string.IsNullOrEmpty(revision.BuildStatus.Url));
+                !(revision == null || revision.BuildStatus == null || string.IsNullOrEmpty(revision.BuildStatus.Url));
 
             tabControl.SuspendLayout();
 
@@ -55,24 +55,27 @@ namespace GitUI.CommandsDialogs
 
                     if (isFavIconMissing || tabControl.SelectedTab == buildReportTabPage)
                     {
-                        if (revision.BuildStatus.ShowInBuildReportTab)
+                        try
                         {
-                            url = null;
-                            try
+                            if (revision.BuildStatus.ShowInBuildReportTab)
                             {
+                                url = null;
                                 buildReportWebBrowser.Navigate(revision.BuildStatus.Url);
                             }
-                            catch { }
-                        }
-                        else
-                        {
-                            url = revision.BuildStatus.Url;
-                            buildReportWebBrowser.Navigate("about:blank");
-                        }
+                            else
+                            {
+                                url = revision.BuildStatus.Url;
+                                buildReportWebBrowser.Navigate("about:blank");
+                            }
 
-                        if (isFavIconMissing)
+                            if (isFavIconMissing)
+                            {
+                                buildReportWebBrowser.Navigated += BuildReportWebBrowserOnNavigated;
+                            }
+                        }
+                        catch
                         {
-                            buildReportWebBrowser.Navigated += BuildReportWebBrowserOnNavigated;
+                            //No propagation to the user if the report fails
                         }
                     }
 

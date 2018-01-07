@@ -129,10 +129,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                             _workTreeWatcher.EnableRaisingEvents = true;
                             _gitDirWatcher.EnableRaisingEvents = !_gitDirWatcher.Path.StartsWith(_workTreeWatcher.Path);
                             _globalIgnoreWatcher.EnableRaisingEvents = !string.IsNullOrWhiteSpace(_globalIgnoreWatcher.Path);
-                            _currUpdateInterval = MinUpdateInterval;
-                            _prevUpdateTime = 0;
-                            _ignoredFilesAreStale = true;
-                            _ignoredFiles = new HashSet<string>();
                             ScheduleNext(UpdateDelay);
                         }
                         break;
@@ -224,6 +220,10 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                     }
                     _gitPath = Path.GetDirectoryName(gitDirPath);
                     _submodulesPath = Path.Combine(_gitPath, "modules");
+                    _currUpdateInterval = MinUpdateInterval;
+                    _prevUpdateTime = 0;
+                    _ignoredFilesAreStale = true;
+                    _ignoredFiles = new HashSet<string>();
                     ignoredFilesTimer.Stop();
                     ignoredFilesTimer.Start();
                     CurrentStatus = GitStatusMonitorState.Running;
@@ -273,7 +273,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
         private string RunStatusCommand()
         {
             _ignoredFilesPending = _ignoredFilesAreStale;
-            //Note: Git 2.15 introduces --ignored=matching to only get ignored directories, decreasing size
+            //git-status with ignored files when needed only
             string command = GitCommandHelpers.GetAllChangedFilesCmd(!_ignoredFilesPending, UntrackedFilesMode.Default);
             return Module.RunGitCmd(command);
         }
