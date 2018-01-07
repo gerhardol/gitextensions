@@ -52,6 +52,10 @@ namespace Bitbucket
                 return;
             }
             _stashClient = new StashClient(_settings.BitbucketUrl, _settings.Username, _settings.Password);
+            this.Load += BitbucketPullRequestFormLoad;
+            this.Load += BitbucketViewPullRequestFormLoad;
+            createPullLinkLabel.Text = _settings + "pull-requests?create";
+            viewPullLinkLabel.Text = _settings + "pull-requests";
         }
 
         private void BitbucketPullRequestFormLoad(object sender, EventArgs e)
@@ -352,6 +356,16 @@ namespace Bitbucket
                    MessageBox.Show(string.Join(Environment.NewLine, response.Messages),
                        _error.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
            */
+        }
+
+        private void viewPullLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+
+        }
+
+        private void createPullLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+
         }
     }
 }
