@@ -34,8 +34,8 @@ namespace Bitbucket
             _plugin = plugin;
             _settingsContainer = settings;
             _gitUiCommands = gitUiCommands;
-            //TODO Retrieve all users and set default reviewers
             ReviewersDataGrid.Visible = false;
+            
             _settings = Settings.Parse(_gitUiCommands.GitModule, _settingsContainer, _plugin);
             if (_settings == null)
             {
@@ -43,16 +43,19 @@ namespace Bitbucket
                 Close();
                 return;
             }
-            Load += BitbucketPullRequestFormLoad;
             Load += BitbucketViewPullRequestFormLoad;
+            Load += BitbucketPullRequestFormLoad;
+
             createPullLinkLabel.Text = string.Format("{0}/projects/{1}/repos/{2}/pull-requests?create",
-                                           _settings.BitbucketUrl, _settings.ProjectKey, _settings.RepoSlug);
+                                      _settings.BitbucketUrl, _settings.ProjectKey, _settings.RepoSlug);
             viewPullLinkLabel.Text = string.Format("{0}/projects/{1}/repos/{2}/pull-requests",
                 _settings.BitbucketUrl, _settings.ProjectKey, _settings.RepoSlug);
         }
 
         private void BitbucketPullRequestFormLoad(object sender, EventArgs e)
         {
+            if (_settings == null)
+                return;
 
             //_bitbucketUsers.AddRange(GetBitbucketUsers().Select(a => a.Slug));
             ThreadPool.QueueUserWorkItem(state =>
@@ -78,6 +81,7 @@ namespace Bitbucket
         {
             if (_settings == null)
                 return;
+
             ThreadPool.QueueUserWorkItem(state =>
             {
                 var pullReqs = GetPullRequests();
@@ -92,7 +96,6 @@ namespace Bitbucket
                 catch(System.InvalidOperationException){
                     return;
                 }
-
             });
         }
 
