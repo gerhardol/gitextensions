@@ -272,13 +272,6 @@ namespace GitUI.CommandsDialogs
 
             FillTerminalTab();
             ManageWorktreeSupport();
-            if (_showRevisionInfoNextToRevisionGrid)
-            {
-                CommitInfoTabControl.SelectedTab = DiffTabPage;
-            } else
-            {
-                CommitInfoTabControl.SelectedTab = CommitInfoTabPage;
-            }
         }
 
         private void LayoutRevisionInfo()
