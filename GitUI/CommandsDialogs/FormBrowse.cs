@@ -283,6 +283,7 @@ namespace GitUI.CommandsDialogs
                 RevisionInfo.DisplayAvatarOnRight();
                 CommitInfoTabControl.SuspendLayout();
                 CommitInfoTabControl.RemoveIfExists(CommitInfoTabPage);
+                //Move difftab to left
                 CommitInfoTabControl.RemoveIfExists(DiffTabPage);
                 CommitInfoTabControl.TabPages.Insert(0, DiffTabPage);
                 CommitInfoTabControl.SelectedTab = DiffTabPage;
@@ -2086,6 +2087,7 @@ namespace GitUI.CommandsDialogs
             this.runMergetoolToolStripMenuItem.Enabled =
             this.cherryPickToolStripMenuItem.Enabled =
             this.checkoutToolStripMenuItem.Enabled =
+            this.toolStripMenuItemReflog.Enabled = 
             this.bisectToolStripMenuItem.Enabled =
               enabled && !Module.IsBareRepository();
 
