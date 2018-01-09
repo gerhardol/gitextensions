@@ -24,6 +24,7 @@ namespace Bitbucket
         private readonly ISettingsSource _settingsContainer;
         private readonly BindingList<BitbucketUser> _reviewers = new BindingList<BitbucketUser>();
         private readonly List<string> _bitbucketUsers = new List<string>();
+        private readonly ILinkFactory _linkFactory = new LinkFactory();
 
 
         public BitbucketPullRequestForm(BitbucketPlugin plugin, ISettingsSource settings, GitUIBaseEventArgs gitUiCommands)
@@ -307,9 +308,9 @@ namespace Bitbucket
             lblPRState.Text = curItem.State;
             txtPRReviewers.Text = curItem.Reviewers;
             lblPRSourceRepo.Text = curItem.SrcDisplayName;
-            lblPRSourceBranch.Text = curItem.SrcBranch;
+            lblPRSourceBranch.Text = _linkFactory.CreateBranchLink(curItem.SrcBranch);
             lblPRDestRepo.Text = curItem.DestDisplayName;
-            lblPRDestBranch.Text = curItem.DestBranch;
+            lblPRDestBranch.Text = _linkFactory.CreateBranchLink(curItem.DestBranch);
 
             viewPullLinkLabel.Text = string.Format("{0}/projects/{1}/repos/{2}/pull-requests/{3}/overview",
                 _settings.BitbucketUrl, _settings.ProjectKey, _settings.RepoSlug, curItem.Id);
