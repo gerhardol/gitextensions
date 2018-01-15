@@ -629,11 +629,23 @@ namespace GitUI.CommandsDialogs
             Cursor.Current = Cursors.Default;
         }
 
+        private DateTime _lastOnActivate = DateTime.MinValue;
         private void OnActivate()
         {
-            CheckForMergeConflicts();
-            UpdateStashCount();
-            UpdateSubmodulesList();
+            //(limit the risk) of simultaneous updates
+            //For instance at startup this can be called 3 times more or less in parallel
+            if (DateTime.Now- _lastOnActivate > TimeSpan.FromSeconds(1))
+            {
+                _lastOnActivate = DateTime.Now;
+                CheckForMergeConflicts();
+                UpdateStashCount();
+                UpdateSubmodulesList();
+            }
+            else
+            {
+                //Dummy to get marker in the log
+                Module.RunGitCmd("--version");
+            }
         }
 
         internal Keys GetShortcutKeys(Commands cmd)
