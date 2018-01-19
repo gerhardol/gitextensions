@@ -72,23 +72,21 @@ namespace GitUI.BuildServerIntegration
 
                 var cancellationToken = new CompositeDisposable
                 {
-                    fullDayObservable
-                        .OnErrorResumeNext(fullObservable)
-                        .OnErrorResumeNext(Observable.Empty<BuildInfo>()
-                            .DelaySubscription(TimeSpan.FromMinutes(1))
-                            .OnErrorResumeNext(fromNowObservable)
-                            .Retry()
-                            .Repeat())
-                        .ObserveOn(SynchronizationContext.Current)
-                        .Subscribe(OnBuildInfoUpdate),
+                    fullDayObservable.OnErrorResumeNext(fullObservable)
+                                     .OnErrorResumeNext(Observable.Empty<BuildInfo>()
+                                                                  .DelaySubscription(TimeSpan.FromMinutes(1))
+                                                                  .OnErrorResumeNext(fromNowObservable)
+                                                                  .Retry()
+                                                                  .Repeat())
+                                     .ObserveOn(SynchronizationContext.Current)
+                                     .Subscribe(OnBuildInfoUpdate),
 
-                    runningBuildsObservable
-                        .OnErrorResumeNext(Observable.Empty<BuildInfo>()
-                            .DelaySubscription(TimeSpan.FromSeconds(10)))
-                        .Retry()
-                        .Repeat()
-                        .ObserveOn(SynchronizationContext.Current)
-                        .Subscribe(OnBuildInfoUpdate)
+                    runningBuildsObservable.OnErrorResumeNext(Observable.Empty<BuildInfo>()
+                                                                        .DelaySubscription(TimeSpan.FromSeconds(10)))
+                                           .Retry()
+                                           .Repeat()
+                                           .ObserveOn(SynchronizationContext.Current)
+                                           .Subscribe(OnBuildInfoUpdate)
                 };
 
                 buildStatusCancellationToken = cancellationToken;
@@ -203,13 +201,19 @@ namespace GitUI.BuildServerIntegration
             }
         }
 
-        public string ReplaceVariables(string projects)
+        /// <summary>
+        /// Get a "repo shortname" from the current repo url
+        /// There is no official Git repo shortname, this is one possible definition, extracting the filename without extension for the remote repo
+        /// This function couild have been included in GitModule
+        /// </summary>
+        /// <returns>URL filename part if a remote exists and empty or null if no repo URL</returns>
+        private string GetRepoShortname()
         {
             //Extract "name of repo" from remote url
             string remoteName = Module.GetCurrentRemote();
             if (remoteName.IsNullOrWhiteSpace())
             {
-                //No remote for the branch, for instance submodule. Use first remote 
+                //No remote for the branch, for instance a submodule. Use first remote.
                 var remotes = Module.GetRemotes();
                 if (remotes.Length > 0)
                 {
@@ -217,14 +221,24 @@ namespace GitUI.BuildServerIntegration
                 }
             }
             var remoteUrl = Module.GetSetting(string.Format(SettingKeyString.RemoteUrl, remoteName));
-            var start = 1 + remoteUrl.LastIndexOfAny(new char[] { '/', Path.DirectorySeparatorChar });
-            var len = remoteUrl.Length - start;
-            if (remoteUrl.EndsWith(".git")) { len -= 4; }
-            if (start >= 0) { remoteUrl = remoteUrl.Substring(start, len); }
+            var repoName = Path.GetFileNameWithoutExtension(remoteUrl);
 
-            return projects
-                .Replace("%REPO_SHORTNAME_U%", remoteUrl.ToUpper())
-                .Replace("%REPO_SHORTNAME%", remoteUrl);
+            return repoName;
+        }
+
+        /// <summary>
+        /// Replace variables for the project string with the current "repo shortname"
+        /// </summary>
+        /// <param name="projectNames">build server specific format, compatible with the variable format (Windows style %NAME%)</param>
+        /// <returns>projectNames with variables replaced</returns>
+        public string ReplaceVariables(string projectNames)
+        {
+            var repoName = GetRepoShortname();
+
+            if (repoName.IsNullOrWhiteSpace())
+                return projectNames;
+
+            return projectNames.Replace("%REPO_SHORTNAME%", repoName);
         }
 
         private IBuildServerCredentials ShowBuildServerCredentialsForm(string buildServerUniqueKey, IBuildServerCredentials buildServerCredentials)

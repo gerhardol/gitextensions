@@ -8,6 +8,6 @@ namespace GitUIPluginInterfaces.BuildServerIntegration
 
         void CancelBuildStatusFetchOperation();
 
-        string ReplaceVariables(string projects);
+        string ReplaceVariables(string projectNames);
     }
 }
