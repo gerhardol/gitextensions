@@ -72,6 +72,10 @@ namespace GitCommands.Git
                 "Unexpectedly two identical artificial revisions to diff: " + firstRevision +
                 ". This will be displayed as diff to HEAD, not an identical diff.");
 
+            Debug.Assert(secondRevision != null,
+                "Unexpectedly comparing to null.");
+            if (secondRevision == null) secondRevision = string.Empty;
+
             //As empty (unstaged) and --cached (staged) are options (not revisions),
             // order must be preserved with -R
             if (firstRevision != secondRevision && (firstRevision.IsNullOrEmpty() ||
@@ -102,15 +106,19 @@ namespace GitCommands.Git
             {
                 //Untracked files can only be compared to /dev/null
                 //The UI should normall only allow this for unstaged to staged, but it can be included in multi selections
-                if (!isTracked)
+                if (firstRevision == null)
+                {
+                    extra += " " + secondRevision;
+                }
+                else if (isTracked)
+                {
+                    extra += " " + firstRevision + " " + secondRevision;
+                }
+                else if (!isTracked)
                 {
                     extra += " --no-index";
                     oldFileName = fileName;
                     fileName = "/dev/null";
-                }
-                else
-                {
-                    extra += " " + firstRevision + " " + secondRevision;
                 }
 
                 extra += " -- " + fileName.QuoteNE() + " " + oldFileName.QuoteNE();
@@ -128,6 +136,9 @@ namespace GitCommands.Git
         /// <returns></returns>
         private string ArtificialToDiffOptions(string rev)
         {
+            if (rev == null)
+                return rev;
+
             if (rev.IsNullOrEmpty() || rev == GitRevision.UnstagedGuid)
             {
                 rev = string.Empty;

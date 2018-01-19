@@ -2225,8 +2225,8 @@ namespace GitCommands
             }
 
             //fix refs slashes
-            firstRevision = firstRevision == null ? "" : firstRevision.ToPosixPath();
-            secondRevision = secondRevision == null ? "" : secondRevision.ToPosixPath();
+            firstRevision = firstRevision == null ? null : firstRevision.ToPosixPath();
+            secondRevision = secondRevision == null ? null : secondRevision.ToPosixPath();
             string diffOptions = _revisionDiffProvider.Get(firstRevision, secondRevision, fileName, oldFileName, isTracked);
             if (AppSettings.UsePatienceDiffAlgorithm)
                 extraDiffArguments = string.Concat(extraDiffArguments, " --patience");

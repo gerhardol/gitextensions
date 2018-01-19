@@ -1022,7 +1022,9 @@ namespace GitUI.CommandsDialogs
 
             _selectedRevisionUpdatedTargets |= UpdateTargets.DiffList;
 
-            DiffTabPage.Text = revisionDiff.GetTabText();
+            var title = revisionDiff.GetTabText();
+            if (title != null)
+                DiffTabPage.Text = title;
         }
 
         private void FillCommitInfo()

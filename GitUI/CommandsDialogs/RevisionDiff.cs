@@ -115,8 +115,18 @@ namespace GitUI.CommandsDialogs
 
                 case 1: // diff "parent" --> "selected revision"
                     var revision = revisions[0];
-                    if (revision != null && revision.HasParent)
-                        return _diffParentWithSelection.Text;
+                    if (revision != null)
+                    {
+                        if (revision.HasParent)
+                        {
+                            return _diffParentWithSelection.Text;
+                        }
+                        else
+                        {
+                            //No parent, just empty text
+                            return null;
+                        }
+                    }
                     break;
 
                 case 2: // diff "first clicked revision" --> "second clicked revision"
@@ -267,7 +277,7 @@ namespace GitUI.CommandsDialogs
                 return;
             }
 
-            if (items.Count() == 1)
+            if (items.Count() == 1 && DiffFiles.SelectedItemParent != null)
             {
                 items.Add(new GitRevision(Module, DiffFiles.SelectedItemParent));
 
