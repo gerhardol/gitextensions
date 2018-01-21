@@ -24,8 +24,6 @@ namespace GitUI
 
     public sealed partial class FileStatusList : GitModuleControl
     {
-        private readonly TranslationString _UnsupportedMultiselectAction =
-            new TranslationString("Operation not supported");
         private readonly TranslationString _DiffWithParent =
             new TranslationString("Diff with:");
         public readonly TranslationString CombinedDiff =
@@ -979,14 +977,16 @@ namespace GitUI
                     SetDiff(revisions[0]);
                     break;
 
-                case 2: // diff "first clicked revision" --> "second clicked revision"
+                default: // 2 or more revisions selected
                     NoFiles.Text = _noDiffFilesChangesDefaultText;
-                    SetGitItemStatuses(revisions[1].Guid, Module.GetDiffFilesWithSubmodulesStatus(revisions[1].Guid, revisions[0].Guid));
-                    break;
-
-                default: // more than 2 revisions selected => no diff
-                    NoFiles.Text = _UnsupportedMultiselectAction.Text;
-                    GitItemStatuses = null;
+                    var dictionary = new Dictionary<string, IList<GitItemStatus>>();
+                    for (int i = 1; i < revisions.Count; i++)
+                    {
+                        dictionary.Add(revisions[i].Guid, Module.GetDiffFilesWithSubmodulesStatus(revisions[i].Guid, revisions[0].Guid));
+                        if (!AppSettings.ShowDiffForAllParents)
+                            break;
+                    }
+                    GitItemStatusesWithParents = dictionary;
                     break;
             }
             UpdateNoFilesLabelVisibility();
