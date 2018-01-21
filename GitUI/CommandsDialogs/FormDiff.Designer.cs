@@ -349,35 +349,35 @@
             this.aBToolStripMenuItem.Name = "aBToolStripMenuItem";
             this.aBToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
             this.aBToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
-            this.aBToolStripMenuItem.Text = "A <--> B";
+            this.aBToolStripMenuItem.Text = "B -> A";
             this.aBToolStripMenuItem.Click += new System.EventHandler(this.openWithDifftoolToolStripMenuItem_Click);
             // 
             // aLocalToolStripMenuItem
             // 
             this.aLocalToolStripMenuItem.Name = "aLocalToolStripMenuItem";
             this.aLocalToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
-            this.aLocalToolStripMenuItem.Text = "A <--> Working directory";
+            this.aLocalToolStripMenuItem.Text = "A -> Working directory";
             this.aLocalToolStripMenuItem.Click += new System.EventHandler(this.openWithDifftoolToolStripMenuItem_Click);
             // 
             // bLocalToolStripMenuItem
             // 
             this.bLocalToolStripMenuItem.Name = "bLocalToolStripMenuItem";
             this.bLocalToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
-            this.bLocalToolStripMenuItem.Text = "B <--> Working directory";
+            this.bLocalToolStripMenuItem.Text = "B -> Working directory";
             this.bLocalToolStripMenuItem.Click += new System.EventHandler(this.openWithDifftoolToolStripMenuItem_Click);
             // 
             // parentOfALocalToolStripMenuItem
             // 
             this.parentOfALocalToolStripMenuItem.Name = "parentOfALocalToolStripMenuItem";
             this.parentOfALocalToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
-            this.parentOfALocalToolStripMenuItem.Text = "A\'s parent <--> Working directory";
+            this.parentOfALocalToolStripMenuItem.Text = "A\'s parent -> Working directory";
             this.parentOfALocalToolStripMenuItem.Click += new System.EventHandler(this.openWithDifftoolToolStripMenuItem_Click);
             // 
             // parentOfBLocalToolStripMenuItem
             // 
             this.parentOfBLocalToolStripMenuItem.Name = "parentOfBLocalToolStripMenuItem";
             this.parentOfBLocalToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
-            this.parentOfBLocalToolStripMenuItem.Text = "B\'s parent <--> Working directory";
+            this.parentOfBLocalToolStripMenuItem.Text = "B\'s parent -> Working directory";
             this.parentOfBLocalToolStripMenuItem.Click += new System.EventHandler(this.openWithDifftoolToolStripMenuItem_Click);
             // 
             // toolStripSeparator32

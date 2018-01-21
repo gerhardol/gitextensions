@@ -10,6 +10,7 @@ using GitUI.CommandsDialogs.BrowseDialog;
 using GitUI.HelperDialogs;
 using ResourceManager;
 using GitUI.Hotkey;
+using GitUI.UserControls.RevisionGridClasses;
 
 namespace GitUI.CommandsDialogs
 {
@@ -536,7 +537,31 @@ namespace GitUI.CommandsDialogs
 
         private void openWithDifftoolToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
         {
+            IList<GitRevision> revisions = _revisionGrid.GetSelectedRevisions();
             ContextMenuDiffToolInfo selectionInfo = GetContextMenuDiffToolInfo();
+
+            if (DiffFiles.SelectedItemsWithParent.Count() > 0)
+            {
+                aDiffCaptionMenuItem.Text = "A: (" + _revisionGrid.DescribeRevision(revisions[0], 50) + ")";
+                aDiffCaptionMenuItem.Tag = "caption";
+                aDiffCaptionMenuItem.Visible = true;
+                MenuUtil.SetAsCaptionMenuItem(aDiffCaptionMenuItem, DiffContextMenu);
+
+                bDiffCaptionMenuItem.Text = "B:";
+                var parent = _revisionGrid.GetRevision(DiffFiles.SelectedItemsWithParent.First().ParentGuid);
+                if (parent != null)
+                {
+                    bDiffCaptionMenuItem.Text += " (" + _revisionGrid.DescribeRevision(parent, 50) + ")";
+                }
+                bDiffCaptionMenuItem.Tag = "caption";
+                bDiffCaptionMenuItem.Visible = true;
+                MenuUtil.SetAsCaptionMenuItem(bDiffCaptionMenuItem, DiffContextMenu);
+            }
+            else
+            {
+                aDiffCaptionMenuItem.Visible = false;
+                bDiffCaptionMenuItem.Visible = false;
+            }
 
             aBToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuAB(selectionInfo);
             aLocalToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuALocal(selectionInfo);
