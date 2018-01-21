@@ -38,15 +38,17 @@ namespace GitUI
 
         private bool _filterVisible;
         private ToolStripItem _openSubmoduleMenuItem;
+        private readonly bool _alwaysRevisionGroups;
 
         public DescribeRevisionDelegate DescribeRevision;
 
-        public FileStatusList()
+        public FileStatusList(bool alwaysRevisionGroups= false)
         {
             InitializeComponent();
             CreateOpenSubmoduleMenuItem();
             Translate();
             FilterVisible = false;
+            _alwaysRevisionGroups = alwaysRevisionGroups;
 
             SelectFirstItemOnSetItems = true;
             _noDiffFilesChangesDefaultText = NoFiles.Text;
@@ -751,7 +753,7 @@ namespace GitUI
             }
 
             FileStatusListView.BeginUpdate();
-            FileStatusListView.ShowGroups = _itemsDictionary != null && _itemsDictionary.Count > 1;
+            FileStatusListView.ShowGroups = _itemsDictionary != null && (_alwaysRevisionGroups || _itemsDictionary.Count > 1);
             FileStatusListView.Groups.Clear();
             FileStatusListView.Items.Clear();
             if (_itemsDictionary != null)

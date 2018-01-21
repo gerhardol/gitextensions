@@ -17,10 +17,6 @@ namespace GitUI.CommandsDialogs
     {
         private readonly TranslationString _saveFileFilterCurrentFormat = new TranslationString("Current format");
         private readonly TranslationString _saveFileFilterAllFiles = new TranslationString("All files");
-        private readonly TranslationString _diffNoSelection = new TranslationString("Diff (no selection)");
-        private readonly TranslationString _diffParentWithSelection = new TranslationString("Diff (A: parent --> B: selection)");
-        private readonly TranslationString _diffTwoSelected = new TranslationString("Diff (A: first --> B: second)");
-        private readonly TranslationString _diffNotSupported = new TranslationString("Diff (not supported)");
         private readonly TranslationString _deleteSelectedFilesCaption = new TranslationString("Delete");
         private readonly TranslationString _deleteSelectedFiles =
             new TranslationString("Are you sure you want delete the selected file(s)?");
@@ -95,7 +91,7 @@ namespace GitUI.CommandsDialogs
 
         #endregion
 
-        public string GetTabText()
+        public void GetTabText()
         {
             var revisions = _revisionGrid.GetSelectedRevisions();
 
@@ -107,19 +103,6 @@ namespace GitUI.CommandsDialogs
                 _oldDiffItem = null;
                 _oldRevision = null;
             }
-
-            switch (revisions.Count)
-            {
-                case 0:
-                    return _diffNoSelection.Text;
-
-                case 1: // diff "parent" --> "selected revision"
-                    return _diffParentWithSelection.Text;
-
-                case 2: // diff "first clicked revision" --> "second clicked revision"
-                    return _diffTwoSelected.Text;
-            }
-            return _diffNotSupported.Text;
         }
 
         public void Bind(RevisionGrid revisionGrid, RevisionFileTree revisionFileTree)

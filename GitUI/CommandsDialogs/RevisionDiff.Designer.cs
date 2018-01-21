@@ -32,7 +32,7 @@ namespace GitUI.CommandsDialogs
         {
             this.components = new System.ComponentModel.Container();
             this.DiffSplitContainer = new System.Windows.Forms.SplitContainer();
-            this.DiffFiles = new GitUI.FileStatusList();
+            this.DiffFiles = new GitUI.FileStatusList(true);
             this.DiffContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.openWithDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aBToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();

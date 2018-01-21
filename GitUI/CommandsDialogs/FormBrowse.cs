@@ -1010,8 +1010,6 @@ namespace GitUI.CommandsDialogs
 
         private void FillDiff()
         {
-            DiffTabPage.Text = _diffTabPageTitleBase;
-
             if (CommitInfoTabControl.SelectedTab != DiffTabPage)
             {
                 return;
@@ -1021,10 +1019,7 @@ namespace GitUI.CommandsDialogs
                 return;
 
             _selectedRevisionUpdatedTargets |= UpdateTargets.DiffList;
-
-            var title = revisionDiff.GetTabText();
-            if (title != null)
-                DiffTabPage.Text = title;
+            revisionDiff.GetTabText();
         }
 
         private void FillCommitInfo()
