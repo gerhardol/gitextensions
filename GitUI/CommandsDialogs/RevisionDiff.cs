@@ -235,27 +235,28 @@ namespace GitUI.CommandsDialogs
                 itemsToCheckout = selectedItems.Where(item => !item.IsNew);
             }
 
+            //TODO use DiffFiles.SelectedItemParent
             Module.CheckoutFiles(itemsToCheckout.Select(item => item.Name), revision, false);
             RefreshArtificial();
         }
 
         private void ShowSelectedFileDiff()
         {
-            var items = _revisionGrid.GetSelectedRevisions();
-            if (DiffFiles.SelectedItem == null || items.Count() == 0)
+            var revisions = _revisionGrid.GetSelectedRevisions();
+            if (DiffFiles.SelectedItem == null || revisions.Count() == 0)
             {
                 DiffText.ViewPatch("");
                 return;
             }
 
-            if (items.Count() == 1 && DiffFiles.SelectedItemParent != null)
+            if (revisions.Count() == 1 && DiffFiles.SelectedItemParent != null)
             {
-                items.Add(new GitRevision(Module, DiffFiles.SelectedItemParent));
+                revisions.Add(new GitRevision(Module, DiffFiles.SelectedItemParent));
 
                 if (!string.IsNullOrWhiteSpace(DiffFiles.SelectedItemParent)
                     && DiffFiles.SelectedItemParent == DiffFiles.CombinedDiff.Text)
                 {
-                    var diffOfConflict = Module.GetCombinedDiffContent(items.First(), DiffFiles.SelectedItem.Name,
+                    var diffOfConflict = Module.GetCombinedDiffContent(revisions.First(), DiffFiles.SelectedItem.Name,
                         DiffText.GetExtraDiffArguments(), DiffText.Encoding);
 
                     if (string.IsNullOrWhiteSpace(diffOfConflict))
@@ -267,7 +268,12 @@ namespace GitUI.CommandsDialogs
                     return;
                 }
             }
-            DiffText.ViewChanges(items, DiffFiles.SelectedItem, String.Empty);
+            else if (revisions.Count() > 2)
+            {
+                //The revision to compare with must be second in the list
+                revisions[1] = new GitRevision(Module, DiffFiles.SelectedItemParent);
+            }
+            DiffText.ViewChanges(revisions, DiffFiles.SelectedItem, String.Empty);
         }
 
 
@@ -322,6 +328,32 @@ namespace GitUI.CommandsDialogs
         private void DiffContextMenu_Opening(object sender, CancelEventArgs e)
         {
             var selectionInfo = GetSelectionInfo();
+
+            if (DiffFiles.SelectedItemsWithParent.Count() > 0)
+            {
+                IList<GitRevision> revisions = _revisionGrid.GetSelectedRevisions();
+
+                bDiffCaptionMenuItem.Text = "B: (" + _revisionGrid.DescribeRevision(revisions[0], 50) + ")";
+                bDiffCaptionMenuItem.Tag = "caption";
+                bDiffCaptionMenuItem.Visible = true;
+                MenuUtil.SetAsCaptionMenuItem(bDiffCaptionMenuItem, DiffContextMenu);
+
+                /*aDiffCaptionMenuItem.Text = "A:";
+                var parent = _revisionGrid.GetRevision(DiffFiles.SelectedItemsWithParent.First().ParentGuid);
+                if (parent != null)
+                {
+                    aDiffCaptionMenuItem.Text += " (" + _revisionGrid.DescribeRevision(parent, 50) + ")";
+                }
+                aDiffCaptionMenuItem.Tag = "caption";
+                aDiffCaptionMenuItem.Visible = false;
+                MenuUtil.SetAsCaptionMenuItem(aDiffCaptionMenuItem, DiffContextMenu);
+                */
+            }
+            else
+            {
+                aDiffCaptionMenuItem.Visible = false;
+                bDiffCaptionMenuItem.Visible = false;
+            }
 
             //Many options have no meaning for artificial commits or submodules
             //Hide the obviously no action options when single selected, handle them in actions if multi select
@@ -394,21 +426,18 @@ namespace GitUI.CommandsDialogs
         private void UnstageFileToolStripMenuItemClick(object sender, EventArgs e)
         {
             var files = new List<GitItemStatus>();
-            foreach (var item in DiffFiles.SelectedItems)
+            foreach (var item in DiffFiles.SelectedItems.Where(i => i.IsStaged))
             {
-                if (item.IsStaged)
+                if (!item.IsNew)
                 {
-                    if (!item.IsNew)
-                    {
-                        Module.UnstageFileToRemove(item.Name);
+                    Module.UnstageFileToRemove(item.Name);
 
-                        if (item.IsRenamed)
-                            Module.UnstageFileToRemove(item.OldName);
-                    }
-                    else
-                    {
-                        files.Add(item);
-                    }
+                    if (item.IsRenamed)
+                        Module.UnstageFileToRemove(item.OldName);
+                }
+                else
+                {
+                    files.Add(item);
                 }
             }
 
@@ -506,16 +535,16 @@ namespace GitUI.CommandsDialogs
         {
             IList<GitRevision> selectedRevisions = _revisionGrid.GetSelectedRevisions();
             //Should be blocked in the GUI but not an error to show to the user
-            Debug.Assert(selectedRevisions.Count == 1 || selectedRevisions.Count == 2,
+            Debug.Assert(selectedRevisions.Count == 1 || selectedRevisions.Count >= 2,
                 "Unexpectedly number of revisions for difftool" + selectedRevisions.Count);
-            if (selectedRevisions.Count < 1 || selectedRevisions.Count > 2)
+            if (selectedRevisions.Count < 1)// || selectedRevisions.Count > 2)
             {
                 return null;
             }
 
-            bool aIsLocal = selectedRevisions.Count == 2 && selectedRevisions[1].Guid == GitRevision.UnstagedGuid;
+            bool aIsLocal = selectedRevisions.Count >= 2 && selectedRevisions[1].Guid == GitRevision.UnstagedGuid;
             bool bIsLocal = selectedRevisions[0].Guid == GitRevision.UnstagedGuid;
-            bool multipleRevisionsSelected = selectedRevisions.Count == 2;
+            bool multipleRevisionsSelected = selectedRevisions.Count >= 2;
 
             bool localExists = false;
             bool isAnyTracked = DiffFiles.SelectedItems.Any(item => item.IsTracked);
@@ -537,31 +566,7 @@ namespace GitUI.CommandsDialogs
 
         private void openWithDifftoolToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            IList<GitRevision> revisions = _revisionGrid.GetSelectedRevisions();
             ContextMenuDiffToolInfo selectionInfo = GetContextMenuDiffToolInfo();
-
-            if (DiffFiles.SelectedItemsWithParent.Count() > 0 )
-            {
-                bDiffCaptionMenuItem.Text = "B: (" + _revisionGrid.DescribeRevision(revisions[0], 50) + ")";
-                bDiffCaptionMenuItem.Tag = "caption";
-                bDiffCaptionMenuItem.Visible = true;
-                MenuUtil.SetAsCaptionMenuItem(bDiffCaptionMenuItem, DiffContextMenu);
-
-                aDiffCaptionMenuItem.Text = "A:";
-                var parent = _revisionGrid.GetRevision(DiffFiles.SelectedItemsWithParent.First().ParentGuid);
-                if (parent != null)
-                {
-                    aDiffCaptionMenuItem.Text += " (" + _revisionGrid.DescribeRevision(parent, 50) + ")";
-                }
-                aDiffCaptionMenuItem.Tag = "caption";
-                aDiffCaptionMenuItem.Visible = true;
-                MenuUtil.SetAsCaptionMenuItem(aDiffCaptionMenuItem, DiffContextMenu);
-            }
-            else
-            {
-                aDiffCaptionMenuItem.Visible = false;
-                bDiffCaptionMenuItem.Visible = false;
-            }
 
             aBToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuAB(selectionInfo);
             aLocalToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuALocal(selectionInfo);
@@ -576,7 +581,7 @@ namespace GitUI.CommandsDialogs
         {
             IList<GitRevision> revisions = _revisionGrid.GetSelectedRevisions();
 
-            if (revisions.Count != 2 || !DiffFiles.SelectedItems.Any())
+            if (/*revisions.Count != 2 ||*/ !DiffFiles.SelectedItems.Any())
             {
                 return;
             }
@@ -588,7 +593,7 @@ namespace GitUI.CommandsDialogs
         {
             IList<GitRevision> revisions = _revisionGrid.GetSelectedRevisions();
 
-            if (revisions.Count != 1 || !DiffFiles.SelectedItems.Any())
+            if (/*revisions.Count != 1 ||*/ !DiffFiles.SelectedItems.Any())
             {
                 return;
             }
@@ -605,7 +610,7 @@ namespace GitUI.CommandsDialogs
         {
             IList<GitRevision> revisions = _revisionGrid.GetSelectedRevisions();
 
-            if (revisions.Count != 2 || !DiffFiles.SelectedItems.Any())
+            if (/*revisions.Count != 2 ||*/ !DiffFiles.SelectedItems.Any())
             {
                 return;
             }
@@ -617,7 +622,7 @@ namespace GitUI.CommandsDialogs
         {
             IList<GitRevision> revisions = _revisionGrid.GetSelectedRevisions();
 
-            if (revisions.Count != 1 || !DiffFiles.SelectedItems.Any())
+            if (/*revisions.Count != 1 ||*/ !DiffFiles.SelectedItems.Any())
             {
                 return;
             }
@@ -640,7 +645,7 @@ namespace GitUI.CommandsDialogs
                 {
                     resetFileToSelectedToolStripMenuItem.Visible = true;
                     TranslateItem(resetFileToSelectedToolStripMenuItem.Name, resetFileToSelectedToolStripMenuItem);
-                    resetFileToSelectedToolStripMenuItem.Text += " (" + _revisionGrid.DescribeRevision(revisions[0], 50) + ")";
+                    resetFileToSelectedToolStripMenuItem.Text += " (B)";//" (" + _revisionGrid.DescribeRevision(revisions[0], 50) + ")";
                 }
                 if (revisions[0].HasParent)
                 {
@@ -649,7 +654,7 @@ namespace GitUI.CommandsDialogs
                     GitRevision parentRev = _revisionGrid.GetRevision(revisions[0].FirstParentGuid);
                     if (parentRev != null)
                     {
-                        resetFileToParentToolStripMenuItem.Text += " (" + _revisionGrid.DescribeRevision(parentRev, 50) + ")";
+                        resetFileToParentToolStripMenuItem.Text += " (A)";// " (" + _revisionGrid.DescribeRevision(parentRev, 50) + ")";
                     }
                 }
                 else
@@ -673,7 +678,7 @@ namespace GitUI.CommandsDialogs
                 {
                     resetFileToFirstToolStripMenuItem.Visible = true;
                     TranslateItem(resetFileToFirstToolStripMenuItem.Name, resetFileToFirstToolStripMenuItem);
-                    resetFileToFirstToolStripMenuItem.Text += " (" + _revisionGrid.DescribeRevision(revisions[1], 50) + ")";
+                    resetFileToFirstToolStripMenuItem.Text += " (A)";//" (" + _revisionGrid.DescribeRevision(revisions[1], 50) + ")";
                 }
 
                 if (revisions[0].Guid == GitRevision.UnstagedGuid)
@@ -684,7 +689,7 @@ namespace GitUI.CommandsDialogs
                 {
                     resetFileToSecondToolStripMenuItem.Visible = true;
                     TranslateItem(resetFileToSecondToolStripMenuItem.Name, resetFileToSecondToolStripMenuItem);
-                    resetFileToSecondToolStripMenuItem.Text += " (" + _revisionGrid.DescribeRevision(revisions[0], 50) + ")";
+                    resetFileToSecondToolStripMenuItem.Text += " (B)";//" (" + _revisionGrid.DescribeRevision(revisions[0], 50) + ")";
                 }
             }
             else

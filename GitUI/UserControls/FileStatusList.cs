@@ -974,7 +974,24 @@ namespace GitUI
                     break;
 
                 case 1: // diff "parent" --> "selected revision"
-                    SetDiff(revisions[0]);
+                        //SetDiff(revisions[0]);
+                    var dictionary2 = new Dictionary<string, IList<GitItemStatus>>();
+                    for (int i = 0; i < revisions[0].ParentGuids.Length; i++)
+                    {
+                        dictionary2.Add(revisions[0].ParentGuids[i], Module.GetDiffFilesWithSubmodulesStatus(revisions[0].ParentGuids[i], revisions[0].Guid));
+                        if (!AppSettings.ShowDiffForAllParents)
+                            break;
+                    }
+                    var isMergeCommit = revisions[0].ParentGuids.Count() == 2;
+                    if (isMergeCommit)
+                    {
+                        var conflicts = Module.GetCombinedDiffFileList(revisions[0].Guid);
+                        if (conflicts.Any())
+                        {
+                            dictionary2.Add(CombinedDiff.Text, conflicts);
+                        }
+                    }
+                    GitItemStatusesWithParents = dictionary2;
                     break;
 
                 default: // 2 or more revisions selected
