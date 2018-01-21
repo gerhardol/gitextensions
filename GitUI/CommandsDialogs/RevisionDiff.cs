@@ -540,22 +540,22 @@ namespace GitUI.CommandsDialogs
             IList<GitRevision> revisions = _revisionGrid.GetSelectedRevisions();
             ContextMenuDiffToolInfo selectionInfo = GetContextMenuDiffToolInfo();
 
-            if (DiffFiles.SelectedItemsWithParent.Count() > 0)
+            if (DiffFiles.SelectedItemsWithParent.Count() > 0 )
             {
-                aDiffCaptionMenuItem.Text = "A: (" + _revisionGrid.DescribeRevision(revisions[0], 50) + ")";
-                aDiffCaptionMenuItem.Tag = "caption";
-                aDiffCaptionMenuItem.Visible = true;
-                MenuUtil.SetAsCaptionMenuItem(aDiffCaptionMenuItem, DiffContextMenu);
-
-                bDiffCaptionMenuItem.Text = "B:";
-                var parent = _revisionGrid.GetRevision(DiffFiles.SelectedItemsWithParent.First().ParentGuid);
-                if (parent != null)
-                {
-                    bDiffCaptionMenuItem.Text += " (" + _revisionGrid.DescribeRevision(parent, 50) + ")";
-                }
+                bDiffCaptionMenuItem.Text = "B: (" + _revisionGrid.DescribeRevision(revisions[0], 50) + ")";
                 bDiffCaptionMenuItem.Tag = "caption";
                 bDiffCaptionMenuItem.Visible = true;
                 MenuUtil.SetAsCaptionMenuItem(bDiffCaptionMenuItem, DiffContextMenu);
+
+                aDiffCaptionMenuItem.Text = "A:";
+                var parent = _revisionGrid.GetRevision(DiffFiles.SelectedItemsWithParent.First().ParentGuid);
+                if (parent != null)
+                {
+                    aDiffCaptionMenuItem.Text += " (" + _revisionGrid.DescribeRevision(parent, 50) + ")";
+                }
+                aDiffCaptionMenuItem.Tag = "caption";
+                aDiffCaptionMenuItem.Visible = true;
+                MenuUtil.SetAsCaptionMenuItem(aDiffCaptionMenuItem, DiffContextMenu);
             }
             else
             {
