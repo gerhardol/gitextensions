@@ -202,9 +202,10 @@ namespace GitUI.BuildServerIntegration
         }
 
         /// <summary>
-        /// Get a "repo shortname" from the current repo url
-        /// There is no official Git repo shortname, this is one possible definition, extracting the filename without extension for the remote repo
-        /// This function couild have been included in GitModule
+        /// Get a "repo shortname" from the current repo URL
+        /// There is no official Git repo shortname, this is one possible definition:
+        ///  The filename without extension for the remote URL
+        /// This function could have been included in GitModule
         /// </summary>
         /// <returns>URL filename part if a remote exists and empty or null if no repo URL</returns>
         private string GetRepoShortname()
@@ -229,16 +230,15 @@ namespace GitUI.BuildServerIntegration
         /// <summary>
         /// Replace variables for the project string with the current "repo shortname"
         /// </summary>
-        /// <param name="projectNames">build server specific format, compatible with the variable format (Windows style %NAME%)</param>
+        /// <param name="projectNames">build server specific format, compatible with the variable format</param>
         /// <returns>projectNames with variables replaced</returns>
         public string ReplaceVariables(string projectNames)
         {
             var repoName = GetRepoShortname();
-
             if (repoName.IsNullOrWhiteSpace())
                 return projectNames;
 
-            return projectNames.Replace("%REPO_SHORTNAME%", repoName);
+            return projectNames.Replace("{cRepoShortName}", repoName);
         }
 
         private IBuildServerCredentials ShowBuildServerCredentialsForm(string buildServerUniqueKey, IBuildServerCredentials buildServerCredentials)
