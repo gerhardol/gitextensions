@@ -799,7 +799,7 @@ namespace GitUI
 
                             var listItem = new ListViewItem(text, group);
                             listItem.ImageIndex = GetItemImageIndex(item);
-                            if (item.SubmoduleStatus != null && !item.SubmoduleStatus.IsCompleted)
+                            if (item.SubmoduleStatus != null)// && !item.SubmoduleStatus.IsCompleted)
                             {
                                 var capturedItem = item;
                                 item.SubmoduleStatus.ContinueWith((task) => listItem.ImageIndex = GetItemImageIndex(capturedItem),

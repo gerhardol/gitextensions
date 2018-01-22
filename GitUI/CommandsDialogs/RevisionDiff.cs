@@ -251,12 +251,10 @@ namespace GitUI.CommandsDialogs
 
             if (revisions.Count() == 1 && DiffFiles.SelectedItemParent != null)
             {
-                revisions.Add(new GitRevision(Module, DiffFiles.SelectedItemParent));
-
                 if (!string.IsNullOrWhiteSpace(DiffFiles.SelectedItemParent)
                     && DiffFiles.SelectedItemParent == DiffFiles.CombinedDiff.Text)
                 {
-                    var diffOfConflict = Module.GetCombinedDiffContent(revisions.First(), DiffFiles.SelectedItem.Name,
+                    var diffOfConflict = Module.GetCombinedDiffContent(revisions[0], DiffFiles.SelectedItem.Name,
                         DiffText.GetExtraDiffArguments(), DiffText.Encoding);
 
                     if (string.IsNullOrWhiteSpace(diffOfConflict))
@@ -267,6 +265,7 @@ namespace GitUI.CommandsDialogs
                     DiffText.ViewPatch(diffOfConflict);
                     return;
                 }
+                revisions.Add(new GitRevision(Module, DiffFiles.SelectedItemParent));
             }
             else if (revisions.Count() > 2)
             {
