@@ -111,8 +111,6 @@ namespace GitUI.CommandsDialogs
             // DiffContextMenu
             // 
             this.DiffContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-                this.aDiffCaptionMenuItem,
-                this.bDiffCaptionMenuItem,
             this.openWithDifftoolToolStripMenuItem,
             this.saveAsToolStripMenuItem1,
             this.resetFileToToolStripMenuItem,
@@ -142,6 +140,8 @@ namespace GitUI.CommandsDialogs
             // openWithDifftoolToolStripMenuItem
             // 
             this.openWithDifftoolToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.aDiffCaptionMenuItem,
+            this.bDiffCaptionMenuItem,
             this.aBToolStripMenuItem,
             this.aLocalToolStripMenuItem,
             this.bLocalToolStripMenuItem,
