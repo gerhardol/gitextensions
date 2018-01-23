@@ -32,6 +32,7 @@ namespace GitUI.CommandsDialogs
         public RevisionDiff()
         {
             InitializeComponent();
+            DiffFiles.AlwaysRevisionGroups = true;
             Translate();
             this.HotkeysEnabled = true;
         }

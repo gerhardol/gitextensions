@@ -36,17 +36,16 @@ namespace GitUI
 
         private bool _filterVisible;
         private ToolStripItem _openSubmoduleMenuItem;
-        private readonly bool _alwaysRevisionGroups;
+        private bool _alwaysRevisionGroups = false;
 
         public DescribeRevisionDelegate DescribeRevision;
 
-        public FileStatusList(bool alwaysRevisionGroups= false)
+        public FileStatusList()
         {
             InitializeComponent();
             CreateOpenSubmoduleMenuItem();
             Translate();
             FilterVisible = false;
-            _alwaysRevisionGroups = alwaysRevisionGroups;
 
             SelectFirstItemOnSetItems = true;
             _noDiffFilesChangesDefaultText = NoFiles.Text;
@@ -81,6 +80,13 @@ namespace GitUI
             NoFiles.Font = new Font(SystemFonts.MessageBoxFont, FontStyle.Italic);
 
             _filter = new Regex(".*");
+        }
+
+        public bool AlwaysRevisionGroups {
+            set
+            {
+                _alwaysRevisionGroups = value;
+            }
         }
 
         private void CreateOpenSubmoduleMenuItem()
