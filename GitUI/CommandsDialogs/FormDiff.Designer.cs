@@ -349,7 +349,7 @@
             this.aBToolStripMenuItem.Name = "aBToolStripMenuItem";
             this.aBToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
             this.aBToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
-            this.aBToolStripMenuItem.Text = "B -> A";
+            this.aBToolStripMenuItem.Text = "A -> B";
             this.aBToolStripMenuItem.Click += new System.EventHandler(this.openWithDifftoolToolStripMenuItem_Click);
             // 
             // aLocalToolStripMenuItem

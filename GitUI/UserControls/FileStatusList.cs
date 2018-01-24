@@ -991,7 +991,7 @@ namespace GitUI
                 }
                 else
                 {
-                    revs = revisions.Select(i => i.Guid).ToArray();
+                    revs = revisions.Where(i => i.Guid != revisions[0].Guid).Select(i => i.Guid).ToArray();
                 }
                 if (revs.Length == 0)
                 {
