@@ -370,7 +370,16 @@ namespace Bitbucket
         {
             try
             {
-                System.Diagnostics.Process.Start((sender as LinkLabel).Text);
+                var link = (sender as LinkLabel).Text;
+                if (e.Button == MouseButtons.Right)
+                {
+                    //Just copy the text
+                    Clipboard.SetText(link);
+                }
+                else
+                {
+                    System.Diagnostics.Process.Start(link);
+                }
             }
             catch
             {
