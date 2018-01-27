@@ -235,16 +235,15 @@ namespace GitUI.CommandsDialogs
         {
             IList<GitRevision> selectedRevisions = _revisionGrid.GetSelectedRevisions();
 
+            var selectedItemStatus = DiffFiles.SelectedItem;
             bool isAnyCombinedDiff = DiffFiles.SelectedItemParents.Any(item => item == DiffFiles.CombinedDiff.Text);
             bool isExactlyOneItemSelected = DiffFiles.SelectedItems.Count() == 1;
             bool isAnyItemSelected = DiffFiles.SelectedItems.Count() > 0;
-            bool isCombinedDiff = isExactlyOneItemSelected && DiffFiles.CombinedDiff.Text == DiffFiles.SelectedItemParent;
-            var selectedItemStatus = DiffFiles.SelectedItem;
             bool isBareRepository = Module.IsBareRepository();
             bool singleFileExists = isExactlyOneItemSelected && File.Exists(FormBrowseUtil.GetFullPathFromGitItemStatus(Module, DiffFiles.SelectedItem));
             bool isAnyTracked = DiffFiles.SelectedItems.Any(item => item.IsTracked);
 
-            var selectionInfo = new ContextMenuSelectionInfo(selectedRevisions, selectedItemStatus, isAnyCombinedDiff, isExactlyOneItemSelected, isCombinedDiff, isAnyItemSelected, isBareRepository, singleFileExists, isAnyTracked);
+            var selectionInfo = new ContextMenuSelectionInfo(selectedRevisions, selectedItemStatus, isAnyCombinedDiff, isExactlyOneItemSelected, isAnyItemSelected, isBareRepository, singleFileExists, isAnyTracked);
             return selectionInfo;
         }
 
@@ -544,28 +543,17 @@ namespace GitUI.CommandsDialogs
 
         private ContextMenuDiffToolInfo GetContextMenuDiffToolInfo()
         {
-            IList<GitRevision> selectedRevisions = _revisionGrid.GetSelectedRevisions();
-            if (selectedRevisions.Count == 0)
+            IList<GitRevision> revisions = _revisionGrid.GetSelectedRevisions();
+            if (revisions.Count == 0)
             {
                 //Should be blocked in the GUI but not an error to show to the user
                 return null;
             }
 
-            bool aIsLocal = false;
-            foreach (var item in DiffFiles.SelectedItemsWithParent)
-            {
-                if (item.ParentGuid == GitRevision.UnstagedGuid)
-                {
-                    aIsLocal = true;
-                    break;
-                }
-            }
-            bool bIsLocal = selectedRevisions[0].Guid == GitRevision.UnstagedGuid;
-            bool multipleRevisionsSelected = selectedRevisions.Count > 1;
+            bool aIsLocal = DiffFiles.SelectedItemsWithParent.Any(i => i.ParentGuid == GitRevision.UnstagedGuid);
+            bool bIsLocal = revisions[0].Guid == GitRevision.UnstagedGuid;
 
             bool localExists = DiffFiles.SelectedItems.Any(item => !item.IsTracked);
-            bool isAnyTracked = DiffFiles.SelectedItems.Any(item => item.IsTracked);
-
             if (!localExists)
             {
                 //enable *<->Local items only when (any) local file exists
@@ -580,7 +568,7 @@ namespace GitUI.CommandsDialogs
                 }
             }
 
-            var selectionInfo = new ContextMenuDiffToolInfo(aIsLocal, bIsLocal, isAnyTracked, localExists, multipleRevisionsSelected);
+            var selectionInfo = new ContextMenuDiffToolInfo(aIsLocal, bIsLocal, localExists);
             return selectionInfo;
         }
 
