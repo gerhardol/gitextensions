@@ -328,6 +328,7 @@
             this.findInDiffToolStripMenuItem});
             this.DiffContextMenu.Name = "DiffContextMenu";
             this.DiffContextMenu.Size = new System.Drawing.Size(211, 148);
+            this.DiffContextMenu.Opening += new System.ComponentModel.CancelEventHandler(this.diffContextToolStripMenuItem_Opening);
             // 
             // openWithDifftoolToolStripMenuItem
             // 
@@ -341,7 +342,7 @@
             this.openWithDifftoolToolStripMenuItem.Name = "openWithDifftoolToolStripMenuItem";
             this.openWithDifftoolToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
             this.openWithDifftoolToolStripMenuItem.Text = "Open with difftool";
-            this.DiffContextMenu.Opening += new System.ComponentModel.CancelEventHandler(this.openWithDifftoolToolStripMenuItem_DropDownOpening);
+            this.openWithDifftoolToolStripMenuItem.DropDownOpening += new System.EventHandler(this.openWithDifftoolToolStripMenuItem_DropDownOpening);
             // 
             // aBToolStripMenuItem
             // 

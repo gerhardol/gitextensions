@@ -220,15 +220,15 @@ namespace GitUI.CommandsDialogs
         {
             IList<GitRevision> selectedRevisions = _revisionGrid.GetSelectedRevisions();
 
+            var selectedItemStatus = DiffFiles.SelectedItem;
             bool isAnyCombinedDiff = DiffFiles.SelectedItemParents.Any(item => item == DiffFiles.CombinedDiff.Text);
             bool isExactlyOneItemSelected = DiffFiles.SelectedItems.Count() == 1;
             bool isAnyItemSelected = DiffFiles.SelectedItems.Count() > 0;
-            var isCombinedDiff = isExactlyOneItemSelected && DiffFiles.CombinedDiff.Text == DiffFiles.SelectedItemParent;
-            var selectedItemStatus = DiffFiles.SelectedItem;
             bool isBareRepository = Module.IsBareRepository();
             bool singleFileExists = isExactlyOneItemSelected && File.Exists(FormBrowseUtil.GetFullPathFromGitItemStatus(Module, DiffFiles.SelectedItem));
+            bool isAnyTracked = DiffFiles.SelectedItems.Any(item => item.IsTracked);
 
-            var selectionInfo = new ContextMenuSelectionInfo(selectedRevisions, selectedItemStatus, isAnyCombinedDiff, isExactlyOneItemSelected, isCombinedDiff, isAnyItemSelected, isBareRepository, singleFileExists);
+            var selectionInfo = new ContextMenuSelectionInfo(selectedRevisions, selectedItemStatus, isAnyCombinedDiff, isExactlyOneItemSelected, isAnyItemSelected, isBareRepository, singleFileExists, isAnyTracked);
             return selectionInfo;
         }
 
@@ -519,36 +519,32 @@ namespace GitUI.CommandsDialogs
 
         private ContextMenuDiffToolInfo GetContextMenuDiffToolInfo()
         {
-            IList<GitRevision> selectedRevisions = _revisionGrid.GetSelectedRevisions();
-            //Should be blocked in the GUI but not an error to show to the user
-            Debug.Assert(selectedRevisions.Count == 1 || selectedRevisions.Count == 2,
-                "Unexpectedly number of revisions for difftool" + selectedRevisions.Count);
-            if (selectedRevisions.Count < 1 || selectedRevisions.Count > 2)
+            IList<GitRevision> revisions = _revisionGrid.GetSelectedRevisions();
+            if (revisions.Count == 0)
             {
+                //Should be blocked in the GUI but not an error to show to the user
                 return null;
             }
 
-            bool aIsLocal = selectedRevisions.Count == 2 && selectedRevisions[1].Guid == GitRevision.UnstagedGuid;
-            bool bIsLocal = selectedRevisions[0].Guid == GitRevision.UnstagedGuid;
-            bool multipleRevisionsSelected = selectedRevisions.Count == 2;
+            bool aIsLocal = DiffFiles.SelectedItemsWithParent.Any(i => i.ParentGuid == GitRevision.UnstagedGuid);
+            bool bIsLocal = revisions[0].Guid == GitRevision.UnstagedGuid;
 
-            bool localExists = false;
-            bool bIsNormal = false; //B is assumed to be new or deleted (check from DiffFiles)
-
-            //enable *<->Local items only when (any) local file exists
-            foreach (var item in DiffFiles.SelectedItems)
+            bool localExists = DiffFiles.SelectedItems.Any(item => !item.IsTracked);
+            if (!localExists)
             {
-                bIsNormal = bIsNormal || !(item.IsNew || item.IsDeleted);
-                string filePath = FormBrowseUtil.GetFullPathFromGitItemStatus(Module, item);
-                if (File.Exists(filePath) || Directory.Exists(filePath))
+                //enable *<->Local items only when (any) local file exists
+                foreach (var item in DiffFiles.SelectedItems)
                 {
-                    localExists = true;
-                    if (localExists && bIsNormal)
+                    string filePath = FormBrowseUtil.GetFullPathFromGitItemStatus(Module, item);
+                    if (File.Exists(filePath))
+                    {
+                        localExists = true;
                         break;
+                    }
                 }
             }
 
-            var selectionInfo = new ContextMenuDiffToolInfo(aIsLocal, bIsLocal, bIsNormal, localExists, multipleRevisionsSelected);
+            var selectionInfo = new ContextMenuDiffToolInfo(aIsLocal, bIsLocal, localExists);
             return selectionInfo;
         }
 
