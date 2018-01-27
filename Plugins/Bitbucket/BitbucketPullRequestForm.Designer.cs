@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.lblReviewers = new System.Windows.Forms.Label();
@@ -82,6 +83,7 @@
             this.lblPRDestRepo = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
             this.tabCreate = new System.Windows.Forms.TabPage();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.ReviewersDataGrid)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -803,5 +805,6 @@
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.LinkLabel createPullLinkLabel;
         private System.Windows.Forms.LinkLabel viewPullLinkLabel;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

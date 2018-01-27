@@ -17,6 +17,7 @@ namespace Bitbucket
         private readonly TranslationString _commited = new TranslationString("{0} committed\n{1}");
         private readonly TranslationString _success = new TranslationString("Success");
         private readonly TranslationString _error = new TranslationString("Error");
+        private readonly TranslationString _linkLabelToolTip = new TranslationString("Right-click to copy link");
 
         private Settings _settings;
         private readonly BitbucketPlugin _plugin;
@@ -34,8 +35,10 @@ namespace Bitbucket
             _plugin = plugin;
             _settingsContainer = settings;
             _gitUiCommands = gitUiCommands;
+            //Reviewers are not implemented
+            lblReviewers.Visible = false;
             ReviewersDataGrid.Visible = false;
-            
+
             _settings = Settings.Parse(_gitUiCommands.GitModule, _settingsContainer, _plugin);
             if (_settings == null)
             {
@@ -48,8 +51,11 @@ namespace Bitbucket
 
             createPullLinkLabel.Text = string.Format("{0}/projects/{1}/repos/{2}/pull-requests?create",
                                       _settings.BitbucketUrl, _settings.ProjectKey, _settings.RepoSlug);
+            toolTip1.SetToolTip(createPullLinkLabel, _linkLabelToolTip.Text);
+
             viewPullLinkLabel.Text = string.Format("{0}/projects/{1}/repos/{2}/pull-requests",
                 _settings.BitbucketUrl, _settings.ProjectKey, _settings.RepoSlug);
+            toolTip1.SetToolTip(viewPullLinkLabel, _linkLabelToolTip.Text);
         }
 
         private void BitbucketPullRequestFormLoad(object sender, EventArgs e)
@@ -158,7 +164,9 @@ namespace Bitbucket
                 MessageBox.Show(string.Join(Environment.NewLine, response.Messages),
                     _error.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
-/*
+
+        //Users/reviewers are not implemented and hidden
+        /*
         private IEnumerable<BitbucketUser> GetBitbucketUsers()
         {
             var list = new List<BitbucketUser>();
