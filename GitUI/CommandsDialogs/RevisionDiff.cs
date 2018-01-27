@@ -22,6 +22,7 @@ namespace GitUI.CommandsDialogs
         private readonly TranslationString _deleteSelectedFiles =
             new TranslationString("Are you sure you want delete the selected file(s)?");
         private readonly TranslationString _deleteFailed = new TranslationString("Delete file failed");
+        private readonly TranslationString _multipleDescription = new TranslationString("<multiple>");
 
         private RevisionGrid _revisionGrid;
         private RevisionFileTree _revisionFileTree;
@@ -149,6 +150,11 @@ namespace GitUI.CommandsDialogs
 
         private string DescribeRevision(string sha1, int maxLength)
         {
+            if (sha1.IsNullOrEmpty())
+            {
+                //No parent at all, present as working directory
+                return Strings.GetCurrentUnstagedChanges();
+            }
             var revision = _revisionGrid.GetRevision(sha1);
             if (revision == null)
             {
@@ -165,7 +171,7 @@ namespace GitUI.CommandsDialogs
         private string DescribeSelectedParentRevision(bool showUnstaged)
         {
             var parents = DiffFiles.SelectedItemsWithParent
-                .Where(i => showUnstaged || i.ParentGuid != GitRevision.UnstagedGuid)
+                .Where(i => showUnstaged || !(i.ParentGuid == GitRevision.UnstagedGuid || i.ParentGuid.IsNullOrWhiteSpace()))
                 .Select(i => i.ParentGuid)
                 .Distinct()
                 .Count();
@@ -179,7 +185,7 @@ namespace GitUI.CommandsDialogs
             }
             else
             {
-                return "<multiple>";
+                return _multipleDescription.Text;
             }
         }
 
@@ -510,7 +516,8 @@ namespace GitUI.CommandsDialogs
 
         private void openWithDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (DiffFiles.SelectedItem == null)
+            IList<GitRevision> revisions = _revisionGrid.GetSelectedRevisions();
+            if (DiffFiles.SelectedItem == null || revisions == null || revisions.Count == 0)
                 return;
 
             GitUI.RevisionDiffKind diffKind;
@@ -530,8 +537,8 @@ namespace GitUI.CommandsDialogs
 
             foreach (var itemWithParent in DiffFiles.SelectedItemsWithParent)
             {
-                GitItemStatus selectedItem = itemWithParent.Item;
-                _revisionGrid.OpenWithDifftool(selectedItem.Name, selectedItem.OldName, diffKind, itemWithParent.Item.IsTracked);
+                IList<GitRevision> revs = new List<GitRevision> { revisions[0], new GitRevision(Module, itemWithParent.ParentGuid) };
+                _revisionGrid.OpenWithDifftool(revs, itemWithParent.Item.Name, itemWithParent.Item.OldName, diffKind, itemWithParent.Item.IsTracked);
             }
         }
 

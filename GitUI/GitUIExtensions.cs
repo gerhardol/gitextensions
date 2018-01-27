@@ -20,14 +20,19 @@ namespace GitUI
         public static SynchronizationContext UISynchronizationContext;
 
 
-        public static void OpenWithDifftool(this RevisionGrid grid, string fileName, string oldFileName, GitUI.RevisionDiffKind diffKind, bool isTracked=true)
+        public static void OpenWithDifftool(this RevisionGrid grid, string fileName, string oldFileName, GitUI.RevisionDiffKind diffKind, bool isTracked = true)
+        {
+            grid.OpenWithDifftool(grid.GetSelectedRevisions(), fileName, oldFileName, diffKind, isTracked);
+        }
+
+        public static void OpenWithDifftool(this RevisionGrid grid, IList<GitRevision> revisions, string fileName, string oldFileName, GitUI.RevisionDiffKind diffKind, bool isTracked)
         {
             //Note: Order in revisions is that first clicked is last in array
             string extraDiffArgs;
             string firstRevision;
             string secondRevision;
 
-            string error = RevisionDiffInfoProvider.Get(grid.GetSelectedRevisions(), diffKind, out extraDiffArgs, out firstRevision, out secondRevision);
+            string error = RevisionDiffInfoProvider.Get(revisions, diffKind, out extraDiffArgs, out firstRevision, out secondRevision);
             if (!string.IsNullOrEmpty(error))
             {
                 MessageBox.Show(grid, error);
