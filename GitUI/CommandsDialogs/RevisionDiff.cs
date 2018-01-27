@@ -538,11 +538,9 @@ namespace GitUI.CommandsDialogs
         private ContextMenuDiffToolInfo GetContextMenuDiffToolInfo()
         {
             IList<GitRevision> selectedRevisions = _revisionGrid.GetSelectedRevisions();
-            //Should be blocked in the GUI but not an error to show to the user
-            Debug.Assert(selectedRevisions.Count >= 1,
-                "Unexpectedly number of revisions for difftool" + selectedRevisions.Count);
-            if (selectedRevisions.Count < 1)
+            if (selectedRevisions.Count == 0)
             {
+                //Should be blocked in the GUI but not an error to show to the user
                 return null;
             }
 
@@ -556,19 +554,22 @@ namespace GitUI.CommandsDialogs
                 }
             }
             bool bIsLocal = selectedRevisions[0].Guid == GitRevision.UnstagedGuid;
-            bool multipleRevisionsSelected = selectedRevisions.Count >= 2;
+            bool multipleRevisionsSelected = selectedRevisions.Count > 1;
 
-            bool localExists = false;
+            bool localExists = DiffFiles.SelectedItems.Any(item => !item.IsTracked);
             bool isAnyTracked = DiffFiles.SelectedItems.Any(item => item.IsTracked);
 
-            //enable *<->Local items only when (any) local file exists
-            foreach (var item in DiffFiles.SelectedItems)
+            if (!localExists)
             {
-                string filePath = FormBrowseUtil.GetFullPathFromGitItemStatus(Module, item);
-                if (!item.IsTracked || File.Exists(filePath) || Directory.Exists(filePath))
+                //enable *<->Local items only when (any) local file exists
+                foreach (var item in DiffFiles.SelectedItems)
                 {
-                    localExists = true;
-                    break;
+                    string filePath = FormBrowseUtil.GetFullPathFromGitItemStatus(Module, item);
+                    if (File.Exists(filePath))
+                    {
+                        localExists = true;
+                        break;
+                    }
                 }
             }
 

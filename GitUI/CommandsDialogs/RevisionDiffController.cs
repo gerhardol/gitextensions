@@ -165,12 +165,12 @@ namespace GitUI.CommandsDialogs
 
         public bool ShouldShowMenuAParent(ContextMenuDiffToolInfo selectionInfo)
         {
-            return true;//ShouldShowMenuALocal(selectionInfo) && selectionInfo.AIsLocal;
+            return true;
         }
 
         public bool ShouldShowMenuBParent(ContextMenuDiffToolInfo selectionInfo)
         {
-            return true;//ShouldShowMenuBLocal(selectionInfo) && (selectionInfo.BIsLocal || selectionInfo.MultipleRevisionsSelected);
+            return true;
         }
     }
 }
