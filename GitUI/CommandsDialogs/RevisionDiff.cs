@@ -617,9 +617,8 @@ namespace GitUI.CommandsDialogs
         private void resetFileToToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             IList<GitRevision> revisions = _revisionGrid.GetSelectedRevisions();
-            int selectedRevsCount = revisions.Count;
 
-            if (selectedRevsCount == 0)
+            if (revisions.Count == 0)
             {
                 resetFileToSelectedToolStripMenuItem.Visible = false;
                 resetFileToParentToolStripMenuItem.Visible = false;

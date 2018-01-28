@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using GitCommands;
 using GitUI.Editor;
-using ICSharpCode.TextEditor.Util;
 using ResourceManager;
 
 namespace GitUI
@@ -18,7 +15,6 @@ namespace GitUI
     {
 
         public static SynchronizationContext UISynchronizationContext;
-
 
         public static void OpenWithDifftool(this RevisionGrid grid, string fileName, string oldFileName, GitUI.RevisionDiffKind diffKind, bool isTracked = true)
         {
