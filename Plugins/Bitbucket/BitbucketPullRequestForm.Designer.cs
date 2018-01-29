@@ -714,7 +714,7 @@
             this.ClientSize = new System.Drawing.Size(827, 667);
             this.Controls.Add(this.tabControl1);
             this.Name = "BitbucketPullRequestForm";
-            this.Text = "Create Pull Request";
+            this.Text = "Bitbucket Server";
             ((System.ComponentModel.ISupportInitialize)(this.ReviewersDataGrid)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
