@@ -251,7 +251,8 @@ namespace JenkinsIntegration
                             return;
                         }
                         var buildInfo = CreateBuildInfo((JObject) buildDetails);
-                        observer.OnNext(buildInfo);
+                        if (buildInfo != null)
+                            observer.OnNext(buildInfo);
 
                         if (buildInfo.Status == BuildInfo.BuildStatus.InProgress)
                         {
@@ -278,7 +279,7 @@ namespace JenkinsIntegration
             }
         }
 
-        private readonly string JenkinsTreeBuildInfo = "number,result,timestamp,url,actions[lastBuiltRevision[SHA1],totalCount,failCount,skipCount],building,duration";
+        private readonly string JenkinsTreeBuildInfo = "number,result,timestamp,url,actions[lastBuiltRevision[SHA1,branch[name]],totalCount,failCount,skipCount],building,duration";
         private static BuildInfo CreateBuildInfo(JObject buildDescription)
         {
             var idValue = buildDescription["number"].ToObject<string>();
@@ -292,7 +293,15 @@ namespace JenkinsIntegration
             foreach (var element in action)
             {
                 if (element["lastBuiltRevision"] != null)
+                {
                     commitHashList.Add(element["lastBuiltRevision"]["SHA1"].ToObject<string>());
+                    foreach (var branch in element["lastBuiltRevision"]["branch"])
+                    {
+                        var name = branch["name"].ToObject<string>();
+                        if ("progress" == name)
+                            return null;
+                    }
+                }
                 if (element["totalCount"] != null)
                 {
                     int nbTests = element["totalCount"].ToObject<int>();
