@@ -758,8 +758,8 @@ namespace GitUI.CommandsDialogs
             {
                 GitUICommands submodulCommands = new GitUICommands(_fullPathResolver.Resolve(name.EnsureTrailingPathSeparator()));
                 submodulCommands.StartCommitDialog(this, false);
-                RefreshArtificial();
             }
+            RefreshArtificial();
         }
 
         private void diffResetSubmoduleChanges_Click(object sender, EventArgs e)
@@ -802,12 +802,9 @@ namespace GitUI.CommandsDialogs
         
         private void diffUpdateSubmoduleMenuItem_Click(object sender, EventArgs e)
         {
-            var submodules = DiffFiles.SelectedItems.Where(it => it.IsSubmodule).Select(it => it.Name).Distinct().ToList();
-
-            foreach (var name in submodules)
-            {
-                FormProcess.ShowDialog((FindForm() as FormBrowse), GitCommandHelpers.SubmoduleUpdateCmd(name));
-            }
+            var submodules = DiffFiles.SelectedItems.Where(it => it.IsSubmodule).Select(it => it.Name).Distinct();
+ 
+            FormProcess.ShowDialog((FindForm() as FormBrowse), GitCommandHelpers.SubmoduleUpdateCmd(submodules));
             RefreshArtificial();
         }
 
@@ -827,11 +824,12 @@ namespace GitUI.CommandsDialogs
         {
             var submodules = DiffFiles.SelectedItems.Where(it => it.IsSubmodule).Select(it => it.Name).Distinct().ToList();
 
+            string summary = "";
             foreach (var name in submodules)
             {
-                string summary = Module.GetSubmoduleSummary(name);
-                using (var frm = new FormEdit(summary)) frm.ShowDialog(this);
+                summary += Module.GetSubmoduleSummary(name);
             }
+            using (var frm = new FormEdit(summary)) frm.ShowDialog(this);
         }
     }
 }

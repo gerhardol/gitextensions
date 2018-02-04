@@ -200,7 +200,7 @@ namespace GitCommands
             // We don't need putty for http:// links and git@... urls are already usable.
             // But ssh:// urls can cause problems
             if (!inputUrl.StartsWith("ssh") || !Uri.IsWellFormedUriString(inputUrl, UriKind.Absolute))
-                return "\"" + inputUrl + "\"";
+                return inputUrl.Quote();
 
             // Turn ssh://user@host/path into user@host:path, which works better
             Uri uri = new Uri(inputUrl, UriKind.Absolute);
@@ -372,7 +372,7 @@ namespace GitCommands
         public static string CherryPickCmd(string cherry, bool commit, string arguments)
         {
             string cherryPickCmd = commit ? "cherry-pick" : "cherry-pick --no-commit";
-            return cherryPickCmd + " " + arguments + " \"" + cherry + "\"";
+            return cherryPickCmd + " " + arguments + " " + cherry.Quote();
         }
 
         /// <summary>
@@ -411,32 +411,37 @@ namespace GitCommands
             if (remoteBranch)
                 cmd.Append(" -r");
 
-            cmd.Append(" \"");
-            cmd.Append(branchName);
-            cmd.Append("\"");
+            cmd.Append(" " + branchName.Quote());
 
             return cmd.ToString();
         }
 
         public static string DeleteTagCmd(string tagName)
         {
-            return "tag -d \"" + tagName + "\"";
+            return "tag -d " + tagName.Quote();
         }
 
         public static string SubmoduleUpdateCmd(string name)
         {
-            if (string.IsNullOrEmpty(name))
-                return "submodule update --init --recursive";
+            name = name ?? "";
+            return SubmoduleUpdateCommand(name.Trim().QuoteNE());
+        }
 
-            return "submodule update --init --recursive \"" + name.Trim() + "\"";
+        public static string SubmoduleUpdateCmd(IEnumerable<string> submodules)
+        {
+            string submodulesQuoted = String.Join(" ", submodules.Select(s => s.Trim().QuoteNE()));
+            return SubmoduleUpdateCommand(submodulesQuoted);
+        }
+
+        private static string SubmoduleUpdateCommand(string name)
+        {
+            return "submodule update --init --recursive " + name;
         }
 
         public static string SubmoduleSyncCmd(string name)
         {
-            if (string.IsNullOrEmpty(name))
-                return "submodule sync";
-
-            return "submodule sync \"" + name.Trim() + "\"";
+            name = name ?? "";
+            return "submodule sync " + name.Trim().QuoteNE();
         }
 
         public static string AddSubmoduleCmd(string remotePath, string localPath, string branch, bool force)
@@ -445,11 +450,11 @@ namespace GitCommands
             localPath = localPath.ToPosixPath();
 
             if (!string.IsNullOrEmpty(branch))
-                branch = " -b \"" + branch.Trim() + "\"";
+                branch = " -b " + branch.Trim().Quote();
 
             var forceCmd = force ? " -f" : string.Empty;
 
-            return "submodule add" + forceCmd + branch + " \"" + remotePath.Trim() + "\" \"" + localPath.Trim() + "\"";
+            return "submodule add" + forceCmd + branch + " " + remotePath.Trim().Quote() + " " + localPath.Trim().Quote();
         }
 
         public static string RevertCmd(string commit, bool autoCommit, int parentIndex)
@@ -472,17 +477,17 @@ namespace GitCommands
 
         public static string ResetSoftCmd(string commit)
         {
-            return "reset --soft \"" + commit + "\"";
+            return "reset --soft " + commit.Quote();
         }
 
         public static string ResetMixedCmd(string commit)
         {
-            return "reset --mixed \"" + commit + "\"";
+            return "reset --mixed " + commit.Quote();
         }
 
         public static string ResetHardCmd(string commit)
         {
-            return "reset --hard \"" + commit + "\"";
+            return "reset --hard " + commit.Quote();
         }
 
         public static string CloneCmd(string fromPath, string toPath)
@@ -653,9 +658,9 @@ namespace GitCommands
             var options = String.Concat(sforce, sprogressOption);
 
             if (all)
-                return "push " + options + "\"" + path.Trim() + "\" --tags";
+                return "push " + options + path.Trim().Quote() + " --tags";
             if (!string.IsNullOrEmpty(tag))
-                return "push " + options + "\"" + path.Trim() + "\" tag " + tag;
+                return "push " + options + path.Trim().Quote() + " tag " + tag;
 
             return "";
         }
@@ -750,10 +755,7 @@ namespace GitCommands
                 sb.Append("--autostash ");
             }
 
-            sb.Append('"');
-            sb.Append(branch);
-            sb.Append('"');
-
+            sb.Append(branch.Quote());
 
             return sb.ToString();
         }
@@ -779,17 +781,10 @@ namespace GitCommands
                 sb.Append("--autostash ");
             }
 
-            sb.Append('"')
-              .Append(from)
-              .Append("\" ");
-
-
-            sb.Append('"')
-              .Append(branch)
-              .Append("\"");
-
-
-            sb.Append(" --onto ")
+            sb.Append(from.Quote())
+              .Append(" ")
+              .Append(branch.Quote())
+              .Append(" --onto ")
               .Append(onto);
 
             return sb.ToString();
@@ -819,17 +814,17 @@ namespace GitCommands
         public static string PatchCmd(string patchFile)
         {
             if (IsDiffFile(patchFile))
-                return "apply \"" + patchFile.ToPosixPath() + "\"";
+                return "apply " + patchFile.ToPosixPath().Quote();
             else
-                return "am --3way --signoff \"" + patchFile.ToPosixPath() + "\"";
+                return "am --3way --signoff " + patchFile.ToPosixPath().Quote();
         }
 
         public static string PatchCmdIgnoreWhitespace(string patchFile)
         {
             if (IsDiffFile(patchFile))
-                return "apply --ignore-whitespace \"" + patchFile.ToPosixPath() + "\"";
+                return "apply --ignore-whitespace " + patchFile.ToPosixPath().Quote();
             else
-                return "am --3way --signoff --ignore-whitespace \"" + patchFile.ToPosixPath() + "\"";
+                return "am --3way --signoff --ignore-whitespace " + patchFile.ToPosixPath().Quote();
         }
 
         public static string PatchDirCmd()
