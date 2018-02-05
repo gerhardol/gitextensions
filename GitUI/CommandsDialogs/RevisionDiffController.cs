@@ -53,16 +53,14 @@ namespace GitUI.CommandsDialogs
 
     public sealed class ContextMenuDiffToolInfo
     {
-        public ContextMenuDiffToolInfo(bool aIsLocal, bool aIsNew, bool bIsLocal, bool bIsNew, bool localExists)
+        public ContextMenuDiffToolInfo(bool aIsLocal, bool bIsLocal, bool bIsNew, bool localExists)
         {
             AIsLocal = aIsLocal;
-            AIsNew = aIsNew;
             BIsLocal = bIsLocal;
             BIsNew = bIsNew;
             LocalExists = localExists;
         }
         public bool AIsLocal { get; }
-        public bool AIsNew { get; }
         public bool BIsLocal { get; }
         public bool BIsNew { get; }
         public bool LocalExists { get; }
@@ -159,7 +157,7 @@ namespace GitUI.CommandsDialogs
 
         public bool ShouldShowMenuAParentLocal(ContextMenuDiffToolInfo selectionInfo)
         {
-            return selectionInfo.LocalExists && !selectionInfo.AIsNew;
+            return selectionInfo.LocalExists;
         }
 
         public bool ShouldShowMenuBParentLocal(ContextMenuDiffToolInfo selectionInfo)
