@@ -551,13 +551,15 @@ namespace GitUI.CommandsDialogs
             if (revisions.Count == 0)
             {
                 //Should be blocked in the GUI but not an error to show to the user
-                return new ContextMenuDiffToolInfo(false, false, true, false);
+                return new ContextMenuDiffToolInfo(false, false, false, false, false, false);
             }
 
-            bool aIsLocal = DiffFiles.SelectedItemsWithParent.Any(i => i.ParentGuid == GitRevision.UnstagedGuid);
-            //Cannot determine if A is new
+            bool aIsLocal = DiffFiles.SelectedItemsWithParent.All(i => i.ParentGuid == GitRevision.UnstagedGuid);
+            //Cannot determine if A exists in many situations
+            bool aExists = revisions.Count > 1 || DiffFiles.SelectedItems.All(i => !i.IsNew);
             bool bIsLocal = revisions[0].Guid == GitRevision.UnstagedGuid;
-            bool bIsNew = DiffFiles.SelectedItemsWithParent.All(i => !i.Item.IsNew);
+            bool bExists = DiffFiles.SelectedItems.Any(i => !i.IsDeleted);
+            bool bParentExists = DiffFiles.SelectedItems.Any(i => !i.IsDeleted && !i.IsNew);
 
             bool localExists = DiffFiles.SelectedItems.Any(item => !item.IsTracked);
             if (!localExists)
@@ -574,7 +576,7 @@ namespace GitUI.CommandsDialogs
                 }
             }
 
-            var selectionInfo = new ContextMenuDiffToolInfo(aIsLocal, bIsLocal, bIsNew, localExists);
+            var selectionInfo = new ContextMenuDiffToolInfo(aIsLocal, aExists, bIsLocal, bExists, bParentExists, localExists);
             return selectionInfo;
         }
 

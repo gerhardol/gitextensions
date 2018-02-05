@@ -53,16 +53,20 @@ namespace GitUI.CommandsDialogs
 
     public sealed class ContextMenuDiffToolInfo
     {
-        public ContextMenuDiffToolInfo(bool aIsLocal, bool bIsLocal, bool bIsNew, bool localExists)
+        public ContextMenuDiffToolInfo(bool aIsLocal, bool aExists, bool bIsLocal, bool bExists, bool bParentExists, bool localExists)
         {
             AIsLocal = aIsLocal;
+            AExists = aExists;
             BIsLocal = bIsLocal;
-            BIsNew = bIsNew;
+            BExists = bExists;
+            BParentExists = bParentExists;
             LocalExists = localExists;
         }
         public bool AIsLocal { get; }
+        public bool AExists { get; }
         public bool BIsLocal { get; }
-        public bool BIsNew { get; }
+        public bool BExists { get; }
+        public bool BParentExists { get; }
         public bool LocalExists { get; }
     }
 
@@ -147,22 +151,22 @@ namespace GitUI.CommandsDialogs
 
         public bool ShouldShowMenuALocal(ContextMenuDiffToolInfo selectionInfo)
         {
-            return selectionInfo.LocalExists && !selectionInfo.AIsLocal;
+            return selectionInfo.LocalExists && selectionInfo.AExists && !selectionInfo.AIsLocal;
         }
 
         public bool ShouldShowMenuBLocal(ContextMenuDiffToolInfo selectionInfo)
         {
-            return selectionInfo.LocalExists && !selectionInfo.BIsLocal;
+            return selectionInfo.LocalExists && selectionInfo.BExists && !selectionInfo.BIsLocal;
         }
 
         public bool ShouldShowMenuAParentLocal(ContextMenuDiffToolInfo selectionInfo)
         {
-            return selectionInfo.LocalExists;
+            return selectionInfo.LocalExists && selectionInfo.AExists;
         }
 
         public bool ShouldShowMenuBParentLocal(ContextMenuDiffToolInfo selectionInfo)
         {
-            return selectionInfo.LocalExists && !selectionInfo.BIsNew;
+            return selectionInfo.LocalExists && selectionInfo.BParentExists;
         }
         #endregion
     }
