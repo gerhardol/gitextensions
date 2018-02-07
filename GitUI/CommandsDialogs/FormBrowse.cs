@@ -27,9 +27,7 @@ using GitUI.UserControls.ToolStripClasses;
 using GitUIPluginInterfaces;
 using Microsoft.Win32;
 using ResourceManager;
-#if !__MonoCS__
 using Microsoft.WindowsAPICodePack.Taskbar;
-#endif
 
 namespace GitUI.CommandsDialogs
 {
@@ -117,12 +115,10 @@ namespace GitUI.CommandsDialogs
         private ToolStripItem _bisect;
         private ToolStripItem _warning;
 
-#if !__MonoCS__
         private ThumbnailToolBarButton _commitButton;
         private ThumbnailToolBarButton _pushButton;
         private ThumbnailToolBarButton _pullButton;
         private bool _toolbarButtonsCreated;
-#endif
         private readonly ToolStripMenuItem _toolStripGitStatus;
         private readonly GitStatusMonitor _gitStatusMonitor;
         private readonly FilterRevisionsHelper _filterRevisionsHelper;
@@ -388,12 +384,10 @@ namespace GitUI.CommandsDialogs
 
         private void BrowseLoad(object sender, EventArgs e)
         {
-#if !__MonoCS__
             if (EnvUtils.RunningOnWindows() && TaskbarManager.IsPlatformSupported)
             {
                 TaskbarManager.Instance.ApplicationId = "GitExtensions";
             }
-#endif
             SetSplitterPositions();
             HideVariableMainMenuItems();
 
@@ -753,7 +747,6 @@ namespace GitUI.CommandsDialogs
 
         private void UpdateJumplist(bool validWorkingDir)
         {
-#if !__MonoCS__
             if (!EnvUtils.RunningOnWindows() || !TaskbarManager.IsPlatformSupported)
                 return;
 
@@ -794,10 +787,8 @@ namespace GitUI.CommandsDialogs
             {
                 Trace.WriteLine(ex.Message, "UpdateJumplist");
             }
-#endif
         }
 
-#if !__MonoCS__
         private void CreateOrUpdateTaskBarButtons(bool validRepo)
         {
             if (EnvUtils.RunningOnWindows() && TaskbarManager.IsPlatformSupported)
@@ -825,7 +816,6 @@ namespace GitUI.CommandsDialogs
                 _pullButton.Enabled = validRepo;
             }
         }
-#endif
 
         /// <summary>
         /// Converts an image into an icon.  This was taken off of the interwebs.
@@ -1060,9 +1050,6 @@ namespace GitUI.CommandsDialogs
 
         private void FillBuildReport()
         {
-            if (EnvUtils.IsMonoRuntime())
-                return;
-
             var selectedRevisions = RevisionGrid.GetSelectedRevisions();
             var revision = selectedRevisions.Count == 1 ? selectedRevisions[0] : null;
 
@@ -2746,14 +2733,12 @@ namespace GitUI.CommandsDialogs
         {
             if (disposing)
             {
-#if !__MonoCS__
                 if (_commitButton != null)
                     _commitButton.Dispose();
                 if (_pushButton != null)
                     _pushButton.Dispose();
                 if (_pullButton != null)
                     _pullButton.Dispose();
-#endif
                 if (_submodulesStatusCts != null)
                     _submodulesStatusCts.Dispose();
                 if (_formBrowseMenus != null)

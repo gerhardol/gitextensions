@@ -50,10 +50,8 @@ namespace GitUI
 
             SelectFirstItemOnSetItems = true;
             _noDiffFilesChangesDefaultText = NoFiles.Text;
-#if !__MonoCS__ // TODO Drag'n'Drop doesn't work on Mono/Linux
             FileStatusListView.MouseMove += FileStatusListView_MouseMove;
             FileStatusListView.MouseDown += FileStatusListView_MouseDown;
-#endif
             if (_images == null)
             {
                 _images = new ImageList();
@@ -247,7 +245,6 @@ namespace GitUI
             return text;
         }
 
-#if !__MonoCS__ // TODO Drag'n'Drop doesnt work on Mono/Linux
         void FileStatusListView_MouseDown(object sender, MouseEventArgs e)
         {
             //SELECT
@@ -284,7 +281,6 @@ namespace GitUI
                     dragBoxFromMouseDown = Rectangle.Empty;
             }
         }
-#endif
 
         public override ContextMenuStrip ContextMenuStrip
         {
@@ -314,7 +310,6 @@ namespace GitUI
             }
         }
 
-#if !__MonoCS__ // TODO Drag'n'Drop doesnt work on Mono/Linux
         private Rectangle dragBoxFromMouseDown;
 
         void FileStatusListView_MouseMove(object sender, MouseEventArgs e)
@@ -382,7 +377,6 @@ namespace GitUI
                 }
             }
         }
-#endif
 
         public int UnfilteredItemsCount()
         {
