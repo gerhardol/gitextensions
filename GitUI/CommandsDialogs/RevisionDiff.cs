@@ -548,35 +548,10 @@ namespace GitUI.CommandsDialogs
         private ContextMenuDiffToolInfo GetContextMenuDiffToolInfo()
         {
             IList<GitRevision> revisions = _revisionGrid.GetSelectedRevisions();
-            if (revisions.Count == 0)
-            {
-                //Should be blocked in the GUI but not an error to show to the user
-                return new ContextMenuDiffToolInfo(false, false, false, false, false, false);
-            }
 
-            bool aIsLocal = DiffFiles.SelectedItemsWithParent.All(i => i.ParentGuid == GitRevision.UnstagedGuid);
-            //Cannot determine if A exists in many situations
-            bool aExists = revisions.Count > 1 || DiffFiles.SelectedItems.All(i => !i.IsNew);
-            bool bIsLocal = revisions[0].Guid == GitRevision.UnstagedGuid;
-            bool bExists = DiffFiles.SelectedItems.Any(i => !i.IsDeleted);
-            bool bParentExists = DiffFiles.SelectedItems.Any(i => !i.IsDeleted && !i.IsNew);
+            bool localExists = _revisionDiffController.LocalExists(DiffFiles.SelectedItemsWithParent, _fullPathResolver);
 
-            bool localExists = DiffFiles.SelectedItems.Any(item => !item.IsTracked);
-            if (!localExists)
-            {
-                //enable *<->Local items only when (any) local file exists
-                foreach (var item in DiffFiles.SelectedItems)
-                {
-                    string filePath = _fullPathResolver.Resolve(item.Name);
-                    if (File.Exists(filePath))
-                    {
-                        localExists = true;
-                        break;
-                    }
-                }
-            }
-
-            var selectionInfo = new ContextMenuDiffToolInfo(aIsLocal, aExists, bIsLocal, bExists, bParentExists, localExists);
+            var selectionInfo = new ContextMenuDiffToolInfo(revisions, DiffFiles.SelectedItemsWithParent, localExists);
             return selectionInfo;
         }
 

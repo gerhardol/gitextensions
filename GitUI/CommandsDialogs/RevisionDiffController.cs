@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using GitCommands;
 
@@ -18,6 +19,8 @@ namespace GitUI.CommandsDialogs
         bool ShouldShowMenuUnstage(ContextMenuSelectionInfo selectionInfo);
         bool ShouldShowSubmoduleMenus(ContextMenuSelectionInfo selectionInfo);
         bool ShouldShowDifftoolMenus(ContextMenuSelectionInfo selectionInfo);
+
+        bool LocalExists(IEnumerable<GitItemStatusWithParent> selectedItemsWithParent, IFullPathResolver fullPathResolver);
 
         bool ShouldShowMenuAB(ContextMenuDiffToolInfo selectionInfo);
         bool ShouldShowMenuALocal(ContextMenuDiffToolInfo selectionInfo);
@@ -53,20 +56,14 @@ namespace GitUI.CommandsDialogs
 
     public sealed class ContextMenuDiffToolInfo
     {
-        public ContextMenuDiffToolInfo(bool aIsLocal, bool aExists, bool bIsLocal, bool bExists, bool bParentExists, bool localExists)
+        public ContextMenuDiffToolInfo(IList<GitRevision> selectedRevisions, IEnumerable<GitItemStatusWithParent> selectedItemsWithParent, bool localExists)
         {
-            AIsLocal = aIsLocal;
-            AExists = aExists;
-            BIsLocal = bIsLocal;
-            BExists = bExists;
-            BParentExists = bParentExists;
+            SelectedRevisions = selectedRevisions;
+            SelectedItemsWithParent = selectedItemsWithParent;
             LocalExists = localExists;
         }
-        public bool AIsLocal { get; }
-        public bool AExists { get; }
-        public bool BIsLocal { get; }
-        public bool BExists { get; }
-        public bool BParentExists { get; }
+        public IEnumerable<GitRevision> SelectedRevisions { get; }
+        public IEnumerable<GitItemStatusWithParent> SelectedItemsWithParent { get; }
         public bool LocalExists { get; }
     }
 
@@ -119,7 +116,7 @@ namespace GitUI.CommandsDialogs
 
         public bool ShouldShowMenuEditFile(ContextMenuSelectionInfo selectionInfo)
         {
-            return !selectionInfo.SelectedDiff.IsSubmodule && selectionInfo.SingleFileExists;
+            return selectionInfo.IsSingleGitItemSelected && !selectionInfo.SelectedDiff.IsSubmodule && selectionInfo.SingleFileExists;
         }
 
         public bool ShouldShowMenuCopyFileName(ContextMenuSelectionInfo selectionInfo)
@@ -143,30 +140,62 @@ namespace GitUI.CommandsDialogs
         }
         #endregion
 
+        public bool LocalExists(IEnumerable<GitItemStatusWithParent> selectedItemsWithParent, IFullPathResolver fullPathResolver)
+        {
+            bool localExists = selectedItemsWithParent.Any(item => !item.Item.IsTracked);
+            if (!localExists)
+            {
+                //enable *<->Local items only when (any) local file exists
+                foreach (var item in selectedItemsWithParent)
+                {
+                    string filePath = fullPathResolver.Resolve(item.Item.Name);
+                    if (File.Exists(filePath))
+                    {
+                        localExists = true;
+                        break;
+                    }
+                }
+            }
+
+            return localExists;
+        }
+
         #region difftool submenu
         public bool ShouldShowMenuAB(ContextMenuDiffToolInfo selectionInfo)
         {
-            return true;
+            return selectionInfo.SelectedRevisions.Count() > 0;
         }
 
         public bool ShouldShowMenuALocal(ContextMenuDiffToolInfo selectionInfo)
         {
-            return selectionInfo.LocalExists && selectionInfo.AExists && !selectionInfo.AIsLocal;
+            return selectionInfo.LocalExists && selectionInfo.SelectedRevisions.Count() > 0
+                //A exists (Can only determine that A does not exist if A is parent (one selected) and B is new (compare to bParentExists))
+                && (selectionInfo.SelectedRevisions.Count() > 1
+                  || selectionInfo.SelectedItemsWithParent.Any(i => !i.Item.IsNew))
+                //A is not local
+                && selectionInfo.SelectedItemsWithParent.Any(i => i.ParentGuid != GitRevision.UnstagedGuid);
         }
 
         public bool ShouldShowMenuBLocal(ContextMenuDiffToolInfo selectionInfo)
         {
-            return selectionInfo.LocalExists && selectionInfo.BExists && !selectionInfo.BIsLocal;
+            return selectionInfo.LocalExists && selectionInfo.SelectedRevisions.Count() > 0
+                //B exists
+                && selectionInfo.SelectedItemsWithParent.Any(i => !i.Item.IsDeleted)
+                //B is not local
+                && selectionInfo.SelectedRevisions.First().Guid != GitRevision.UnstagedGuid;
         }
 
         public bool ShouldShowMenuAParentLocal(ContextMenuDiffToolInfo selectionInfo)
         {
-            return selectionInfo.LocalExists && selectionInfo.AExists;
+            return selectionInfo.LocalExists && selectionInfo.SelectedRevisions.Count() > 0;
         }
 
         public bool ShouldShowMenuBParentLocal(ContextMenuDiffToolInfo selectionInfo)
         {
-            return selectionInfo.LocalExists && selectionInfo.BParentExists;
+            return selectionInfo.LocalExists && selectionInfo.SelectedRevisions.Count() > 0
+                //B parent exists
+                && (selectionInfo.SelectedItemsWithParent.Count() > 1
+                  || selectionInfo.SelectedItemsWithParent.Any(i => !i.Item.IsNew));
         }
         #endregion
     }
