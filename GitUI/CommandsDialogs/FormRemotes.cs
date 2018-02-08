@@ -238,9 +238,9 @@ Inactive remote is completely invisible to git.");
             }
         }
 
-        private void RemoteDelete(IList<Repository> remotes, string oldRemoteUrl, string newRemoteUrl)
+        private static void RemoteDelete(IList<Repository> remotes, string oldRemoteUrl)
         {
-            if (oldRemoteUrl.Equals(newRemoteUrl, StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrWhiteSpace(oldRemoteUrl))
             {
                 return;
             }
@@ -252,7 +252,7 @@ Inactive remote is completely invisible to git.");
             }
         }
 
-        private void RemoteUpdate(IList<Repository> remotes, string oldRemoteUrl, string newRemoteUrl)
+        private static void RemoteUpdate(IList<Repository> remotes, string oldRemoteUrl, string newRemoteUrl)
         {
             if (string.IsNullOrWhiteSpace(newRemoteUrl))
             {
@@ -260,7 +260,10 @@ Inactive remote is completely invisible to git.");
             }
 
             // if remote url was renamed - delete the old value
-            RemoteDelete(remotes, oldRemoteUrl, newRemoteUrl);
+            if (!string.Equals(oldRemoteUrl, newRemoteUrl, StringComparison.OrdinalIgnoreCase))
+            {
+                RemoteDelete(remotes, oldRemoteUrl);
+            }
 
             if (remotes.All(r => r.Path != newRemoteUrl))
             {
@@ -343,10 +346,10 @@ Inactive remote is completely invisible to git.");
                 else
                 {
                     var remotes = Repositories.RemoteRepositoryHistory.Repositories;
-                    RemoteUpdate(remotes, _selectedRemote.Url, remoteUrl);
+                    RemoteUpdate(remotes, _selectedRemote?.Url, remoteUrl);
                     if (checkBoxSepPushUrl.Checked)
                     {
-                        RemoteUpdate(remotes, _selectedRemote.PushUrl, remotePushUrl);
+                        RemoteUpdate(remotes, _selectedRemote?.PushUrl, remotePushUrl);
                     }
                     Repositories.SaveSettings();
                 }
