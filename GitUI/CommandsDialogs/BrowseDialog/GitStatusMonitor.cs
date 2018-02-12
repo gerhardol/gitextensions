@@ -303,7 +303,9 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                 {
                     _ignoredFilesAreStale = false;
                 }
+            }
             if (!_statusIsUpToDate)
+            {
                 //Still not up-to-date, but present what received, GetAllChangedFilesCmd() is the heavy command
                 CalculateNextUpdateTime(UpdateDelay);
             }
@@ -407,8 +409,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             if (_nextUpdateTime < Environment.TickCount + UpdateDelay)
                 return;
 
-            //TODO Smarter detection of ignored files created since the files were created
-            //Parse .gitignore?
             var fileName = e.FullPath.Substring(_workTreeWatcher.Path.Length).ToPosixPath();
             if (_ignoredFiles.Contains(fileName))
                 return;
