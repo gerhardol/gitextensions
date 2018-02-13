@@ -9,7 +9,7 @@ for /f "tokens=*" %%i in ('hMSBuild.bat -only-path -notamd64') do set msbuild="%
 set project=..\GitExtensions.sln
 set EnableNuGetPackageRestore=true
 ..\.nuget\nuget.exe restore %project%
-set msbuildparams=/p:Configuration=%Configuration% /t:Rebuild /nologo /v:m
+set msbuildparams=/p:Configuration=%Configuration% /t:Rebuild /nologo /v:m /tv:15
 
 call BuildGitExtNative.cmd %Configuration% Rebuild
 IF ERRORLEVEL 1 EXIT /B 1

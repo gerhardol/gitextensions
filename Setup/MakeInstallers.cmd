@@ -23,7 +23,7 @@ for /f "tokens=*" %%i in ('hMSBuild.bat -only-path -notamd64') do set msbuild="%
 set output=bin\%Configuration%\GitExtensions.msi
 set project=Setup.wixproj
 
-set build=%msbuild% %project% /t:%BuildType% /p:Version=%version% /p:NumericVersion=%numericVersion% /p:Configuration=%Configuration% /nologo /v:m
+set build=%msbuild% %project% /t:%BuildType% /p:Version=%version% /p:NumericVersion=%numericVersion% /p:Configuration=%Configuration% /nologo /v:m /tv:15
 
 echo Creating installers for Git Extensions %version%
 echo.
