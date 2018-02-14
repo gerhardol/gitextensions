@@ -5,7 +5,7 @@
     <Setting Name="IsPortable" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="ProjectToolsVersion" Type="System.Decimal" Scope="Application">
+    <Setting Name="ProjectToolsVersion" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">15</Value>
     </Setting>
   </Settings>
