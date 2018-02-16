@@ -92,7 +92,7 @@ namespace GitUI.CommandsDialogs
         public bool ShouldShowMenuSaveAs(ContextMenuSelectionInfo selectionInfo)
         {
             return selectionInfo.IsSingleGitItemSelected && !selectionInfo.SelectedDiff.IsSubmodule
-                && selectionInfo.AIsParent && !selectionInfo.SelectedRevision.IsArtificial();
+                && /*selectionInfo.AIsParent &&*/ !selectionInfo.SelectedRevision.IsArtificial();
         }
 
         public bool ShouldShowMenuCherryPick(ContextMenuSelectionInfo selectionInfo)
@@ -115,7 +115,7 @@ namespace GitUI.CommandsDialogs
 
         public bool ShouldShowSubmoduleMenus(ContextMenuSelectionInfo selectionInfo)
         {
-            return selectionInfo.IsAnySubmodule && selectionInfo.AIsParent && selectionInfo.SelectedRevision.Guid == GitRevision.UnstagedGuid;
+            return selectionInfo.IsAnySubmodule && /*selectionInfo.AIsParent &&*/ selectionInfo.SelectedRevision.Guid == GitRevision.UnstagedGuid;
         }
 
         public bool ShouldShowMenuEditFile(ContextMenuSelectionInfo selectionInfo)
