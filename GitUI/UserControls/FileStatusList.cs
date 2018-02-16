@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -976,10 +976,12 @@ namespace GitUI
             NoFiles.Text = _noDiffFilesChangesDefaultText;
             if (revisions.Count == 0 || revisions[0] == null)
             {
-                GitItemStatuses = null;
+                GitItemStatusesWithParents = null;
+                Revision = null;
             }
             else
             {
+                Revision = revisions[0];
                 string[] revs;
                 if (revisions.Count == 1)
                 {
@@ -991,6 +993,7 @@ namespace GitUI
                 }
                 if (revs.Length == 0)
                 {
+                    //No parent, will set "" as parent
                     GitItemStatuses = Module.GetTreeFiles(revisions[0].TreeGuid, true);
                 }
                 else

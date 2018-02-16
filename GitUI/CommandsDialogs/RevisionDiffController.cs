@@ -31,11 +31,12 @@ namespace GitUI.CommandsDialogs
 
     public sealed class ContextMenuSelectionInfo
     {
-        public ContextMenuSelectionInfo(IList<GitRevision> selectedRevisions, GitItemStatus selectedDiff, bool isAnyCombinedDiff, bool isSingleGitItemSelected, bool isAnyItemSelected, bool isBareRepository, bool singleFileExists, bool isAnyTracked, bool isAnySubmodule)
+        public ContextMenuSelectionInfo(GitRevision selectedRevision, GitItemStatus selectedDiff, bool aIsParent, bool isAnyCombinedDiff, bool isSingleGitItemSelected, bool isAnyItemSelected, bool isBareRepository, bool singleFileExists, bool isAnyTracked, bool isAnySubmodule)
         {
-            SelectedRevisions = selectedRevisions;
+            SelectedRevision = selectedRevision;
             SelectedDiff = selectedDiff;
-            IsAnyCombinedDiff  = isAnyCombinedDiff;
+            AIsParent = aIsParent;
+            IsAnyCombinedDiff = isAnyCombinedDiff;
             IsSingleGitItemSelected = isSingleGitItemSelected;
             IsAnyItemSelected = isAnyItemSelected;
             IsBareRepository = isBareRepository;
@@ -43,8 +44,9 @@ namespace GitUI.CommandsDialogs
             IsAnyTracked = isAnyTracked;
             IsAnySubmodule = isAnySubmodule;
         }
-        public IEnumerable<GitRevision> SelectedRevisions { get; }
+        public GitRevision SelectedRevision { get; }
         public GitItemStatus SelectedDiff { get; }
+        public bool AIsParent { get; }
         public bool IsAnyCombinedDiff { get; }
         public bool IsSingleGitItemSelected { get; }
         public bool IsAnyItemSelected { get; }
@@ -56,14 +58,16 @@ namespace GitUI.CommandsDialogs
 
     public sealed class ContextMenuDiffToolInfo
     {
-        public ContextMenuDiffToolInfo(IList<GitRevision> selectedRevisions, IEnumerable<GitItemStatusWithParent> selectedItemsWithParent, bool localExists)
+        public ContextMenuDiffToolInfo(GitRevision selectedRevision, IEnumerable<GitItemStatusWithParent> selectedItemsWithParent, bool aIsParent, bool localExists)
         {
-            SelectedRevisions = selectedRevisions;
+            SelectedRevision = selectedRevision;
             SelectedItemsWithParent = selectedItemsWithParent;
+            AIsParent = aIsParent;
             LocalExists = localExists;
         }
-        public IEnumerable<GitRevision> SelectedRevisions { get; }
+        public GitRevision SelectedRevision { get; }
         public IEnumerable<GitItemStatusWithParent> SelectedItemsWithParent { get; }
+        public bool AIsParent { get; }
         public bool LocalExists { get; }
     }
 
@@ -88,30 +92,30 @@ namespace GitUI.CommandsDialogs
         public bool ShouldShowMenuSaveAs(ContextMenuSelectionInfo selectionInfo)
         {
             return selectionInfo.IsSingleGitItemSelected && !selectionInfo.SelectedDiff.IsSubmodule
-                && selectionInfo.SelectedRevisions.Count() == 1 && !selectionInfo.SelectedRevisions.First().IsArtificial();
+                && selectionInfo.AIsParent && !selectionInfo.SelectedRevision.IsArtificial();
         }
 
         public bool ShouldShowMenuCherryPick(ContextMenuSelectionInfo selectionInfo)
         {
             return selectionInfo.IsSingleGitItemSelected && !selectionInfo.SelectedDiff.IsSubmodule
                 && !selectionInfo.IsAnyCombinedDiff && !selectionInfo.IsBareRepository
-                && !selectionInfo.SelectedRevisions.First().IsArtificial();
+                && !selectionInfo.SelectedRevision.IsArtificial();
         }
 
         //Stage/unstage must limit the selected items, IsStaged is not reflecting Staged status
         public bool ShouldShowMenuStage(ContextMenuSelectionInfo selectionInfo)
         {
-            return selectionInfo.SelectedRevisions.Count() == 1 && selectionInfo.SelectedRevisions.First().Guid == GitRevision.UnstagedGuid;
+            return selectionInfo.AIsParent && selectionInfo.SelectedRevision.Guid == GitRevision.UnstagedGuid;
         }
 
         public bool ShouldShowMenuUnstage(ContextMenuSelectionInfo selectionInfo)
         {
-            return selectionInfo.SelectedRevisions.Count() == 1 && selectionInfo.SelectedRevisions.First().Guid == GitRevision.IndexGuid;
+            return selectionInfo.AIsParent && selectionInfo.SelectedRevision.Guid == GitRevision.IndexGuid;
         }
 
         public bool ShouldShowSubmoduleMenus(ContextMenuSelectionInfo selectionInfo)
         {
-            return selectionInfo.IsAnySubmodule && selectionInfo.SelectedRevisions.Any(i => i.Guid == GitRevision.UnstagedGuid);
+            return selectionInfo.IsAnySubmodule && selectionInfo.AIsParent && selectionInfo.SelectedRevision.Guid == GitRevision.UnstagedGuid;
         }
 
         public bool ShouldShowMenuEditFile(ContextMenuSelectionInfo selectionInfo)
@@ -126,7 +130,7 @@ namespace GitUI.CommandsDialogs
 
         public bool ShouldShowMenuShowInFileTree(ContextMenuSelectionInfo selectionInfo)
         {
-            return selectionInfo.IsSingleGitItemSelected && !selectionInfo.SelectedRevisions.First().IsArtificial();
+            return selectionInfo.IsSingleGitItemSelected && !selectionInfo.SelectedRevision.IsArtificial();
         }
 
         public bool ShouldShowMenuFileHistory(ContextMenuSelectionInfo selectionInfo)
@@ -163,14 +167,14 @@ namespace GitUI.CommandsDialogs
         #region difftool submenu
         public bool ShouldShowMenuAB(ContextMenuDiffToolInfo selectionInfo)
         {
-            return selectionInfo.SelectedRevisions.Count() > 0;
+            return selectionInfo.SelectedRevision != null;
         }
 
         public bool ShouldShowMenuALocal(ContextMenuDiffToolInfo selectionInfo)
         {
-            return selectionInfo.LocalExists && selectionInfo.SelectedRevisions.Count() > 0
-                //A exists (Can only determine that A does not exist if A is parent (one selected) and B is new (compare to bParentExists))
-                && (selectionInfo.SelectedRevisions.Count() > 1
+            return selectionInfo.LocalExists && selectionInfo.SelectedRevision != null
+                //A exists (Can only determine that A does not exist if A is parent (one selected) and B is new)
+                && (!selectionInfo.AIsParent
                   || selectionInfo.SelectedItemsWithParent.Any(i => !i.Item.IsNew))
                 //A is not local
                 && selectionInfo.SelectedItemsWithParent.Any(i => i.ParentGuid != GitRevision.UnstagedGuid);
@@ -178,21 +182,21 @@ namespace GitUI.CommandsDialogs
 
         public bool ShouldShowMenuBLocal(ContextMenuDiffToolInfo selectionInfo)
         {
-            return selectionInfo.LocalExists && selectionInfo.SelectedRevisions.Count() > 0
+            return selectionInfo.LocalExists && selectionInfo.SelectedRevision != null
                 //B exists
                 && selectionInfo.SelectedItemsWithParent.Any(i => !i.Item.IsDeleted)
                 //B is not local
-                && selectionInfo.SelectedRevisions.First().Guid != GitRevision.UnstagedGuid;
+                && selectionInfo.SelectedRevision.Guid != GitRevision.UnstagedGuid;
         }
 
         public bool ShouldShowMenuAParentLocal(ContextMenuDiffToolInfo selectionInfo)
         {
-            return selectionInfo.LocalExists && selectionInfo.SelectedRevisions.Count() > 0;
+            return selectionInfo.LocalExists && selectionInfo.SelectedRevision != null;
         }
 
         public bool ShouldShowMenuBParentLocal(ContextMenuDiffToolInfo selectionInfo)
         {
-            return selectionInfo.LocalExists && selectionInfo.SelectedRevisions.Count() > 0
+            return selectionInfo.LocalExists && selectionInfo.SelectedRevision != null
                 //B parent exists
                 && (selectionInfo.SelectedItemsWithParent.Count() > 1
                   || selectionInfo.SelectedItemsWithParent.Any(i => !i.Item.IsNew));
