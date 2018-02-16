@@ -578,6 +578,25 @@ namespace GitCommands
             set { SetBool("LoadBlameOnShow", value); }
         }
 
+        public static bool DetectCopyInFileOnBlame
+        {
+            get { return GetBool("DetectCopyInFileOnBlame", true); }
+            set { SetBool("DetectCopyInFileOnBlame", value); }
+        }
+
+        public static bool DetectCopyInAllOnBlame
+        {
+            get { return GetBool("DetectCopyInAllOnBlame", false); }
+            set { SetBool("DetectCopyInAllOnBlame", value); }
+        }
+
+        public static bool IgnoreWhitespaceOnBlame
+        {
+            get { return GetBool("IgnoreWhitespaceOnBlame", true); }
+            set { SetBool("IgnoreWhitespaceOnBlame", value); }
+        }
+
+
         public static bool OpenSubmoduleDiffInSeparateWindow
         {
             get { return GetBool("opensubmodulediffinseparatewindow", false); }
@@ -1581,21 +1600,22 @@ namespace GitCommands
 
         private static void LoadEncodings()
         {
-            Action<Encoding> addEncoding = delegate (Encoding e) { AvailableEncodings[e.HeaderName] = e; };
-            Action<string> addEncodingByName = delegate (string s) { try { addEncoding(Encoding.GetEncoding(s)); } catch { } };
+            void AddEncoding(Encoding e) { AvailableEncodings[e.HeaderName] = e; }
+
+            void AddEncodingByName(string s) { try { AddEncoding(Encoding.GetEncoding(s)); } catch { } }
 
             string availableEncodings = GetString("AvailableEncodings", "");
             if (string.IsNullOrWhiteSpace(availableEncodings))
             {
                 // Default encoding set
-                addEncoding(Encoding.Default);
-                addEncoding(new ASCIIEncoding());
-                addEncoding(new UnicodeEncoding());
-                addEncoding(new UTF7Encoding());
-                addEncoding(new UTF8Encoding(false));
+                AddEncoding(Encoding.Default);
+                AddEncoding(new ASCIIEncoding());
+                AddEncoding(new UnicodeEncoding());
+                AddEncoding(new UTF7Encoding());
+                AddEncoding(new UTF8Encoding(false));
                 try
                 {
-                    addEncoding(Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage));
+                    AddEncoding(Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage));
                 }
                 catch
                 {
@@ -1609,13 +1629,13 @@ namespace GitCommands
                 {
                     // create utf-8 without BOM
                     if (encodingName == utf8.HeaderName)
-                        addEncoding(utf8);
+                        AddEncoding(utf8);
                     // default encoding
                     else if (encodingName == "Default")
-                        addEncoding(Encoding.Default);
+                        AddEncoding(Encoding.Default);
                     // add encoding by name
                     else
-                        addEncodingByName(encodingName);
+                        AddEncodingByName(encodingName);
                 }
             }
         }

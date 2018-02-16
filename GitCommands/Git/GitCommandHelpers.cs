@@ -160,16 +160,17 @@ namespace GitCommands
             var startProcess = Process.Start(startInfo);
             startProcess.EnableRaisingEvents = true;
 
-            EventHandler processExited = null;
-            processExited = (sender, args) =>
+            void ProcessExited(object sender, EventArgs args)
             {
-                startProcess.Exited -= processExited;
+                startProcess.Exited -= ProcessExited;
 
                 //GitHub #4213 Commands are duplicated in GE Gitcommand log
                 var executionEndTimestamp = DateTime.Now;
                 AppSettings.GitLog.Log(" " + c + quotedCmd + " " + arguments, executionStartTimestamp, executionEndTimestamp);
-            };
-            startProcess.Exited += processExited;
+            }
+
+            startProcess.Exited += ProcessExited;
+
             return startProcess;
         }
 

@@ -2085,7 +2085,7 @@ namespace GitCommands
             return patchFiles;
         }
 
-        public string CommitCmd(bool amend, bool signOff = false, string author = "", bool useExplicitCommitMessage = true, bool noVerify = false)
+        public string CommitCmd(bool amend, bool signOff = false, string author = "", bool useExplicitCommitMessage = true, bool noVerify = false, bool gpgSign = false, string gpgKeyId = "")
         {
             string command = "commit";
             if (amend)
@@ -2102,6 +2102,14 @@ namespace GitCommands
                 author = author.Trim().Trim('"');
                 command += " --author=\"" + author + "\"";
             }                
+
+            if (gpgSign)
+            {
+                command += " -S";
+
+                if (!string.IsNullOrWhiteSpace(gpgKeyId))
+                    command += gpgKeyId;
+            }
 
             if (useExplicitCommitMessage)
             {
@@ -2934,7 +2942,13 @@ namespace GitCommands
         {
             from = from.ToPosixPath();
             filename = filename.ToPosixPath();
-            string blameCommand = string.Format("blame --porcelain -M -w -l{0} \"{1}\" -- \"{2}\"", lines != null ? " -L " + lines : "", from, filename);
+
+            string detectCopyInFileOpt = AppSettings.DetectCopyInFileOnBlame ? " -M" : string.Empty;
+            string detectCopyInAllOpt = AppSettings.DetectCopyInAllOnBlame ? " -C" : string.Empty;
+            string ignoreWhitespaceOpt = AppSettings.IgnoreWhitespaceOnBlame ? " -w" : string.Empty;
+            string linesOpt = lines != null ? " -L " + lines : string.Empty;
+
+            string blameCommand = $"blame --porcelain{detectCopyInFileOpt}{detectCopyInAllOpt}{ignoreWhitespaceOpt} -l{linesOpt} \"{from}\" -- \"{filename}\"";
             var itemsStrings =
                 RunCacheableCmd(
                     AppSettings.GitCommand,
