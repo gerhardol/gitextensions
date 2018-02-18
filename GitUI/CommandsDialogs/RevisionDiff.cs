@@ -171,11 +171,9 @@ namespace GitUI.CommandsDialogs
         /// <returns></returns>
         private string DescribeSelectedParentRevision(bool showUnstagedAndCombined)
         {
-            var parents = DiffFiles.SelectedItemsWithParent
+            var parents = DiffFiles.SelectedItemParents
                 .Where(i => showUnstagedAndCombined ||
-                    !(i.ParentGuid.IsNullOrWhiteSpace() || i.ParentGuid == GitRevision.UnstagedGuid) || i.ParentGuid == DiffFiles.CombinedDiff.Text)
-                .Select(i => i.ParentGuid)
-                .Distinct()
+                    !(i.IsNullOrWhiteSpace() || i == GitRevision.UnstagedGuid) || i == DiffFiles.CombinedDiff.Text)
                 .Count();
             if (parents == 0)
             {
@@ -183,7 +181,7 @@ namespace GitUI.CommandsDialogs
             }
             else if (parents == 1)
             {
-                return DescribeRevision(DiffFiles.SelectedItemsWithParent.First().ParentGuid, 50);
+                return DescribeRevision(DiffFiles.SelectedItemParent?.Guid, 50);
             }
             else
             {
@@ -275,9 +273,9 @@ namespace GitUI.CommandsDialogs
                 var addedItems = selectedItems.Where(item => item.IsNew);
                 Module.RemoveFiles(addedItems.Select(item => item.Name), false);
 
-                foreach (var parent in DiffFiles.SelectedItemsWithParent.Select(item => item.ParentGuid).Distinct())
+                foreach (var parent in DiffFiles.SelectedItemParents)
                 {
-                    var itemsToCheckout = DiffFiles.SelectedItemsWithParent.Where(item => !item.Item.IsNew && item.ParentGuid==parent);
+                    var itemsToCheckout = DiffFiles.SelectedItemsWithParent.Where(item => !item.Item.IsNew && item.ParentRevision.Guid == parent);
                     Module.CheckoutFiles(itemsToCheckout.Select(item => item.Item.Name), parent, false);
                 }
             }
@@ -531,7 +529,7 @@ namespace GitUI.CommandsDialogs
 
             foreach (var itemWithParent in DiffFiles.SelectedItemsWithParent)
             {
-                IList<GitRevision> revs = new List<GitRevision> { DiffFiles.Revision, new GitRevision(Module, itemWithParent.ParentGuid) };
+                IList<GitRevision> revs = new List<GitRevision> { DiffFiles.Revision, itemWithParent.ParentRevision };
                 _revisionGrid.OpenWithDifftool(revs, itemWithParent.Item.Name, itemWithParent.Item.OldName, diffKind, itemWithParent.Item.IsTracked);
             }
         }
@@ -541,7 +539,7 @@ namespace GitUI.CommandsDialogs
             bool aIsParent = _revisionDiffController.AisParent(DiffFiles.Revision.ParentGuids, DiffFiles.SelectedItemParents);
             bool localExists = _revisionDiffController.LocalExists(DiffFiles.SelectedItemsWithParent, _fullPathResolver);
 
-            IEnumerable<string> selectedItemParentRevs = DiffFiles.SelectedItemsWithParent.Select(it => it.ParentGuid);
+            IEnumerable<string> selectedItemParentRevs = DiffFiles.SelectedItemParents;
             bool allAreNew = DiffFiles.SelectedItemsWithParent.All(i => i.Item.IsNew);
             bool allAreDeleted = DiffFiles.SelectedItemsWithParent.All(i => i.Item.IsDeleted);
             var revisions = _revisionGrid.GetSelectedRevisions();

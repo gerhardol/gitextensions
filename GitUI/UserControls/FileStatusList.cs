@@ -504,7 +504,7 @@ namespace GitUI
             get
             {
                 return FileStatusListView.SelectedItems.Cast<ListViewItem>()
-                    .Select(i => new GitItemStatusWithParent((GitItemStatus)i.Tag, ((GitRevision)i.Group?.Tag)?.Guid));
+                    .Select(i => new GitItemStatusWithParent((GitItemStatus)i.Tag, (GitRevision)i.Group?.Tag));
             }
         }
 
@@ -1013,7 +1013,8 @@ namespace GitUI
                     }
 
                     //Show combined (merge conflicts) only when A is only parent
-                    var isMergeCommit = Revision.ParentGuids.Count() > 1 && _revisionDiffController.AisParent(Revision.ParentGuids, parentRevs.Select(i => i.Guid));
+                    var isMergeCommit = AppSettings.ShowDiffForAllParents && Revision.ParentGuids.Count() > 1
+                        && _revisionDiffController.AisParent(Revision.ParentGuids, parentRevs.Select(i => i.Guid));
                     if (isMergeCommit)
                     {
                         var conflicts = Module.GetCombinedDiffFileList(Revision.Guid);
@@ -1172,12 +1173,12 @@ namespace GitUI
     public class GitItemStatusWithParent
     {
         public readonly GitItemStatus Item;
-        public readonly string ParentGuid;
+        public readonly GitRevision ParentRevision;
 
-        public GitItemStatusWithParent(GitItemStatus anItem, string aParentGuid)
+        public GitItemStatusWithParent(GitItemStatus anItem, GitRevision aParentGuid)
         {
             Item = anItem;
-            ParentGuid = aParentGuid;
+            ParentRevision = aParentGuid;
         }
     }
 }
