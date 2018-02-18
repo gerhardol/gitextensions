@@ -4,7 +4,6 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text.RegularExpressions;
@@ -12,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitCommands;
+using GitUI.CommandsDialogs;
 using GitUI.Properties;
 using GitUI.UserControls;
 using ResourceManager;
@@ -40,6 +40,7 @@ namespace GitUI
 
         public DescribeRevisionDelegate DescribeRevision;
         private readonly IFullPathResolver _fullPathResolver;
+        private RevisionDiffController _revisionDiffController;
 
         public FileStatusList()
         {
@@ -80,6 +81,7 @@ namespace GitUI
 
             _filter = new Regex(".*");
             _fullPathResolver = new FullPathResolver(() => Module.WorkingDir);
+            _revisionDiffController = new RevisionDiffController();
         }
 
         public bool AlwaysRevisionGroups
@@ -962,43 +964,52 @@ namespace GitUI
         {
             HandleVisibility_NoFilesLabel_FilterComboBox(filesPresent: true);
             NoFiles.Text = _noDiffFilesChangesDefaultText;
-            if (revisions.Count == 0 || revisions[0] == null)
+            if (revisions == null || revisions.Count == 0)
             {
-                SetGitItemStatuses(null);
                 Revision = null;
             }
             else
             {
                 Revision = revisions[0];
-                string[] revs;
+            }
+
+            if (Revision == null)
+            {
+                SetGitItemStatuses(null);
+            }
+            else
+            {
+                string[] parentRevs;
                 if (revisions.Count == 1)
                 {
-                    revs = revisions[0].ParentGuids;
+                    parentRevs = Revision.ParentGuids;
                 }
                 else
                 {
-                    revs = revisions.Where(i => i.Guid != revisions[0].Guid).Select(i => i.Guid).ToArray();
+                    parentRevs = revisions.Skip(1).Select(i => i.Guid).ToArray();
                 }
-                if (revs.Length == 0)
+
+                if (parentRevs.Length == 0)
                 {
                     //No parent, will set "" as parent
-                    SetGitItemStatuses(Module.GetTreeFiles(revisions[0].TreeGuid, true));
+                    SetGitItemStatuses(Module.GetTreeFiles(Revision.TreeGuid, true));
                 }
                 else
                 {
                     if (!AppSettings.ShowDiffForAllParents)
-                        revs = new string[]{revs[0]};
+                        parentRevs = new string[]{ parentRevs[0]};
 
                     var dictionary = new Dictionary<string, IList<GitItemStatus>>();
-                    foreach (var rev in revs)
+                    foreach (var rev in parentRevs)
                     {
-                        dictionary.Add(rev, Module.GetDiffFilesWithSubmodulesStatus(rev, revisions[0].Guid));
+                        dictionary.Add(rev, Module.GetDiffFilesWithSubmodulesStatus(rev, Revision.Guid));
                     }
 
-                    var isMergeCommit = revisions.Count == 1 && revisions[0].ParentGuids.Count() == 2;
+                    //Show combined (merge conflicts) only when A is only parent
+                    var isMergeCommit = _revisionDiffController.AisParent(Revision.ParentGuids, parentRevs);
                     if (isMergeCommit)
                     {
-                        var conflicts = Module.GetCombinedDiffFileList(revisions[0].Guid);
+                        var conflicts = Module.GetCombinedDiffFileList(Revision.Guid);
                         if (conflicts.Any())
                         {
                             dictionary.Add(CombinedDiff.Text, conflicts);

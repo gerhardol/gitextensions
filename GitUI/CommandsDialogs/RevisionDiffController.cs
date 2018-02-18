@@ -27,7 +27,7 @@ namespace GitUI.CommandsDialogs
         bool ShouldShowMenuBParentLocal(ContextMenuDiffToolInfo selectionInfo);
 
         bool LocalExists(IEnumerable<GitItemStatusWithParent> selectedItemsWithParent, IFullPathResolver fullPathResolver);
-        bool AisParent(IEnumerable<string> parentRevs, string firstParent, string selectedParent);
+        bool AisParent(IEnumerable<string> selectedParentRevs, IEnumerable<string> selectedItemParentRevs);
     }
 
     public sealed class ContextMenuSelectionInfo
@@ -209,9 +209,16 @@ namespace GitUI.CommandsDialogs
             return localExists;
         }
 
-        public bool AisParent(IEnumerable<string> parentRevs, string firstParent, string selectedParent)
+        public bool AisParent(IEnumerable<string> selectedParentRevs, IEnumerable<string> selectedItemParentRevs)
         {
-            return parentRevs.Count() == 1 && firstParent == selectedParent;
+            foreach (var item in selectedItemParentRevs)
+            {
+                if (!selectedParentRevs.Contains(item))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
         #endregion
     }

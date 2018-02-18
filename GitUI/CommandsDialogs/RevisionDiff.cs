@@ -236,7 +236,7 @@ namespace GitUI.CommandsDialogs
         {
             var revisions = _revisionGrid.GetSelectedRevisions();
             //A is parent if one revision selected or parent, then selected
-            bool aIsParent = _revisionDiffController.AisParent(DiffFiles.SelectedItemParents, DiffFiles.Revision.FirstParentGuid, DiffFiles.SelectedItemParent);
+            bool aIsParent = _revisionDiffController.AisParent(DiffFiles.Revision.ParentGuids, DiffFiles.SelectedItemParents);
             //Combined diff is a display only diff, no manipulations
             bool isAnyCombinedDiff = DiffFiles.SelectedItemParents.Any(item => item == DiffFiles.CombinedDiff.Text);
             bool isExactlyOneItemSelected = DiffFiles.SelectedItems.Count() == 1;
@@ -292,23 +292,18 @@ namespace GitUI.CommandsDialogs
                 return;
             }
 
-            var revisions = _revisionGrid.GetSelectedRevisions();
-            if (revisions.Count() == 1 && DiffFiles.SelectedItemParent != null)
+            if (DiffFiles.SelectedItemParent == DiffFiles.CombinedDiff.Text)
             {
-                if (!string.IsNullOrWhiteSpace(DiffFiles.SelectedItemParent)
-                    && DiffFiles.SelectedItemParent == DiffFiles.CombinedDiff.Text)
+                var diffOfConflict = Module.GetCombinedDiffContent(DiffFiles.Revision, DiffFiles.SelectedItem.Name,
+                    DiffText.GetExtraDiffArguments(), DiffText.Encoding);
+
+                if (string.IsNullOrWhiteSpace(diffOfConflict))
                 {
-                    var diffOfConflict = Module.GetCombinedDiffContent(DiffFiles.Revision, DiffFiles.SelectedItem.Name,
-                        DiffText.GetExtraDiffArguments(), DiffText.Encoding);
-
-                    if (string.IsNullOrWhiteSpace(diffOfConflict))
-                    {
-                        diffOfConflict = Strings.GetUninterestingDiffOmitted();
-                    }
-
-                    DiffText.ViewPatch(diffOfConflict);
-                    return;
+                    diffOfConflict = Strings.GetUninterestingDiffOmitted();
                 }
+
+                DiffText.ViewPatch(diffOfConflict);
+                return;
             }
             DiffText.ViewChanges(DiffFiles.SelectedItemParent, DiffFiles.Revision.Guid, DiffFiles.SelectedItem, String.Empty);
         }
@@ -543,7 +538,7 @@ namespace GitUI.CommandsDialogs
 
         private ContextMenuDiffToolInfo GetContextMenuDiffToolInfo()
         {
-            bool aIsParent = _revisionDiffController.AisParent(DiffFiles.SelectedItemParents, DiffFiles.Revision.FirstParentGuid, DiffFiles.SelectedItemParent);
+            bool aIsParent = _revisionDiffController.AisParent(DiffFiles.Revision.ParentGuids, DiffFiles.SelectedItemParents);
             bool localExists = _revisionDiffController.LocalExists(DiffFiles.SelectedItemsWithParent, _fullPathResolver);
 
             var selectionInfo = new ContextMenuDiffToolInfo(DiffFiles.Revision, DiffFiles.SelectedItemsWithParent, aIsParent, localExists);
