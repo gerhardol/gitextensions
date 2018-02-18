@@ -229,7 +229,7 @@ namespace GitUI.CommandsDialogs
             idx = GetNextIdx(idx, DiffFiles.GitItemStatuses.Count() - 1, searchBackward);
             DiffFiles.SetSelectedIndex(idx, notify: false);
 
-            return new Tuple<int, string>(idx, DiffText.GetSelectedPatch(DiffFiles.SelectedItemParent, DiffFiles.Revision.Guid, DiffFiles.SelectedItem));
+            return new Tuple<int, string>(idx, DiffText.GetSelectedPatch(DiffFiles.SelectedItemParent?.Guid, DiffFiles.Revision.Guid, DiffFiles.SelectedItem));
         }
 
         private ContextMenuSelectionInfo GetSelectionInfo()
@@ -292,7 +292,7 @@ namespace GitUI.CommandsDialogs
                 return;
             }
 
-            if (DiffFiles.SelectedItemParent == DiffFiles.CombinedDiff.Text)
+            if (DiffFiles.SelectedItemParent?.Guid == DiffFiles.CombinedDiff.Text)
             {
                 var diffOfConflict = Module.GetCombinedDiffContent(DiffFiles.Revision, DiffFiles.SelectedItem.Name,
                     DiffText.GetExtraDiffArguments(), DiffText.Encoding);
@@ -305,7 +305,7 @@ namespace GitUI.CommandsDialogs
                 DiffText.ViewPatch(diffOfConflict);
                 return;
             }
-            DiffText.ViewChanges(DiffFiles.SelectedItemParent, DiffFiles.Revision.Guid, DiffFiles.SelectedItem, String.Empty);
+            DiffText.ViewChanges(DiffFiles.SelectedItemParent?.Guid, DiffFiles.Revision.Guid, DiffFiles.SelectedItem, String.Empty);
         }
 
 
@@ -544,8 +544,10 @@ namespace GitUI.CommandsDialogs
             IEnumerable<string> selectedItemParentRevs = DiffFiles.SelectedItemsWithParent.Select(it => it.ParentGuid);
             bool allAreNew = DiffFiles.SelectedItemsWithParent.All(i => i.Item.IsNew);
             bool allAreDeleted = DiffFiles.SelectedItemsWithParent.All(i => i.Item.IsDeleted);
+            var revisions = _revisionGrid.GetSelectedRevisions();
+            bool aParentsValid = revisions != null && revisions.Count > 1;
 
-            var selectionInfo = new ContextMenuDiffToolInfo(DiffFiles.Revision, selectedItemParentRevs, allAreNew, allAreDeleted, aIsParent, localExists);
+            var selectionInfo = new ContextMenuDiffToolInfo(DiffFiles.Revision, selectedItemParentRevs, allAreNew, allAreDeleted, aIsParent, aParentsValid, localExists);
             return selectionInfo;
         }
 
@@ -579,6 +581,7 @@ namespace GitUI.CommandsDialogs
             bLocalToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuBLocal(selectionInfo);
             parentOfALocalToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuAParentLocal(selectionInfo);
             parentOfBLocalToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuBParentLocal(selectionInfo);
+            parentOfALocalToolStripMenuItem.Visible = _revisionDiffController.ShouldDisplayMenuAParentLocal(selectionInfo);
             parentOfBLocalToolStripMenuItem.Visible = _revisionDiffController.ShouldDisplayMenuBParentLocal(selectionInfo);
         }
 

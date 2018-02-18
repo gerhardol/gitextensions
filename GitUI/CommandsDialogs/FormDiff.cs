@@ -108,7 +108,7 @@ namespace GitUI.CommandsDialogs
 
             IList<GitRevision> items = new List<GitRevision> { _headRevision, baseCommit };
             if (items.Count() == 1)
-                items.Add(new GitRevision(Module, DiffFiles.SelectedItemParent));
+                items.Add(DiffFiles.SelectedItemParent);
             DiffText.ViewChanges(items, DiffFiles.SelectedItem, String.Empty);
         }
 
@@ -256,8 +256,10 @@ namespace GitUI.CommandsDialogs
             IEnumerable<string> selectedItemParentRevs = DiffFiles.Revision.ParentGuids;
             bool allAreNew = DiffFiles.SelectedItemsWithParent.All(i => i.Item.IsNew);
             bool allAreDeleted = DiffFiles.SelectedItemsWithParent.All(i => i.Item.IsDeleted);
+            var revisions = RevisionGrid.GetSelectedRevisions();
+            bool aParentsValid = revisions != null && revisions.Count > 1;
 
-            var selectionInfo = new ContextMenuDiffToolInfo(_headRevision, selectedItemParentRevs, allAreNew, allAreDeleted, aIsParent, localExists);
+            var selectionInfo = new ContextMenuDiffToolInfo(_headRevision, selectedItemParentRevs, allAreNew, allAreDeleted, aIsParent, aParentsValid, localExists);
             return selectionInfo;
         }
 
@@ -269,6 +271,7 @@ namespace GitUI.CommandsDialogs
             bLocalToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuBLocal(selectionInfo);
             parentOfALocalToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuAParentLocal(selectionInfo);
             parentOfBLocalToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuBParentLocal(selectionInfo);
+            parentOfALocalToolStripMenuItem.Visible = _revisionDiffController.ShouldDisplayMenuAParentLocal(selectionInfo);
             parentOfBLocalToolStripMenuItem.Visible = _revisionDiffController.ShouldDisplayMenuBParentLocal(selectionInfo);
         }
 

@@ -25,6 +25,7 @@ namespace GitUI.CommandsDialogs
         bool ShouldShowMenuBLocal(ContextMenuDiffToolInfo selectionInfo);
         bool ShouldShowMenuAParentLocal(ContextMenuDiffToolInfo selectionInfo);
         bool ShouldShowMenuBParentLocal(ContextMenuDiffToolInfo selectionInfo);
+        bool ShouldDisplayMenuAParentLocal(ContextMenuDiffToolInfo selectionInfo);
         bool ShouldDisplayMenuBParentLocal(ContextMenuDiffToolInfo selectionInfo);
 
         bool LocalExists(IEnumerable<GitItemStatusWithParent> selectedItemsWithParent, IFullPathResolver fullPathResolver);
@@ -58,14 +59,14 @@ namespace GitUI.CommandsDialogs
 
     public sealed class ContextMenuDiffToolInfo
     {
-        public ContextMenuDiffToolInfo(GitRevision selectedRevision, IEnumerable<string> selectedItemParentRevs, bool allAreNew, bool allAreDeleted, bool aIsParent, bool localExists)
+        public ContextMenuDiffToolInfo(GitRevision selectedRevision, IEnumerable<string> selectedItemParentRevs, bool allAreNew, bool allAreDeleted, bool aIsParent, bool aParentsValid, bool localExists)
         {
             SelectedRevision = selectedRevision;
             SelectedItemParentRevs = selectedItemParentRevs;
             AllAreNew = allAreNew;
             AllAreDeleted = allAreDeleted;
             AIsParent = aIsParent;
-            AIsParent = aIsParent;
+            AParentsValid = aParentsValid;
             LocalExists = localExists;
         }
         public GitRevision SelectedRevision { get; }
@@ -73,6 +74,7 @@ namespace GitUI.CommandsDialogs
         public bool AllAreNew { get; }
         public bool AllAreDeleted { get; }
         public bool AIsParent { get; }
+        public bool AParentsValid { get; }
         public bool LocalExists { get; }
     }
 
@@ -182,6 +184,11 @@ namespace GitUI.CommandsDialogs
             return selectionInfo.SelectedRevision != null && selectionInfo.LocalExists
                 //B parent exists
                 && !selectionInfo.AllAreNew;
+        }
+
+        public bool ShouldDisplayMenuAParentLocal(ContextMenuDiffToolInfo selectionInfo)
+        {
+            return selectionInfo.AParentsValid;
         }
 
         public bool ShouldDisplayMenuBParentLocal(ContextMenuDiffToolInfo selectionInfo)
