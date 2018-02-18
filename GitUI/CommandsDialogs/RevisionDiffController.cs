@@ -25,6 +25,7 @@ namespace GitUI.CommandsDialogs
         bool ShouldShowMenuBLocal(ContextMenuDiffToolInfo selectionInfo);
         bool ShouldShowMenuAParentLocal(ContextMenuDiffToolInfo selectionInfo);
         bool ShouldShowMenuBParentLocal(ContextMenuDiffToolInfo selectionInfo);
+        bool ShouldDisplayMenuBParentLocal(ContextMenuDiffToolInfo selectionInfo);
 
         bool LocalExists(IEnumerable<GitItemStatusWithParent> selectedItemsWithParent, IFullPathResolver fullPathResolver);
         bool AisParent(IEnumerable<string> selectedParentRevs, IEnumerable<string> selectedItemParentRevs);
@@ -32,10 +33,9 @@ namespace GitUI.CommandsDialogs
 
     public sealed class ContextMenuSelectionInfo
     {
-        public ContextMenuSelectionInfo(GitRevision selectedRevision, GitItemStatus selectedDiff, bool aIsParent, bool isAnyCombinedDiff, bool isSingleGitItemSelected, bool isAnyItemSelected, bool isBareRepository, bool singleFileExists, bool isAnyTracked, bool isAnySubmodule)
+        public ContextMenuSelectionInfo(GitRevision selectedRevision, bool aIsParent, bool isAnyCombinedDiff, bool isSingleGitItemSelected, bool isAnyItemSelected, bool isBareRepository, bool singleFileExists, bool isAnyTracked, bool isAnySubmodule)
         {
             SelectedRevision = selectedRevision;
-            //xxx SelectedDiff = selectedDiff;
             AIsParent = aIsParent;
             IsAnyCombinedDiff = isAnyCombinedDiff;
             IsSingleGitItemSelected = isSingleGitItemSelected;
@@ -58,15 +58,20 @@ namespace GitUI.CommandsDialogs
 
     public sealed class ContextMenuDiffToolInfo
     {
-        public ContextMenuDiffToolInfo(GitRevision selectedRevision, IEnumerable<GitItemStatusWithParent> selectedItemsWithParent, bool aIsParent, bool localExists)
+        public ContextMenuDiffToolInfo(GitRevision selectedRevision, IEnumerable<string> selectedItemParentRevs, bool allAreNew, bool allAreDeleted, bool aIsParent, bool localExists)
         {
             SelectedRevision = selectedRevision;
-            SelectedItemsWithParent = selectedItemsWithParent;
+            SelectedItemParentRevs = selectedItemParentRevs;
+            AllAreNew = allAreNew;
+            AllAreDeleted = allAreDeleted;
+            AIsParent = aIsParent;
             AIsParent = aIsParent;
             LocalExists = localExists;
         }
         public GitRevision SelectedRevision { get; }
-        public IEnumerable<GitItemStatusWithParent> SelectedItemsWithParent { get; }
+        public IEnumerable<string> SelectedItemParentRevs { get; }
+        public bool AllAreNew { get; }
+        public bool AllAreDeleted { get; }
         public bool AIsParent { get; }
         public bool LocalExists { get; }
     }
@@ -153,17 +158,16 @@ namespace GitUI.CommandsDialogs
         {
             return selectionInfo.SelectedRevision != null && selectionInfo.LocalExists
                 //A exists (Can only determine that A does not exist if A is parent and B is new)
-                && (!selectionInfo.AIsParent
-                  || selectionInfo.SelectedItemsWithParent.Any(i => !i.Item.IsNew))
+                && (!selectionInfo.AIsParent || !selectionInfo.AllAreNew)
                 //A is not local
-                && selectionInfo.SelectedItemsWithParent.Any(i => i.ParentGuid != GitRevision.UnstagedGuid);
+                && !selectionInfo.SelectedItemParentRevs.Contains(GitRevision.UnstagedGuid);
         }
 
         public bool ShouldShowMenuBLocal(ContextMenuDiffToolInfo selectionInfo)
         {
             return selectionInfo.SelectedRevision != null && selectionInfo.LocalExists
                 //B exists
-                && selectionInfo.SelectedItemsWithParent.Any(i => !i.Item.IsDeleted)
+                && !selectionInfo.AllAreDeleted
                 //B is not local
                 && selectionInfo.SelectedRevision.Guid != GitRevision.UnstagedGuid;
         }
@@ -175,16 +179,15 @@ namespace GitUI.CommandsDialogs
 
         public bool ShouldShowMenuBParentLocal(ContextMenuDiffToolInfo selectionInfo)
         {
-            if (selectionInfo.AIsParent)
-            {
-                return ShouldShowMenuALocal(selectionInfo);
-            }
-            else
-            {
-                return selectionInfo.SelectedRevision != null && selectionInfo.LocalExists
-                    //B parent exists
-                    && selectionInfo.SelectedItemsWithParent.Any(i => !i.Item.IsNew);
-            }
+            return selectionInfo.SelectedRevision != null && selectionInfo.LocalExists
+                //B parent exists
+                && !selectionInfo.AllAreNew;
+        }
+
+        public bool ShouldDisplayMenuBParentLocal(ContextMenuDiffToolInfo selectionInfo)
+        {
+            //Same as ShouldShowMenuALocal()
+            return !selectionInfo.AIsParent;
         }
         #endregion
 

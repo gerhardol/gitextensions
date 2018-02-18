@@ -247,7 +247,7 @@ namespace GitUI.CommandsDialogs
             bool isAnySubmodule = DiffFiles.SelectedItems.Any(item => item.IsSubmodule);
             bool singleFileExists = isExactlyOneItemSelected && File.Exists(_fullPathResolver.Resolve(DiffFiles.SelectedItem.Name));
 
-            var selectionInfo = new ContextMenuSelectionInfo(DiffFiles.Revision, DiffFiles.SelectedItem, aIsParent, isAnyCombinedDiff, isExactlyOneItemSelected, isAnyItemSelected, isBareRepository, singleFileExists, isAnyTracked, isAnySubmodule);
+            var selectionInfo = new ContextMenuSelectionInfo(DiffFiles.Revision, aIsParent, isAnyCombinedDiff, isExactlyOneItemSelected, isAnyItemSelected, isBareRepository, singleFileExists, isAnyTracked, isAnySubmodule);
             return selectionInfo;
         }
 
@@ -541,7 +541,11 @@ namespace GitUI.CommandsDialogs
             bool aIsParent = _revisionDiffController.AisParent(DiffFiles.Revision.ParentGuids, DiffFiles.SelectedItemParents);
             bool localExists = _revisionDiffController.LocalExists(DiffFiles.SelectedItemsWithParent, _fullPathResolver);
 
-            var selectionInfo = new ContextMenuDiffToolInfo(DiffFiles.Revision, DiffFiles.SelectedItemsWithParent, aIsParent, localExists);
+            IEnumerable<string> selectedItemParentRevs = DiffFiles.SelectedItemsWithParent.Select(it => it.ParentGuid);
+            bool allAreNew = DiffFiles.SelectedItemsWithParent.All(i => i.Item.IsNew);
+            bool allAreDeleted = DiffFiles.SelectedItemsWithParent.All(i => i.Item.IsDeleted);
+
+            var selectionInfo = new ContextMenuDiffToolInfo(DiffFiles.Revision, selectedItemParentRevs, allAreNew, allAreDeleted, aIsParent, localExists);
             return selectionInfo;
         }
 
@@ -575,6 +579,7 @@ namespace GitUI.CommandsDialogs
             bLocalToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuBLocal(selectionInfo);
             parentOfALocalToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuAParentLocal(selectionInfo);
             parentOfBLocalToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuBParentLocal(selectionInfo);
+            parentOfBLocalToolStripMenuItem.Visible = _revisionDiffController.ShouldDisplayMenuBParentLocal(selectionInfo);
         }
 
         private void resetFileToolStripMenuItem_Click(object sender, EventArgs e)

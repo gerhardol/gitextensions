@@ -253,8 +253,11 @@ namespace GitUI.CommandsDialogs
             bool aIsParent = _revisionDiffController.AisParent(DiffFiles.Revision.ParentGuids, DiffFiles.SelectedItemParents);
             bool localExists = _revisionDiffController.LocalExists(DiffFiles.SelectedItemsWithParent, _fullPathResolver);
 
-            var selectionInfo = new ContextMenuDiffToolInfo(_headRevision, DiffFiles.SelectedItemsWithParent, aIsParent, localExists);
+            IEnumerable<string> selectedItemParentRevs = DiffFiles.Revision.ParentGuids;
+            bool allAreNew = DiffFiles.SelectedItemsWithParent.All(i => i.Item.IsNew);
+            bool allAreDeleted = DiffFiles.SelectedItemsWithParent.All(i => i.Item.IsDeleted);
 
+            var selectionInfo = new ContextMenuDiffToolInfo(_headRevision, selectedItemParentRevs, allAreNew, allAreDeleted, aIsParent, localExists);
             return selectionInfo;
         }
 
@@ -266,7 +269,8 @@ namespace GitUI.CommandsDialogs
             bLocalToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuBLocal(selectionInfo);
             parentOfALocalToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuAParentLocal(selectionInfo);
             parentOfBLocalToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuBParentLocal(selectionInfo);
-         }
+            parentOfBLocalToolStripMenuItem.Visible = _revisionDiffController.ShouldDisplayMenuBParentLocal(selectionInfo);
+        }
 
         private void PickAnotherBranch(GitRevision preSelectCommit, ref string displayStr, ref GitRevision revision)
         {

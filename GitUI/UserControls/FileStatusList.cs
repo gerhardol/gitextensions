@@ -18,6 +18,7 @@ using ResourceManager;
 
 namespace GitUI
 {
+    //Parents is used as the "first selected" (not always the parent) for GitItemStatus
     using GitItemsWithParents = IDictionary<string, IList<GitItemStatus>>;
 
     public delegate string DescribeRevisionDelegate(string sha1);
@@ -1006,7 +1007,7 @@ namespace GitUI
                     }
 
                     //Show combined (merge conflicts) only when A is only parent
-                    var isMergeCommit = _revisionDiffController.AisParent(Revision.ParentGuids, parentRevs);
+                    var isMergeCommit = Revision.ParentGuids.Count() > 1 && _revisionDiffController.AisParent(Revision.ParentGuids, parentRevs);
                     if (isMergeCommit)
                     {
                         var conflicts = Module.GetCombinedDiffFileList(Revision.Guid);
