@@ -176,12 +176,14 @@ namespace GitUI.CommandsDialogs
 
         public bool ShouldShowMenuAParentLocal(ContextMenuDiffToolInfo selectionInfo)
         {
-            return selectionInfo.SelectedRevision != null && selectionInfo.LocalExists;
+            return selectionInfo.SelectedRevision != null && selectionInfo.LocalExists
+                && ShouldDisplayMenuAParentLocal(selectionInfo);
         }
 
         public bool ShouldShowMenuBParentLocal(ContextMenuDiffToolInfo selectionInfo)
         {
             return selectionInfo.SelectedRevision != null && selectionInfo.LocalExists
+                && ShouldDisplayMenuBParentLocal(selectionInfo)
                 //B parent exists
                 && !selectionInfo.AllAreNew;
         }
