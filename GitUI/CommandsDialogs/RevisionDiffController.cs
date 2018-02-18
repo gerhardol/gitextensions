@@ -83,8 +83,7 @@ namespace GitUI.CommandsDialogs
 
         public bool ShouldShowResetFileMenus(ContextMenuSelectionInfo selectionInfo)
         {
-            return selectionInfo.IsAnyItemSelected && !selectionInfo.IsBareRepository
-                && (!selectionInfo.IsSingleGitItemSelected || (!selectionInfo.IsAnySubmodule && selectionInfo.IsAnyTracked));//xxx
+            return selectionInfo.IsAnyItemSelected && !selectionInfo.IsBareRepository && selectionInfo.IsAnyTracked;
         }
         #endregion
 
@@ -115,7 +114,7 @@ namespace GitUI.CommandsDialogs
 
         public bool ShouldShowSubmoduleMenus(ContextMenuSelectionInfo selectionInfo)
         {
-            return selectionInfo.IsAnySubmodule && /*selectionInfo.AIsParent &&*/ selectionInfo.SelectedRevision.Guid == GitRevision.UnstagedGuid;
+            return selectionInfo.IsAnySubmodule && selectionInfo.SelectedRevision.Guid == GitRevision.UnstagedGuid;
         }
 
         public bool ShouldShowMenuEditFile(ContextMenuSelectionInfo selectionInfo)
@@ -152,8 +151,8 @@ namespace GitUI.CommandsDialogs
 
         public bool ShouldShowMenuALocal(ContextMenuDiffToolInfo selectionInfo)
         {
-            return selectionInfo.LocalExists && selectionInfo.SelectedRevision != null
-                //A exists (Can only determine that A does not exist if A is parent (one selected) and B is new)
+            return selectionInfo.SelectedRevision != null && selectionInfo.LocalExists
+                //A exists (Can only determine that A does not exist if A is parent and B is new)
                 && (!selectionInfo.AIsParent
                   || selectionInfo.SelectedItemsWithParent.Any(i => !i.Item.IsNew))
                 //A is not local
@@ -162,7 +161,7 @@ namespace GitUI.CommandsDialogs
 
         public bool ShouldShowMenuBLocal(ContextMenuDiffToolInfo selectionInfo)
         {
-            return selectionInfo.LocalExists && selectionInfo.SelectedRevision != null
+            return selectionInfo.SelectedRevision != null && selectionInfo.LocalExists
                 //B exists
                 && selectionInfo.SelectedItemsWithParent.Any(i => !i.Item.IsDeleted)
                 //B is not local
@@ -171,15 +170,21 @@ namespace GitUI.CommandsDialogs
 
         public bool ShouldShowMenuAParentLocal(ContextMenuDiffToolInfo selectionInfo)
         {
-            return selectionInfo.LocalExists && selectionInfo.SelectedRevision != null;
+            return selectionInfo.SelectedRevision != null && selectionInfo.LocalExists;
         }
 
         public bool ShouldShowMenuBParentLocal(ContextMenuDiffToolInfo selectionInfo)
         {
-            return selectionInfo.LocalExists && selectionInfo.SelectedRevision != null
-                //B parent exists
-                && (selectionInfo.SelectedItemsWithParent.Count() > 1
-                  || selectionInfo.SelectedItemsWithParent.Any(i => !i.Item.IsNew));
+            if (selectionInfo.AIsParent)
+            {
+                return ShouldShowMenuALocal(selectionInfo);
+            }
+            else
+            {
+                return selectionInfo.SelectedRevision != null && selectionInfo.LocalExists
+                    //B parent exists
+                    && selectionInfo.SelectedItemsWithParent.Any(i => !i.Item.IsNew);
+            }
         }
         #endregion
 

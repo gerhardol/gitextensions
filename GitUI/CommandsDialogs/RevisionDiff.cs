@@ -235,10 +235,13 @@ namespace GitUI.CommandsDialogs
         private ContextMenuSelectionInfo GetSelectionInfo()
         {
             var revisions = _revisionGrid.GetSelectedRevisions();
+            //A is parent if one revision selected or parent, then selected
             bool aIsParent = _revisionDiffController.AisParent(DiffFiles.SelectedItemParents, DiffFiles.Revision.FirstParentGuid, DiffFiles.SelectedItemParent);
+            //Combined diff is a display only diff, no manipulations
             bool isAnyCombinedDiff = DiffFiles.SelectedItemParents.Any(item => item == DiffFiles.CombinedDiff.Text);
             bool isExactlyOneItemSelected = DiffFiles.SelectedItems.Count() == 1;
             bool isAnyItemSelected = DiffFiles.SelectedItems.Count() > 0;
+            //No changes to files in bare repos
             bool isBareRepository = Module.IsBareRepository();
             bool isAnyTracked = DiffFiles.SelectedItems.Any(item => item.IsTracked);
             bool isAnySubmodule = DiffFiles.SelectedItems.Any(item => item.IsSubmodule);
