@@ -82,7 +82,8 @@ namespace GitUI
             _fullPathResolver = new FullPathResolver(() => Module.WorkingDir);
         }
 
-        public bool AlwaysRevisionGroups {
+        public bool AlwaysRevisionGroups
+        {
             set
             {
                 _alwaysRevisionGroups = value;
@@ -670,10 +671,8 @@ namespace GitUI
             }
             set
             {
-                if (value == null)
-                    GitItemStatusesWithParents = null;
-                else
-                    SetGitItemStatuses(null, value);
+                SetGitItemStatuses(value);
+                Revision = null;
             }
         }
 
@@ -692,23 +691,17 @@ namespace GitUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false)]
-        public string GitFirstParent
+        public void SetGitItemStatuses(IList<GitItemStatus> items)
         {
-            get
-            {
-                var data = GitItemStatusesWithParents;
-                if (data != null && data.Count > 0)
-                    return data.ElementAt(0).Key;
-                return null;
-            }
+            GitItemsWithParents dictionary = items == null ? null :
+                dictionary = new Dictionary<string, IList<GitItemStatus>> { { "", items } };
+            SetGitItemStatusesWithParents(dictionary);
         }
 
-        public void SetGitItemStatuses(string parentRev, IList<GitItemStatus> items)
+        private void SetGitItemStatusesWithParents(GitItemsWithParents items)
         {
-            var dictionary = new Dictionary<string, IList<GitItemStatus>> { { parentRev ?? "", items } };
-            GitItemStatusesWithParents = dictionary;
+            _itemsDictionary = items;
+            UpdateFileStatusListView();
         }
 
         private GitItemsWithParents _itemsDictionary = new Dictionary<string, IList<GitItemStatus>>();
@@ -719,11 +712,6 @@ namespace GitUI
             get
             {
                 return _itemsDictionary;
-            }
-            set
-            {
-                _itemsDictionary = value;
-                UpdateFileStatusListView();
             }
         }
 
@@ -976,7 +964,7 @@ namespace GitUI
             NoFiles.Text = _noDiffFilesChangesDefaultText;
             if (revisions.Count == 0 || revisions[0] == null)
             {
-                GitItemStatusesWithParents = null;
+                SetGitItemStatuses(null);
                 Revision = null;
             }
             else
@@ -994,13 +982,14 @@ namespace GitUI
                 if (revs.Length == 0)
                 {
                     //No parent, will set "" as parent
-                    GitItemStatuses = Module.GetTreeFiles(revisions[0].TreeGuid, true);
+                    SetGitItemStatuses(Module.GetTreeFiles(revisions[0].TreeGuid, true));
                 }
                 else
                 {
-                    var dictionary = new Dictionary<string, IList<GitItemStatus>>();
                     if (!AppSettings.ShowDiffForAllParents)
                         revs = new string[]{revs[0]};
+
+                    var dictionary = new Dictionary<string, IList<GitItemStatus>>();
                     foreach (var rev in revs)
                     {
                         dictionary.Add(rev, Module.GetDiffFilesWithSubmodulesStatus(rev, revisions[0].Guid));
@@ -1016,7 +1005,7 @@ namespace GitUI
                         }
                     }
 
-                    GitItemStatusesWithParents = dictionary;
+                    SetGitItemStatusesWithParents(dictionary);
                 }
             }
             UpdateNoFilesLabelVisibility();
@@ -1171,5 +1160,4 @@ namespace GitUI
             ParentGuid = aParentGuid;
         }
     }
-
 }

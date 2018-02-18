@@ -155,14 +155,16 @@ namespace GitUI.CommandsDialogs
             // 
             this.aDiffCaptionMenuItem.Name = "aDiffCaptionMenuItem";
             this.aDiffCaptionMenuItem.Size = new System.Drawing.Size(254, 22);
-            this.aDiffCaptionMenuItem.Text = "A";
+            this.aDiffCaptionMenuItem.Text = "";
+            this.aDiffCaptionMenuItem.Tag = "caption";
             this.aDiffCaptionMenuItem.Enabled = false;
             // 
             // bDiffCaptionMenuItem
             // 
             this.bDiffCaptionMenuItem.Name = "bDiffCaptionMenuItem";
             this.bDiffCaptionMenuItem.Size = new System.Drawing.Size(254, 22);
-            this.bDiffCaptionMenuItem.Text = "B";
+            this.bDiffCaptionMenuItem.Tag = "caption";
+            this.bDiffCaptionMenuItem.Text = "";
             this.bDiffCaptionMenuItem.Enabled = false;
             // 
             // aBToolStripMenuItem

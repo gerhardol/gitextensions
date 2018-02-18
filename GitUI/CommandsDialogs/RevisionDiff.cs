@@ -169,10 +169,11 @@ namespace GitUI.CommandsDialogs
         /// Provide a description for the first selected or parent to the "primary" selected last 
         /// </summary>
         /// <returns></returns>
-        private string DescribeSelectedParentRevision(bool showUnstaged)
+        private string DescribeSelectedParentRevision(bool showUnstagedAndCombined)
         {
             var parents = DiffFiles.SelectedItemsWithParent
-                .Where(i => showUnstaged || !(i.ParentGuid == GitRevision.UnstagedGuid || i.ParentGuid.IsNullOrWhiteSpace()))
+                .Where(i => showUnstagedAndCombined ||
+                    !(i.ParentGuid.IsNullOrWhiteSpace() || i.ParentGuid == GitRevision.UnstagedGuid) || i.ParentGuid == DiffFiles.CombinedDiff.Text)
                 .Select(i => i.ParentGuid)
                 .Distinct()
                 .Count();
@@ -234,7 +235,7 @@ namespace GitUI.CommandsDialogs
         private ContextMenuSelectionInfo GetSelectionInfo()
         {
             var revisions = _revisionGrid.GetSelectedRevisions();
-            bool aIsParent = DiffFiles.SelectedItemParents.Count() == 1 && DiffFiles.Revision.FirstParentGuid == DiffFiles.SelectedItemParent;
+            bool aIsParent = _revisionDiffController.AisParent(DiffFiles.SelectedItemParents, DiffFiles.Revision.FirstParentGuid, DiffFiles.SelectedItemParent);
             bool isAnyCombinedDiff = DiffFiles.SelectedItemParents.Any(item => item == DiffFiles.CombinedDiff.Text);
             bool isExactlyOneItemSelected = DiffFiles.SelectedItems.Count() == 1;
             bool isAnyItemSelected = DiffFiles.SelectedItems.Count() > 0;
@@ -539,8 +540,7 @@ namespace GitUI.CommandsDialogs
 
         private ContextMenuDiffToolInfo GetContextMenuDiffToolInfo()
         {
-            var revisions = _revisionGrid.GetSelectedRevisions();
-            bool aIsParent = DiffFiles.SelectedItemParents.Count() == 1 && DiffFiles.Revision.FirstParentGuid == DiffFiles.SelectedItemParent;
+            bool aIsParent = _revisionDiffController.AisParent(DiffFiles.SelectedItemParents, DiffFiles.Revision.FirstParentGuid, DiffFiles.SelectedItemParent);
             bool localExists = _revisionDiffController.LocalExists(DiffFiles.SelectedItemsWithParent, _fullPathResolver);
 
             var selectionInfo = new ContextMenuDiffToolInfo(DiffFiles.Revision, DiffFiles.SelectedItemsWithParent, aIsParent, localExists);
@@ -554,7 +554,6 @@ namespace GitUI.CommandsDialogs
             if (DiffFiles.SelectedItemsWithParent.Count() > 0 )
             {
                 bDiffCaptionMenuItem.Text = "B: (" + _revisionGrid.DescribeRevision(DiffFiles.Revision, 50) + ")";
-                bDiffCaptionMenuItem.Tag = "caption";
                 bDiffCaptionMenuItem.Visible = true;
                 MenuUtil.SetAsCaptionMenuItem(bDiffCaptionMenuItem, DiffContextMenu);
 
@@ -564,7 +563,6 @@ namespace GitUI.CommandsDialogs
                 {
                     aDiffCaptionMenuItem.Text += " (" + parentDesc + ")";
                 }
-                aDiffCaptionMenuItem.Tag = "caption";
                 aDiffCaptionMenuItem.Visible = true;
                 MenuUtil.SetAsCaptionMenuItem(aDiffCaptionMenuItem, DiffContextMenu);
             }
@@ -607,15 +605,15 @@ namespace GitUI.CommandsDialogs
             }
 
             var parentDesc = DescribeSelectedParentRevision(false);
-            if (parentDesc.IsNotNullOrWhitespace())
+            if (parentDesc.IsNullOrWhiteSpace())
+            {
+                resetFileToParentToolStripMenuItem.Visible = false;
+            }
+            else
             {
                 resetFileToParentToolStripMenuItem.Visible = true;
                 TranslateItem(resetFileToParentToolStripMenuItem.Name, resetFileToParentToolStripMenuItem);
                 resetFileToParentToolStripMenuItem.Text += " (" + parentDesc + ")";
-            }
-            else
-            {
-                resetFileToParentToolStripMenuItem.Visible = false;
             }
         }
 

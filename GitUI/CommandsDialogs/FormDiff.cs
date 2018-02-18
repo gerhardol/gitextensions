@@ -250,7 +250,7 @@ namespace GitUI.CommandsDialogs
 
         private ContextMenuDiffToolInfo GetContextMenuDiffToolInfo()
         {
-            bool aIsParent = DiffFiles.SelectedItemParents.Count() == 1 && DiffFiles.Revision.FirstParentGuid == DiffFiles.SelectedItemParent;
+            bool aIsParent = _revisionDiffController.AisParent(DiffFiles.SelectedItemParents, DiffFiles.Revision.FirstParentGuid, DiffFiles.SelectedItemParent);
             bool localExists = _revisionDiffController.LocalExists(DiffFiles.SelectedItemsWithParent, _fullPathResolver);
 
             var selectionInfo = new ContextMenuDiffToolInfo(_headRevision, DiffFiles.SelectedItemsWithParent, aIsParent, localExists);

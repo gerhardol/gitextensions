@@ -20,13 +20,14 @@ namespace GitUI.CommandsDialogs
         bool ShouldShowSubmoduleMenus(ContextMenuSelectionInfo selectionInfo);
         bool ShouldShowDifftoolMenus(ContextMenuSelectionInfo selectionInfo);
 
-        bool LocalExists(IEnumerable<GitItemStatusWithParent> selectedItemsWithParent, IFullPathResolver fullPathResolver);
-
         bool ShouldShowMenuAB(ContextMenuDiffToolInfo selectionInfo);
         bool ShouldShowMenuALocal(ContextMenuDiffToolInfo selectionInfo);
         bool ShouldShowMenuBLocal(ContextMenuDiffToolInfo selectionInfo);
         bool ShouldShowMenuAParentLocal(ContextMenuDiffToolInfo selectionInfo);
         bool ShouldShowMenuBParentLocal(ContextMenuDiffToolInfo selectionInfo);
+
+        bool LocalExists(IEnumerable<GitItemStatusWithParent> selectedItemsWithParent, IFullPathResolver fullPathResolver);
+        bool AisParent(IEnumerable<string> parentRevs, string firstParent, string selectedParent);
     }
 
     public sealed class ContextMenuSelectionInfo
@@ -34,7 +35,7 @@ namespace GitUI.CommandsDialogs
         public ContextMenuSelectionInfo(GitRevision selectedRevision, GitItemStatus selectedDiff, bool aIsParent, bool isAnyCombinedDiff, bool isSingleGitItemSelected, bool isAnyItemSelected, bool isBareRepository, bool singleFileExists, bool isAnyTracked, bool isAnySubmodule)
         {
             SelectedRevision = selectedRevision;
-            SelectedDiff = selectedDiff;
+            //xxx SelectedDiff = selectedDiff;
             AIsParent = aIsParent;
             IsAnyCombinedDiff = isAnyCombinedDiff;
             IsSingleGitItemSelected = isSingleGitItemSelected;
@@ -45,7 +46,6 @@ namespace GitUI.CommandsDialogs
             IsAnySubmodule = isAnySubmodule;
         }
         public GitRevision SelectedRevision { get; }
-        public GitItemStatus SelectedDiff { get; }
         public bool AIsParent { get; }
         public bool IsAnyCombinedDiff { get; }
         public bool IsSingleGitItemSelected { get; }
@@ -83,21 +83,21 @@ namespace GitUI.CommandsDialogs
 
         public bool ShouldShowResetFileMenus(ContextMenuSelectionInfo selectionInfo)
         {
-            return selectionInfo.IsAnyItemSelected && !selectionInfo.IsAnyCombinedDiff && !selectionInfo.IsBareRepository
-                && (!selectionInfo.IsSingleGitItemSelected || (!selectionInfo.SelectedDiff.IsSubmodule && selectionInfo.SelectedDiff.IsTracked));
+            return selectionInfo.IsAnyItemSelected && !selectionInfo.IsBareRepository
+                && (!selectionInfo.IsSingleGitItemSelected || (!selectionInfo.IsAnySubmodule && selectionInfo.IsAnyTracked));//xxx
         }
         #endregion
 
         #region Main menu items
         public bool ShouldShowMenuSaveAs(ContextMenuSelectionInfo selectionInfo)
         {
-            return selectionInfo.IsSingleGitItemSelected && !selectionInfo.SelectedDiff.IsSubmodule
-                && /*selectionInfo.AIsParent &&*/ !selectionInfo.SelectedRevision.IsArtificial();
+            return selectionInfo.IsSingleGitItemSelected && !selectionInfo.IsAnySubmodule
+                && !selectionInfo.SelectedRevision.IsArtificial();
         }
 
         public bool ShouldShowMenuCherryPick(ContextMenuSelectionInfo selectionInfo)
         {
-            return selectionInfo.IsSingleGitItemSelected && !selectionInfo.SelectedDiff.IsSubmodule
+            return selectionInfo.IsSingleGitItemSelected && !selectionInfo.IsAnySubmodule
                 && !selectionInfo.IsAnyCombinedDiff && !selectionInfo.IsBareRepository
                 && !selectionInfo.SelectedRevision.IsArtificial();
         }
@@ -120,7 +120,7 @@ namespace GitUI.CommandsDialogs
 
         public bool ShouldShowMenuEditFile(ContextMenuSelectionInfo selectionInfo)
         {
-            return selectionInfo.IsSingleGitItemSelected && !selectionInfo.SelectedDiff.IsSubmodule && selectionInfo.SingleFileExists;
+            return selectionInfo.IsSingleGitItemSelected && !selectionInfo.IsAnySubmodule && selectionInfo.SingleFileExists;
         }
 
         public bool ShouldShowMenuCopyFileName(ContextMenuSelectionInfo selectionInfo)
@@ -135,34 +135,14 @@ namespace GitUI.CommandsDialogs
 
         public bool ShouldShowMenuFileHistory(ContextMenuSelectionInfo selectionInfo)
         {
-            return selectionInfo.IsSingleGitItemSelected && selectionInfo.SelectedDiff.IsTracked;
+            return selectionInfo.IsSingleGitItemSelected && selectionInfo.IsAnyTracked;
         }
 
         public bool ShouldShowMenuBlame(ContextMenuSelectionInfo selectionInfo)
         {
-            return ShouldShowMenuFileHistory(selectionInfo) && !selectionInfo.SelectedDiff.IsSubmodule;
+            return ShouldShowMenuFileHistory(selectionInfo) && !selectionInfo.IsAnySubmodule;
         }
         #endregion
-
-        public bool LocalExists(IEnumerable<GitItemStatusWithParent> selectedItemsWithParent, IFullPathResolver fullPathResolver)
-        {
-            bool localExists = selectedItemsWithParent.Any(item => !item.Item.IsTracked);
-            if (!localExists)
-            {
-                //enable *<->Local items only when (any) local file exists
-                foreach (var item in selectedItemsWithParent)
-                {
-                    string filePath = fullPathResolver.Resolve(item.Item.Name);
-                    if (File.Exists(filePath))
-                    {
-                        localExists = true;
-                        break;
-                    }
-                }
-            }
-
-            return localExists;
-        }
 
         #region difftool submenu
         public bool ShouldShowMenuAB(ContextMenuDiffToolInfo selectionInfo)
@@ -200,6 +180,33 @@ namespace GitUI.CommandsDialogs
                 //B parent exists
                 && (selectionInfo.SelectedItemsWithParent.Count() > 1
                   || selectionInfo.SelectedItemsWithParent.Any(i => !i.Item.IsNew));
+        }
+        #endregion
+
+        #region helpers
+        public bool LocalExists(IEnumerable<GitItemStatusWithParent> selectedItemsWithParent, IFullPathResolver fullPathResolver)
+        {
+            bool localExists = selectedItemsWithParent.Any(item => !item.Item.IsTracked);
+            if (!localExists)
+            {
+                //enable *<->Local items only when (any) local file exists
+                foreach (var item in selectedItemsWithParent)
+                {
+                    string filePath = fullPathResolver.Resolve(item.Item.Name);
+                    if (File.Exists(filePath))
+                    {
+                        localExists = true;
+                        break;
+                    }
+                }
+            }
+
+            return localExists;
+        }
+
+        public bool AisParent(IEnumerable<string> parentRevs, string firstParent, string selectedParent)
+        {
+            return parentRevs.Count() == 1 && firstParent == selectedParent;
         }
         #endregion
     }
