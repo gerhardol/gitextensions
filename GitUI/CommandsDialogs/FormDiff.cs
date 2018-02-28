@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using GitCommands;
@@ -17,6 +18,8 @@ namespace GitUI.CommandsDialogs
         private GitRevision _baseRevision;
         private GitRevision _headRevision;
         private readonly GitRevision _mergeBase;
+        private IRevisionDiffController _revisionDiffController;
+        private readonly IFullPathResolver _fullPathResolver;
         private readonly IFindFilePredicateProvider _findFilePredicateProvider;
 
         ToolTip _toolTipControl = new ToolTip();
@@ -52,6 +55,7 @@ namespace GitUI.CommandsDialogs
             _baseRevision = new GitRevision(baseCommitSha);
             _headRevision = new GitRevision(headCommitSha);
             _mergeBase = new GitRevision(Module.GetMergeBase(_baseRevision.Guid, _headRevision.Guid));
+            _fullPathResolver = new FullPathResolver(() => Module.WorkingDir);
             _findFilePredicateProvider = new FindFilePredicateProvider();
 
             lblBaseCommit.BackColor = AppSettings.DiffRemovedColor;
@@ -63,6 +67,12 @@ namespace GitUI.CommandsDialogs
 
             this.Load += (sender, args) => PopulateDiffFiles();
             this.DiffText.ExtraDiffArgumentsChanged += DiffTextOnExtraDiffArgumentsChanged;
+        }
+
+        protected override void OnRuntimeLoad(EventArgs e)
+        {
+            _revisionDiffController = new RevisionDiffController();
+            base.OnRuntimeLoad(e);
         }
 
         private void DiffTextOnExtraDiffArgumentsChanged(object sender, EventArgs eventArgs)
@@ -100,7 +110,7 @@ namespace GitUI.CommandsDialogs
 
             IList<GitRevision> items = new List<GitRevision> { _headRevision, baseCommit };
             if (items.Count() == 1)
-                items.Add(new GitRevision(DiffFiles.SelectedItemParent));
+                items.Add(DiffFiles.SelectedItemParent);
             DiffText.ViewChanges(items, DiffFiles.SelectedItem, String.Empty);
         }
 
@@ -137,9 +147,10 @@ namespace GitUI.CommandsDialogs
                 diffKind = GitUI.RevisionDiffKind.DiffAB;
             }
 
-            foreach (var selectedItem in DiffFiles.SelectedItems)
+            foreach (var itemWithParent in DiffFiles.SelectedItemsWithParent)
             {
-                RevisionGrid.OpenWithDifftool(selectedItem.Name, selectedItem.OldName, diffKind, selectedItem.IsTracked);
+                IList<GitRevision> revs = new List<GitRevision> { _baseRevision, _headRevision };
+                RevisionGrid.OpenWithDifftool(revs, itemWithParent.Item.Name, itemWithParent.Item.OldName, diffKind, itemWithParent.Item.IsTracked);
             }
         }
 
@@ -223,14 +234,47 @@ namespace GitUI.CommandsDialogs
             PickAnotherCommit(_headRevision, ref _headCommitDisplayStr, ref _headRevision);
         }
 
-        private void openWithDifftoolToolStripMenuItem_DropDownOpening(object sender, System.ComponentModel.CancelEventArgs e)
+        private void diffContextToolStripMenuItem_Opening(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            aLocalToolStripMenuItem.Enabled = _baseRevision != null && _baseRevision.Guid != GitRevision.UnstagedGuid && !Module.IsBareRepository();
-            bLocalToolStripMenuItem.Enabled = _headRevision != null && _headRevision.Guid != GitRevision.UnstagedGuid && !Module.IsBareRepository();
-            parentOfALocalToolStripMenuItem.Enabled = parentOfBLocalToolStripMenuItem.Enabled = !Module.IsBareRepository();
-
+            bool isAnyTracked = DiffFiles.SelectedItems.Any(item => item.IsTracked);
             bool isExactlyOneItemSelected = DiffFiles.SelectedItems.Count() == 1;
-            blameToolStripMenuItem.Visible = isExactlyOneItemSelected && !(DiffFiles.SelectedItem.IsSubmodule || _baseRevision.IsArtificial);
+
+            openWithDifftoolToolStripMenuItem.Enabled = isAnyTracked;
+            fileHistoryDiffToolstripMenuItem.Enabled = isAnyTracked && isExactlyOneItemSelected;
+            blameToolStripMenuItem.Enabled = fileHistoryDiffToolstripMenuItem.Enabled && !DiffFiles.SelectedItem.IsSubmodule;
+        }
+
+        private ContextMenuDiffToolInfo GetContextMenuDiffToolInfo()
+        {
+            bool aIsParent = _revisionDiffController.AisParent(DiffFiles.Revision.ParentGuids, DiffFiles.SelectedItemParents);
+            bool localExists = _revisionDiffController.LocalExists(DiffFiles.SelectedItemsWithParent, _fullPathResolver);
+
+            IEnumerable<string> selectedItemParentRevs = DiffFiles.Revision.ParentGuids;
+            bool allAreNew = DiffFiles.SelectedItemsWithParent.All(i => i.Item.IsNew);
+            bool allAreDeleted = DiffFiles.SelectedItemsWithParent.All(i => i.Item.IsDeleted);
+            var revisions = RevisionGrid.GetSelectedRevisions();
+            bool aParentsValid = revisions != null && revisions.Count > 1;
+
+            var selectionInfo = new ContextMenuDiffToolInfo(_headRevision, selectedItemParentRevs,
+                allAreNew: allAreNew,
+                allAreDeleted: allAreDeleted,
+                aIsParent: aIsParent,
+                aParentsValid: aParentsValid,
+                localExists: localExists);
+            return selectionInfo;
+        }
+
+        private void openWithDifftoolToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            ContextMenuDiffToolInfo selectionInfo = GetContextMenuDiffToolInfo();
+
+            aBToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuAB(selectionInfo);
+            aLocalToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuALocal(selectionInfo);
+            bLocalToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuBLocal(selectionInfo);
+            parentOfALocalToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuAParentLocal(selectionInfo);
+            parentOfBLocalToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuBParentLocal(selectionInfo);
+            parentOfALocalToolStripMenuItem.Visible = _revisionDiffController.ShouldDisplayMenuAParentLocal(selectionInfo);
+            parentOfBLocalToolStripMenuItem.Visible = _revisionDiffController.ShouldDisplayMenuBParentLocal(selectionInfo);
         }
 
         private void PickAnotherBranch(GitRevision preSelectCommit, ref string displayStr, ref GitRevision revision)

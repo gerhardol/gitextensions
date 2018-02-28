@@ -1193,7 +1193,7 @@ namespace GitUI.CommandsDialogs
                 Unstaged.ContextMenuStrip = UnstagedSubmoduleContext;
         }
 
-        private void UnstagedContextMenu_Opening(object sender, System.ComponentModel.CancelEventArgs e)
+        private void UnstagedFileContext_Opening(object sender, System.ComponentModel.CancelEventArgs e)
         {
             //Do not show if no item selected
             e.Cancel = !Unstaged.SelectedItems.Any() || Module.IsBareRepository();
@@ -1203,10 +1203,13 @@ namespace GitUI.CommandsDialogs
             var isAssumeUnchangedExist = Unstaged.SelectedItems.Any(s => s.IsAssumeUnchanged);
             var isAssumeUnchangedAll = Unstaged.SelectedItems.All(s => s.IsAssumeUnchanged);
             var isSkipWorktreeAll = Unstaged.SelectedItems.All(s => s.IsSkipWorktree);
+
+            openWithDifftoolToolStripMenuItem.Enabled = isTrackedSelected;
             assumeUnchangedToolStripMenuItem.Visible = isTrackedSelected && !isSkipWorktreeExist && !isAssumeUnchangedAll;
             doNotAssumeUnchangedToolStripMenuItem.Visible = showAssumeUnchangedFilesToolStripMenuItem.Checked && !isSkipWorktreeExist && isAssumeUnchangedExist;
             skipWorktreeToolStripMenuItem.Visible = isTrackedSelected && !isAssumeUnchangedExist && !isSkipWorktreeAll;
             doNotSkipWorktreeToolStripMenuItem.Visible = showSkipWorktreeFilesToolStripMenuItem.Checked && !isAssumeUnchangedExist && isSkipWorktreeExist;
+            viewFileHistoryToolStripItem.Enabled = isTrackedSelected;
         }
 
         private void Unstaged_Enter(object sender, EventArgs e)

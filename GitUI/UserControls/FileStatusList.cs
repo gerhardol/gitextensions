@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -11,20 +11,20 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitCommands;
+using GitUI.CommandsDialogs;
 using GitUI.Properties;
 using GitUI.UserControls;
 using ResourceManager;
 
 namespace GitUI
 {
-    using GitItemsWithParents = IDictionary<string, IList<GitItemStatus>>;
+    //Parents is used as the "first selected" (not always the parent) for GitItemStatus
+    using GitItemsWithParents = IDictionary<GitRevision, IList<GitItemStatus>>;
 
     public delegate string DescribeRevisionDelegate(string sha1);
 
     public sealed partial class FileStatusList : GitModuleControl
     {
-        private readonly TranslationString _UnsupportedMultiselectAction =
-            new TranslationString("Operation not supported");
         private readonly TranslationString _DiffWithParent =
             new TranslationString("Diff with:");
         public readonly TranslationString CombinedDiff =
@@ -35,9 +35,11 @@ namespace GitUI
 
         private bool _filterVisible;
         private ToolStripItem _openSubmoduleMenuItem;
+        private bool _alwaysRevisionGroups = false;
 
         public DescribeRevisionDelegate DescribeRevision;
         private readonly IFullPathResolver _fullPathResolver;
+        private RevisionDiffController _revisionDiffController;
 
         public FileStatusList()
         {
@@ -47,7 +49,6 @@ namespace GitUI
             FilterVisible = false;
 
             SelectFirstItemOnSetItems = true;
-            _noDiffFilesChangesDefaultText = NoFiles.Text;
             FileStatusListView.MouseMove += FileStatusListView_MouseMove;
             FileStatusListView.MouseDown += FileStatusListView_MouseDown;
             if (_images == null)
@@ -78,6 +79,15 @@ namespace GitUI
 
             _filter = new Regex(".*");
             _fullPathResolver = new FullPathResolver(() => Module.WorkingDir);
+            _revisionDiffController = new RevisionDiffController();
+        }
+
+        public bool AlwaysRevisionGroups
+        {
+            set
+            {
+                _alwaysRevisionGroups = value;
+            }
         }
 
         private void CreateOpenSubmoduleMenuItem()
@@ -121,8 +131,6 @@ namespace GitUI
         }
 
         private static ImageList _images;
-
-        private readonly string _noDiffFilesChangesDefaultText;
 
         public void SetNoFilesText(string text)
         {
@@ -338,13 +346,13 @@ namespace GitUI
 
         public int UnfilteredItemsCount()
         {
-            if (_itemsDictionary == null)
+            if (GitItemStatusesWithParents == null)
             {
                 return 0;
             }
             else
             {
-                return _itemsDictionary.SelectMany(pair => pair.Value).Count();
+                return GitItemStatusesWithParents.SelectMany(pair => pair.Value).Count();
             }
         }
 
@@ -428,12 +436,12 @@ namespace GitUI
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [Browsable(false)]
-        public string SelectedItemParent
+        public GitRevision SelectedItemParent
         {
             get
             {
                 foreach (ListViewItem item in FileStatusListView.SelectedItems)
-                    return (string)item.Group?.Tag;
+                    return (GitRevision)item.Group?.Tag;
                 return null;
             }
         }
@@ -446,7 +454,7 @@ namespace GitUI
             {
                 return FileStatusListView.SelectedItems.Cast<ListViewItem>()
                     .Where(i => i.Group != null)
-                    .Select(i => (string)i.Group.Tag);
+                    .Select(i => ((GitRevision)i.Group.Tag)?.Guid);
             }
         }
 
@@ -457,7 +465,7 @@ namespace GitUI
             get
             {
                 return FileStatusListView.SelectedItems.Cast<ListViewItem>()
-                    .Select(i => new GitItemStatusWithParent((GitItemStatus)i.Tag, (string)i.Group?.Tag));
+                    .Select(i => new GitItemStatusWithParent((GitItemStatus)i.Tag, (GitRevision)i.Group?.Tag));
             }
         }
 
@@ -526,6 +534,7 @@ namespace GitUI
                 }
                 else
                 {
+                    //Revision is not set in all situations, the current diff will not be set
                     UICommands.StartFileHistoryDialog(this, SelectedItem.Name, Revision);
                 }
             }
@@ -627,10 +636,8 @@ namespace GitUI
             }
             set
             {
-                if (value == null)
-                    GitItemStatusesWithParents = null;
-                else
-                    SetGitItemStatuses(null, value);
+                //Legacy, Revision and Parent is not set
+                SetDiffs(null, null, value);
             }
         }
 
@@ -649,26 +656,7 @@ namespace GitUI
             }
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false)]
-        public string GitFirstParent
-        {
-            get
-            {
-                var data = GitItemStatusesWithParents;
-                if (data != null && data.Count > 0)
-                    return data.ElementAt(0).Key;
-                return null;
-            }
-        }
-
-        public void SetGitItemStatuses(string parentRev, IList<GitItemStatus> items)
-        {
-            var dictionary = new Dictionary<string, IList<GitItemStatus>> { { parentRev ?? "", items } };
-            GitItemStatusesWithParents = dictionary;
-        }
-
-        private GitItemsWithParents _itemsDictionary = new Dictionary<string, IList<GitItemStatus>>();
+        private GitItemsWithParents _itemsDictionary = new Dictionary<GitRevision, IList<GitItemStatus>>();
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [Browsable(false)]
         public GitItemsWithParents GitItemStatusesWithParents
@@ -677,16 +665,11 @@ namespace GitUI
             {
                 return _itemsDictionary;
             }
-            set
-            {
-                _itemsDictionary = value;
-                UpdateFileStatusListView();
-            }
         }
 
         private void UpdateFileStatusListView(bool updateCausedByFilter = false)
         {
-            if (_itemsDictionary == null || !_itemsDictionary.Any())
+            if (!GitItemStatuses.Any())
             {
                 HandleVisibility_NoFilesLabel_FilterComboBox(filesPresent: false);
             }
@@ -709,7 +692,7 @@ namespace GitUI
             }
 
             FileStatusListView.BeginUpdate();
-            FileStatusListView.ShowGroups = _itemsDictionary != null && _itemsDictionary.Count > 1;
+            FileStatusListView.ShowGroups = _itemsDictionary != null && (_alwaysRevisionGroups || _itemsDictionary.Count > 1);
             FileStatusListView.Groups.Clear();
             FileStatusListView.Items.Clear();
             if (_itemsDictionary != null)
@@ -721,16 +704,16 @@ namespace GitUI
                 foreach (var pair in _itemsDictionary)
                 {
                     ListViewGroup group = null;
-                    if (!String.IsNullOrEmpty(pair.Key))
+                    if (pair.Key != null)
                     {
                         var groupName = "";
-                        if (pair.Key == CombinedDiff.Text)
+                        if (pair.Key.Guid == CombinedDiff.Text)
                         {
                             groupName = CombinedDiff.Text;
                         }
                         else
                         {
-                            groupName = _DiffWithParent.Text + " " + GetDescriptionForRevision(pair.Key);
+                            groupName = _DiffWithParent.Text + " " + GetDescriptionForRevision(pair.Key.Guid);
                         }
 
                         group = new ListViewGroup(groupName);
@@ -828,7 +811,6 @@ namespace GitUI
 
         private void FileStatusListView_SizeChanged(object sender, EventArgs e)
         {
-            NoFiles.Location = new Point(5, 5);
             NoFiles.Size = new Size(Size.Width - 10, Size.Height - 10);
             Refresh();
             FileStatusListView.BeginUpdate();
@@ -919,91 +901,87 @@ namespace GitUI
             }
         }
 
-        public void SetDiffs(List<GitRevision> revisions)
+        public void SetDiffs(GitRevision selectedRev, GitRevision parentRev, IList<GitItemStatus> items)
         {
-            HandleVisibility_NoFilesLabel_FilterComboBox(filesPresent: true);
-            switch (revisions.Count)
-            {
-                case 0:
-                    NoFiles.Text = _noDiffFilesChangesDefaultText;
-                    GitItemStatuses = null;
-                    break;
+            Revision = selectedRev;
+            if (parentRev == null) { parentRev = new GitRevision(""); }
+            GitItemsWithParents dictionary = items == null ? null :
+                dictionary = new Dictionary<GitRevision, IList<GitItemStatus>> { { parentRev, items } };
 
-                case 1: // diff "parent" --> "selected revision"
-                    SetDiff(revisions[0]);
-                    break;
-
-                case 2: // diff "first clicked revision" --> "second clicked revision"
-                    NoFiles.Text = _noDiffFilesChangesDefaultText;
-                    SetGitItemStatuses(revisions[1].Guid, Module.GetDiffFilesWithSubmodulesStatus(revisions[1].Guid, revisions[0].Guid));
-                    break;
-
-                default: // more than 2 revisions selected => no diff
-                    NoFiles.Text = _UnsupportedMultiselectAction.Text;
-                    GitItemStatuses = null;
-                    break;
-            }
-            UpdateNoFilesLabelVisibility();
-        }
-
-        private void UpdateNoFilesLabelVisibility()
-        {
-            if (GitItemStatusesWithParents == null && GitItemStatuses == null)
-                HandleVisibility_NoFilesLabel_FilterComboBox(filesPresent: false);
-            else if (GitItemStatusesWithParents != null)
-            {
-                List<string> keys = GitItemStatusesWithParents.Keys.ToList();
-                if (keys.Count == 0)
-                    HandleVisibility_NoFilesLabel_FilterComboBox(filesPresent: false);
-                else if (keys.Count == 1 && (GitItemStatusesWithParents[keys[0]] == null || GitItemStatusesWithParents[keys[0]].Count == 0))
-                    HandleVisibility_NoFilesLabel_FilterComboBox(filesPresent: false);
-            }
-            else if (GitItemStatuses?.Count == 0)
-            {
-                HandleVisibility_NoFilesLabel_FilterComboBox(filesPresent: false);
-            }
+            _itemsDictionary = dictionary;
+            UpdateFileStatusListView();
         }
 
         public void SetDiff(GitRevision revision)
         {
-            NoFiles.Text = _noDiffFilesChangesDefaultText;
+            SetDiffs(new List<GitRevision> { revision });
+        }
 
-            Revision = revision;
-
-            if (revision == null)
-                GitItemStatuses = null;
-            else if (!revision.HasParent)
-                GitItemStatuses = Module.GetTreeFiles(revision.TreeGuid, true);
+        public void SetDiffs(List<GitRevision> revisions)
+        {
+            if (revisions == null || revisions.Count == 0)
+            {
+                Revision = null;
+            }
             else
             {
-                if (revision.Guid == GitRevision.UnstagedGuid) //working directory changes
-                    GitItemStatuses = Module.GetUnstagedFilesWithSubmodulesStatus();
-                else if (revision.Guid == GitRevision.IndexGuid) //index
-                    GitItemStatuses = Module.GetStagedFilesWithSubmodulesStatus();
+                Revision = revisions[0];
+            }
+
+            var dictionary = new Dictionary<GitRevision, IList<GitItemStatus>>();
+            if (Revision != null)
+            {
+                GitRevision[] parentRevs;
+                if (revisions.Count == 1)
+                {
+                    var list = new List<GitRevision>();
+                    foreach (var item in Revision.ParentGuids)
+                    {
+                        //Note: RevisionGrid could in some forms be used to get the parent guids
+                        list.Add(new GitRevision(item));
+                    };
+                    parentRevs = list.ToArray();
+                }
                 else
                 {
-                    GitItemsWithParents dictionary = new Dictionary<string, IList<GitItemStatus>>();
-                    foreach (var parentRev in revision.ParentGuids)
-                    {
-                        dictionary.Add(parentRev, Module.GetDiffFilesWithSubmodulesStatus(parentRev, revision.Guid));
+                    parentRevs = revisions.Skip(1).ToArray();
+                }
 
-                        //Only add the first parent to the dictionary if the setting to show diffs
-                        //for app parents is disabled
-                        if (!AppSettings.ShowDiffForAllParents)
-                            break;
+                if (parentRevs.Length == 0)
+                {
+                    //No parent, will set "" as parent
+                    var rev = new GitRevision("");
+                    dictionary.Add(rev, Module.GetTreeFiles(Revision.TreeGuid, true));
+                }
+                else
+                {
+                    if (!AppSettings.ShowDiffForAllParents)
+                        parentRevs = new GitRevision[]{ parentRevs[0]};
+
+                    foreach (var rev in parentRevs)
+                    {
+                        dictionary.Add(rev, Module.GetDiffFilesWithSubmodulesStatus(rev.Guid, Revision.Guid));
                     }
-                    var isMergeCommit = revision.ParentGuids.Count() == 2;
+
+                    //Show combined (merge conflicts) only when A is only parent
+                    var isMergeCommit = AppSettings.ShowDiffForAllParents &&
+                        Revision.ParentGuids != null && Revision.ParentGuids.Count() > 1
+                        && _revisionDiffController.AisParent(Revision.ParentGuids, parentRevs.Select(i => i.Guid));
                     if (isMergeCommit)
                     {
-                        var conflicts = Module.GetCombinedDiffFileList(revision.Guid);
+                        var conflicts = Module.GetCombinedDiffFileList(Revision.Guid);
                         if (conflicts.Any())
                         {
-                            dictionary.Add(CombinedDiff.Text, conflicts);
+                            //Create a mock commit
+                            var rev = new GitRevision(CombinedDiff.Text);
+                            dictionary.Add(rev, conflicts);
                         }
                     }
-                    GitItemStatusesWithParents = dictionary;
+
                 }
             }
+            _itemsDictionary = dictionary;
+            UpdateFileStatusListView();
         }
 
         private void HandleVisibility_NoFilesLabel_FilterComboBox(bool filesPresent)
@@ -1012,6 +990,7 @@ namespace GitUI
             if (_filterVisible)
             {
                 FilterComboBox.Visible = filesPresent;
+                FilterWatermarkLabel.Visible = filesPresent;
             }
         }
 
@@ -1128,13 +1107,12 @@ namespace GitUI
     public class GitItemStatusWithParent
     {
         public readonly GitItemStatus Item;
-        public readonly string ParentGuid;
+        public readonly GitRevision ParentRevision;
 
-        public GitItemStatusWithParent(GitItemStatus anItem, string aParentGuid)
+        public GitItemStatusWithParent(GitItemStatus anItem, GitRevision aParentGuid)
         {
             Item = anItem;
-            ParentGuid = aParentGuid;
+            ParentRevision = aParentGuid;
         }
     }
-
 }

@@ -15,12 +15,11 @@ namespace GitUI
     {
         public static SynchronizationContext UISynchronizationContext;
 
-
-        public static void OpenWithDifftool(this RevisionGrid grid, string fileName, string oldFileName, GitUI.RevisionDiffKind diffKind, bool isTracked=true)
+        public static void OpenWithDifftool(this RevisionGrid grid, IList<GitRevision> revisions, string fileName, string oldFileName, GitUI.RevisionDiffKind diffKind, bool isTracked)
         {
             //Note: Order in revisions is that first clicked is last in array
 
-            string error = RevisionDiffInfoProvider.Get(grid.GetSelectedRevisions(), diffKind,
+            string error = RevisionDiffInfoProvider.Get(revisions, diffKind,
                 out var extraDiffArgs, out var firstRevision, out var secondRevision);
 
             if (!string.IsNullOrEmpty(error))
@@ -38,8 +37,10 @@ namespace GitUI
         private static PatchApply.Patch GetItemPatch(GitModule module, GitItemStatus file,
             string firstRevision, string secondRevision, string diffArgs, Encoding encoding)
         {
+            //Files with tree guid should be presented with normal diff
+            var isTracked = file.IsTracked || file.TreeGuid.IsNotNullOrWhitespace() && secondRevision.IsNotNullOrWhitespace();
             return module.GetSingleDiff(firstRevision, secondRevision, file.Name, file.OldName,
-                    diffArgs, encoding, true, file.IsTracked);
+                    diffArgs, encoding, true, isTracked);
         }
 
         public static string GetSelectedPatch(this FileViewer diffViewer, string firstRevision, string secondRevision, GitItemStatus file)
