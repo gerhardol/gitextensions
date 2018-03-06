@@ -101,6 +101,15 @@ namespace GitUI
         {
             return diffViewer.ViewPatch(() =>
             {
+                if (firstRevision == null && secondRevision.IsNotNullOrWhitespace())
+                {
+                    // The previous commit does not exist, nothing to compare with
+                    if (file.TreeGuid.IsNullOrEmpty())
+                        diffViewer.ViewGitItemRevision(file.Name, secondRevision);
+                    else
+                        diffViewer.ViewGitItem(file.Name, file.TreeGuid);
+                }
+
                 string selectedPatch = diffViewer.GetSelectedPatch(firstRevision, secondRevision, file);
                 return selectedPatch ?? defaultText;
             });
