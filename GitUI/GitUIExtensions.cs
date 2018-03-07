@@ -82,7 +82,9 @@ namespace GitUI
         public static Task ViewChanges(this FileViewer diffViewer, IList<GitRevision> revisions, GitItemStatus file, string defaultText)
         {
             if (revisions.Count == 0)
+            {
                 return Task.CompletedTask;
+            }
 
             var selectedRevision = revisions[0];
             string secondRevision = selectedRevision?.Guid;
@@ -106,6 +108,7 @@ namespace GitUI
                     {
                         throw new ArgumentException(nameof(secondRevision));
                     }
+
                     return diffViewer.ViewGitItemRevision(file.Name, secondRevision);
                 }
                 else

@@ -47,7 +47,8 @@ namespace GitUI.HelperDialogs
                 await ViewSelectedDiff();
             }
             catch (OperationCanceledException)
-            { }
+            {
+            }
         }
 
         private async Task ViewSelectedDiff()
@@ -73,7 +74,8 @@ namespace GitUI.HelperDialogs
                 await ViewSelectedDiff();
             }
             catch (OperationCanceledException)
-            { }
+            {
+            }
         }
     }
 }
