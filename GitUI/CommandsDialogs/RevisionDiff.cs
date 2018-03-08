@@ -273,6 +273,7 @@ namespace GitUI.CommandsDialogs
                 }
             }
 
+            DiffText.ViewPatch("Waiting...");
             await DiffText.ViewChanges(items, DiffFiles.SelectedItem, String.Empty);
         }
 

@@ -94,6 +94,7 @@ namespace GitUI
                 firstRevision = selectedRevision.FirstParentGuid;
             }
 
+            Thread.SpinWait(200000000);
             return ViewChanges(diffViewer, firstRevision, secondRevision, file, defaultText);
         }
 
