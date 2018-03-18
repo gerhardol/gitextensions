@@ -33,6 +33,8 @@ namespace JenkinsIntegration.Settings
             {
                 JenkinsServerUrl.Text = buildServerConfig.GetString("BuildServerUrl", string.Empty);
                 JenkinsProjectName.Text = buildServerConfig.GetString("ProjectName", _defaultProjectName);
+                IgnoreBuildBranch.Text = buildServerConfig.GetString("IgnoreBuildBranch", string.Empty);
+                SkipCommitUrl.Text = buildServerConfig.GetString("SkipCommitUrl", string.Empty);
             }
         }
 
@@ -40,6 +42,8 @@ namespace JenkinsIntegration.Settings
         {
             buildServerConfig.SetString("BuildServerUrl", JenkinsServerUrl.Text);
             buildServerConfig.SetString("ProjectName", JenkinsProjectName.Text);
+            buildServerConfig.SetString("IgnoreBuildBranch", IgnoreBuildBranch.Text);
+            buildServerConfig.SetString("SkipCommitUrl", SkipCommitUrl.Text);
         }
     }
 }
