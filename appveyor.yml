@@ -34,9 +34,10 @@ build_script:
     & Setup\BuildInstallers.cmd
     if ($LastExitCode -ne 0) { $host.SetShouldExit($LastExitCode) }
     & Setup\MakePortableArchive.cmd Release %APPVEYOR_BUILD_VERSION%
+
+    Get-ChildItem GitExtensionsVSIX\bin\Release\GitExtensionsVSIX.vsix | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
     #Upload a portable archive, not a installer
     Get-ChildItem Setup\GitExtensions-Portable-*.zip | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
-    Get-ChildItem GitExtensionsVSIX\bin\Release\GitExtensionsVSIX.vsix | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
 
 test_script:
 - ps: |
