@@ -101,7 +101,7 @@ namespace GitCommands
         public static readonly string NoNewLineAtTheEnd = "\\ No newline at end of file";
         private const string DiffCommandWithStandardArgs = " -c diff.submodule=short -c diff.noprefix=false diff --no-color ";
 
-        public GitModule(string workingdir)
+        public GitModule([CanBeNull] string workingdir)
         {
             _superprojectInit = false;
             WorkingDir = (workingdir ?? "").EnsureTrailingPathSeparator();
