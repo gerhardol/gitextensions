@@ -119,7 +119,7 @@ namespace GitExtensions
 
             if (args.Length <= 1)
             {
-                commands.StartBrowseDialog();
+                commands.StartBrowseDialog(startWithDashboard: !AppSettings.StartWithRecentWorkingDir);
             }
             else
             {
