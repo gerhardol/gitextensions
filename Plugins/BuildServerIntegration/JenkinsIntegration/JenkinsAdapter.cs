@@ -57,6 +57,7 @@ namespace JenkinsIntegration
 
         private readonly Dictionary<string, JenkinsCacheInfo> _lastBuildCache = new Dictionary<string, JenkinsCacheInfo>();
         private readonly List<string> _projectsUrls = new List<string>();
+        private string _projectName;
 
         public void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config, Func<string, bool> isCommitInRevisionGrid)
         {
@@ -93,6 +94,8 @@ namespace JenkinsIntegration
                     AddGetBuildUrl(projectUrl);
                 }
             }
+
+            _projectName = _buildServerWatcher.ReplaceVariables("{cRepoShortName}");
         }
 
         /// <summary>
@@ -295,7 +298,7 @@ namespace JenkinsIntegration
             }
         }
 
-        private const string _jenkinsTreeBuildInfo = "number,result,timestamp,url,actions[lastBuiltRevision[SHA1],totalCount,failCount,skipCount],building,duration";
+        private const string _jenkinsTreeBuildInfo = "number,result,timestamp,url,actions[remoteUrls,lastBuiltRevision[SHA1],totalCount,failCount,skipCount],building,duration";
 
         private static BuildInfo CreateBuildInfo(JObject buildDescription)
         {
@@ -309,6 +312,20 @@ namespace JenkinsIntegration
             string testResults = string.Empty;
             foreach (var element in action)
             {
+                // check that the commit is for this repo and not for another (like a shared library)
+                var urls = element["remoteUrls"];
+                if (urls != null && _projectName.IsNotNullOrWhitespace())
+                {
+                    foreach (var u in urls)
+                    {
+                        string url = u.ToObject<string>();
+                        if (url.IsNotNullOrWhitespace() && !(url.EndsWith(_projectName) || url.EndsWith(_projectName + ".git")))
+                        {
+                            continue;
+                        }
+                    }
+                }
+
                 if (element["lastBuiltRevision"] != null)
                 {
                     commitHashList.Add(element["lastBuiltRevision"]["SHA1"].ToObject<string>());
