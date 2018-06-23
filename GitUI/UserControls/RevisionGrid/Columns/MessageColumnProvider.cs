@@ -152,12 +152,16 @@ namespace GitUI.UserControls.RevisionGrid.Columns
 
                 // Summary of changes
                 var count = _grid.GetChangeCount(revision.Guid);
-                if (count != null)
+                if (count != null && _grid.IsCountUpdated)
                 {
                     ArtificialCount(count.Changed, Properties.Resources.IconFileStatusModified, style.normalFont, style.foreColor);
                     ArtificialCount(count.New, Properties.Resources.IconFileStatusAdded, style.normalFont, style.foreColor);
                     ArtificialCount(count.Deleted, Properties.Resources.IconFileStatusRemoved, style.normalFont, style.foreColor);
-                    ArtificialCount(count.Submodules, Properties.Resources.IconSubmodulesManage, style.normalFont, style.foreColor);
+                    if (_grid.HasSubmodules)
+                    {
+                        ArtificialCount(count.SubmodulesChanged, Properties.Resources.IconSubmoduleRevisionDown, style.normalFont, style.foreColor);
+                        ArtificialCount(count.SubmodulesDirty, Properties.Resources.IconSubmoduleDirty, style.normalFont, style.foreColor);
+                    }
                 }
             }
             else
@@ -216,7 +220,7 @@ namespace GitUI.UserControls.RevisionGrid.Columns
             {
                 const int padding = 5;
                 var imageSize = e.CellBounds.Height - padding - padding;
-                if (count > 0)
+                if (count >= 0)
                 {
                     Image i = icon;
                     var rect = new Rectangle(
