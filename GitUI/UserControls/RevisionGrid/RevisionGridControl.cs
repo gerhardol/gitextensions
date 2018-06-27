@@ -1756,12 +1756,14 @@ namespace GitUI
 
             if (unstagedRev != null)
             {
-                unstagedRev.SubjectCount = Strings.GetUnstagedCountText(unstaged);
+                var items = status.Where(item => item.Staged == StagedStatus.WorkTree);
+                UpdateChangeCount(GitRevision.UnstagedGuid, items);
             }
 
             if (stagedRev != null)
             {
-                stagedRev.SubjectCount = Strings.GetStagedCountText(staged);
+                var items = status.Where(item => item.Staged == StagedStatus.Index);
+                UpdateChangeCount(GitRevision.IndexGuid, items);
             }
 
             // cache the status, if commits do not exist or for a refresh

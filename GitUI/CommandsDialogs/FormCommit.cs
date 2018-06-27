@@ -802,7 +802,7 @@ namespace GitUI.CommandsDialogs
 
             foreach (var fileStatus in allChangedFiles)
             {
-                if (fileStatus.IsStaged)
+                if (fileStatus.Staged == StagedStatus.Index)
                 {
                     stagedFiles.Add(fileStatus);
                 }
@@ -1476,7 +1476,7 @@ namespace GitUI.CommandsDialogs
                                 Name = item.OldName,
                                 IsDeleted = true,
                                 IsTracked = true,
-                                IsStaged = false
+                                Staged = StagedStatus.WorkTree
                             };
                             unstagedFiles.Add(clone);
 
@@ -1486,7 +1486,7 @@ namespace GitUI.CommandsDialogs
                             item.OldName = string.Empty;
                         }
 
-                        item.IsStaged = false;
+                        item.Staged = StagedStatus.WorkTree;
                         unstagedFiles.Add(item);
                     }
 

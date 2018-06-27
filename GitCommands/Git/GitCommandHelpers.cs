@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using GitCommands.Git;
+using GitCommands.Git.Extensions;
 using GitCommands.Logging;
 using GitCommands.Patches;
 using GitCommands.Utils;
@@ -798,9 +799,26 @@ namespace GitCommands
         /// <param name="secondRevision">to revision</param>
         /// <param name="parentToSecond">The parent for the second revision</param>
         /// <returns>list with the parsed GitItemStatus</returns>
-        public static IReadOnlyList<GitItemStatus> GetDiffChangedFilesFromString(IGitModule module, string statusString, [CanBeNull]string firstRevision = null, [CanBeNull]string secondRevision = null, [CanBeNull]string parentToSecond = null)
+        public static IReadOnlyList<GitItemStatus> GetDiffChangedFilesFromString(IGitModule module, string statusString, [CanBeNull]string firstRevision, [CanBeNull]string secondRevision, [CanBeNull]string parentToSecond)
         {
-            return GetAllChangedFilesFromString_v1(module, statusString, true, secondRevision);
+            StagedStatus staged = StagedStatus.Unknown;
+            if (firstRevision == GitRevision.IndexGuid && secondRevision == GitRevision.UnstagedGuid)
+            {
+                staged = StagedStatus.WorkTree;
+            }
+            else if (firstRevision == parentToSecond && secondRevision == GitRevision.IndexGuid)
+            {
+                staged = StagedStatus.Index;
+            }
+            else if ((firstRevision.IsNotNullOrWhitespace() && !GitRevisionExtensions.IsArtificial(firstRevision)) ||
+                (secondRevision.IsNotNullOrWhitespace() && !GitRevisionExtensions.IsArtificial(secondRevision)) ||
+                parentToSecond.IsNotNullOrWhitespace())
+            {
+                // This cannot be a worktree/index file
+                staged = StagedStatus.None;
+            }
+
+            return GetAllChangedFilesFromString_v1(module, statusString, true, staged);
         }
 
         /// <summary>
@@ -819,7 +837,7 @@ namespace GitCommands
         /// Parse git-status --porcelain=1 and git-diff --name-status
         /// Outputs are similar, except that git-status has status for both worktree and index
         /// </summary>
-        private static IReadOnlyList<GitItemStatus> GetAllChangedFilesFromString_v1(IGitModule module, string statusString, bool fromDiff, string diffToRevision)
+        private static IReadOnlyList<GitItemStatus> GetAllChangedFilesFromString_v1(IGitModule module, string statusString, bool fromDiff, StagedStatus staged)
         {
             var diffFiles = new List<GitItemStatus>();
 
@@ -828,12 +846,7 @@ namespace GitCommands
                 return diffFiles;
             }
 
-            /*The status string can show warnings. This is a text block at the start or at the beginning
-              of the file status. Strip it. Example:
-                warning: LF will be replaced by CRLF in CustomDictionary.xml.
-                The file will have its original line endings in your working directory.
-                warning: LF will be replaced by CRLF in FxCop.targets.
-                The file will have its original line endings in your working directory.*/
+            // The status string from git-diff can show warnings. See tests
             var nl = new[] { '\n', '\r' };
             string trimmedStatus = statusString.Trim(nl);
             int lastNewLinePos = trimmedStatus.LastIndexOfAny(nl);
@@ -885,7 +898,7 @@ namespace GitCommands
                 char x = status[0];
                 char y = status.Length > 1 ? status[1] : ' ';
 
-                if (fromDiff && diffToRevision == GitRevision.UnstagedGuid && x == 'U')
+                if (fromDiff && staged == StagedStatus.WorkTree && x == 'U')
                 {
                     // git-diff has two lines to inform that a file is modified and has a merge conflict
                     continue;
@@ -906,9 +919,7 @@ namespace GitCommands
                         gitItemStatusX = GitItemStatusFromStatusCharacter(fileName, x);
                     }
 
-                    // IsStaged can only be set for git-diff when comparing HEAD -> Index (not set at all)
-                    // TODO: Change IsStaged to enum values
-                    gitItemStatusX.IsStaged = !fromDiff;
+                    gitItemStatusX.Staged = fromDiff ? staged : StagedStatus.Index;
                     if (submodules.Contains(gitItemStatusX.Name))
                     {
                         gitItemStatusX.IsSubmodule = true;
@@ -935,7 +946,7 @@ namespace GitCommands
                     gitItemStatusY = GitItemStatusFromStatusCharacter(fileName, y);
                 }
 
-                gitItemStatusY.IsStaged = false;
+                gitItemStatusY.Staged = StagedStatus.WorkTree;
                 if (submodules.Contains(gitItemStatusY.Name))
                 {
                     gitItemStatusY.IsSubmodule = true;
@@ -961,7 +972,6 @@ namespace GitCommands
 
                 string fileName = line.Substring(line.IndexOf(' ') + 1);
                 GitItemStatus gitItemStatus = GitItemStatusFromStatusCharacter(fileName, statusCharacter);
-                gitItemStatus.IsStaged = false;
                 gitItemStatus.IsAssumeUnchanged = true;
                 result.Add(gitItemStatus);
             }
@@ -981,7 +991,6 @@ namespace GitCommands
                 GitItemStatus gitItemStatus = GitItemStatusFromStatusCharacter(fileName, statusCharacter);
                 if (gitItemStatus.IsSkipWorktree)
                 {
-                    gitItemStatus.IsStaged = false;
                     result.Add(gitItemStatus);
                 }
             }
