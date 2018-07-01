@@ -1742,7 +1742,6 @@ namespace GitUI
         }
 
         public bool IsCountUpdated { get; set; }
-        public bool HasSubmodules { get; set; }
         public class ChangeCount
         {
             // Count for artificial commits
@@ -1814,18 +1813,8 @@ namespace GitUI
                 changeCount.Changed = items.Count(item => !item.IsNew && !item.IsDeleted && !item.IsSubmodule);
                 changeCount.New = items.Count(item => item.IsNew && !item.IsSubmodule);
                 changeCount.Deleted = items.Count(item => item.IsDeleted && !item.IsSubmodule);
-                if (HasSubmodules)
-                {
-                    changeCount.SubmodulesChanged = items.Count(item => item.IsSubmodule && item.IsChanged);
-                    if (rev == GitRevision.UnstagedGuid)
-                    {
-                        changeCount.SubmodulesDirty = items.Count(item => item.IsSubmodule && !item.IsTracked);
-                    }
-                    else
-                    {
-                        changeCount.SubmodulesDirty = -1;
-                    }
-                }
+                changeCount.SubmodulesChanged = items.Count(item => item.IsSubmodule && item.IsChanged);
+                changeCount.SubmodulesDirty = items.Count(item => item.IsSubmodule && !item.IsTracked);
             }
         }
 

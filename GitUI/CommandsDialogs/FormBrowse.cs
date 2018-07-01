@@ -2616,8 +2616,6 @@ namespace GitUI.CommandsDialogs
                     newItems.Add(usmi);
                 }
 
-                RevisionGrid.HasSubmodules = true;
-
                 // Using AddRange is critical: if you used Add to add menu items one at a
                 // time, performance would be extremely slow with many submodules (> 100).
                 toolStripButtonLevelUp.DropDownItems.AddRange(newItems.ToArray());
