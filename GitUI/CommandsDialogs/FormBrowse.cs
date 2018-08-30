@@ -2005,10 +2005,10 @@ namespace GitUI.CommandsDialogs
             GitBash = 0,
             GitGui = 1,
             GitGitK = 2,
-            FocusRevisionGrid = 3,
-            FocusCommitInfo = 4,
-            FocusFileTree = 5,
-            FocusDiff = 6,
+            FocusLeftOfRevisionGridAndCommitInfo = 3,
+            FocusRightOfRevisionGridAndCommitInfo = 4,
+            FocusDiffList = 5,
+            FocusFileTree = 6,
             Commit = 7,
             AddNotes = 8,
             FindFileInSelectedCommit = 9,
@@ -2028,6 +2028,9 @@ namespace GitUI.CommandsDialogs
             EditFile = 22,
             OpenAsTempFile = 23,
             OpenAsTempFileWith = 24,
+            FocusBranchTree = 25,
+            FocusGitConsole = 26,
+            FocusRevisionContents = 27
         }
 
         internal Keys GetShortcutKeys(Command cmd)
@@ -2070,10 +2073,13 @@ namespace GitUI.CommandsDialogs
                 case Command.GitBash: Module.RunBash(); break;
                 case Command.GitGui: Module.RunGui(); break;
                 case Command.GitGitK: Module.RunGitK(); break;
-                case Command.FocusRevisionGrid: RevisionGrid.Focus(); break;
-                case Command.FocusCommitInfo: CommitInfoTabControl.SelectedTab = CommitInfoTabPage; break;
-                case Command.FocusFileTree: CommitInfoTabControl.SelectedTab = TreeTabPage; fileTree.Focus(); break;
-                case Command.FocusDiff: CommitInfoTabControl.SelectedTab = DiffTabPage; revisionDiff.Focus(); break;
+                case Command.FocusBranchTree: FocusBranchTree(); break;
+                case Command.FocusLeftOfRevisionGridAndCommitInfo: FocusRevisionGridOrCommitInfo(revisionGrid: AppSettings.CommitInfoPosition != CommitInfoPosition.LeftwardFromList); break;
+                case Command.FocusRightOfRevisionGridAndCommitInfo: FocusRevisionGridOrCommitInfo(revisionGrid: AppSettings.CommitInfoPosition == CommitInfoPosition.LeftwardFromList); break;
+                case Command.FocusDiffList: CommitInfoTabControl.SelectedTab = DiffTabPage; revisionDiff.Focus(focusContents: false); break;
+                case Command.FocusFileTree: CommitInfoTabControl.SelectedTab = TreeTabPage; fileTree.Focus(focusContents: false); break;
+                case Command.FocusGitConsole: FocusGitConsole(); break;
+                case Command.FocusRevisionContents: FocusRevisionContents(); break;
                 case Command.FocusFilter: FocusFilter(); break;
                 case Command.Commit: CommitToolStripMenuItemClick(null, null); break;
                 case Command.AddNotes: AddNotes(); break;
@@ -2095,6 +2101,54 @@ namespace GitUI.CommandsDialogs
             }
 
             return true;
+
+            void FocusBranchTree()
+            {
+                if (!MainSplitContainer.Panel1Collapsed)
+                {
+                    repoObjectsTree.Focus();
+                }
+            }
+
+            void FocusRevisionGridOrCommitInfo(bool revisionGrid)
+            {
+                if (revisionGrid)
+                {
+                    RevisionGrid.Focus();
+                }
+                else
+                {
+                    if (AppSettings.CommitInfoPosition == CommitInfoPosition.BelowList)
+                    {
+                        CommitInfoTabControl.SelectedTab = CommitInfoTabPage;
+                    }
+
+                    RevisionInfo.Focus();
+                }
+            }
+
+            void FocusGitConsole()
+            {
+                FillTerminalTab();
+                var tabPageCaption = _consoleTabCaption.Text;
+                if (CommitInfoTabControl.TabPages.ContainsKey(tabPageCaption))
+                {
+                    CommitInfoTabControl.SelectedTab = CommitInfoTabControl.TabPages[tabPageCaption];
+                }
+            }
+
+            void FocusRevisionContents()
+            {
+                if (fileTree.Visible)
+                {
+                    fileTree.Focus(focusContents: true);
+                }
+                else
+                {
+                    CommitInfoTabControl.SelectedTab = DiffTabPage;
+                    revisionDiff.Focus(focusContents: true);
+                }
+            }
 
             void OpenWithDifftool()
             {

@@ -885,5 +885,17 @@ namespace GitUI.CommandsDialogs
                 frm.ShowDialog(this);
             }
         }
+
+        public void Focus(bool focusContents)
+        {
+            if (focusContents)
+            {
+                DiffText.Focus();
+            }
+            else
+            {
+                DiffFiles.Focus();
+            }
+        }
     }
 }

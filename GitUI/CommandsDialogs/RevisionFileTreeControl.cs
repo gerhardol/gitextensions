@@ -770,5 +770,17 @@ See the changes in the commit form.");
                 tvGitTree.SelectedNode = e.Node;
             }
         }
+
+        public void Focus(bool focusContents)
+        {
+            if (focusContents)
+            {
+                FileText.Focus();
+            }
+            else
+            {
+                tvGitTree.Focus();
+            }
+        }
     }
 }
