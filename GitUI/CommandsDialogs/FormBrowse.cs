@@ -2403,6 +2403,7 @@ namespace GitUI.CommandsDialogs
             }
         }
 
+        private readonly Stopwatch _sw = new Stopwatch();
 
         private void InitiateSubmodulesUpdate()
         {
@@ -2411,6 +2412,7 @@ namespace GitUI.CommandsDialogs
                 return;
             }
 
+            _sw.Restart();
 
             _submoduleStatusProvider.UpdateSubmodulesList(
                 Module.WorkingDir, _noBranchTitle.Text,
@@ -2421,6 +2423,8 @@ namespace GitUI.CommandsDialogs
                 },
                 PopulateToolbarAsync);
 
+            _sw.Stop();
+            Debug.WriteLine($"Submodules updated in {_sw.Elapsed}");
         }
 
         private async Task PopulateToolbarAsync(SubmoduleInfoResult result, CancellationToken cancelToken)
