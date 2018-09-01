@@ -2403,13 +2403,20 @@ namespace GitUI.CommandsDialogs
 
         private DateTime _previousSubmoduleUpdateTime;
 
-        private void LoadSubmodulesIntoDropDownMenu()
+        private bool ShouldUpdateSubmodules()
         {
             TimeSpan elapsed = DateTime.Now - _previousSubmoduleUpdateTime;
-            if (elapsed.TotalSeconds > 15)
+            return elapsed.TotalSeconds > 15;
+        }
+
+        private void LoadSubmodulesIntoDropDownMenu()
+        {
+            if (!ShouldUpdateSubmodules())
             {
-                UpdateSubmodulesList();
+                return;
             }
+
+            UpdateSubmodulesList();
         }
 
         /// <summary>Holds submodule information that is gathered asynchronously.</summary>
@@ -2464,6 +2471,11 @@ namespace GitUI.CommandsDialogs
 
         private void UpdateSubmodulesList()
         {
+            if (!ShouldUpdateSubmodules())
+            {
+                return;
+            }
+
             _previousSubmoduleUpdateTime = DateTime.Now;
 
             // Cancel any previous async activities:
