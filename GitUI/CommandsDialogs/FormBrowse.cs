@@ -101,6 +101,9 @@ namespace GitUI.CommandsDialogs
         private ToolStripItem _warning;
         private bool _startWithDashboard;
 
+        private bool _submoduleStatusUpdateNeeded = true;
+        private bool _stashCountUpdateNeeded = true;
+
         [Flags]
         private enum UpdateTargets
         {
@@ -397,6 +400,7 @@ namespace GitUI.CommandsDialogs
 
             RevisionGrid.IndexWatcher.Changed += (_, args) =>
             {
+                _stashCountUpdateNeeded = true;
                 bool indexChanged = args.IsIndexChanged;
                 this.InvokeAsync(
                         () =>
@@ -471,6 +475,8 @@ namespace GitUI.CommandsDialogs
 
         private void UICommands_PostRepositoryChanged(object sender, GitUIEventArgs e)
         {
+            _submoduleStatusUpdateNeeded = true;
+            _stashCountUpdateNeeded = true;
             this.InvokeAsync(RefreshRevisions).FileAndForget();
         }
 
@@ -839,8 +845,13 @@ namespace GitUI.CommandsDialogs
         private void OnActivate()
         {
             CheckForMergeConflicts();
-            UpdateStashCount();
             InitiateSubmodulesUpdate();
+
+            if (_stashCountUpdateNeeded)
+            {
+                _stashCountUpdateNeeded = false;
+                UpdateStashCount();
+            }
 
             return;
 
@@ -1245,6 +1256,8 @@ namespace GitUI.CommandsDialogs
         private void RefreshToolStripMenuItemClick(object sender, EventArgs e)
         {
             RefreshRevisions();
+            _submoduleStatusUpdateNeeded = true;
+            _stashCountUpdateNeeded = true;
         }
 
         private void RefreshDashboardToolStripMenuItemClick(object sender, EventArgs e)
@@ -2403,17 +2416,14 @@ namespace GitUI.CommandsDialogs
             }
         }
 
-        private readonly Stopwatch _sw = new Stopwatch();
-
         private void InitiateSubmodulesUpdate()
         {
-            if (!_submoduleStatusProvider.ShouldUpdateSubmodules())
+            if (!_submoduleStatusUpdateNeeded)
             {
                 return;
             }
 
-            _sw.Restart();
-
+            _submoduleStatusUpdateNeeded = false;
             _submoduleStatusProvider.UpdateSubmodulesList(
                 Module.WorkingDir, _noBranchTitle.Text,
                 () =>
@@ -2422,9 +2432,6 @@ namespace GitUI.CommandsDialogs
                     toolStripButtonLevelUp.DropDownItems.Add(_loading.Text);
                 },
                 PopulateToolbarAsync);
-
-            _sw.Stop();
-            Debug.WriteLine($"Submodules updated in {_sw.Elapsed}");
         }
 
         private async Task PopulateToolbarAsync(SubmoduleInfoResult result, CancellationToken cancelToken)
