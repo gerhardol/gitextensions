@@ -91,12 +91,16 @@ namespace GitCommands
                     }
                 };
 
-                _logOperation = CommandLog.LogProcessStart(fileName, arguments);
-
                 _process.Exited += OnProcessExit;
-
                 _process.Start();
 
+                // From https://stackoverflow.com/a/47656845/2338036:
+                // In order to access the exit time information, the Process class needs to have an open Handle for the processa.
+                // Whilst e.g. WaitForExit will temporarily create a handle, unfortunately it closes that handle before returning.
+                // We can force the Process class to permanently open a handle to the process by accessing its Handle or SafeHandle properties.
+                var unused = _process.SafeHandle;
+
+                _logOperation = CommandLog.LogProcessStart(fileName, arguments);
                 _logOperation.SetProcessId(_process.Id);
             }
 
