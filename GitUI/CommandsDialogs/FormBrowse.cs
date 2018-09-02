@@ -255,6 +255,14 @@ namespace GitUI.CommandsDialogs
                             }
                         }
                     }
+
+                    if (_submoduleStatusProvider.CheckSubmoduleList(status))
+                    {
+                        // Force an update
+                        _submoduleStatusUpdateNeeded = true;
+
+                        // Note: if CheckSubmoduleList() is more finegrained, this could call InitiateSubmodulesUpdate() directly
+                    }
                 };
 
                 // TODO: Replace with a status page?
