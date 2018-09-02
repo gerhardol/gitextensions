@@ -91,7 +91,8 @@ namespace GitUI.CommandsDialogs
             DeleteSelectedFiles = 0,
             ShowHistory = 1,
             Blame = 2,
-            OpenWithDifftool = 3
+            OpenWithDifftool = 3,
+            EditFile = 4
         }
 
         public bool ExecuteCommand(Command cmd)
@@ -112,6 +113,7 @@ namespace GitUI.CommandsDialogs
                 case Command.ShowHistory: fileHistoryDiffToolstripMenuItem.PerformClick(); break;
                 case Command.Blame: blameToolStripMenuItem.PerformClick(); break;
                 case Command.OpenWithDifftool: firstToSelectedToolStripMenuItem.PerformClick(); break;
+                case Command.EditFile: diffEditFileToolStripMenuItem.PerformClick(); break;
                 default: return base.ExecuteCommand(cmd);
             }
 
@@ -125,6 +127,7 @@ namespace GitUI.CommandsDialogs
             fileHistoryDiffToolstripMenuItem.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Command.ShowHistory);
             blameToolStripMenuItem.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Command.Blame);
             firstToSelectedToolStripMenuItem.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Command.OpenWithDifftool);
+            diffEditFileToolStripMenuItem.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Command.EditFile);
             DiffText.ReloadHotkeys();
         }
 
@@ -410,7 +413,7 @@ namespace GitUI.CommandsDialogs
         private void diffShowInFileTreeToolStripMenuItem_Click(object sender, EventArgs e)
         {
             // switch to view (and fills the first level of file tree data model if not already done)
-            (FindForm() as FormBrowse)?.ExecuteCommand(FormBrowse.Commands.FocusFileTree);
+            (FindForm() as FormBrowse)?.ExecuteCommand(FormBrowse.Command.FocusFileTree);
             _revisionFileTree.ExpandToFile(DiffFiles.SelectedItems.First().Name);
         }
 
@@ -880,6 +883,18 @@ namespace GitUI.CommandsDialogs
             using (var frm = new FormEdit(UICommands, summary))
             {
                 frm.ShowDialog(this);
+            }
+        }
+
+        public void Focus(bool focusContents)
+        {
+            if (focusContents)
+            {
+                DiffText.Focus();
+            }
+            else
+            {
+                DiffFiles.Focus();
             }
         }
     }
