@@ -1263,9 +1263,9 @@ namespace GitUI.CommandsDialogs
 
         private void RefreshToolStripMenuItemClick(object sender, EventArgs e)
         {
-            RefreshRevisions();
             _submoduleStatusUpdateNeeded = true;
             _stashCountUpdateNeeded = true;
+            RefreshRevisions();
         }
 
         private void RefreshDashboardToolStripMenuItemClick(object sender, EventArgs e)
@@ -1318,6 +1318,7 @@ namespace GitUI.CommandsDialogs
 
         private void StashToolStripMenuItemClick(object sender, EventArgs e)
         {
+            _stashCountUpdateNeeded = true;
             UICommands.StartStashDialog(this);
         }
 
@@ -1539,6 +1540,7 @@ namespace GitUI.CommandsDialogs
 
         private void ManageSubmodulesToolStripMenuItemClick(object sender, EventArgs e)
         {
+            _submoduleStatusUpdateNeeded = true;
             UICommands.StartSubmodulesDialog(this);
         }
 
@@ -1555,36 +1557,43 @@ namespace GitUI.CommandsDialogs
 
         private void UpdateAllSubmodulesToolStripMenuItemClick(object sender, EventArgs e)
         {
+            _submoduleStatusUpdateNeeded = true;
             UICommands.StartUpdateSubmodulesDialog(this);
         }
 
         private void SynchronizeAllSubmodulesToolStripMenuItemClick(object sender, EventArgs e)
         {
+            _submoduleStatusUpdateNeeded = true;
             UICommands.StartSyncSubmodulesDialog(this);
         }
 
         private void ToolStripSplitStashButtonClick(object sender, EventArgs e)
         {
+            _stashCountUpdateNeeded = true;
             UICommands.StartStashDialog(this);
         }
 
         private void StashChangesToolStripMenuItemClick(object sender, EventArgs e)
         {
+            _stashCountUpdateNeeded = true;
             UICommands.StashSave(this, AppSettings.IncludeUntrackedFilesInManualStash);
         }
 
         private void StashPopToolStripMenuItemClick(object sender, EventArgs e)
         {
+            _stashCountUpdateNeeded = true;
             UICommands.StashPop(this);
         }
 
         private void ManageStashesToolStripMenuItemClick(object sender, EventArgs e)
         {
+            _stashCountUpdateNeeded = true;
             UICommands.StartStashDialog(this);
         }
 
         private void CreateStashToolStripMenuItemClick(object sender, EventArgs e)
         {
+            _stashCountUpdateNeeded = true;
             UICommands.StartStashDialog(this, false);
         }
 
