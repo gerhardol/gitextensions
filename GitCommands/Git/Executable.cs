@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Security.Permissions;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using GitCommands.Logging;
 using GitUIPluginInterfaces;
@@ -55,11 +54,11 @@ namespace GitCommands
             // TODO should this use TaskCreationOptions.RunContinuationsAsynchronously
             private readonly TaskCompletionSource<int?> _exitTaskCompletionSource = new TaskCompletionSource<int?>();
 
+            private readonly object _syncRoot = new object();
             private readonly Process _process;
             private readonly ProcessOperation _logOperation;
             private readonly bool _redirectInput;
             private readonly bool _redirectOutput;
-
             private int _disposed;
 
             /// <inheritdoc />
@@ -108,9 +107,12 @@ namespace GitCommands
             {
                 // The Exited event can be raised after the process is disposed, however
                 // if the Process is disposed then reading ExitCode will throw.
-                if (_disposed == 0)
+                lock (_syncRoot)
                 {
-                    ExitCode = _process.ExitCode;
+                    if (_disposed == 0)
+                    {
+                        ExitCode = _process.ExitCode;
+                    }
                 }
 
                 _logOperation.LogProcessEnd(ExitCode);
@@ -181,15 +183,18 @@ namespace GitCommands
             /// <inheritdoc />
             public void Dispose()
             {
-                if (Interlocked.CompareExchange(ref _disposed, 1, 0) != 0)
+                lock (_syncRoot)
                 {
-                    return;
+                    if (_disposed == 0)
+                    {
+                        _disposed = 1;
+                        return;
+                    }
                 }
-
-                _process.Exited -= OnProcessExit;
 
                 _exitTaskCompletionSource.TrySetResult(null);
 
+                _process.Exited -= OnProcessExit;
                 _process.Dispose();
 
                 _logOperation.NotifyDisposed();
