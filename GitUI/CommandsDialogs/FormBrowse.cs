@@ -2437,6 +2437,7 @@ namespace GitUI.CommandsDialogs
         private void toolStripButtonLevelUp_DropDownOpening(object sender, EventArgs e)
         {
             InitiateSubmodulesUpdate();
+            PopulateToolbarAsync(_submoduleStatusProvider.SubmoduleInfoResult);
             PreventToolStripSplitButtonClosing(sender as ToolStripSplitButton);
         }
 
@@ -2506,14 +2507,20 @@ namespace GitUI.CommandsDialogs
                     RemoveSubmoduleButtons();
                     toolStripButtonLevelUp.DropDownItems.Add(_loading.Text);
                 },
-                PopulateToolbarAsync);
+                PopulateToolbar0Async);
         }
 
-        private async Task PopulateToolbarAsync(SubmoduleInfoResult result, CancellationToken cancelToken)
+        private async Task PopulateToolbar0Async(SubmoduleInfoResult result, CancellationToken cancelToken)
         {
             // Second task: Populate toolbar menu on UI thread.  Note further tasks are created by
             // CreateSubmoduleMenuItem to update images with submodule status.
             await this.SwitchToMainThreadAsync(cancelToken);
+        }
+
+        private void PopulateToolbarAsync(SubmoduleInfoResult result)
+        {
+            // Second task: Populate toolbar menu on UI thread.  Note further tasks are created by
+            // CreateSubmoduleMenuItem to update images with submodule status.
 
             RemoveSubmoduleButtons();
 
