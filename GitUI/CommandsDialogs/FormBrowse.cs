@@ -255,6 +255,7 @@ namespace GitUI.CommandsDialogs
                             }
                         }
                     }
+
                     if (_submoduleStatusProvider.HasSubmodulesStatusChanged(status))
                     {
                         // Force an update
