@@ -256,13 +256,8 @@ namespace GitUI.CommandsDialogs
                         }
                     }
 
-                    if (_submoduleStatusProvider.CheckSubmoduleList(status))
-                    {
-                        // Force an update
-                        _submoduleStatusUpdateNeeded = true;
-
-                        // Note: if CheckSubmoduleList() is more finegrained, this could call InitiateSubmodulesUpdate() directly
-                    }
+                    // Note: if CheckSubmoduleList() is more fine grained, this could call InitiateSubmodulesUpdate() directly
+                    _submoduleStatusUpdateNeeded = _submoduleStatusProvider.HasSubmodulesStatusChanged(status);
                 };
 
                 // TODO: Replace with a status page?
@@ -2441,7 +2436,7 @@ namespace GitUI.CommandsDialogs
             }
 
             _submoduleStatusUpdateNeeded = false;
-            _submoduleStatusProvider.UpdateSubmodulesList(
+            _submoduleStatusProvider.UpdateSubmodulesStatus(
                 Module.WorkingDir, _noBranchTitle.Text,
                 () =>
                 {
@@ -2468,7 +2463,7 @@ namespace GitUI.CommandsDialogs
                 newItems.Add(new ToolStripMenuItem(_noSubmodulesPresent.Text));
             }
 
-            if (result.Superproject != null)
+            if (result.SuperProject != null)
             {
                 newItems.Add(new ToolStripSeparator());
                 if (result.TopProject != null)
@@ -2476,7 +2471,7 @@ namespace GitUI.CommandsDialogs
                     newItems.Add(CreateSubmoduleMenuItem(result.TopProject, _topProjectModuleFormat.Text));
                 }
 
-                newItems.Add(CreateSubmoduleMenuItem(result.Superproject, _superprojectModuleFormat.Text));
+                newItems.Add(CreateSubmoduleMenuItem(result.SuperProject, _superprojectModuleFormat.Text));
                 newItems.AddRange(result.SuperSubmodules.Select(submodule => CreateSubmoduleMenuItem(submodule)));
             }
 
