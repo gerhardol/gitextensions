@@ -40,6 +40,8 @@ namespace GitCommands.Submodules
             return allChangedFiles.Any(i => i.IsSubmodule && (i.IsChanged || !i.IsTracked));
         }
 
+        public SubmoduleInfoResult Result { get; private set; }
+
         public void UpdateSubmodulesStatus(string workingDirectory,
             string noBranchText,
             Action onUpdateBegin,
@@ -58,13 +60,14 @@ namespace GitCommands.Submodules
 
                 // Don't access Module directly because it's not thread-safe.  Use a thread-local version:
                 var threadModule = new GitModule(workingDirectory);
-                var result = new SubmoduleInfoResult();
+                SubmoduleInfoResult result = new SubmoduleInfoResult();
 
                 // Add all submodules inside the current repository:
                 GetRepositorySubmodulesStatus(result, threadModule, cancelToken, noBranchText);
 
                 GetSuperProjectRepositorySubmodulesStatus(result, threadModule, cancelToken, noBranchText);
 
+                Result = result;
                 await onUpdateCompleteAsync(result, cancelToken);
             });
         }

@@ -2384,6 +2384,9 @@ namespace GitUI.CommandsDialogs
         private void toolStripButtonLevelUp_DropDownOpening(object sender, EventArgs e)
         {
             InitiateSubmodulesUpdate();
+
+            // TBD This should be async and present "loading.." before Result is available
+            PopulateToolbarAsync(_submoduleStatusProvider.Result);
             PreventToolStripSplitButtonClosing(sender as ToolStripSplitButton);
         }
 
@@ -2446,6 +2449,8 @@ namespace GitUI.CommandsDialogs
             }
 
             _submoduleStatusUpdateNeeded = false;
+
+            // TBD should more or less work as it does, create the result and leave submodule status to .FileAndForget to not block initial menu dropdown
             _submoduleStatusProvider.UpdateSubmodulesStatus(
                 Module.WorkingDir, _noBranchTitle.Text,
                 () =>
@@ -2453,14 +2458,21 @@ namespace GitUI.CommandsDialogs
                     RemoveSubmoduleButtons();
                     toolStripButtonLevelUp.DropDownItems.Add(_loading.Text);
                 },
-                PopulateToolbarAsync);
+                PopulateToolbar0Async);
         }
 
-        private async Task PopulateToolbarAsync(SubmoduleInfoResult result, CancellationToken cancelToken)
+        private async Task PopulateToolbar0Async(SubmoduleInfoResult result, CancellationToken cancelToken)
         {
             // Second task: Populate toolbar menu on UI thread.  Note further tasks are created by
             // CreateSubmoduleMenuItem to update images with submodule status.
             await this.SwitchToMainThreadAsync(cancelToken);
+        }
+
+        private void PopulateToolbarAsync(SubmoduleInfoResult result)
+        {
+            // Second task: Populate toolbar menu on UI thread.  Note further tasks are created by
+            // CreateSubmoduleMenuItem to update images with submodule status.
+            ////await this.SwitchToMainThreadAsync(cancelToken);
 
             RemoveSubmoduleButtons();
 
