@@ -554,7 +554,7 @@ namespace GitUI.UserControls.RevisionGrid.Columns
                         {
                             if (!node.Revision.IsArtificial)
                             {
-                                laneInfoText.AppendLine(node.Revision.Guid);
+                                laneInfoText.AppendLine(CommitIdColumnProvider.Format(node.Revision.Guid));
 
                                 var references = new References(node);
 
@@ -565,6 +565,14 @@ namespace GitUI.UserControls.RevisionGrid.Columns
                                     {
                                         laneInfoText.AppendFormat(" (merged with {0})", references.MergedWith);
                                     }
+                                }
+
+                                laneInfoText.Append(Format("\nContained in branches: {0}\n", references.Branches));
+                                laneInfoText.Append(Format("\nContained in tags: {0}\n", references.Tags));
+
+                                string Format<T>(string format, IEnumerable<T> list)
+                                {
+                                    return list.Any() ? string.Format(format, string.Join(", ", list)) : string.Empty;
                                 }
 
                                 // laneInfoText.Append(references.DebugInfo);
@@ -592,9 +600,60 @@ namespace GitUI.UserControls.RevisionGrid.Columns
             }
         }
 
+        private class Reference
+        {
+            internal readonly string LocalName;
+            internal bool IsLocal { get; private set; } = false;
+            internal List<string> Remotes { get; } = new List<string>();
+
+            internal Reference(string localName)
+            {
+                LocalName = localName;
+            }
+
+            internal void Add([NotNull] IGitRef gitReference)
+            {
+                if (gitReference.IsHead)
+                {
+                    IsLocal = true;
+                }
+                else if (gitReference.IsRemote)
+                {
+                    Remotes.Add(gitReference.Remote);
+                }
+            }
+
+            public override string ToString()
+            {
+                var list = new StringBuilder();
+
+                if (Remotes.Any())
+                {
+                    if (IsLocal)
+                    {
+                        list.Append("[");
+                    }
+
+                    list.Append(Remotes.Join("|")).Append("/");
+
+                    if (IsLocal)
+                    {
+                        list.Append("]");
+                    }
+                }
+
+                list.Append(LocalName);
+
+                return list.ToString();
+            }
+        }
+
         private class References
         {
             private HashSet<Node> _visitedNodes = new HashSet<Node>();
+            private Dictionary<string, Reference> _referenceByName = new Dictionary<string, Reference>();
+            internal List<Reference> Tags { get; } = new List<Reference>();
+            internal List<Reference> Branches { get; } = new List<Reference>();
             internal string CommittedTo { get; private set; }
             internal string MergedWith { get; private set; }
             internal StringBuilder DebugInfo = new StringBuilder();
@@ -604,15 +663,12 @@ namespace GitUI.UserControls.RevisionGrid.Columns
                 AddReferencesOf(node, previousDescJunction: null);
             }
 
-            private bool AddReferencesOf([NotNull] Node node, [CanBeNull] Junction previousDescJunction)
+            private void AddReferencesOf([NotNull] Node node, [CanBeNull] Junction previousDescJunction)
             {
                 if (_visitedNodes.Add(node))
                 {
-                    if (CheckForMerge(node, previousDescJunction) || FindBranch(node, node, previousDescJunction))
-                    {
-                        return true;
-                    }
-
+                    CheckForMerge(node, previousDescJunction);
+                    node.Revision.Refs.ForEach(reference => Add(reference, node, previousDescJunction));
                     foreach (var descJunction in node.Descendants)
                     {
                         // iterate the inner nodes (i.e. excluding the youngest) beginning with the oldest
@@ -622,10 +678,7 @@ namespace GitUI.UserControls.RevisionGrid.Columns
                             Node innerNode = descJunction[nodeIndex];
                             if (nodeFound)
                             {
-                                if (FindBranch(innerNode, node, descJunction))
-                                {
-                                    return true;
-                                }
+                                innerNode.Revision.Refs.ForEach(reference => Add(reference, node, descJunction));
                             }
                             else
                             {
@@ -634,38 +687,43 @@ namespace GitUI.UserControls.RevisionGrid.Columns
                         }
 
                         // handle the youngest and its descendants
-                        if (AddReferencesOf(descJunction.Youngest, descJunction))
-                        {
-                            return true;
-                        }
+                        AddReferencesOf(descJunction.Youngest, descJunction);
                     }
                 }
-
-                return false;
             }
 
-            private bool FindBranch([NotNull] Node descNode, [NotNull] Node node, [CanBeNull] Junction descJunction)
+            private void Add([NotNull] IGitRef gitReference, [NotNull] Node node, [CanBeNull] Junction descJunction)
             {
-                foreach (var gitReference in descNode.Revision.Refs)
+                Reference reference;
+                if (!_referenceByName.TryGetValue(gitReference.LocalName, out reference))
                 {
-                    if (gitReference.IsHead || gitReference.IsRemote)
+                    reference = new Reference(gitReference.LocalName);
+                    _referenceByName.Add(gitReference.LocalName, reference);
+                    if (gitReference.IsTag)
                     {
-                        CheckForMerge(node, descJunction);
-                        CommittedTo = CommittedTo ?? gitReference.Name;
-                        return true;
+                        Tags.Add(reference);
+                    }
+                    else if (gitReference.IsHead || gitReference.IsRemote)
+                    {
+                        Branches.Add(reference);
+                        if (CommittedTo == null)
+                        {
+                            CheckForMerge(node, descJunction);
+                            CommittedTo = CommittedTo ?? gitReference.Name;
+                        }
                     }
                     else if (gitReference.IsStash && CommittedTo == null)
                     {
                         CommittedTo = gitReference.Name;
-                        return true;
                     }
                 }
 
-                return false;
+                reference.Add(gitReference);
             }
 
             /// <summary>
             /// Checks whether the commit message is a merge message
+            /// though only if CommittedTo has not been set yet
             /// and then if its a merge message, sets CommittedTo and MergedWith.
             ///
             /// MergedWith is set if it is the current node, i.e. on the first call.
@@ -677,38 +735,39 @@ namespace GitUI.UserControls.RevisionGrid.Columns
             /// the descending junction the node is part of
             /// (used for the decision whether the node belongs the first or second branch of the merge)
             /// </param>
-            private bool CheckForMerge([NotNull] Node node, [CanBeNull] Junction descJunction)
+            private void CheckForMerge([NotNull] Node node, [CanBeNull] Junction descJunction)
             {
-                bool isTheFirstBranch = descJunction == null || node.Ancestors.Count == 0 || node.Ancestors.First() == descJunction;
-                string mergedInto;
-                string mergedWith;
-                (mergedInto, mergedWith) = ParseMergeMessage(node, appendPullRequest: isTheFirstBranch);
-
-                if (mergedInto != null)
+                if (CommittedTo == null)
                 {
-                    CommittedTo = isTheFirstBranch ? mergedInto : mergedWith;
-                }
+                    bool isTheFirstBranch = descJunction == null || node.Ancestors.Count == 0 || node.Ancestors.First() == descJunction;
+                    string mergedInto;
+                    string mergedWith;
+                    (mergedInto, mergedWith) = ParseMergeMessage(node, appendPullRequest: isTheFirstBranch);
 
-                if (MergedWith == null)
-                {
-                    MergedWith = mergedWith ?? string.Empty;
-                }
-
-                if (CommittedTo != null)
-                {
-                    DebugInfo.AppendFormat("  node: {0}, branch: {1}, descJunction {2} isTheFirstBranch {3}\n",
-                        node.Revision.Guid.Substring(0, 8), CommittedTo, descJunction?.ToString() ?? "(null)", isTheFirstBranch);
-                    foreach (var ancJunction in node.Ancestors)
+                    if (mergedInto != null)
                     {
-                        DebugInfo.AppendFormat("  {2}anc {0} -> {1} {3}\n",
-                            ancJunction.Oldest.Revision.Guid.Substring(0, 8),
-                            ancJunction.Youngest.Revision.Guid.Substring(0, 8),
-                            ancJunction == descJunction ? ">\x200A" : "   ",
-                            ancJunction == descJunction ? CommittedTo + " " + MergedWith : "");
+                        CommittedTo = isTheFirstBranch ? mergedInto : mergedWith;
+                    }
+
+                    if (MergedWith == null)
+                    {
+                        MergedWith = mergedWith ?? string.Empty;
+                    }
+
+                    if (CommittedTo != null)
+                    {
+                        DebugInfo.AppendFormat("  node: {0}, branch: {1}, descJunction {2} isTheFirstBranch {3}\n",
+                            node.Revision.Guid.Substring(0, 8), CommittedTo, descJunction?.ToString() ?? "(null)", isTheFirstBranch);
+                        foreach (var ancJunction in node.Ancestors)
+                        {
+                            DebugInfo.AppendFormat("  {2}anc {0} -> {1} {3}\n",
+                                ancJunction.Oldest.Revision.Guid.Substring(0, 8),
+                                ancJunction.Youngest.Revision.Guid.Substring(0, 8),
+                                ancJunction == descJunction ? ">\x200A" : "   ",
+                                ancJunction == descJunction ? CommittedTo + " " + MergedWith : "");
+                        }
                     }
                 }
-
-                return CommittedTo != null;
             }
 
             private static readonly Regex _merge = new Regex("(?i)^merged? (pull request (.*) from )?(.*branch )?'?([^ ']+)'?( into (.*))?\\.?$");
