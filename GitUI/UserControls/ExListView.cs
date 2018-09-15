@@ -282,6 +282,9 @@ namespace GitUI.UserControls
             }
         }
 
+        public ListViewGroupHitInfo GetGroupHitInfo(Point location) =>
+            GetGroupHitInfo(new NativeMethods.POINT(location.X, location.Y));
+
         private ListViewGroupHitInfo GetGroupHitInfo(Message msg)
         {
             var point = NativeMethods.LParamToPOINT((uint)msg.LParam);
