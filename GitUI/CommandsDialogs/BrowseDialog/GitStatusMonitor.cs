@@ -508,7 +508,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
     public sealed class IgnoredFilesCache
     {
         private readonly IGitModule _gitModule;
-        private readonly ConcurrentDictionary<string, object> _ignoredCandidates = new ConcurrentDictionary<string, object>();
+        private readonly ConcurrentDictionary<string, object> _ignoredCandidateDirs = new ConcurrentDictionary<string, object>();
         private readonly ConcurrentDictionary<string, object> _ignoredFiles = new ConcurrentDictionary<string, object>();
         private readonly ConcurrentDictionary<string, object> _trackedSeen = new ConcurrentDictionary<string, object>();
 
@@ -521,9 +521,9 @@ namespace GitUI.CommandsDialogs.BrowseDialog
         {
             // TODO: validate input parameters
 
-            if (!_trackedSeen.ContainsKey(fileName))
+            if (!_trackedSeen.ContainsKey(fileName) && !fileName.IsNullOrEmpty())
             {
-                _ignoredCandidates.TryAdd(fileName, null);
+                _ignoredCandidateDirs.TryAdd(Path.GetDirectoryName(fileName), null);
             }
         }
 
@@ -550,13 +550,13 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                     _trackedSeen.TryAdd(file.Name, null);
                 }
 
-                _ignoredCandidates.TryRemove(file.Name, out var _);
+                _ignoredCandidateDirs.TryRemove(Path.GetDirectoryName(file.Name), out var _);
             }
         }
 
         public void VerifyIgnoredCandidates()
         {
-            var candidates = _ignoredCandidates.Keys.ToArray();
+            var candidates = _ignoredCandidateDirs.Keys.ToArray();
 
             if (candidates.Length == 0)
             {
@@ -583,7 +583,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             {
                 foreach (var file in candidates)
                 {
-                    _ignoredCandidates.TryRemove(file, out var _);
+                    _ignoredCandidateDirs.TryRemove(Path.GetDirectoryName(file), out var _);
                 }
             }
 
