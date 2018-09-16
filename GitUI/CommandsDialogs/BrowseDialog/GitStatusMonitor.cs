@@ -144,8 +144,9 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
             void WorkTreeChanged(object sender, FileSystemEventArgs e)
             {
-                if (_nextUpdateTime < Environment.TickCount + UpdateDelay)
+                if (_nextUpdateTime <= Environment.TickCount + _currentUpdateInterval)
                 {
+                    // Update sceduled already, no check needed
                     return;
                 }
 
