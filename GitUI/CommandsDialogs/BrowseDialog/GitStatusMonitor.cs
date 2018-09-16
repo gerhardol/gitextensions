@@ -49,7 +49,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
         private int _previousUpdateTime;
         private int _currentUpdateInterval = MinUpdateInterval;
         private GitStatusMonitorState _currentStatus;
-        private IgnoredFilesCache _ignoredFilesCache;
         private readonly CancellationTokenSequence _statusCancellation = new CancellationTokenSequence();
         private CancellationToken _statusCancellationToken;
 
@@ -109,8 +108,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
             Init(commandsSource);
 
-            _ignoredFilesCache = new IgnoredFilesCache(new GitModule(null));
-
             return;
 
             void WorkTreeWatcherError(object sender, ErrorEventArgs e)
@@ -150,12 +147,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                     return;
                 }
 
-                var fileName = e.FullPath.Substring(_workTreeWatcher.Path.Length).ToPosixPath();
-                if (_ignoredFilesCache.IsIgnored(fileName))
-                {
-                    return;
-                }
-
                 if (e.FullPath.StartsWith(_gitPath))
                 {
                     GitDirChanged(sender, e);
@@ -174,7 +165,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                     return;
                 }
 
-                _ignoredFilesCache.AddCandidate(fileName);
                 CalculateNextUpdateTime(UpdateDelay);
             }
 
@@ -182,7 +172,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             {
                 if (e.FullPath == _globalIgnoreFilePath)
                 {
-                    _ignoredFilesCache.ClearCachedData();
                     CalculateNextUpdateTime(UpdateDelay);
                 }
             }
@@ -271,7 +260,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                     oldCommands.PreCheckoutRevision -= GitUICommands_PreCheckout;
                     oldCommands.PostCheckoutBranch -= GitUICommands_PostCheckout;
                     oldCommands.PostCheckoutRevision -= GitUICommands_PostCheckout;
-                    oldCommands.PostEditGitIgnore -= GitUICommands_PostEditGitIgnore;
                 }
 
                 commandsSource_activate(sender as IGitUICommandsSource);
@@ -284,7 +272,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                 newCommands.PreCheckoutRevision += GitUICommands_PreCheckout;
                 newCommands.PostCheckoutBranch += GitUICommands_PostCheckout;
                 newCommands.PostCheckoutRevision += GitUICommands_PostCheckout;
-                newCommands.PostEditGitIgnore += GitUICommands_PostEditGitIgnore;
 
                 var module = newCommands.Module;
                 StartWatchingChanges(module.WorkingDir, module.WorkingDirGitDir);
@@ -298,11 +285,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             void GitUICommands_PostCheckout(object sender, GitUIPostActionEventArgs e)
             {
                 CurrentStatus = GitStatusMonitorState.Running;
-            }
-
-            void GitUICommands_PostEditGitIgnore(object sender, GitUIEventArgs e)
-            {
-                _ignoredFilesCache.ClearCachedData();
             }
         }
 
@@ -331,7 +313,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                     _submodulesPath = Path.Combine(_gitPath, "modules");
                     _currentUpdateInterval = MinUpdateInterval;
                     _previousUpdateTime = 0;
-                    _ignoredFilesCache = new IgnoredFilesCache(Module);
                     CurrentStatus = GitStatusMonitorState.Running;
                 }
                 else
@@ -404,7 +385,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
             // capture a consistent state in the main thread
             var statusCancellationToken = _statusCancellationToken;
-            var ignoredFilesCache = _ignoredFilesCache;
             IGitModule module = Module;
 
             ThreadHelper.JoinableTaskFactory.RunAsync(
@@ -461,14 +441,10 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                     return;
                 }
 
-                ignoredFilesCache.Update(changedFiles);
-
                 if (IsAboutToUpdate())
                 {
                     return;
                 }
-
-                ignoredFilesCache.VerifyIgnoredCandidates();
             }
 
             void UpdatedStatusReceived(IEnumerable<GitItemStatus> changedFiles)
@@ -502,99 +478,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
             // Enforce a minimal time between updates, to not update too frequently
             _nextUpdateTime = Math.Max(next, _previousUpdateTime + _currentUpdateInterval);
-        }
-    }
-
-    // TODO: move to GitCommands project and add tests
-    public sealed class IgnoredFilesCache
-    {
-        private readonly IGitModule _gitModule;
-        private readonly ConcurrentDictionary<string, object> _ignoredCandidateDirs = new ConcurrentDictionary<string, object>();
-        private readonly ConcurrentDictionary<string, object> _ignoredFiles = new ConcurrentDictionary<string, object>();
-        private readonly ConcurrentDictionary<string, object> _trackedSeen = new ConcurrentDictionary<string, object>();
-
-        public IgnoredFilesCache(IGitModule gitModule)
-        {
-            _gitModule = gitModule;
-        }
-
-        public void AddCandidate(string fileName)
-        {
-            // TODO: validate input parameters
-
-            if (!_trackedSeen.ContainsKey(fileName) && !fileName.IsNullOrEmpty())
-            {
-                _ignoredCandidateDirs.TryAdd(Path.GetDirectoryName(fileName), null);
-            }
-        }
-
-        public void ClearCachedData()
-        {
-            _ignoredFiles.Clear();
-            _trackedSeen.Clear();
-        }
-
-        public bool IsIgnored(string fileName)
-        {
-            // TODO: validate input parameters
-
-            return _ignoredFiles.ContainsKey(fileName);
-        }
-
-        public void Update(IEnumerable<GitItemStatus> changedFiles)
-        {
-            // TODO: validate input parameters
-            foreach (var file in changedFiles)
-            {
-                if (file.IsTracked)
-                {
-                    _trackedSeen.TryAdd(file.Name, null);
-                }
-
-                _ignoredCandidateDirs.TryRemove(Path.GetDirectoryName(file.Name), out var _);
-            }
-        }
-
-        public void VerifyIgnoredCandidates()
-        {
-            var candidates = _ignoredCandidateDirs.Keys.ToArray();
-
-            if (candidates.Length == 0)
-            {
-                return;
-            }
-
-            var ignoredFiles = GetIgnoredFiles();
-            UpdateIgnoredFiles();
-            RemoveIgnoredCandidates();
-
-            return;
-
-            IEnumerable<GitItemStatus> GetIgnoredFiles()
-            {
-                var candidatesDirs = candidates.Select(Path.GetDirectoryName).ToHashSet();
-                var dirsArg = string.Join(" ", candidatesDirs.Select(dir => dir.Quote()));
-                var cmd = GitCommandHelpers.GetAllChangedFilesCmd(false, UntrackedFilesMode.Default, noLocks: true);
-                cmd += " -- " + dirsArg;
-                var output = _gitModule.RunGitCmd(cmd);
-                return GitCommandHelpers.GetStatusChangedFilesFromString(_gitModule, output).Where(file => file.IsIgnored);
-            }
-
-            void RemoveIgnoredCandidates()
-            {
-                foreach (var file in candidates)
-                {
-                    _ignoredCandidateDirs.TryRemove(Path.GetDirectoryName(file), out var _);
-                }
-            }
-
-            void UpdateIgnoredFiles()
-            {
-                foreach (var file in ignoredFiles)
-                {
-                    _ignoredFiles.TryAdd(file.Name, null);
-                }
-            }
         }
     }
 }
