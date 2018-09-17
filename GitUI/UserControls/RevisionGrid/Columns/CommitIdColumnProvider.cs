@@ -14,6 +14,8 @@ namespace GitUI.UserControls.RevisionGrid.Columns
     {
         private readonly Dictionary<Font, int[]> _widthByLengthByFont = new Dictionary<Font, int[]>(capacity: 4);
         private readonly RevisionGridControl _grid;
+        public const int DefaultLength = 7;
+        public int Length { get; private set; } = DefaultLength;
 
         public CommitIdColumnProvider(RevisionGridControl grid)
             : base("Commit ID")
@@ -50,11 +52,14 @@ namespace GitUI.UserControls.RevisionGrid.Columns
 
                 if (i == -1 && Column.Width > widthByLength[widthByLength.Length - 1])
                 {
-                    _grid.DrawColumnText(e, revision.ObjectId.ToString(), monospaceFont, style.ForeColor, e.CellBounds, useEllipsis: false);
+                    string objectId = revision.ObjectId.ToString();
+                    Length = objectId.Length;
+                    _grid.DrawColumnText(e, objectId, monospaceFont, style.ForeColor, e.CellBounds, useEllipsis: false);
                 }
                 else if (i > 1)
                 {
-                    _grid.DrawColumnText(e, revision.ObjectId.ToShortString(i - 1), monospaceFont, style.ForeColor, e.CellBounds, useEllipsis: false);
+                    Length = i - 1;
+                    _grid.DrawColumnText(e, revision.ObjectId.ToShortString(Length), monospaceFont, style.ForeColor, e.CellBounds, useEllipsis: false);
                 }
             }
         }
