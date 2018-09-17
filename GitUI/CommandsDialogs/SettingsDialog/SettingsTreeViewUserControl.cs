@@ -152,6 +152,10 @@ namespace GitUI.CommandsDialogs.SettingsDialog
             foreach (var node in _nodesFoundByTextBox)
             {
                 HighlightNode(node, true);
+                for (var parent = node.Parent; parent != null; parent = parent.Parent)
+                {
+                    parent.Expand();
+                }
             }
 
             if (_nodesFoundByTextBox.Any())
