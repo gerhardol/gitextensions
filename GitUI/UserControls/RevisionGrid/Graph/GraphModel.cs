@@ -708,7 +708,7 @@ namespace GitUI.UserControls.RevisionGrid.Graph
         {
             for (int i = _processedNodes; i < _nodes.Count; i++)
             {
-                if (_nodes[i] != node)
+                if (i >= _nodes.Count || _nodes[i] != node)
                 {
                     continue;
                 }
