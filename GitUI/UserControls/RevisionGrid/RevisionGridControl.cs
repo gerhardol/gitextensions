@@ -489,7 +489,7 @@ namespace GitUI
 
         private void SetSelectedIndex(int index)
         {
-            if (_gridView.Rows[index].Selected)
+            if (index >= _gridView.Rows.Count || _gridView.Rows[index].Selected)
             {
                 return;
             }
