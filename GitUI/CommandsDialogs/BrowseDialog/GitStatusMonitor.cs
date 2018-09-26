@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,7 +6,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitCommands;
 using GitUIPluginInterfaces;
-using JetBrains.Annotations;
 using Microsoft.VisualStudio.Threading;
 using CancellationToken = System.Threading.CancellationToken;
 
@@ -17,9 +15,14 @@ namespace GitUI.CommandsDialogs.BrowseDialog
     {
         /// <summary>
         /// We often change several files at once.
-        /// Wait a second so they're all changed before we try to get the status.
+        /// Short delay before we try to get the status.
         /// </summary>
         private const int InteractiveUpdateDelay = 200;
+
+        /// <summary>
+        /// We often change several files at once.
+        /// Wait a second so they're all changed before we try to get the status.
+        /// </summary>
         private const int FileChangedUpdateDelay = 1000;
 
         /// <summary>
@@ -30,18 +33,16 @@ namespace GitUI.CommandsDialogs.BrowseDialog
         /// <summary>
         /// Update every 5min, just to make sure something didn't slip through the cracks.
         /// </summary>
-        private const int MaxUpdatePeriod = 5 * 60 * 1000;
+        private const int PeriodicUpdateInterval = 5 * 60 * 1000;
 
         private bool _commandIsRunning;
         private bool _statusIsUpToDate = true;
 
         private readonly FileSystemWatcher _workTreeWatcher = new FileSystemWatcher();
         private readonly FileSystemWatcher _gitDirWatcher = new FileSystemWatcher();
-        private readonly FileSystemWatcher _globalIgnoreWatcher = new FileSystemWatcher();
 
         private readonly Timer _timerRefresh;
 
-        private string _globalIgnoreFilePath;
         private string _gitPath;
         private string _submodulesPath;
 
@@ -96,17 +97,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             _gitDirWatcher.IncludeSubdirectories = true;
             _gitDirWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
 
-            // Setup a file watcher to detect changes to the global ignore file. When it
-            // changes, we'll update our status.
-            _globalIgnoreWatcher.EnableRaisingEvents = false;
-            _globalIgnoreWatcher.Changed += GlobalIgnoreChanged;
-            _globalIgnoreWatcher.Created += GlobalIgnoreChanged;
-            _globalIgnoreWatcher.Deleted += GlobalIgnoreChanged;
-            _globalIgnoreWatcher.Renamed += GlobalIgnoreChanged;
-            _globalIgnoreWatcher.Error += WorkTreeWatcherError;
-            _globalIgnoreWatcher.IncludeSubdirectories = false;
-            _globalIgnoreWatcher.NotifyFilter = NotifyFilters.LastWrite;
-
             Init(commandsSource);
 
             return;
@@ -142,9 +132,9 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
             void WorkTreeChanged(object sender, FileSystemEventArgs e)
             {
-                if (_nextUpdateTime <= Environment.TickCount + _currentUpdateInterval)
+                if (IsAboutToUpdate())
                 {
-                    // Update sceduled already, no check needed
+                    // Update scheduled already, no check needed
                     return;
                 }
 
@@ -168,19 +158,11 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
                 CalculateNextUpdateTime();
             }
-
-            void GlobalIgnoreChanged(object sender, FileSystemEventArgs e)
-            {
-                if (e.FullPath == _globalIgnoreFilePath)
-                {
-                    CalculateNextUpdateTime();
-                }
-            }
         }
 
         private bool IsAboutToUpdate()
         {
-            return _nextUpdateTime < Environment.TickCount + InteractiveUpdateDelay && _nextUpdateTime >= Environment.TickCount;
+            return _nextUpdateTime <= Environment.TickCount + _currentUpdateInterval;
         }
 
         public void Dispose()
@@ -188,7 +170,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             _statusCancellation.Dispose();
             _workTreeWatcher.Dispose();
             _gitDirWatcher.Dispose();
-            _globalIgnoreWatcher.Dispose();
             _timerRefresh.Dispose();
         }
 
@@ -205,7 +186,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                             _timerRefresh.Stop();
                             _workTreeWatcher.EnableRaisingEvents = false;
                             _gitDirWatcher.EnableRaisingEvents = false;
-                            _globalIgnoreWatcher.EnableRaisingEvents = false;
                         }
 
                         break;
@@ -215,7 +195,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                             _timerRefresh.Stop();
                             _workTreeWatcher.EnableRaisingEvents = false;
                             _gitDirWatcher.EnableRaisingEvents = false;
-                            _globalIgnoreWatcher.EnableRaisingEvents = false;
                         }
 
                         break;
@@ -225,7 +204,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                             _timerRefresh.Start();
                             _workTreeWatcher.EnableRaisingEvents = true;
                             _gitDirWatcher.EnableRaisingEvents = !_gitDirWatcher.Path.StartsWith(_workTreeWatcher.Path);
-                            _globalIgnoreWatcher.EnableRaisingEvents = !string.IsNullOrWhiteSpace(_globalIgnoreWatcher.Path);
                             CalculateNextUpdateTime(isInterActive: true);
                         }
 
@@ -303,13 +281,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                 {
                     _workTreeWatcher.Path = workTreePath;
                     _gitDirWatcher.Path = gitDirPath;
-                    _globalIgnoreFilePath = DetermineGlobalIgnoreFilePath();
-                    string globalIgnoreDirectory = Path.GetDirectoryName(_globalIgnoreFilePath);
-                    if (Directory.Exists(globalIgnoreDirectory))
-                    {
-                        _globalIgnoreWatcher.Path = globalIgnoreDirectory;
-                    }
-
                     _gitPath = Path.GetDirectoryName(gitDirPath);
                     _submodulesPath = Path.Combine(_gitPath, "modules");
                     _currentUpdateInterval = MinUpdateInterval;
@@ -327,28 +298,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             }
 
             return;
-
-            string DetermineGlobalIgnoreFilePath()
-            {
-                // According to https://git-scm.com/docs/git-config, the following are checked in order:
-                //  - core.excludesFile configuration,
-                //  - $XDG_CONFIG_HOME/git/ignore, if XDG_CONFIG_HOME is set and not empty,
-                //  - $HOME/.config/git/ignore.
-
-                string globalExcludeFile = Module.GetEffectiveSetting("core.excludesFile");
-                if (!string.IsNullOrWhiteSpace(globalExcludeFile))
-                {
-                    return Path.GetFullPath(globalExcludeFile);
-                }
-
-                string xdgConfigHome = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME");
-                if (!string.IsNullOrWhiteSpace(xdgConfigHome))
-                {
-                    return Path.GetFullPath(Path.Combine(xdgConfigHome, "git/ignore"));
-                }
-
-                return Path.GetFullPath(Path.Combine(EnvironmentConfiguration.GetHomeDir(), ".config/git/ignore"));
-            }
         }
 
         private void Update()
@@ -397,14 +346,13 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(statusCancellationToken);
 
                         UpdatedStatusReceived(changedFiles);
-                        UpdateIgnoredCacheAsync(changedFiles).FileAndForget();
                     }
                     finally
                     {
                         _commandIsRunning = false;
 
                         // Schedule update every 5 min, even if we don't know that anything changed
-                        CalculateNextUpdateTime(MaxUpdatePeriod);
+                        CalculateNextUpdateTime(PeriodicUpdateInterval);
                     }
                 })
                 .FileAndForget();
@@ -431,20 +379,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                     CurrentStatus = GitStatusMonitorState.Stopped;
 
                     throw;
-                }
-            }
-
-            async Task UpdateIgnoredCacheAsync(IEnumerable<GitItemStatus> changedFiles)
-            {
-                await TaskScheduler.Default;
-                if (statusCancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                if (IsAboutToUpdate())
-                {
-                    return;
                 }
             }
 
