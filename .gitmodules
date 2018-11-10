@@ -13,3 +13,30 @@
 [submodule "Externals/ICSharpCode.TextEditor"]
 	path = Externals/ICSharpCode.TextEditor
 	url = https://github.com/gitextensions/ICSharpCode.TextEditor.git
+[submodule "subtest/s001"]
+	path = subtest/s001
+	url = ../gitextensions
+[submodule "subtest/s002"]
+	path = subtest/s002
+	url = ../gitextensions
+[submodule "subtest/s003"]
+	path = subtest/s003
+	url = ../gitextensions
+[submodule "subtest/s004"]
+	path = subtest/s004
+	url = ../gitextensions
+[submodule "subtest/s005"]
+	path = subtest/s005
+	url = ../gitextensions
+[submodule "subtest/s006"]
+	path = subtest/s006
+	url = ../gitextensions
+[submodule "subtest/s007"]
+	path = subtest/s007
+	url = ../gitextensions
+[submodule "subtest/s008"]
+	path = subtest/s008
+	url = ../gitextensions
+[submodule "subtest/s009"]
+	path = subtest/s009
+	url = ../gitextensions
