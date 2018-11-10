@@ -67,3 +67,30 @@
 [submodule "subtest/u019"]
 	path = subtest/u019
 	url = ./.
+[submodule "subtest/r21"]
+	path = subtest/r21
+	url = git@github.com:gitextensions/gitextensions.git
+[submodule "subtest/r22"]
+	path = subtest/r22
+	url = git@github.com:gitextensions/gitextensions.git
+[submodule "subtest/r23"]
+	path = subtest/r23
+	url = git@github.com:gitextensions/gitextensions.git
+[submodule "subtest/r24"]
+	path = subtest/r24
+	url = git@github.com:gitextensions/gitextensions.git
+[submodule "subtest/r25"]
+	path = subtest/r25
+	url = git@github.com:gitextensions/gitextensions.git
+[submodule "subtest/r26"]
+	path = subtest/r26
+	url = git@github.com:gitextensions/gitextensions.git
+[submodule "subtest/r27"]
+	path = subtest/r27
+	url = git@github.com:gitextensions/gitextensions.git
+[submodule "subtest/r28"]
+	path = subtest/r28
+	url = git@github.com:gitextensions/gitextensions.git
+[submodule "subtest/r29"]
+	path = subtest/r29
+	url = git@github.com:gitextensions/gitextensions.git
