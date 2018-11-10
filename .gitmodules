@@ -40,3 +40,30 @@
 [submodule "subtest/s009"]
 	path = subtest/s009
 	url = ../gitextensions
+[submodule "subtest/u011"]
+	path = subtest/u011
+	url = ./.
+[submodule "subtest/u012"]
+	path = subtest/u012
+	url = ./.
+[submodule "subtest/u013"]
+	path = subtest/u013
+	url = ./.
+[submodule "subtest/u014"]
+	path = subtest/u014
+	url = ./.
+[submodule "subtest/u015"]
+	path = subtest/u015
+	url = ./.
+[submodule "subtest/u016"]
+	path = subtest/u016
+	url = ./.
+[submodule "subtest/u017"]
+	path = subtest/u017
+	url = ./.
+[submodule "subtest/u018"]
+	path = subtest/u018
+	url = ./.
+[submodule "subtest/u019"]
+	path = subtest/u019
+	url = ./.
