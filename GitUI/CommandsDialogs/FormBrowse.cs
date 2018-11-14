@@ -84,7 +84,6 @@ namespace GitUI.CommandsDialogs
 
         private readonly TranslationString _undoLastCommitText = new TranslationString("You will still be able to find all the commit's changes in the staging area\n\nDo you want to continue?");
         private readonly TranslationString _undoLastCommitCaption = new TranslationString("Undo last commit");
-
         #endregion
 
         private readonly SplitterManager _splitterManager = new SplitterManager(new AppSettingsPath("FormBrowse"));
@@ -107,9 +106,6 @@ namespace GitUI.CommandsDialogs
         private ToolStripItem _warning;
 
         [CanBeNull] private TabPage _consoleTabPage;
-
-        private bool _submoduleStatusUpdateNeeded = true;
-        private bool _stashCountUpdateNeeded = true;
 
         [Flags]
         private enum UpdateTargets
@@ -262,7 +258,10 @@ namespace GitUI.CommandsDialogs
                         }
                     }
 
-                    _submoduleStatusUpdateNeeded = _submoduleStatusUpdateNeeded || _submoduleStatusProvider.HasSubmodulesStatusChanged(status);
+                    if (AppSettings.ShowSubmoduleStatus && _submoduleStatusProvider.HasSubmodulesStatusChanged(status))
+                    {
+                        UpdateSubmodulesStatus(updateStatus: true);
+                    }
                 };
 
                 // TODO: Replace with a status page?
@@ -464,7 +463,6 @@ namespace GitUI.CommandsDialogs
 
             RevisionGrid.IndexWatcher.Changed += (_, args) =>
             {
-                _stashCountUpdateNeeded = true;
                 bool indexChanged = args.IsIndexChanged;
                 this.InvokeAsync(
                         () =>
@@ -474,6 +472,7 @@ namespace GitUI.CommandsDialogs
                                 : Images.ReloadRevisions;
                         })
                     .FileAndForget();
+                UpdateStashCount();
             };
 
             base.OnLoad(e);
@@ -539,9 +538,8 @@ namespace GitUI.CommandsDialogs
 
         private void UICommands_PostRepositoryChanged(object sender, GitUIEventArgs e)
         {
-            _submoduleStatusUpdateNeeded = true;
-            _stashCountUpdateNeeded = true;
             this.InvokeAsync(RefreshRevisions).FileAndForget();
+            UpdateSubmodulesStatus();
         }
 
         private void RefreshRevisions()
@@ -911,13 +909,6 @@ namespace GitUI.CommandsDialogs
         private void OnActivate()
         {
             CheckForMergeConflicts();
-            InitiateSubmodulesUpdate();
-
-            if (_stashCountUpdateNeeded)
-            {
-                _stashCountUpdateNeeded = false;
-                UpdateStashCount();
-            }
 
             return;
 
@@ -1013,30 +1004,30 @@ namespace GitUI.CommandsDialogs
                     }
                 }).FileAndForget();
             }
+        }
 
-            void UpdateStashCount()
+        private void UpdateStashCount()
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            if (AppSettings.ShowStashCount)
             {
-                ThreadHelper.ThrowIfNotOnUIThread();
-
-                if (AppSettings.ShowStashCount)
+                ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
                 {
-                    ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-                    {
-                        // Add a delay to not interfere with GUI updates when switching repository
-                        await Task.Delay(500);
-                        await TaskScheduler.Default;
+                    // Add a delay to not interfere with GUI updates when switching repository
+                    await Task.Delay(500);
+                    await TaskScheduler.Default;
 
-                        var result = Module.GetStashes().Count;
+                    var result = Module.GetStashes().Count;
 
-                        await this.SwitchToMainThreadAsync();
+                    await this.SwitchToMainThreadAsync();
 
-                        toolStripSplitStash.Text = $"({result})";
-                    }).FileAndForget();
-                }
-                else
-                {
-                    toolStripSplitStash.Text = string.Empty;
-                }
+                    toolStripSplitStash.Text = $"({result})";
+                }).FileAndForget();
+            }
+            else
+            {
+                toolStripSplitStash.Text = string.Empty;
             }
         }
 
@@ -1295,8 +1286,8 @@ namespace GitUI.CommandsDialogs
         private void RefreshStatus()
         {
             _gitStatusMonitor?.RequestRefresh();
-            _submoduleStatusUpdateNeeded = true;
-            _stashCountUpdateNeeded = true;
+            UpdateSubmodulesStatus();
+            UpdateStashCount();
         }
 
         private void RefreshToolStripMenuItemClick(object sender, EventArgs e)
@@ -1355,8 +1346,8 @@ namespace GitUI.CommandsDialogs
 
         private void StashToolStripMenuItemClick(object sender, EventArgs e)
         {
-            _stashCountUpdateNeeded = true;
             UICommands.StartStashDialog(this);
+            UpdateStashCount();
         }
 
         private void ResetToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1585,8 +1576,8 @@ namespace GitUI.CommandsDialogs
 
         private void ManageSubmodulesToolStripMenuItemClick(object sender, EventArgs e)
         {
-            _submoduleStatusUpdateNeeded = true;
             UICommands.StartSubmodulesDialog(this);
+            UpdateSubmodulesStatus();
         }
 
         private void UpdateSubmoduleToolStripMenuItemClick(object sender, EventArgs e)
@@ -1602,44 +1593,44 @@ namespace GitUI.CommandsDialogs
 
         private void UpdateAllSubmodulesToolStripMenuItemClick(object sender, EventArgs e)
         {
-            _submoduleStatusUpdateNeeded = true;
             UICommands.StartUpdateSubmodulesDialog(this);
+            UpdateSubmodulesStatus();
         }
 
         private void SynchronizeAllSubmodulesToolStripMenuItemClick(object sender, EventArgs e)
         {
-            _submoduleStatusUpdateNeeded = true;
             UICommands.StartSyncSubmodulesDialog(this);
+            UpdateSubmodulesStatus();
         }
 
         private void ToolStripSplitStashButtonClick(object sender, EventArgs e)
         {
-            _stashCountUpdateNeeded = true;
             UICommands.StartStashDialog(this);
+            UpdateStashCount();
         }
 
         private void StashChangesToolStripMenuItemClick(object sender, EventArgs e)
         {
-            _stashCountUpdateNeeded = true;
             UICommands.StashSave(this, AppSettings.IncludeUntrackedFilesInManualStash);
+            UpdateStashCount();
         }
 
         private void StashPopToolStripMenuItemClick(object sender, EventArgs e)
         {
-            _stashCountUpdateNeeded = true;
             UICommands.StashPop(this);
+            UpdateStashCount();
         }
 
         private void ManageStashesToolStripMenuItemClick(object sender, EventArgs e)
         {
-            _stashCountUpdateNeeded = true;
             UICommands.StartStashDialog(this);
+            UpdateStashCount();
         }
 
         private void CreateStashToolStripMenuItemClick(object sender, EventArgs e)
         {
-            _stashCountUpdateNeeded = true;
             UICommands.StartStashDialog(this, false);
+            UpdateStashCount();
         }
 
         private void ExitToolStripMenuItemClick(object sender, EventArgs e)
@@ -2552,7 +2543,6 @@ namespace GitUI.CommandsDialogs
 
         private void toolStripButtonLevelUp_DropDownOpening(object sender, EventArgs e)
         {
-            InitiateSubmodulesUpdate();
             PreventToolStripSplitButtonClosing(sender as ToolStripSplitButton);
         }
 
@@ -2623,16 +2613,11 @@ namespace GitUI.CommandsDialogs
             }
         }
 
-        private void InitiateSubmodulesUpdate()
+        private void UpdateSubmodulesStatus(bool updateStatus = false)
         {
-            if (!_submoduleStatusUpdateNeeded)
-            {
-                return;
-            }
-
             toolStripButtonLevelUp.ToolTipText = "";
-            _submoduleStatusUpdateNeeded = false;
             _submoduleStatusProvider.UpdateSubmodulesStatus(
+                updateStatus,
                 Module.WorkingDir, _noBranchTitle.Text,
                 () =>
                 {
