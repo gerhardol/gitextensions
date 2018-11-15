@@ -260,7 +260,7 @@ namespace GitUI.CommandsDialogs
 
                     if (AppSettings.ShowSubmoduleStatus && _submoduleStatusProvider.HasSubmodulesStatusChanged(status))
                     {
-                        UpdateSubmodulesStatus(updateStatus: true);
+                        UpdateSubmodulesStructure(updateStatus: true);
                     }
                 };
 
@@ -472,7 +472,6 @@ namespace GitUI.CommandsDialogs
                                 : Images.ReloadRevisions;
                         })
                     .FileAndForget();
-                UpdateStashCount();
             };
 
             base.OnLoad(e);
@@ -539,7 +538,8 @@ namespace GitUI.CommandsDialogs
         private void UICommands_PostRepositoryChanged(object sender, GitUIEventArgs e)
         {
             this.InvokeAsync(RefreshRevisions).FileAndForget();
-            UpdateSubmodulesStatus();
+            UpdateSubmodulesStructure();
+            UpdateStashCount();
         }
 
         private void RefreshRevisions()
@@ -1008,8 +1008,6 @@ namespace GitUI.CommandsDialogs
 
         private void UpdateStashCount()
         {
-            ThreadHelper.ThrowIfNotOnUIThread();
-
             if (AppSettings.ShowStashCount)
             {
                 ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
@@ -1286,14 +1284,14 @@ namespace GitUI.CommandsDialogs
         private void RefreshStatus()
         {
             _gitStatusMonitor?.RequestRefresh();
-            UpdateSubmodulesStatus();
+            UpdateSubmodulesStructure();
             UpdateStashCount();
         }
 
         private void RefreshToolStripMenuItemClick(object sender, EventArgs e)
         {
-            RefreshStatus();
             RefreshRevisions();
+            RefreshStatus();
         }
 
         private void RefreshDashboardToolStripMenuItemClick(object sender, EventArgs e)
@@ -1577,7 +1575,7 @@ namespace GitUI.CommandsDialogs
         private void ManageSubmodulesToolStripMenuItemClick(object sender, EventArgs e)
         {
             UICommands.StartSubmodulesDialog(this);
-            UpdateSubmodulesStatus();
+            UpdateSubmodulesStructure();
         }
 
         private void UpdateSubmoduleToolStripMenuItemClick(object sender, EventArgs e)
@@ -1594,13 +1592,13 @@ namespace GitUI.CommandsDialogs
         private void UpdateAllSubmodulesToolStripMenuItemClick(object sender, EventArgs e)
         {
             UICommands.StartUpdateSubmodulesDialog(this);
-            UpdateSubmodulesStatus();
+            UpdateSubmodulesStructure();
         }
 
         private void SynchronizeAllSubmodulesToolStripMenuItemClick(object sender, EventArgs e)
         {
             UICommands.StartSyncSubmodulesDialog(this);
-            UpdateSubmodulesStatus();
+            UpdateSubmodulesStructure();
         }
 
         private void ToolStripSplitStashButtonClick(object sender, EventArgs e)
@@ -2613,7 +2611,7 @@ namespace GitUI.CommandsDialogs
             }
         }
 
-        private void UpdateSubmodulesStatus(bool updateStatus = false)
+        private void UpdateSubmodulesStructure(bool updateStatus = false)
         {
             toolStripButtonLevelUp.ToolTipText = "";
             _submoduleStatusProvider.UpdateSubmodulesStatus(
