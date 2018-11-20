@@ -2613,6 +2613,9 @@ namespace GitUI.CommandsDialogs
 
         private void UpdateSubmodulesStructure(bool updateStatus = false)
         {
+            // Submodule status is updated on git-status updates. To make sure supermodule status is updated, update immediately
+            updateStatus = updateStatus || (AppSettings.ShowSubmoduleStatus && (Module.SuperprojectModule != null) && (_gitStatusMonitor != null));
+
             toolStripButtonLevelUp.ToolTipText = "";
             _submoduleStatusProvider.UpdateSubmodulesStatus(
                 updateStatus,
