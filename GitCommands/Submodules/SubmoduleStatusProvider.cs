@@ -14,7 +14,8 @@ namespace GitCommands.Submodules
 {
     public interface ISubmoduleStatusProvider : IDisposable
     {
-        bool HasSubmodulesStatusChanged([CanBeNull] IReadOnlyList<GitItemStatus> allChangedFiles);
+        bool HasChangedToNone([CanBeNull] IReadOnlyList<GitItemStatus> allChangedFiles);
+        bool HasStatusChanges([CanBeNull] IReadOnlyList<GitItemStatus> allChangedFiles);
         void UpdateSubmodulesStatus(bool updateStatus, string workingDirectory, string noBranchText, Action onUpdateBegin, Func<SubmoduleInfoResult, CancellationToken, Task> onUpdateCompleteAsync);
     }
 
@@ -22,13 +23,29 @@ namespace GitCommands.Submodules
     {
         private readonly CancellationTokenSequence _submodulesStatusSequence = new CancellationTokenSequence();
         private DateTime _previousSubmoduleUpdateTime;
+        private bool _previousSubmoduleHadChanges;
 
         public void Dispose()
         {
             _submodulesStatusSequence.Dispose();
         }
 
-        public bool HasSubmodulesStatusChanged([CanBeNull] IReadOnlyList<GitItemStatus> allChangedFiles)
+        public bool HasChangedToNone([CanBeNull] IReadOnlyList<GitItemStatus> allChangedFiles)
+        {
+            if (allChangedFiles == null)
+            {
+                return false;
+            }
+
+            bool anyUpdate = allChangedFiles.Any(i => i.IsSubmodule && (i.IsChanged || !i.IsTracked));
+
+            // If status is changed to none, the status must be cleared
+            bool result = _previousSubmoduleHadChanges && !anyUpdate;
+            _previousSubmoduleHadChanges = anyUpdate;
+            return result;
+        }
+
+        public bool HasStatusChanges([CanBeNull] IReadOnlyList<GitItemStatus> allChangedFiles)
         {
             TimeSpan elapsed = DateTime.Now - _previousSubmoduleUpdateTime;
 
@@ -54,6 +71,9 @@ namespace GitCommands.Submodules
 
             // If not updating the status, allow a 'quick' update
             _previousSubmoduleUpdateTime = updateStatus ? DateTime.Now : DateTime.MinValue;
+
+            // Changes are assumed
+            _previousSubmoduleHadChanges = updateStatus;
 
             onUpdateBegin();
 

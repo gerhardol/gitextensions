@@ -258,9 +258,16 @@ namespace GitUI.CommandsDialogs
                         }
                     }
 
-                    if (AppSettings.ShowSubmoduleStatus && _submoduleStatusProvider.HasSubmodulesStatusChanged(status))
+                    if (AppSettings.ShowSubmoduleStatus)
                     {
-                        UpdateSubmodulesStructure(updateStatus: true);
+                        if (_submoduleStatusProvider.HasChangedToNone(status))
+                        {
+                            UpdateSubmodulesStructure(updateStatus: false);
+                        }
+                        else if (_submoduleStatusProvider.HasStatusChanges(status))
+                        {
+                            UpdateSubmodulesStructure(updateStatus: true);
+                        }
                     }
                 };
 
