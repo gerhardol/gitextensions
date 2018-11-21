@@ -181,101 +181,7 @@ namespace GitUI.CommandsDialogs
             toolStripBranchFilterComboBox.DropDown += toolStripBranches_DropDown_ResizeDropDownWidth;
             revisionDiff.Bind(RevisionGrid, fileTree);
 
-            // Activation of the control requires restart of Browse, limit also deactivation for consistency
-            bool countToolbar = AppSettings.ShowGitStatusInBrowseToolbar;
-            bool countArtificial = AppSettings.ShowGitStatusForArtificialCommits && AppSettings.RevisionGraphShowWorkingDirChanges;
-
-            if (countToolbar || countArtificial)
-            {
-                _toolStripGitStatus = new ToolStripMenuItem
-                {
-                    ImageTransparentColor = Color.Magenta,
-                    ImageScaling = ToolStripItemImageScaling.SizeToFit,
-                    Margin = new Padding(0, 1, 0, 2)
-                };
-
-                var repoStateVisualiser = new RepoStateVisualiser();
-
-                _gitStatusMonitor = new GitStatusMonitor(this);
-
-                _gitStatusMonitor.GitStatusMonitorStateChanged += (s, e) =>
-                {
-                    var status = e.State;
-                    if (status == GitStatusMonitorState.Stopped)
-                    {
-                        _toolStripGitStatus.Visible = false;
-                        _toolStripGitStatus.Text = "";
-                        TaskbarManager.Instance.SetOverlayIcon(null, "");
-                    }
-                    else if (status == GitStatusMonitorState.Running)
-                    {
-                        _toolStripGitStatus.Visible = true;
-                    }
-                };
-
-                Brush lastBrush = null;
-
-                _gitStatusMonitor.GitWorkingDirectoryStatusChanged += (s, e) =>
-                {
-                    var status = e.ItemStatuses.ToList();
-
-                    var (image, brush) = repoStateVisualiser.Invoke(status);
-
-                    _toolStripGitStatus.Image = image;
-
-                    _toolStripGitStatus.Text = countToolbar && status.Count != 0
-                        ? string.Format(_commitButtonText + " ({0})", status.Count.ToString())
-                        : _commitButtonText.Text;
-
-                    if (countArtificial)
-                    {
-                        RevisionGrid.UpdateArtificialCommitCount(status);
-                    }
-
-                    // The diff filelist is not updated, as the selected diff is unset
-                    ////_revisionDiff.RefreshArtificial();
-
-                    if (!ReferenceEquals(brush, lastBrush))
-                    {
-                        lastBrush = brush;
-
-                        const int imgDim = 32;
-                        const int dotDim = 9;
-                        const int pad = 2;
-                        using (var bmp = new Bitmap(imgDim, imgDim))
-                        {
-                            using (var g = Graphics.FromImage(bmp))
-                            {
-                                g.SmoothingMode = SmoothingMode.AntiAlias;
-                                g.Clear(Color.Transparent);
-                                g.FillEllipse(brush, new Rectangle(imgDim - dotDim - pad, imgDim - dotDim - pad, dotDim, dotDim));
-                            }
-
-                            using (var overlay = Icon.FromHandle(bmp.GetHicon()))
-                            {
-                                TaskbarManager.Instance.SetOverlayIcon(overlay, "");
-                            }
-                        }
-                    }
-
-                    if (AppSettings.ShowSubmoduleStatus)
-                    {
-                        if (_submoduleStatusProvider.HasChangedToNone(status))
-                        {
-                            UpdateSubmodulesStructure(updateStatus: false);
-                        }
-                        else if (_submoduleStatusProvider.HasStatusChanges(status))
-                        {
-                            UpdateSubmodulesStructure(updateStatus: true);
-                        }
-                    }
-                };
-
-                // TODO: Replace with a status page?
-                _toolStripGitStatus.Click += CommitToolStripMenuItemClick;
-                ToolStrip.Items.Insert(ToolStrip.Items.IndexOf(toolStripButtonCommit), _toolStripGitStatus);
-                ToolStrip.Items.Remove(toolStripButtonCommit);
-            }
+            InitCountArtificial(out _toolStripGitStatus, out _gitStatusMonitor);
 
             if (!EnvUtils.RunningOnWindows())
             {
@@ -375,6 +281,110 @@ namespace GitUI.CommandsDialogs
                 if (!GitVersion.Current.SupportWorktreeList)
                 {
                     manageWorktreeToolStripMenuItem.Enabled = false;
+                }
+            }
+
+            void InitCountArtificial(out ToolStripMenuItem toolStripGitStatus, out GitStatusMonitor gitStatusMonitor)
+            {
+                // Activation of the control requires restart of Browse, limit also deactivation for consistency
+                bool countToolbar = AppSettings.ShowGitStatusInBrowseToolbar;
+                bool countArtificial = AppSettings.ShowGitStatusForArtificialCommits && AppSettings.RevisionGraphShowWorkingDirChanges;
+
+                if (countToolbar || countArtificial)
+                {
+                    toolStripGitStatus = new ToolStripMenuItem
+                    {
+                        ImageTransparentColor = Color.Magenta,
+                        ImageScaling = ToolStripItemImageScaling.SizeToFit,
+                        Margin = new Padding(0, 1, 0, 2)
+                    };
+
+                    var repoStateVisualiser = new RepoStateVisualiser();
+
+                    gitStatusMonitor = new GitStatusMonitor(this);
+
+                    gitStatusMonitor.GitStatusMonitorStateChanged += (s, e) =>
+                    {
+                        var status = e.State;
+                        if (status == GitStatusMonitorState.Stopped)
+                        {
+                            _toolStripGitStatus.Visible = false;
+                            _toolStripGitStatus.Text = "";
+                            TaskbarManager.Instance.SetOverlayIcon(null, "");
+                        }
+                        else if (status == GitStatusMonitorState.Running)
+                        {
+                            _toolStripGitStatus.Visible = true;
+                        }
+                    };
+
+                    Brush lastBrush = null;
+
+                    gitStatusMonitor.GitWorkingDirectoryStatusChanged += (s, e) =>
+                    {
+                        var status = e.ItemStatuses.ToList();
+
+                        var (image, brush) = repoStateVisualiser.Invoke(status);
+
+                        _toolStripGitStatus.Image = image;
+
+                        _toolStripGitStatus.Text = countToolbar && status.Count != 0
+                            ? string.Format(_commitButtonText + " ({0})", status.Count.ToString())
+                            : _commitButtonText.Text;
+
+                        if (countArtificial)
+                        {
+                            RevisionGrid.UpdateArtificialCommitCount(status);
+                        }
+
+                        // The diff filelist is not updated, as the selected diff is unset
+                        ////_revisionDiff.RefreshArtificial();
+
+                        if (!ReferenceEquals(brush, lastBrush))
+                        {
+                            lastBrush = brush;
+
+                            const int imgDim = 32;
+                            const int dotDim = 9;
+                            const int pad = 2;
+                            using (var bmp = new Bitmap(imgDim, imgDim))
+                            {
+                                using (var g = Graphics.FromImage(bmp))
+                                {
+                                    g.SmoothingMode = SmoothingMode.AntiAlias;
+                                    g.Clear(Color.Transparent);
+                                    g.FillEllipse(brush, new Rectangle(imgDim - dotDim - pad, imgDim - dotDim - pad, dotDim, dotDim));
+                                }
+
+                                using (var overlay = Icon.FromHandle(bmp.GetHicon()))
+                                {
+                                    TaskbarManager.Instance.SetOverlayIcon(overlay, "");
+                                }
+                            }
+                        }
+
+                        if (AppSettings.ShowSubmoduleStatus)
+                        {
+                            if (_submoduleStatusProvider.HasChangedToNone(status))
+                            {
+                                UpdateSubmodulesStructure(updateStatus: false);
+                            }
+                            else if (_submoduleStatusProvider.HasStatusChanges(status))
+                            {
+                                UpdateSubmodulesStructure(updateStatus: true);
+                            }
+                        }
+                    };
+
+                    // TODO: Replace with a status page?
+                    _toolStripGitStatus.Click += CommitToolStripMenuItemClick;
+                    ToolStrip.Items.Insert(ToolStrip.Items.IndexOf(toolStripButtonCommit), _toolStripGitStatus);
+                    ToolStrip.Items.Remove(toolStripButtonCommit);
+                }
+                else
+                {
+                    toolStripGitStatus = null;
+                    gitStatusMonitor = null;
                 }
             }
         }
