@@ -490,6 +490,8 @@ namespace GitUI.CommandsDialogs
                         })
                     .FileAndForget();
             };
+            UpdateSubmodulesStructure();
+            UpdateStashCount();
 
             base.OnLoad(e);
         }
@@ -1890,6 +1892,7 @@ namespace GitUI.CommandsDialogs
             HideVariableMainMenuItems();
             UnregisterPlugins();
             RevisionGrid.InvalidateCount();
+            _submoduleStatusProvider.Init();
 
             UICommands = new GitUICommands(module);
             if (Module.IsValidGitWorkingDir())
@@ -2631,7 +2634,7 @@ namespace GitUI.CommandsDialogs
         private void UpdateSubmodulesStructure(bool updateStatus = false)
         {
             // Submodule status is updated on git-status updates. To make sure supermodule status is updated, update immediately
-            updateStatus = updateStatus || (AppSettings.ShowSubmoduleStatus && (Module.SuperprojectModule != null) && (_gitStatusMonitor != null));
+            updateStatus = updateStatus || (AppSettings.ShowSubmoduleStatus && (_gitStatusMonitor != null) && (Module.SuperprojectModule != null));
 
             toolStripButtonLevelUp.ToolTipText = "";
             _submoduleStatusProvider.UpdateSubmodulesStatus(

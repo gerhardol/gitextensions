@@ -14,6 +14,7 @@ namespace GitCommands.Submodules
 {
     public interface ISubmoduleStatusProvider : IDisposable
     {
+        void Init();
         bool HasChangedToNone([CanBeNull] IReadOnlyList<GitItemStatus> allChangedFiles);
         bool HasStatusChanges([CanBeNull] IReadOnlyList<GitItemStatus> allChangedFiles);
         void UpdateSubmodulesStatus(bool updateStatus, string workingDirectory, string noBranchText, Action onUpdateBegin, Func<SubmoduleInfoResult, CancellationToken, Task> onUpdateCompleteAsync);
@@ -28,6 +29,13 @@ namespace GitCommands.Submodules
         public void Dispose()
         {
             _submodulesStatusSequence.Dispose();
+        }
+
+        public void Init()
+        {
+            // Cancel any previous async activities:
+            var cancelToken = _submodulesStatusSequence.Next();
+            _previousSubmoduleHadChanges = false;
         }
 
         public bool HasChangedToNone([CanBeNull] IReadOnlyList<GitItemStatus> allChangedFiles)
@@ -71,9 +79,6 @@ namespace GitCommands.Submodules
 
             // If not updating the status, allow a 'quick' update
             _previousSubmoduleUpdateTime = updateStatus ? DateTime.Now : DateTime.MinValue;
-
-            // Changes are assumed
-            _previousSubmoduleHadChanges = updateStatus;
 
             onUpdateBegin();
 
