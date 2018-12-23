@@ -867,7 +867,7 @@ namespace GitUI
                 _superprojectCurrentCheckout = ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
                 {
                     await TaskScheduler.Default;
-                    return GetSuperprojectCheckout(ShowRemoteRef, capturedModule);
+                    return GetSuperprojectCheckout(ShowRemoteRef, capturedModule, noLocks: true);
                 });
 
                 ResetNavigationHistory();
@@ -1018,7 +1018,7 @@ namespace GitUI
         }
 
         [CanBeNull]
-        private static SuperProjectInfo GetSuperprojectCheckout(Func<IGitRef, bool> showRemoteRef, GitModule gitModule)
+        private static SuperProjectInfo GetSuperprojectCheckout(Func<IGitRef, bool> showRemoteRef, GitModule gitModule, bool noLocks = false)
         {
             if (gitModule.SuperprojectModule == null)
             {
@@ -1040,7 +1040,7 @@ namespace GitUI
                 spi.CurrentBranch = commit;
             }
 
-            var refs = gitModule.SuperprojectModule.GetSubmoduleItemsForEachRef(gitModule.SubmodulePath, showRemoteRef);
+            var refs = gitModule.SuperprojectModule.GetSubmoduleItemsForEachRef(gitModule.SubmodulePath, showRemoteRef, noLocks: noLocks);
 
             if (refs != null)
             {
