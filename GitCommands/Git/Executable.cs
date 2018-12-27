@@ -96,6 +96,11 @@ namespace GitCommands
 
                 _process.Start();
 
+                if (arguments != null && arguments.StartsWith("--no-optional-locks"))
+                {
+                    _process.PriorityClass = ProcessPriorityClass.BelowNormal;
+                }
+
                 _logOperation.SetProcessId(_process.Id);
             }
 
