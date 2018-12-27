@@ -428,15 +428,27 @@ namespace GitCommands
             };
         }
 
+        /// <summary>
+        /// Arguments for git-clean
+        /// </summary>
+        /// <param name="dryRun">Only show what would be deleted</param>
+        /// <param name="directories">Delete untracked directories too</param>
+        /// <param name="nonIgnored">Include files not ignored by Git, the default git-clean behavior</param>
+        /// <param name="ignored">Include files ignored by Git</param>
+        /// <param name="paths">Limit to specific paths</param>
         public static ArgumentString CleanUpCmd(bool dryRun, bool directories, bool nonIgnored, bool ignored, string paths = null)
         {
+            if (!nonIgnored && !ignored)
+            {
+                throw new ArgumentException($"For clean, at least nonIgnored or ignored must be set.");
+            }
+
             return new GitArgumentBuilder("clean")
             {
                 { directories, "-d" },
-                { !nonIgnored && !ignored, "-x" },
-                { ignored, "-X" },
-                { dryRun, "--dry-run" },
-                { !dryRun, "-f" },
+                { nonIgnored && ignored, "-x" },
+                { !nonIgnored && ignored, "-X" },
+                { dryRun, "--dry-run", "-f" },
                 paths
             };
         }

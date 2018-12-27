@@ -638,7 +638,7 @@ namespace GitUI
 
                 if (resetAction == FormResetChanges.ActionEnum.ResetAndDelete)
                 {
-                    Module.Clean(dryRun: false, directories: true);
+                    Module.Clean(directories: true, nonIgnored: true);
                 }
 
                 return true;
