@@ -45,7 +45,7 @@ namespace GitUI.CommandsDialogs
 
         private void Preview_Click(object sender, EventArgs e)
         {
-            var cleanUpCmd = GitCommandHelpers.CleanUpCmd(true, directories: RemoveDirectories.Checked, nonIgnored: RemoveAll.Checked || RemoveNonIgnored.Checked, ignored: RemoveAll.Checked || RemoveIngnored.Checked, paths: GetPathArgumentFromGui());
+            var cleanUpCmd = GitCommandHelpers.CleanUpCmd(true, directories: RemoveDirectories.Checked, nonIgnored: RemoveAll.Checked || RemoveNonIgnored.Checked, ignored: RemoveAll.Checked || RemoveIgnored.Checked, paths: GetPathArgumentFromGui());
             string cmdOutput = FormProcess.ReadDialog(this, cleanUpCmd);
             PreviewOutput.Text = EnvUtils.ReplaceLinuxNewLinesDependingOnPlatform(cmdOutput);
         }
@@ -54,7 +54,7 @@ namespace GitUI.CommandsDialogs
         {
             if (MessageBox.Show(this, _reallyCleanupQuestion.Text, _reallyCleanupQuestionCaption.Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
-                var cleanUpCmd = GitCommandHelpers.CleanUpCmd(false, directories: RemoveDirectories.Checked, nonIgnored: RemoveAll.Checked || RemoveNonIgnored.Checked, ignored: RemoveAll.Checked || RemoveIngnored.Checked, paths: GetPathArgumentFromGui());
+                var cleanUpCmd = GitCommandHelpers.CleanUpCmd(false, directories: RemoveDirectories.Checked, nonIgnored: RemoveAll.Checked || RemoveNonIgnored.Checked, ignored: RemoveAll.Checked || RemoveIgnored.Checked, paths: GetPathArgumentFromGui());
                 string cmdOutput = FormProcess.ReadDialog(this, cleanUpCmd);
                 PreviewOutput.Text = EnvUtils.ReplaceLinuxNewLinesDependingOnPlatform(cmdOutput);
             }
