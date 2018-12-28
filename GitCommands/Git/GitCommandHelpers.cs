@@ -67,6 +67,18 @@ namespace GitCommands
         All = 3
     }
 
+    /// <summary>Arguments to 'git reset'.</summary>
+    public enum ResetMode
+    {
+        Soft = 1,
+
+        Mixed = 2,
+
+        Hard = 3
+
+        // All options are not implemented
+    }
+
     public static class GitCommandHelpers
     {
         #region SSH / Plink
@@ -179,30 +191,14 @@ namespace GitCommands
             };
         }
 
-        public static ArgumentString ResetSoftCmd(string commit)
+        public static ArgumentString ResetCmd(ResetMode mode, string commit = null, string file = null)
         {
             return new GitArgumentBuilder("reset")
             {
-                "--soft",
-                commit.QuoteNE()
-            };
-        }
-
-        public static ArgumentString ResetMixedCmd(string commit)
-        {
-            return new GitArgumentBuilder("reset")
-            {
-                "--mixed",
-                commit.QuoteNE()
-            };
-        }
-
-        public static ArgumentString ResetHardCmd(string commit)
-        {
-            return new GitArgumentBuilder("reset")
-            {
-                "--hard",
-                commit.QuoteNE()
+                mode,
+                commit.QuoteNE(),
+                "--",
+                file?.ToPosixPath().QuoteNE()
             };
         }
 

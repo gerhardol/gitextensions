@@ -1465,42 +1465,9 @@ namespace GitCommands
             return _gitExecutable.GetOutput(args);
         }
 
-        // TODO use an enum to set the reset kind (soft / mixed / hard)
-
-        public void ResetSoft(string commit, string file = null)
+        public void Reset(ResetMode mode, string file = null)
         {
-            _gitExecutable.RunCommand(
-                new GitArgumentBuilder("reset")
-            {
-                "--soft",
-                commit.QuoteNE(),
-                "--",
-                file.QuoteNE()
-            });
-        }
-
-        public void ResetMixed(string commit, string file = null)
-        {
-            _gitExecutable.RunCommand(
-                new GitArgumentBuilder("reset")
-            {
-                "--mixed",
-                commit.QuoteNE(),
-                "--",
-                file.QuoteNE()
-            });
-        }
-
-        public void ResetHard(string commit, string file = null)
-        {
-            _gitExecutable.RunCommand(
-                new GitArgumentBuilder("reset")
-            {
-                "--hard",
-                commit.QuoteNE(),
-                "--",
-                file.QuoteNE()
-            });
+            _gitExecutable.RunCommand(GitCommandHelpers.ResetCmd(mode, null, file));
         }
 
         public string ResetFile(string file)
