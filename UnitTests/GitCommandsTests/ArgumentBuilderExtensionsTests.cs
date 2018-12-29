@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using FluentAssertions;
 using GitCommands;
 using GitCommands.Git;
 using GitUIPluginInterfaces;
@@ -252,6 +254,49 @@ namespace GitCommandsTests
                 id
             };
             Assert.AreEqual(args.ToString(), "");
+        }
+
+        [Test]
+        public void Add_CleanMode_None_should_throw()
+        {
+            ((Action)(() =>
+                {
+                    var args = new ArgumentBuilder
+                    {
+                        CleanMode.None
+                    };
+                }))
+                .Should().Throw<InvalidEnumArgumentException>();
+        }
+
+        [TestCase(CleanMode.OnlyNonIgnored, "")]
+        [TestCase(CleanMode.OnlyIgnored, "-X")]
+        [TestCase(CleanMode.All, "-x")]
+        public void Add_CleanMode(CleanMode mode, string expected)
+        {
+            var args = new ArgumentBuilder
+            {
+                mode
+            };
+            args.ToString().Should().Be(expected);
+        }
+
+        [Test]
+        public void Add_CleanMode_ensure_all_switches_are_handled()
+        {
+            foreach (int mode in Enum.GetValues(typeof(CleanMode)))
+            {
+                if (mode == 0)
+                {
+                    continue;
+                }
+
+                // unimplemented switches will result in InvalidEnumArgumentException
+                var args = new ArgumentBuilder
+                {
+                    (CleanMode)mode
+                };
+            }
         }
     }
 }
