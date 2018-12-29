@@ -2739,12 +2739,7 @@ namespace GitCommands
 
         public void UnstageFileToRemove(string file)
         {
-            var args = new GitArgumentBuilder("reset")
-            {
-                "HEAD",
-                "--",
-                file.ToPosixPath().QuoteNE()
-            };
+            var args = GitCommandHelpers.ResetCmd(ResetMode.ResetIndex, "HEAD", file);
             _gitExecutable.RunCommand(args);
         }
 

@@ -72,11 +72,19 @@ namespace GitCommands
     /// <summary>Arguments to 'git reset'.</summary>
     public enum ResetMode
     {
-        Soft = 0,
+        /// <summary>(no option)</summary>
+        ResetIndex = 0,
 
+        /// <summary>--soft</summary>
+        Soft,
+
+        /// <summary>--mixed</summary>
         Mixed,
 
+        /// <summary>--hard</summary>
         Hard
+
+        // All options are not implemented, like --merge, --keep, --patch
     }
 
     public static class GitCommandHelpers
@@ -191,8 +199,20 @@ namespace GitCommands
             };
         }
 
+        /// <summary>
+        /// The Git command line for reset
+        /// </summary>
+        /// <param name="mode">Reset mode</param>
+        /// <param name="commit">Optional commit-ish (for reset-index this is tree-ish and mandatory)</param>
+        /// <param name="file">Optional file to reset</param>
+        /// <returns>Argument string</returns>
         public static ArgumentString ResetCmd(ResetMode mode, string commit = null, string file = null)
         {
+            if (mode == ResetMode.ResetIndex && commit.IsNullOrWhiteSpace())
+            {
+                throw new ArgumentException("reset to index requires a tree-ish parameter");
+            }
+
             return new GitArgumentBuilder("reset")
             {
                 mode,

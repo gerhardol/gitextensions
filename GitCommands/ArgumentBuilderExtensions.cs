@@ -216,6 +216,8 @@ namespace GitCommands
             {
                 switch (mode)
                 {
+                    case ResetMode.ResetIndex:
+                        return "";
                     case ResetMode.Soft:
                         return "--soft";
                     case ResetMode.Mixed:
