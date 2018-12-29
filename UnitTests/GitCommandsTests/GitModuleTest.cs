@@ -390,7 +390,7 @@ namespace GitCommandsTests
 
         [TestCase(null, "reset --hard --")]
         [TestCase("file.txt", "reset --hard -- \"file.txt\"")]
-        public void ResetHard_calls_correct_command_and_parses_response(string file, string args)
+        public void Reset_with_Hard_should_issue_correct_command_and_parse_response(string file, string args)
         {
             using (_executable.StageCommand(args))
             {
