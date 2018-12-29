@@ -57,26 +57,26 @@ namespace GitCommands
     /// <summary>Mode for 'git clean'</summary>
     public enum CleanMode
     {
+        None = 0,
+
         /// <summary>Only untracked files not in .gitignore, the default. Git clean without either -x or -X option.</summary>
-        OnlyNonIgnored = 1,
+        OnlyNonIgnored,
 
         /// <summary>Only files included in any ignore list (.gitignore, $GIT_DIR/info/exclude). Git clean with -X option.</summary>
-        OnlyIgnored = 2,
+        OnlyIgnored,
 
         /// <summary>All files not tracked by Git. Git clean with  -x option.</summary>
-        All = 3
+        All
     }
 
     /// <summary>Arguments to 'git reset'.</summary>
     public enum ResetMode
     {
-        Soft = 1,
+        Soft = 0,
 
-        Mixed = 2,
+        Mixed,
 
-        Hard = 3
-
-        // All options are not implemented
+        Hard
     }
 
     public static class GitCommandHelpers
