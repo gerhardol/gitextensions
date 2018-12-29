@@ -257,28 +257,42 @@ namespace GitCommandsTests
         }
 
         [Test]
-        public void Add_CleanMode_None_should_throw()
+        public void Add_ForcePushOptions_ensure_all_switches_are_handled()
         {
-            ((Action)(() =>
+            foreach (int mode in Enum.GetValues(typeof(ForcePushOptions)))
+            {
+                // unimplemented switches will result in InvalidEnumArgumentException
+                var args = new ArgumentBuilder
                 {
-                    var args = new ArgumentBuilder
-                    {
-                        CleanMode.None
-                    };
-                }))
-                .Should().Throw<InvalidEnumArgumentException>();
+                    (ForcePushOptions)mode
+                };
+            }
         }
 
-        [TestCase(CleanMode.OnlyNonIgnored, "")]
-        [TestCase(CleanMode.OnlyIgnored, "-X")]
-        [TestCase(CleanMode.All, "-x")]
-        public void Add_CleanMode(CleanMode mode, string expected)
+        [Test]
+        public void Add_GitBisectOption_ensure_all_switches_are_handled()
         {
-            var args = new ArgumentBuilder
+            foreach (int mode in Enum.GetValues(typeof(GitBisectOption)))
             {
-                mode
-            };
-            args.ToString().Should().Be(expected);
+                // unimplemented switches will result in InvalidEnumArgumentException
+                var args = new ArgumentBuilder
+                {
+                    (GitBisectOption)mode
+                };
+            }
+        }
+
+        [Test]
+        public void Add_IgnoreSubmodulesMode_ensure_all_switches_are_handled()
+        {
+            foreach (int mode in Enum.GetValues(typeof(IgnoreSubmodulesMode)))
+            {
+                // unimplemented switches will result in InvalidEnumArgumentException
+                var args = new ArgumentBuilder
+                {
+                    (IgnoreSubmodulesMode)mode
+                };
+            }
         }
 
         [Test]
@@ -286,15 +300,23 @@ namespace GitCommandsTests
         {
             foreach (int mode in Enum.GetValues(typeof(CleanMode)))
             {
-                if (mode == 0)
-                {
-                    continue;
-                }
-
                 // unimplemented switches will result in InvalidEnumArgumentException
                 var args = new ArgumentBuilder
                 {
                     (CleanMode)mode
+                };
+            }
+        }
+
+        [Test]
+        public void Add_ResetMode_ensure_all_switches_are_handled()
+        {
+            foreach (int mode in Enum.GetValues(typeof(ResetMode)))
+            {
+                // unimplemented switches will result in InvalidEnumArgumentException
+                var args = new ArgumentBuilder
+                {
+                    (ResetMode)mode
                 };
             }
         }
