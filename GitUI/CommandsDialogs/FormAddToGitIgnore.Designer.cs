@@ -1,4 +1,7 @@
-﻿namespace GitUI.CommandsDialogs
+﻿using System;
+using System.Windows.Forms;
+
+namespace GitUI.CommandsDialogs
 {
     partial class FormAddToGitIgnore
     {
@@ -159,8 +162,9 @@
             this.FilePattern.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.FilePattern.Size = new System.Drawing.Size(575, 71);
             this.FilePattern.TabIndex = 6;
-            this.FilePattern.WordWrap = false;
+            this.FilePattern.WordWrap = true;
             this.FilePattern.TextChanged += new System.EventHandler(this.FilePattern_TextChanged);
+            FilePattern.KeyDown += new System.Windows.Forms.KeyEventHandler(this.FilePattern_KeyDown);
             // 
             // panel1
             // 
@@ -221,6 +225,15 @@
             this.groupFilePattern.PerformLayout();
             this.ResumeLayout(false);
 
+        }
+
+        private void FilePattern_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                FilePattern.Text += Environment.NewLine;
+                e.Handled = true;
+            }
         }
 
         #endregion
