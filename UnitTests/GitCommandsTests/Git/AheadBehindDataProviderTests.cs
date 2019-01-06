@@ -67,12 +67,12 @@ namespace GitCommandsTests.Git
         [Test]
         public void GetData_should_return_null_if_git_output_empty()
         {
-            _provider.GetTestAccessor().GetData(Encoding.UTF8, "*").Should().BeNull();
+            _provider.GetTestAccessor().GetData(Encoding.UTF8, "**").Should().BeNull();
         }
 
-        [TestCase(" my-branch")]
-        [TestCase("[gone] branch-with-no-more-remote")]
-        [TestCase("")]
+        [TestCase("::::my-branch")]
+        [TestCase("::[gone]::branch-with-no-more-remote")]
+        [TestCase("::::")]
         public void GetData_should_return_null_if_git_output_has_no_data(string result)
         {
             SetResultOfGitCommand(result);
@@ -85,7 +85,7 @@ namespace GitCommandsTests.Git
         {
             SetResultOfGitCommand("results!");
 
-            var data = _provider.GetTestAccessor().GetData(Encoding.UTF8, "*");
+            var data = _provider.GetTestAccessor().GetData(Encoding.UTF8, "**");
 
             data.Should().BeNull();
         }
@@ -93,7 +93,7 @@ namespace GitCommandsTests.Git
         [Test]
         public void GetData_should_return_ahead_for_a_branch()
         {
-            SetResultOfGitCommand("[ahead 10] my-branch");
+            SetResultOfGitCommand("::[ahead 10]::my-branch");
 
             var data = _provider.GetTestAccessor().GetData(Encoding.UTF8, "my-branch");
 
@@ -108,7 +108,7 @@ namespace GitCommandsTests.Git
         [Test]
         public void GetData_should_return_behind_for_a_branch()
         {
-            SetResultOfGitCommand("[behind 2] my-branch");
+            SetResultOfGitCommand("::[behind 2]::my-branch");
 
             var data = _provider.GetTestAccessor().GetData(Encoding.UTF8, "my-branch");
 
@@ -123,7 +123,7 @@ namespace GitCommandsTests.Git
         [Test]
         public void GetData_should_return_ahead_and_behind_for_a_branch()
         {
-            SetResultOfGitCommand("[ahead 99, behind 3] my-branch");
+            SetResultOfGitCommand("::[ahead 99, behind 3]::my-branch");
 
             var data = _provider.GetTestAccessor().GetData(Encoding.UTF8, "my-branch");
 
@@ -138,11 +138,11 @@ namespace GitCommandsTests.Git
         [Test]
         public void GetData_should_return_ahead_and_behind_for_all_branches()
         {
-            SetResultOfGitCommand(" branch-not-changed\n"
-                    + "[gone] branch-with-no-more-remote\n"
-                    + "[ahead 99, behind 3] ahead-behind-branch\n"
-                    + "[ahead 3] ahead-branch\n"
-                    + "[behind 4] behind-branch");
+            SetResultOfGitCommand("::branch-not-changed\n"
+                    + "::[gone]::branch-with-no-more-remote\n"
+                    + "::[ahead 99, behind 3]::ahead-behind-branch\n"
+                    + "::[ahead 3]::ahead-branch\n"
+                    + "::[behind 4]::behind-branch");
 
             var data = _provider.GetTestAccessor().GetData(Encoding.UTF8, "*");
 

@@ -433,7 +433,7 @@ namespace GitUI.BranchTreePanel
         private AheadBehindDataProvider _aheadBehindDataProvider;
         private void DisplayAheadBehindInformationForBranches()
         {
-            if (_rootNodes.Count == 0 || _aheadBehindDataProvider == null)
+            if (_rootNodes.Count == 0 || _aheadBehindDataProvider == null || !AppSettings.ShowAheadBehindData)
             {
                 return;
             }
