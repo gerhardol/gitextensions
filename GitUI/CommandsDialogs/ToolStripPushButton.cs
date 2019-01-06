@@ -29,7 +29,7 @@ namespace GitUI.CommandsDialogs
 
         public void DisplayAheadBehindInformation(string branchName)
         {
-            if (!_supportsAheadBehindData)
+            if (!_supportsAheadBehindData || !AppSettings.ShowAheadBehindData)
             {
                 return;
             }

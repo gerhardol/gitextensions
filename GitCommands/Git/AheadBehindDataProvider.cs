@@ -16,8 +16,9 @@ namespace GitCommands.Git
     {
         private readonly Func<IExecutable> _getGitExecutable;
 
+        // TODO handle [gone] status to show that remote branch no longer exists
         private readonly Regex _aheadBehindRegEx =
-            new Regex(@"^\[(ahead (?<ahead>\d+))?(, )?(behind (?<behind>\d+))?\] (?<branch>.*)$",
+            new Regex(@"^(\[(ahead (?<ahead_u>\d+))?(, )?(behind (?<behind_u>\d+))?\])?::(\[(ahead (?<ahead_p>\d+))?(, )?(behind (?<behind_p>\d+))?\])?::(?<branch>.*)$",
                 RegexOptions.Compiled | RegexOptions.Multiline);
 
         public AheadBehindDataProvider(Func<IExecutable> getGitExecutable)
@@ -25,13 +26,13 @@ namespace GitCommands.Git
             _getGitExecutable = getGitExecutable;
         }
 
-        public IDictionary<string, AheadBehindData> GetData(string branchName = "*")
+        public IDictionary<string, AheadBehindData> GetData(string branchName = "**")
         {
             return GetData(null, branchName);
         }
 
         // This method is required to facilitate unit tests
-        private IDictionary<string, AheadBehindData> GetData(Encoding encoding, string branchName = "*")
+        private IDictionary<string, AheadBehindData> GetData(Encoding encoding, string branchName = "**")
         {
             if (string.IsNullOrWhiteSpace(branchName))
             {
@@ -45,7 +46,7 @@ namespace GitCommands.Git
 
             var aheadBehindGitCommand = new GitArgumentBuilder("for-each-ref")
             {
-                "--format=\"%(push:track) %(refname:short)\"",
+                "--format=\"%(upstream:track)::%(push:track)::%(refname:short)\"",
                 "refs/heads/" + branchName
             };
 
@@ -68,8 +69,8 @@ namespace GitCommands.Git
                     new AheadBehindData
                     {
                         Branch = match.Groups["branch"].Value,
-                        AheadCount = match.Groups["ahead"].Value,
-                        BehindCount = match.Groups["behind"].Value
+                        AheadCount = match.Groups["ahead_p"].Success ? match.Groups["ahead_p"].Value : match.Groups["ahead_u"].Value,
+                        BehindCount = match.Groups["behind_p"].Success ? match.Groups["behind_p"].Value : match.Groups["behind_u"].Value
                     });
             }
 
