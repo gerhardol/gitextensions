@@ -44,6 +44,8 @@ namespace GitUITests.UserControls
         [Test]
         public void DisplayAheadBehindInformation_should_not_display_anything_if_does_not_support_ahead_behind()
         {
+            AppSettings.ShowAheadBehindData = true;
+
             _sut.Initialize(_aheadBehindDataProvider, false);
 
             _sut.DisplayAheadBehindInformation("any-branchName");
@@ -56,6 +58,8 @@ namespace GitUITests.UserControls
         [TestCaseSource(nameof(GetInvalidAheadBehindData))]
         public void DisplayAheadBehindInformation_should_display_default_text_image_if_ahead_behind_data_null(IDictionary<string, AheadBehindData> data)
         {
+            AppSettings.ShowAheadBehindData = true;
+
             var branchName = "who_cares";
             _aheadBehindDataProvider.GetData(branchName).Returns(x => data);
 
@@ -84,6 +88,8 @@ namespace GitUITests.UserControls
         [Test]
         public void DisplayAheadBehindInformation_should_display_normal_state_when_no_data_returned()
         {
+            AppSettings.ShowAheadBehindData = true;
+
             var branchName = "(no branch) or any-branch";
             _aheadBehindDataProvider.GetData(branchName).Returns(x => null);
 
@@ -97,6 +103,8 @@ namespace GitUITests.UserControls
         [Test]
         public void DisplayAheadBehindInformation_should_display_normal_state_when_in_ahead_state()
         {
+            AppSettings.ShowAheadBehindData = true;
+
             var branchName = "my-branch";
             var data = new Dictionary<string, AheadBehindData>
             {
@@ -115,6 +123,8 @@ namespace GitUITests.UserControls
         [Test]
         public void DisplayAheadBehindInformation_should_display_warning_state_when_in_behind_state()
         {
+            AppSettings.ShowAheadBehindData = true;
+
             var branchName = "my-branch";
             var data = new Dictionary<string, AheadBehindData>
             {
@@ -133,6 +143,8 @@ namespace GitUITests.UserControls
         [Test]
         public void DisplayAheadBehindInformation_should_display_warning_state_when_in_ahead_and_behind_state()
         {
+            AppSettings.ShowAheadBehindData = true;
+
             var branchName = "my-branch";
             var data = new Dictionary<string, AheadBehindData>
             {
@@ -143,6 +155,26 @@ namespace GitUITests.UserControls
             _sut.DisplayAheadBehindInformation(branchName);
 
             _sut.DisplayStyle.Should().Be(ToolStripItemDisplayStyle.ImageAndText);
+            _sut.ToolTipText.Should().Contain("99 new commit(s) will be pushed");
+            _sut.ToolTipText.Should().Contain("3 commit(s) should be integrated");
+            _sut.Image.RawFormat.GetHashCode().Should().Be(Images.Unstage.RawFormat.GetHashCode());
+        }
+
+        [Test]
+        public void DisplayAheadBehindInformation_should_display_nothing_when_dont()
+        {
+            AppSettings.ShowAheadBehindData = false;
+
+            var branchName = "my-branch";
+            var data = new Dictionary<string, AheadBehindData>
+            {
+                { branchName, new AheadBehindData { AheadCount = "99", BehindCount = "3", Branch = branchName } }
+            };
+            _aheadBehindDataProvider.GetData(branchName).Returns(x => data);
+
+            _sut.DisplayAheadBehindInformation(branchName);
+
+            _sut.DisplayStyle.Should().Be(ToolStripItemDisplayStyle.Image);
             _sut.ToolTipText.Should().Contain("99 new commit(s) will be pushed");
             _sut.ToolTipText.Should().Contain("3 commit(s) should be integrated");
             _sut.Image.RawFormat.GetHashCode().Should().Be(Images.Unstage.RawFormat.GetHashCode());
