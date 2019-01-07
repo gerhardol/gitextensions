@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Windows.Forms;
 using FluentAssertions;
 using GitCommands;
@@ -20,32 +19,27 @@ namespace GitUITests.UserControls
         private IAheadBehindDataProvider _aheadBehindDataProvider;
         private ToolStripPushButton _sut;
 
-        [OneTimeSetUp]
-        public void SetUpFixture()
-        {
-            _originalShowAheadBehindData = AppSettings.ShowAheadBehindData;
-        }
-
-        [OneTimeTearDown]
-        public void OneTimeTearDown()
-        {
-            AppSettings.ShowAheadBehindData = _originalShowAheadBehindData;
-        }
-
         [SetUp]
         public void Setup()
         {
+            _originalShowAheadBehindData = AppSettings.ShowAheadBehindData;
+            AppSettings.ShowAheadBehindData = true;
+
             _aheadBehindDataProvider = Substitute.For<IAheadBehindDataProvider>();
 
             _sut = new ToolStripPushButton();
             _sut.Initialize(_aheadBehindDataProvider, true);
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            AppSettings.ShowAheadBehindData = _originalShowAheadBehindData;
+        }
+
         [Test]
         public void DisplayAheadBehindInformation_should_not_display_anything_if_does_not_support_ahead_behind()
         {
-            AppSettings.ShowAheadBehindData = true;
-
             _sut.Initialize(_aheadBehindDataProvider, false);
 
             _sut.DisplayAheadBehindInformation("any-branchName");
@@ -58,8 +52,6 @@ namespace GitUITests.UserControls
         [TestCaseSource(nameof(GetInvalidAheadBehindData))]
         public void DisplayAheadBehindInformation_should_display_default_text_image_if_ahead_behind_data_null(IDictionary<string, AheadBehindData> data)
         {
-            AppSettings.ShowAheadBehindData = true;
-
             var branchName = "who_cares";
             _aheadBehindDataProvider.GetData(branchName).Returns(x => data);
 
@@ -88,8 +80,6 @@ namespace GitUITests.UserControls
         [Test]
         public void DisplayAheadBehindInformation_should_display_normal_state_when_no_data_returned()
         {
-            AppSettings.ShowAheadBehindData = true;
-
             var branchName = "(no branch) or any-branch";
             _aheadBehindDataProvider.GetData(branchName).Returns(x => null);
 
@@ -103,8 +93,6 @@ namespace GitUITests.UserControls
         [Test]
         public void DisplayAheadBehindInformation_should_display_normal_state_when_in_ahead_state()
         {
-            AppSettings.ShowAheadBehindData = true;
-
             var branchName = "my-branch";
             var data = new Dictionary<string, AheadBehindData>
             {
@@ -123,8 +111,6 @@ namespace GitUITests.UserControls
         [Test]
         public void DisplayAheadBehindInformation_should_display_warning_state_when_in_behind_state()
         {
-            AppSettings.ShowAheadBehindData = true;
-
             var branchName = "my-branch";
             var data = new Dictionary<string, AheadBehindData>
             {
@@ -143,8 +129,6 @@ namespace GitUITests.UserControls
         [Test]
         public void DisplayAheadBehindInformation_should_display_warning_state_when_in_ahead_and_behind_state()
         {
-            AppSettings.ShowAheadBehindData = true;
-
             var branchName = "my-branch";
             var data = new Dictionary<string, AheadBehindData>
             {
