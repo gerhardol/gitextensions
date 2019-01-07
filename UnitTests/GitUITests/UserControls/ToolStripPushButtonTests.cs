@@ -145,23 +145,20 @@ namespace GitUITests.UserControls
         }
 
         [Test]
-        public void DisplayAheadBehindInformation_should_display_nothing_when_dont()
+        public void DisplayAheadBehindInformation_should_display_nothing_when_disabled()
         {
             AppSettings.ShowAheadBehindData = false;
 
             var branchName = "my-branch";
-            var data = new Dictionary<string, AheadBehindData>
-            {
-                { branchName, new AheadBehindData { AheadCount = "99", BehindCount = "3", Branch = branchName } }
-            };
-            _aheadBehindDataProvider.GetData(branchName).Returns(x => data);
 
             _sut.DisplayAheadBehindInformation(branchName);
 
             _sut.DisplayStyle.Should().Be(ToolStripItemDisplayStyle.Image);
-            _sut.ToolTipText.Should().Contain("99 new commit(s) will be pushed");
-            _sut.ToolTipText.Should().Contain("3 commit(s) should be integrated");
+            _sut.ToolTipText.Should().NotContain("99 new commit(s) will be pushed");
+            _sut.ToolTipText.Should().NotContain("3 commit(s) should be integrated");
             _sut.Image.RawFormat.GetHashCode().Should().Be(Images.Unstage.RawFormat.GetHashCode());
+
+            _aheadBehindDataProvider.DidNotReceive().GetData(Arg.Any<string>());
         }
     }
 }
