@@ -9,7 +9,7 @@ namespace GitCommands.Git
 {
     public interface IAheadBehindDataProvider
     {
-        IDictionary<string, AheadBehindData> GetData(string branchName = "*");
+        IDictionary<string, AheadBehindData> GetData(string branchName = "");
     }
 
     public class AheadBehindDataProvider : IAheadBehindDataProvider
@@ -18,7 +18,7 @@ namespace GitCommands.Git
 
         // TODO handle [gone] status to show that remote branch no longer exists
         private readonly Regex _aheadBehindRegEx =
-            new Regex(@"^(\[(ahead (?<ahead_u>\d+))?(, )?(behind (?<behind_u>\d+))?\])?::(\[(ahead (?<ahead_p>\d+))?(, )?(behind (?<behind_p>\d+))?\])?::(?<branch>.*)$",
+            new Regex(@"^(\[(ahead (?<ahead_p>\d+))?(, )?(behind (?<behind_p>\d+))?\])?::(\[(ahead (?<ahead_u>\d+))?(, )?(behind (?<behind_u>\d+))?\])?::(?<branch>.*)$",
                 RegexOptions.Compiled | RegexOptions.Multiline);
 
         public AheadBehindDataProvider(Func<IExecutable> getGitExecutable)
@@ -26,15 +26,15 @@ namespace GitCommands.Git
             _getGitExecutable = getGitExecutable;
         }
 
-        public IDictionary<string, AheadBehindData> GetData(string branchName = "**")
+        public IDictionary<string, AheadBehindData> GetData(string branchName = "")
         {
             return GetData(null, branchName);
         }
 
         // This method is required to facilitate unit tests
-        private IDictionary<string, AheadBehindData> GetData(Encoding encoding, string branchName = "**")
+        private IDictionary<string, AheadBehindData> GetData(Encoding encoding, string branchName = "")
         {
-            if (string.IsNullOrWhiteSpace(branchName))
+            if (branchName == null)
             {
                 throw new ArgumentException(nameof(branchName));
             }
@@ -46,7 +46,7 @@ namespace GitCommands.Git
 
             var aheadBehindGitCommand = new GitArgumentBuilder("for-each-ref")
             {
-                "--format=\"%(upstream:track)::%(push:track)::%(refname:short)\"",
+                "--format=\"%(push:track)::%(upstream:track)::%(refname:short)\"",
                 "refs/heads/" + branchName
             };
 
@@ -58,7 +58,8 @@ namespace GitCommands.Git
 
             var matches = _aheadBehindRegEx.Matches(result);
             if (matches.Count < 1 || (matches.Count == 1 && (!matches[0].Groups["branch"].Success ||
-                                                             !(matches[0].Groups["ahead_p"].Success || matches[0].Groups["ahead_u"].Success || matches[0].Groups["behind_p"].Success || matches[0].Groups["behind_u"].Success))))
+                                                             !(matches[0].Groups["ahead_p"].Success || matches[0].Groups["ahead_u"].Success ||
+                                                               matches[0].Groups["behind_p"].Success || matches[0].Groups["behind_u"].Success))))
             {
                 return null;
             }
@@ -69,6 +70,7 @@ namespace GitCommands.Git
                 aheadBehindForBranchesData.Add(match.Groups["branch"].Value,
                     new AheadBehindData
                     {
+                        // The information is displayed in the push button, so the push info  is preferred (may differ from upstream)
                         Branch = match.Groups["branch"].Value,
                         AheadCount = match.Groups["ahead_p"].Success ? match.Groups["ahead_p"].Value : match.Groups["ahead_u"].Value,
                         BehindCount = match.Groups["behind_p"].Success ? match.Groups["behind_p"].Value : match.Groups["behind_u"].Value

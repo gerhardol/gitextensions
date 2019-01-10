@@ -51,9 +51,7 @@ namespace GitCommandsTests.Git
         }
 
         [TestCase(null)]
-        [TestCase("")]
-        [TestCase("\t")]
-        public void GetData_should_throw_if_branch_null_or_empty(string branchName)
+        public void GetData_should_throw_if_branch_null(string branchName)
         {
             ((Action)(() => _provider.GetTestAccessor().GetData(Encoding.UTF8, branchName))).Should().Throw<ArgumentException>();
         }

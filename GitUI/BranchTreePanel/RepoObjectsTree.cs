@@ -439,6 +439,11 @@ namespace GitUI.BranchTreePanel
             }
 
             var aheadBehindData = _aheadBehindDataProvider.GetData();
+            if (aheadBehindData == null)
+            {
+                // no tracking information
+                return;
+            }
 
             treeMain.LabelEdit = true;
             TreeNodeCollection nodes = _rootNodes[0].TreeViewNode.Nodes;
