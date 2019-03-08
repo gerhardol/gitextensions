@@ -94,3 +94,6 @@
 [submodule "subtest/r29"]
 	path = subtest/r29
 	url = git@github.com:gitextensions/gitextensions.git
+[submodule "AA space"]
+	path = AA space
+	url = git@github.com:gerhardol/gitextensions.git
