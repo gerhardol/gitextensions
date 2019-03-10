@@ -20,7 +20,7 @@ namespace GitCommands.Submodules
         void Init();
         bool HasChangedToNone([CanBeNull] IReadOnlyList<GitItemStatus> allChangedFiles);
         bool HasStatusChanges([CanBeNull] IReadOnlyList<GitItemStatus> allChangedFiles);
-        void UpdateSubmodulesStatus(bool updateStatus, string workingDirectory, string noBranchText);
+        void UpdateSubmodulesStatus(bool updateStatus, GitModule gitModule, string noBranchText);
     }
 
     public sealed class SubmoduleStatusProvider : ISubmoduleStatusProvider
@@ -81,7 +81,7 @@ namespace GitCommands.Submodules
             return allChangedFiles.Any(i => i.IsSubmodule && (i.IsChanged || !i.IsTracked));
         }
 
-        public void UpdateSubmodulesStatus(bool updateStatus, string workingDirectory, string noBranchText)
+        public void UpdateSubmodulesStatus(bool updateStatus, GitModule gitModule, string noBranchText)
         {
             ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
@@ -100,7 +100,7 @@ namespace GitCommands.Submodules
                 // First task: Gather list of submodules on a background thread.
 
                 // Don't access Module directly because it's not thread-safe.  Use a thread-local version:
-                var threadModule = new GitModule(workingDirectory);
+                var threadModule = new GitModule(gitModule);
                 var result = new SubmoduleInfoResult
                 {
                     Module = threadModule

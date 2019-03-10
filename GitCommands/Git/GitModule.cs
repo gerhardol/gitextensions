@@ -41,6 +41,15 @@ namespace GitCommands
         private readonly IExecutable _gitExecutable;
         private readonly Lazy<Encoding> _filesEncoding;
 
+        public GitModule(GitModule module) : this(module.WorkingDir)
+        {
+            _gitCommonDirectory = module._gitCommonDirectory;
+            if (module._filesEncoding.IsValueCreated)
+            {
+                _filesEncoding = new Lazy<Encoding>(() => module._filesEncoding.Value);
+            }
+        }
+
         public GitModule([CanBeNull] string workingDir, [CanBeNull] IExecutable executable = null)
         {
             WorkingDir = (workingDir ?? "").EnsureTrailingPathSeparator();

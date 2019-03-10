@@ -2659,7 +2659,7 @@ namespace GitUI.CommandsDialogs
             updateStatus = updateStatus || (AppSettings.ShowSubmoduleStatus && _gitStatusMonitor.Active && (Module.SuperprojectModule != null));
 
             toolStripButtonLevelUp.ToolTipText = "";
-            _submoduleStatusProvider.UpdateSubmodulesStatus(updateStatus, Module.WorkingDir, _noBranchTitle.Text);
+            _submoduleStatusProvider.UpdateSubmodulesStatus(updateStatus, Module, _noBranchTitle.Text);
         }
 
         private void SubmoduleStatusProvider_StatusUpdating(object sender, EventArgs e)
