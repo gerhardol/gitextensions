@@ -100,7 +100,7 @@ namespace GitUITests.CommandsDialogs
 
         private void Should_preserve_encoding(Encoding encoding)
         {
-            Assert.AreEqual(new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), _commands.Module.FilesEncoding);
+            Assert.AreEqual(new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), _commands.Module.FilesEncoding.Value);
 
             string filePath = Path.Combine(_referenceRepository.Module.WorkingDir, Path.GetRandomFileName());
 
