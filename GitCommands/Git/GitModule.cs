@@ -39,6 +39,7 @@ namespace GitCommands
         private readonly IRevisionDiffProvider _revisionDiffProvider = new RevisionDiffProvider();
         private readonly IGitCommandRunner _gitCommandRunner;
         private readonly IExecutable _gitExecutable;
+        private readonly Lazy<Encoding> _filesEncoding;
 
         public GitModule([CanBeNull] string workingDir, [CanBeNull] IExecutable executable = null)
         {
@@ -48,6 +49,7 @@ namespace GitCommands
             _commitDataManager = new CommitDataManager(() => this);
             _gitExecutable = executable ?? new Executable(() => AppSettings.GitCommand, WorkingDir);
             _gitCommandRunner = new GitCommandRunner(_gitExecutable, () => SystemEncoding);
+            _filesEncoding = new Lazy<Encoding>(() => EffectiveConfigFile.FilesEncoding ?? new UTF8Encoding(false));
 
             // If this is a submodule, populate relevant properties.
             // If this is not a submodule, these will all be null.
@@ -282,7 +284,7 @@ namespace GitCommands
         [NotNull] public static readonly Encoding LosslessEncoding = Encoding.GetEncoding("ISO-8859-1"); // is any better?
 
         [NotNull]
-        public Encoding FilesEncoding => EffectiveConfigFile.FilesEncoding ?? new UTF8Encoding(false);
+        public Lazy<Encoding> FilesEncoding => _filesEncoding;
 
         [NotNull]
         public Encoding CommitEncoding => EffectiveConfigFile.CommitEncoding ?? new UTF8Encoding(false);
@@ -2309,7 +2311,7 @@ namespace GitCommands
                 cache: cache,
                 outputEncoding: LosslessEncoding);
 
-            var patches = PatchProcessor.CreatePatchesFromString(patch, encoding).ToList();
+            var patches = PatchProcessor.CreatePatchesFromString(patch, new Lazy<Encoding>(() => encoding)).ToList();
 
             return GetPatch(patches, fileName, oldFileName);
         }
@@ -2593,7 +2595,7 @@ namespace GitCommands
         }
 
         internal GitArgumentBuilder GetCurrentChangesCmd(string fileName, [CanBeNull] string oldFileName, bool staged,
-            string extraDiffArguments, Encoding encoding, bool noLocks)
+            string extraDiffArguments, bool noLocks)
         {
             return new GitArgumentBuilder("diff", gitOptions:
                     noLocks && GitVersion.Current.SupportNoOptionalLocks
@@ -2611,12 +2613,12 @@ namespace GitCommands
         }
 
         [CanBeNull]
-        public Patch GetCurrentChanges(string fileName, [CanBeNull] string oldFileName, bool staged, string extraDiffArguments, Encoding encoding, bool noLocks = false)
+        public Patch GetCurrentChanges(string fileName, [CanBeNull] string oldFileName, bool staged, string extraDiffArguments, Encoding encoding = null, bool noLocks = false)
         {
-            var output = _gitExecutable.GetOutput(GetCurrentChangesCmd(fileName, oldFileName, staged, extraDiffArguments, encoding, noLocks),
+            var output = _gitExecutable.GetOutput(GetCurrentChangesCmd(fileName, oldFileName, staged, extraDiffArguments, noLocks),
                 outputEncoding: LosslessEncoding);
 
-            var patches = PatchProcessor.CreatePatchesFromString(output, encoding).ToList();
+            IReadOnlyList<Patch> patches = PatchProcessor.CreatePatchesFromString(output, encoding != null ? new Lazy<Encoding>(() => encoding) : _filesEncoding).ToList();
 
             return GetPatch(patches, fileName, oldFileName);
         }
@@ -3868,7 +3870,7 @@ namespace GitCommands
 
             header = ReEncodeString(header, LosslessEncoding, LogOutputEncoding);
             diffHeader = ReEncodeFileNameFromLossless(diffHeader);
-            diffContent = ReEncodeString(diffContent, LosslessEncoding, FilesEncoding);
+            diffContent = ReEncodeString(diffContent, LosslessEncoding, FilesEncoding.Value);
             return header + diffHeader + diffContent;
         }
 
@@ -3949,7 +3951,7 @@ namespace GitCommands
                 return "";
             }
 
-            var patches = PatchProcessor.CreatePatchesFromString(patch, encoding).ToList();
+            var patches = PatchProcessor.CreatePatchesFromString(patch, new Lazy<Encoding>(() => encoding)).ToList();
 
             return GetPatch(patches, filePath, filePath)?.Text;
         }

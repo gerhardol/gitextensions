@@ -128,16 +128,16 @@ namespace GitUI.CommandsDialogs
         {
             if (!string.IsNullOrEmpty(_fileName))
             {
-                if (fileViewer.FilePreamble is null || Module.FilesEncoding.GetPreamble().SequenceEqual(fileViewer.FilePreamble))
+                if (fileViewer.FilePreamble is null || Module.FilesEncoding.Value.GetPreamble().SequenceEqual(fileViewer.FilePreamble))
                 {
-                    File.WriteAllText(_fileName, fileViewer.GetText(), Module.FilesEncoding);
+                    File.WriteAllText(_fileName, fileViewer.GetText(), Module.FilesEncoding.Value);
                 }
                 else
                 {
                     using (var bytes = new MemoryStream())
                     {
                         bytes.Write(fileViewer.FilePreamble, 0, fileViewer.FilePreamble.Length);
-                        using (var writer = new StreamWriter(bytes, Module.FilesEncoding))
+                        using (var writer = new StreamWriter(bytes, Module.FilesEncoding.Value))
                         {
                             writer.Write(fileViewer.GetText());
                         }

@@ -31,7 +31,7 @@ namespace GitUI.CommandsDialogs
 
             FileName = fileName;
 
-            blameControl1.LoadBlame(revision ?? Module.GetRevision(), null, fileName, null, null, Module.FilesEncoding, initialLine);
+            blameControl1.LoadBlame(revision ?? Module.GetRevision(), null, fileName, null, null, Module.FilesEncoding.Value, initialLine);
         }
 
         private void FormBlameLoad(object sender, EventArgs e)

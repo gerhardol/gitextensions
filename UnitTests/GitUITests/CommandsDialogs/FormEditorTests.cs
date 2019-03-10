@@ -54,7 +54,7 @@ namespace GitUITests.CommandsDialogs
 
             try
             {
-                File.WriteAllText(filePath, "Hello↔world", _commands.Module.FilesEncoding);
+                File.WriteAllText(filePath, "Hello↔world", _commands.Module.FilesEncoding.Value);
 
                 UITest.RunForm<FormEditor>(
                     () =>

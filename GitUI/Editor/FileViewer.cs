@@ -205,7 +205,7 @@ namespace GitUI.Editor
             {
                 if (_encoding == null)
                 {
-                    _encoding = Module.FilesEncoding;
+                    _encoding = Module.FilesEncoding.Value;
                 }
 
                 return _encoding;
@@ -388,7 +388,7 @@ namespace GitUI.Editor
                 }
 
                 using (var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                using (var reader = new StreamReader(stream, Module.FilesEncoding))
+                using (var reader = new StreamReader(stream, Module.FilesEncoding.Value))
                 {
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
                     var content = reader.ReadToEnd();
@@ -1213,7 +1213,7 @@ namespace GitUI.Editor
             Encoding encod;
             if (string.IsNullOrEmpty(encodingToolStripComboBox.Text))
             {
-                encod = Module.FilesEncoding;
+                encod = Module.FilesEncoding.Value;
             }
             else if (encodingToolStripComboBox.Text.StartsWith("Default", StringComparison.CurrentCultureIgnoreCase))
             {
@@ -1223,7 +1223,7 @@ namespace GitUI.Editor
             {
                 encod = AppSettings.AvailableEncodings.Values
                     .FirstOrDefault(en => en.EncodingName == encodingToolStripComboBox.Text)
-                        ?? Module.FilesEncoding;
+                        ?? Module.FilesEncoding.Value;
             }
 
             if (!encod.Equals(Encoding))

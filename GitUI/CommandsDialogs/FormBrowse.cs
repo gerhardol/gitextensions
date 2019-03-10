@@ -1920,7 +1920,7 @@ namespace GitUI.CommandsDialogs
 #if DEBUG
                 // Current encodings
                 Debug.WriteLine("Encodings for " + path);
-                Debug.WriteLine("Files content encoding: " + module.FilesEncoding.EncodingName);
+                Debug.WriteLine("Files content encoding: " + module.FilesEncoding.Value.EncodingName);
                 Debug.WriteLine("Commit encoding: " + module.CommitEncoding.EncodingName);
                 if (module.LogOutputEncoding.CodePage != module.CommitEncoding.CodePage)
                 {
