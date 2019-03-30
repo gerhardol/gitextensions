@@ -168,9 +168,6 @@ namespace GitCommands.Submodules
                 return;
             }
 
-            // sequential prefetching FilesEncoding in a parent thread
-            var foo = supermodule.FilesEncoding;
-
             info.Detailed = new AsyncLazy<DetailedSubmoduleInfo>(async () =>
             {
                 cancelToken.ThrowIfCancellationRequested();
