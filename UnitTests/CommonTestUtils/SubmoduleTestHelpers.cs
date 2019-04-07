@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using GitCommands;
 using GitCommands.Submodules;
@@ -14,9 +15,9 @@ namespace CommonTestUtils
             provider.StatusUpdated += Provider_StatusUpdated;
 
             provider.UpdateSubmodulesStructure(
-                updateStatus: updateStatus,
                 workingDirectory: module.WorkingDir,
-                noBranchText: string.Empty);
+                noBranchText: string.Empty,
+                updateStatus: updateStatus);
 
             AsyncTestHelper.WaitForPendingOperations();
 
@@ -27,6 +28,26 @@ namespace CommonTestUtils
             void Provider_StatusUpdated(object sender, SubmoduleStatusEventArgs e)
             {
                 result = e.Info;
+            }
+        }
+
+        public static void UpdateSubmoduleStatusAndWaitForResult(ISubmoduleStatusProvider provider, GitModule module, IReadOnlyList<GitItemStatus> gitStatus)
+        {
+            List<DetailedSubmoduleInfo> result = new List<DetailedSubmoduleInfo>();
+            provider.StatusUpdated += Provider_StatusUpdated;
+
+            provider.UpdateSubmodulesStatus(
+                workingDirectory: module.WorkingDir,
+                gitStatus: gitStatus);
+
+            AsyncTestHelper.WaitForPendingOperations();
+
+            provider.StatusUpdated -= Provider_StatusUpdated;
+
+            return;
+
+            void Provider_StatusUpdated(object sender, SubmoduleStatusEventArgs e)
+            {
             }
         }
     }

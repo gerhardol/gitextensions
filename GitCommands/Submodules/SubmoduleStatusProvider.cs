@@ -355,32 +355,23 @@ namespace GitCommands.Submodules
             cancelToken.ThrowIfCancellationRequested();
 
             var info = _submoduleInfos[path];
-            info.Detailed = new AsyncLazy<DetailedSubmoduleInfo>(async () =>
+            cancelToken.ThrowIfCancellationRequested();
+
+            var submoduleStatus = await GitCommandHelpers.GetCurrentSubmoduleChangesAsync(superModule, submoduleName, noLocks: true)
+            .ConfigureAwait(true);
+            if (submoduleStatus != null && submoduleStatus.Commit != submoduleStatus.OldCommit)
             {
-                cancelToken.ThrowIfCancellationRequested();
+                submoduleStatus.CheckSubmoduleStatus(submoduleStatus.GetSubmodule(superModule));
+            }
 
-                var submoduleStatus = await GitCommandHelpers.GetCurrentSubmoduleChangesAsync(superModule, submoduleName, noLocks: true)
-                .ConfigureAwait(false);
-                if (submoduleStatus != null && submoduleStatus.Commit != submoduleStatus.OldCommit)
+            info.Detailed = submoduleStatus == null ?
+                null :
+                new DetailedSubmoduleInfo()
                 {
-                    submoduleStatus.CheckSubmoduleStatus(submoduleStatus.GetSubmodule(superModule));
-                }
-
-                if (submoduleStatus != null)
-                {
-                    return new DetailedSubmoduleInfo()
-                    {
-                        Status = submoduleStatus.Status,
-                        IsDirty = submoduleStatus.IsDirty,
-                        AddedAndRemovedText = submoduleStatus.AddedAndRemovedString()
-                    };
-                }
-
-                return null;
-            }, ThreadHelper.JoinableTaskFactory);
-
-            // Serialize the handling
-            await info.Detailed.GetValueAsync(cancelToken);
+                    Status = submoduleStatus.Status,
+                    IsDirty = submoduleStatus.IsDirty,
+                    AddedAndRemovedText = submoduleStatus.AddedAndRemovedString()
+                };
 
             // Recursively update submodules
             var module = new GitModule(path);

@@ -2583,21 +2583,8 @@ namespace GitUI.CommandsDialogs
             Func<Task<Action>> loadDetails = null;
             if (info.Detailed != null)
             {
-                loadDetails = async () =>
-                {
-                    var details = await info.Detailed.GetValueAsync(cancelToken);
-                    return () =>
-                    {
-                        if (details == null)
-                        {
-                            return;
-                        }
-
-                        ThreadHelper.ThrowIfNotOnUIThread();
-                        item.Image = GetSubmoduleItemImage(details);
-                        item.Text = string.Format(textFormat, info.Text + details.AddedAndRemovedText);
-                    };
-                };
+                item.Image = GetSubmoduleItemImage(info.Detailed);
+                item.Text = string.Format(textFormat, info.Text + info.Detailed.AddedAndRemovedText);
             }
 
             return (item, loadDetails);

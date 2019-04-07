@@ -97,6 +97,34 @@ namespace GitCommandsTests.Submodules
                 result.SuperSubmodules.Select(info => info.Path).Should().Contain(_repo2Module.WorkingDir, _repo3Module.WorkingDir);
             }
 
+            [Test]
+            public void Submodule_status_changes()
+            {
+                var currentModule = _repo1Module;
+                var result = SubmoduleTestHelpers.UpdateSubmoduleStructureAndWaitForResult(_provider, currentModule);
+
+                // No changes in repo
+                var changedFiles = GetStatusChangedFiles(currentModule);
+                changedFiles.Should().HaveCount(0);
+                SubmoduleTestHelpers.UpdateSubmoduleStatusAndWaitForResult(_provider, currentModule, changedFiles);
+                result.OurSubmodules.All(i => i.Detailed == null).Should().BeTrue();
+
+                // Make a change in repo2
+                _repo1.CreateFile(_repo2Module.WorkingDir, "test.txt", "test");
+                changedFiles = GetStatusChangedFiles(currentModule);
+                changedFiles.Should().HaveCount(1);
+                SubmoduleTestHelpers.UpdateSubmoduleStatusAndWaitForResult(_provider, currentModule, changedFiles);
+                ////result.OurSubmodules[0].Detailed.IsDirty.Should().BeTrue();
+                result.OurSubmodules[1].Detailed.Should().BeNull();
+
+                // Revert the change
+                File.Delete(Path.Combine(_repo2Module.WorkingDir, "test.txt"));
+                changedFiles = GetStatusChangedFiles(currentModule);
+                changedFiles.Should().HaveCount(0);
+                SubmoduleTestHelpers.UpdateSubmoduleStatusAndWaitForResult(_provider, currentModule, changedFiles);
+                result.OurSubmodules.All(i => i.Detailed == null).Should().BeTrue();
+            }
+
             private static IReadOnlyList<GitItemStatus> GetStatusChangedFiles(IGitModule module)
             {
                 var cmd = GitCommandHelpers.GetAllChangedFilesCmd(true, UntrackedFilesMode.Default, noLocks: true);
