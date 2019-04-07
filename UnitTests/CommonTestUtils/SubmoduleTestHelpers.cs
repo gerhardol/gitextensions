@@ -15,7 +15,7 @@ namespace CommonTestUtils
 
             provider.UpdateSubmodulesStructure(
                 updateStatus: updateStatus,
-                gitModule: module,
+                workingDirectory: module.WorkingDir,
                 noBranchText: string.Empty);
 
             AsyncTestHelper.WaitForPendingOperations();

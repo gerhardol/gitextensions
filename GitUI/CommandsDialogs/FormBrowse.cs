@@ -361,7 +361,7 @@ namespace GitUI.CommandsDialogs
 
                         if (AppSettings.ShowSubmoduleStatus)
                         {
-                            _submoduleStatusProvider.UpdateSubmodulesStatus(Module, status);
+                            _submoduleStatusProvider.UpdateSubmodulesStatus(Module.WorkingDir, status);
                         }
                     }
                 };
@@ -2639,7 +2639,7 @@ namespace GitUI.CommandsDialogs
             var updateStatus = AppSettings.ShowSubmoduleStatus && _gitStatusMonitor.Active && (Module.SuperprojectModule != null);
 
             toolStripButtonLevelUp.ToolTipText = "";
-            _submoduleStatusProvider.UpdateSubmodulesStructure(Module, _noBranchTitle.Text, updateStatus);
+            _submoduleStatusProvider.UpdateSubmodulesStructure(Module.WorkingDir, _noBranchTitle.Text, updateStatus);
         }
 
         private void SubmoduleStatusProvider_StatusUpdating(object sender, EventArgs e)
