@@ -156,20 +156,17 @@ namespace GitCommands
         public string SubmodulePath { get; }
 
         /// <summary>
-        /// If this module is a submodule, returns its superproject <see cref="GitModule"/>, otherwise <c>null</c>.
+        /// If this module is a submodule, returns its superproject <see cref="IGitModule"/>, otherwise <c>null</c>.
         /// </summary>
         /// TODO: Add to IGitModule and return IGitModule
-        [CanBeNull]
+        /// [CanBeNull]
         public GitModule SuperprojectModule { get; }
 
-        /// <summary>
-        /// If this module is a submodule, returns the top-most parent module, otherwise it returns itself.
-        /// </summary>
-        /// TODO: Add to IGitModule and return IGitModule
+        /// <inheritdoc />
         [NotNull]
-        public GitModule GetTopModule()
+        public IGitModule GetTopModule()
         {
-            GitModule topModule = this;
+            var topModule = this;
             while (topModule.SuperprojectModule != null)
             {
                 topModule = topModule.SuperprojectModule;

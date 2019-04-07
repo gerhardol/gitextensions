@@ -10,6 +10,7 @@ using GitCommands;
 using GitCommands.Git;
 using GitCommands.Submodules;
 using GitUI.Properties;
+using GitUIPluginInterfaces;
 using JetBrains.Annotations;
 using Microsoft.VisualStudio.Threading;
 using ResourceManager;
@@ -354,7 +355,7 @@ namespace GitUI.BranchTreePanel
                 }
             }
 
-            private string GetNodeRelativePath(GitModule topModule, SubmoduleNode node)
+            private string GetNodeRelativePath(IGitModule topModule, SubmoduleNode node)
             {
                 return node.SuperPath.SubstringAfter(topModule.WorkingDir).ToPosixPath() + node.LocalPath;
             }

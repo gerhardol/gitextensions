@@ -75,6 +75,17 @@ namespace GitUIPluginInterfaces
         [ContractAnnotation("=>true,objectId:notnull")]
         bool TryResolvePartialCommitId(string objectIdPrefix, out ObjectId objectId);
 
+        /// <summary>
+        /// If this module is a submodule, returns the top-most parent module, otherwise it returns itself.
+        /// </summary>
+        IGitModule GetTopModule();
+
+        /// <summary>
+        /// Get the current submodule path, i.e. submodule name
+        /// </summary>
+        /// <returns>Submodule name, null for top project</returns>
+        string GetCurrentSubmoduleLocalPath();
+
         string GetSubmoduleFullPath(string localPath);
 
         IEnumerable<IGitSubmoduleInfo> GetSubmodulesInfo();

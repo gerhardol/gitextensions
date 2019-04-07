@@ -90,7 +90,7 @@ namespace GitCommands.Submodules
 
                 // Add all submodules inside the current repository:
                 GetRepositorySubmodulesStructure(result, noBranchText);
-                GetSuperProjectRepositorySubmodulesStructure(currentModule, result, noBranchText);
+                GetSuperProjectRepositorySubmodulesStructure(result, noBranchText);
 
                 // Structure is updated
                 OnStatusUpdated(result, cancelToken);
@@ -189,8 +189,9 @@ namespace GitCommands.Submodules
         /// </summary>
         /// <param name="result">submodule info</param>
         /// <param name="noBranchText">text with no branches</param>
-        private void GetSuperProjectRepositorySubmodulesStructure(GitModule currentModule, SubmoduleInfoResult result, string noBranchText)
+        private void GetSuperProjectRepositorySubmodulesStructure(SubmoduleInfoResult result, string noBranchText)
         {
+            GitModule currentModule = (GitModule)result.Module;
             bool isCurrentTopProject = currentModule.SuperprojectModule == null;
             if (isCurrentTopProject)
             {
@@ -211,10 +212,10 @@ namespace GitCommands.Submodules
             SetTopProjectSubmoduleInfo(result, noBranchText, topProject, isParentTopProject);
 
             // Set result.CurrentSubmoduleName and populate result.SuperSubmodules
-            SetSubmoduleData(currentModule, result, noBranchText, topProject);
+            SetSubmoduleData(result, noBranchText, topProject);
         }
 
-        private void SetSuperProjectSubmoduleInfo(GitModule superprojectModule, SubmoduleInfoResult result, string noBranchText, IGitModule topProject, bool isParentTopProject)
+        private void SetSuperProjectSubmoduleInfo(IGitModule superprojectModule, SubmoduleInfoResult result, string noBranchText, IGitModule topProject, bool isParentTopProject)
         {
             string name;
             if (isParentTopProject)
@@ -247,7 +248,7 @@ namespace GitCommands.Submodules
             }
         }
 
-        private void SetSubmoduleData(GitModule currentModule, SubmoduleInfoResult result, string noBranchText, IGitModule topProject)
+        private void SetSubmoduleData(SubmoduleInfoResult result, string noBranchText, IGitModule topProject)
         {
             var submodules = topProject.GetSubmodulesLocalPaths().OrderBy(submoduleName => submoduleName).ToArray();
             if (submodules.Any())
@@ -263,7 +264,7 @@ namespace GitCommands.Submodules
                     bool bold = false;
                     if (submodule == localPath)
                     {
-                        result.CurrentSubmoduleName = currentModule.GetCurrentSubmoduleLocalPath();
+                        result.CurrentSubmoduleName = result.Module.GetCurrentSubmoduleLocalPath();
                         bold = true;
                     }
 
@@ -322,13 +323,14 @@ namespace GitCommands.Submodules
         /// <param name="module">Module to compare to</param>
         /// <param name="cancelToken">Cancelation token</param>
         /// <returns>The task</returns>
-        private async Task GetSubmoduleDetailedStatusAsync(GitModule module, CancellationToken cancelToken)
+        private async Task GetSubmoduleDetailedStatusAsync(IGitModule module, CancellationToken cancelToken)
         {
+            var gitModule = (GitModule)module;
             foreach (var name in module.GetSubmodulesLocalPaths(false))
             {
                 cancelToken.ThrowIfCancellationRequested();
 
-                await GetSubmoduleDetailedStatusAsync(module, name, cancelToken);
+                await GetSubmoduleDetailedStatusAsync(gitModule, name, cancelToken);
             }
         }
 
@@ -392,7 +394,7 @@ namespace GitCommands.Submodules
         /// </summary>
         /// <param name="superModule">The module to compare to</param>
         /// <param name="submoduleName">Name of the submodule</param>
-        private void SetSubmoduleEmptyDetailedStatus(GitModule superModule, string submoduleName)
+        private void SetSubmoduleEmptyDetailedStatus(IGitModule superModule, string submoduleName)
         {
             if (superModule == null || string.IsNullOrEmpty(submoduleName))
             {
