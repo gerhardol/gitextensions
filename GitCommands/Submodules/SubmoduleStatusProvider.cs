@@ -33,6 +33,8 @@ namespace GitCommands.Submodules
         /// <param name="workingDirectory">Current module working directory</param>
         /// <param name="gitStatus">The Git status for the changes (also other than submodules)</param>
         void UpdateSubmodulesStatus(string workingDirectory, [CanBeNull] IReadOnlyList<GitItemStatus> gitStatus);
+
+        SubmoduleStatusProvider.TestAccessor GetTestAccessor();
     }
 
     public sealed class SubmoduleStatusProvider : ISubmoduleStatusProvider
@@ -402,6 +404,24 @@ namespace GitCommands.Submodules
             foreach (var name in module.GetSubmodulesLocalPaths(false))
             {
                 SetSubmoduleEmptyDetailedStatus(module, name);
+            }
+        }
+
+        public TestAccessor GetTestAccessor()
+    => new TestAccessor(this);
+
+        public class TestAccessor
+        {
+            private readonly SubmoduleStatusProvider _provider;
+
+            public TestAccessor(SubmoduleStatusProvider provider)
+            {
+                _provider = provider;
+            }
+
+            public Task UpdateSubmodulesStatusAsync(GitModule module, [CanBeNull] IReadOnlyList<GitItemStatus> gitStatus, CancellationToken cancelToken)
+            {
+                return _provider.UpdateSubmodulesStatusAsync(module, gitStatus, cancelToken);
             }
         }
     }

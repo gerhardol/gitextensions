@@ -117,9 +117,7 @@ namespace GitCommandsTests.Submodules
                 changedFiles = GetStatusChangedFiles(currentModule);
                 changedFiles.Should().HaveCount(1);
                 SubmoduleTestHelpers.UpdateSubmoduleStatusAndWaitForResult(_provider, currentModule, changedFiles);
-
-                // Disabled test as the test case does not await async retrieval of submodule status
-                ////result.OurSubmodules[0].Detailed.IsDirty.Should().BeTrue();
+                result.OurSubmodules[0].Detailed.IsDirty.Should().BeTrue();
                 result.OurSubmodules[1].Detailed.Should().BeNull();
 
                 // Revert the change
@@ -145,9 +143,7 @@ namespace GitCommandsTests.Submodules
                 // Make a change in repo1
                 _repo1.CreateFile(_repo1Module.WorkingDir, "test.txt", "test");
                 changedFiles = GetStatusChangedFiles(currentModule);
-
-                // The status output is incorrect in the test, why it fails (executable dir is repo1)
-                ////changedFiles.Should().HaveCount(0);
+                changedFiles.Should().HaveCount(0);
                 SubmoduleTestHelpers.UpdateSubmoduleStatusAndWaitForResult(_provider, currentModule, changedFiles);
                 result.OurSubmodules.All(i => i.Detailed == null).Should().BeTrue();
 
@@ -163,8 +159,6 @@ namespace GitCommandsTests.Submodules
                 changedFiles = GetStatusChangedFiles(currentModule);
                 changedFiles.Should().HaveCount(1);
                 SubmoduleTestHelpers.UpdateSubmoduleStatusAndWaitForResult(_provider, currentModule, changedFiles);
-
-                // Fails, for same reason as above
                 ////result.OurSubmodules[0].Detailed.IsDirty.Should().BeTrue();
 
                 // Revert the change

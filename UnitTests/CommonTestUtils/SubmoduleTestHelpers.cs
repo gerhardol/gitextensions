@@ -33,22 +33,15 @@ namespace CommonTestUtils
 
         public static void UpdateSubmoduleStatusAndWaitForResult(ISubmoduleStatusProvider provider, GitModule module, IReadOnlyList<GitItemStatus> gitStatus)
         {
-            List<DetailedSubmoduleInfo> result = new List<DetailedSubmoduleInfo>();
-            provider.StatusUpdated += Provider_StatusUpdated;
+            CancellationTokenSequence submodulesStatusSequence = new CancellationTokenSequence();
 
-            provider.UpdateSubmodulesStatus(
-                workingDirectory: module.WorkingDir,
-                gitStatus: gitStatus);
-
-            AsyncTestHelper.WaitForPendingOperations();
-
-            provider.StatusUpdated -= Provider_StatusUpdated;
+            // await status to be updated in result struct returned for the structure, update not running
+            AsyncTestHelper.RunAndWaitForPendingOperations(() => provider.GetTestAccessor().UpdateSubmodulesStatusAsync(
+                module: new GitModule(module.WorkingDir),
+                gitStatus: gitStatus,
+                submodulesStatusSequence.Next()));
 
             return;
-
-            void Provider_StatusUpdated(object sender, SubmoduleStatusEventArgs e)
-            {
-            }
         }
     }
 }
