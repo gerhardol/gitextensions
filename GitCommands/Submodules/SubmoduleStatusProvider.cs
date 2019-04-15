@@ -144,10 +144,10 @@ namespace GitCommands.Submodules
                 return;
             }
 
+            var cancelToken = _submodulesStatusSequence.Next();
             _gitStatusWhileUpdatingStructure = null;
             ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
-                var cancelToken = _submodulesStatusSequence.Next();
                 await TaskScheduler.Default;
 
                 var currentModule = new GitModule(workingDirectory);
@@ -352,13 +352,11 @@ namespace GitCommands.Submodules
                 return;
             }
 
-            cancelToken.ThrowIfCancellationRequested();
-
             var info = _submoduleInfos[path];
             cancelToken.ThrowIfCancellationRequested();
 
             var submoduleStatus = await GitCommandHelpers.GetCurrentSubmoduleChangesAsync(superModule, submoduleName, noLocks: true)
-            .ConfigureAwait(true);
+            .ConfigureAwait(false);
             if (submoduleStatus != null && submoduleStatus.Commit != submoduleStatus.OldCommit)
             {
                 submoduleStatus.CheckSubmoduleStatus(submoduleStatus.GetSubmodule(superModule));
