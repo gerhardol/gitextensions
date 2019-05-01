@@ -46,6 +46,8 @@ namespace GitUI.CommandsDialogs.BrowseDialog
         private bool _nextIsInteractive;
         private GitStatusMonitorState _currentStatus;
 
+        public bool SuspendUpdating { get; set; }
+
         public bool Active
         {
             get => CurrentStatus != GitStatusMonitorState.Stopped;
@@ -200,6 +202,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                             _timerRefresh.Start();
                             _workTreeWatcher.EnableRaisingEvents = true;
                             _gitDirWatcher.EnableRaisingEvents = !_gitDirWatcher.Path.StartsWith(_workTreeWatcher.Path);
+                            SuspendUpdating = false;
                             ScheduleNextInteractiveTime();
                         }
 
@@ -298,6 +301,12 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             }
 
             if (Environment.TickCount < _nextUpdateTime)
+            {
+                return;
+            }
+
+            // If updates are suspended, wait for next tick
+            if (SuspendUpdating)
             {
                 return;
             }

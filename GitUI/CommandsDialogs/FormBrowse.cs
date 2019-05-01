@@ -516,6 +516,11 @@ namespace GitUI.CommandsDialogs
             base.OnActivated(e);
         }
 
+        protected override void OnDeactivate(EventArgs e)
+        {
+            _gitStatusMonitor.SuspendUpdating = true;
+        }
+
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             SaveApplicationSettings();
@@ -934,6 +939,7 @@ namespace GitUI.CommandsDialogs
         private void OnActivate()
         {
             CheckForMergeConflicts();
+            _gitStatusMonitor.SuspendUpdating = false;
 
             return;
 
