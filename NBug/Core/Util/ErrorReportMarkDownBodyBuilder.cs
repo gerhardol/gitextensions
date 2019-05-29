@@ -1,4 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+﻿ // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="GitHub.cs" company="Git Extensions">
 //   Copyright (c) 2019 Igor Velikorossov. Licensed under MIT license.
 // </copyright>
@@ -28,6 +28,8 @@ namespace NBug.Core.Util
             sb.AppendLine(@"<!--
     :warning: Review existing issues to see whether someone else has already reported your issue.
 -->
+
+The sections below must be filled in and this text must be removed or the issue will be closed.
 
 ## Current behaviour
 
