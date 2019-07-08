@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using System.Globalization;
+using System.Windows.Forms;
 using JetBrains.Annotations;
 
 namespace GitUIPluginInterfaces
@@ -90,12 +91,12 @@ namespace GitUIPluginInterfaces
 
             if (type == typeof(float))
             {
-                return float.Parse(value);
+                return float.Parse(value, CultureInfo.InvariantCulture);
             }
 
             if (type == typeof(double))
             {
-                return double.Parse(value);
+                return double.Parse(value, CultureInfo.InvariantCulture);
             }
 
             if (type == typeof(long))
