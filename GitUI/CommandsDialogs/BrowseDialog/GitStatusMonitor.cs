@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Windows.Forms;
 using GitCommands;
 using GitUIPluginInterfaces;
@@ -32,7 +33,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
         private readonly FileSystemWatcher _workTreeWatcher = new FileSystemWatcher();
         private readonly FileSystemWatcher _gitDirWatcher = new FileSystemWatcher();
-        private readonly Timer _timerRefresh;
+        private readonly System.Windows.Forms.Timer _timerRefresh;
         private string _gitPath;
         private string _submodulesPath;
         private readonly CancellationTokenSequence _statusSequence = new CancellationTokenSequence();
@@ -65,7 +66,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
         public GitStatusMonitor(IGitUICommandsSource commandsSource)
         {
-            _timerRefresh = new Timer
+            _timerRefresh = new System.Windows.Forms.Timer
             {
                 Enabled = true,
                 Interval = InteractiveUpdateDelay / 2
@@ -330,6 +331,10 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                 return;
             }
 
+            int commandStartTime;
+            IGitModule module;
+            CancellationToken cancelToken;
+
             lock (_statusSequence)
             {
                 if (_commandIsRunning)
@@ -343,20 +348,20 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                     return;
                 }
 
+                commandStartTime = Environment.TickCount;
+                _workTreeWatcher.EnableRaisingEvents = true;
+                _gitDirWatcher.EnableRaisingEvents = GitDirWatcherEnableRaisingEvents();
+
+                // capture a consistent state in the main thread
+                module = Module;
+                cancelToken = _statusSequence.Next();
+
                 _commandIsRunning = true;
                 _pendingUpdate = false;
 
                 // Schedule update every 5 min, even if we don't know that anything changed
                 _nextUpdateTime = Environment.TickCount + PeriodicUpdateInterval;
             }
-
-            var commandStartTime = Environment.TickCount;
-            _workTreeWatcher.EnableRaisingEvents = true;
-            _gitDirWatcher.EnableRaisingEvents = GitDirWatcherEnableRaisingEvents();
-
-            // capture a consistent state in the main thread
-            IGitModule module = Module;
-            var cancelToken = _statusSequence.Next();
 
             ThreadHelper.JoinableTaskFactory.RunAsync(
                     async () =>
