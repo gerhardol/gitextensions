@@ -172,6 +172,12 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             _statusSequence.Dispose();
         }
 
+        private bool GitDirWatcherEnableRaisingEvents()
+        {
+            return Directory.Exists(_gitDirWatcher.Path)
+                    && !_gitDirWatcher.Path.StartsWith(_workTreeWatcher.Path);
+        }
+
         private GitStatusMonitorState CurrentStatus
         {
             get { return _currentStatus; }
@@ -201,16 +207,14 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                     case GitStatusMonitorState.Running:
                         {
                             _workTreeWatcher.EnableRaisingEvents = Directory.Exists(_workTreeWatcher.Path);
-
-                            _gitDirWatcher.EnableRaisingEvents = Directory.Exists(_gitDirWatcher.Path) &&
-                                    !_gitDirWatcher.Path.StartsWith(_workTreeWatcher.Path);
+                            _gitDirWatcher.EnableRaisingEvents = GitDirWatcherEnableRaisingEvents();
 
                             lock (_statusSequence)
                             {
                                 // An interactive update will be requested separately
-                                _nextUpdateTime =
-                                    _nextEarliestTime =
-                                    Environment.TickCount + FileChangedUpdateDelay;
+                                _nextUpdateTime
+                                    = _nextEarliestTime
+                                    = Environment.TickCount + FileChangedUpdateDelay;
                                 _pendingUpdate = true;
                                 _commandIsRunning = false;
                                 _statusSequence.CancelCurrent();
@@ -348,8 +352,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
             var commandStartTime = Environment.TickCount;
             _workTreeWatcher.EnableRaisingEvents = true;
-            _gitDirWatcher.EnableRaisingEvents = Directory.Exists(_gitDirWatcher.Path) &&
-                    !_gitDirWatcher.Path.StartsWith(_workTreeWatcher.Path);
+            _gitDirWatcher.EnableRaisingEvents = GitDirWatcherEnableRaisingEvents();
 
             // capture a consistent state in the main thread
             IGitModule module = Module;
@@ -454,9 +457,9 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             {
                 _commandIsRunning = false;
                 _statusSequence.CancelCurrent();
-                _nextUpdateTime =
-                    _nextEarliestTime =
-                    Environment.TickCount + InteractiveUpdateDelay;
+                _nextUpdateTime
+                    = _nextEarliestTime
+                    = Environment.TickCount + InteractiveUpdateDelay;
             }
         }
     }
