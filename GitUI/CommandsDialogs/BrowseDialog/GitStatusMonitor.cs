@@ -337,17 +337,17 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                     return;
                 }
 
+                if (!Directory.Exists(_workTreeWatcher.Path))
+                {
+                    // The directory no longer exists, watcher cannot be enabled
+                    return;
+                }
+
                 _commandIsRunning = true;
                 _pendingUpdate = false;
 
                 // Schedule update every 5 min, even if we don't know that anything changed
                 _nextUpdateTime = Environment.TickCount + PeriodicUpdateInterval;
-            }
-
-            if (!Directory.Exists(_workTreeWatcher.Path))
-            {
-                // The directory no longer exists, watcher cannot be enabled
-                return;
             }
 
             var commandStartTime = Environment.TickCount;
