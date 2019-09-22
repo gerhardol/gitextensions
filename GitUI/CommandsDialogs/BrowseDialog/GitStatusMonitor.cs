@@ -361,6 +361,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             ThreadHelper.JoinableTaskFactory.RunAsync(
                     async () =>
                     {
+                        bool isSuccess = false;
                         try
                         {
                             var cmd = GitCommandHelpers.GetAllChangedFilesCmd(true, UntrackedFilesMode.Default,
@@ -374,20 +375,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                             {
                                 if (!cancelToken.IsCancellationRequested)
                                 {
-                                    // Module is unchanged and no forced update, schedule new
-                                    lock (_statusSequence)
-                                    {
-                                        // Adjust the min time for the update
-                                        var commandTime = Environment.TickCount - commandStartTime;
-                                        _nextEarliestTime = commandStartTime + Math.Max(MinUpdateInterval, 3 * commandTime);
-                                        if (_pendingUpdate)
-                                        {
-                                            // Schedule the update, a request is pending
-                                            _nextUpdateTime = _nextEarliestTime;
-                                        }
-
-                                        _commandIsRunning = false;
-                                    }
+                                    isSuccess = true;
                                 }
 
                                 // Update callers also if cancelled, this is for the correct module
@@ -409,6 +397,29 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                             }
 
                             throw;
+                        }
+                        finally
+                        {
+                            if (!ModuleHasChanged() && !cancelToken.IsCancellationRequested)
+                            {
+                                // Module is unchanged and no forced update, schedule new
+                                lock (_statusSequence)
+                                {
+                                    if (isSuccess)
+                                    {
+                                        // Adjust the min time for the update
+                                        var commandTime = Environment.TickCount - commandStartTime;
+                                        _nextEarliestTime = commandStartTime + Math.Max(MinUpdateInterval, 3 * commandTime);
+                                        if (_pendingUpdate)
+                                        {
+                                            // Schedule the update, a request is pending
+                                            _nextUpdateTime = _nextEarliestTime;
+                                        }
+                                    }
+
+                                    _commandIsRunning = false;
+                                }
+                            }
                         }
                     })
                 .FileAndForget();
