@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using GitCommands;
 using GitCommands.Submodules;
@@ -13,10 +13,10 @@ namespace CommonTestUtils
             provider.StatusUpdated += ProviderStatusUpdated;
             try
             {
-                provider.UpdateSubmodulesStructure(
-                    workingDirectory: module.WorkingDir,
-                    noBranchText: string.Empty,
-                    updateStatus: updateStatus);
+                await provider.UpdateSubmodulesStructureAsync(
+                        workingDirectory: module.WorkingDir,
+                        noBranchText: string.Empty,
+                        updateStatus: updateStatus).ConfigureAwait(false);
 
                 await AsyncTestHelper.JoinPendingOperationsAsync(AsyncTestHelper.UnexpectedTimeout);
             }
@@ -35,9 +35,22 @@ namespace CommonTestUtils
 
         public static async Task UpdateSubmoduleStatusAndWaitForResultAsync(ISubmoduleStatusProvider provider, GitModule module, IReadOnlyList<GitItemStatus> gitStatus)
         {
-            provider.UpdateSubmodulesStatus(workingDirectory: module.WorkingDir, gitStatus: gitStatus, forceUpdate: true);
+            List<DetailedSubmoduleInfo> result = new List<DetailedSubmoduleInfo>();
+            provider.StatusUpdated += Provider_StatusUpdated;
 
-            await AsyncTestHelper.JoinPendingOperationsAsync(AsyncTestHelper.UnexpectedTimeout);
+            await provider.UpdateSubmodulesStatusAsync(
+                    workingDirectory: module.WorkingDir,
+                    gitStatus: gitStatus);
+
+            AsyncTestHelper.WaitForPendingOperations(AsyncTestHelper.UnexpectedTimeout);
+
+            provider.StatusUpdated -= Provider_StatusUpdated;
+
+            return;
+
+            void Provider_StatusUpdated(object sender, SubmoduleStatusEventArgs e)
+            {
+            }
         }
     }
 }

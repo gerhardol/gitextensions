@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using GitCommands;
+using GitCommands.Config;
 using GitExtUtils.GitUI;
 using GitExtUtils.GitUI.Theming;
 using GitUI.CommandsDialogs.SubmodulesDialog;
@@ -146,11 +147,21 @@ namespace GitUI.CommandsDialogs
             {
                 Module.UnstageFile(SubModuleLocalPath.Text);
 
-                var modules = Module.GetSubmoduleConfigFile();
-                modules.RemoveConfigSection("submodule \"" + SubModuleName.Text + "\"");
-                if (modules.ConfigSections.Count > 0)
+                ConfigFile configFile;
+                try
                 {
-                    modules.Save();
+                    configFile = Module.GetSubmoduleConfigFile();
+                }
+                catch (GitConfigurationException ex)
+                {
+                    MessageBox.Show(this, ex.Message, "Failed to parse " + ex.ConfigPath, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                configFile.RemoveConfigSection("submodule \"" + SubModuleName.Text + "\"");
+                if (configFile.ConfigSections.Count > 0)
+                {
+                    configFile.Save();
                     Module.StageFile(".gitmodules");
                 }
                 else
@@ -158,9 +169,9 @@ namespace GitUI.CommandsDialogs
                     Module.UnstageFile(".gitmodules");
                 }
 
-                var configFile = Module.LocalConfigFile;
-                configFile.RemoveConfigSection("submodule \"" + SubModuleName.Text + "\"");
-                configFile.Save();
+                var configFileSettings = Module.LocalConfigFile;
+                configFileSettings.RemoveConfigSection("submodule \"" + SubModuleName.Text + "\"");
+                configFileSettings.Save();
 
                 Initialize();
             }

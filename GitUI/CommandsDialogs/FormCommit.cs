@@ -2351,7 +2351,16 @@ namespace GitUI.CommandsDialogs
         {
             var stagedFiles = Staged.AllItems.Select(i => i.Item);
 
-            var configFile = Module.GetSubmoduleConfigFile();
+            ConfigFile configFile;
+            try
+            {
+                configFile = Module.GetSubmoduleConfigFile();
+            }
+            catch (GitConfigurationException ex)
+            {
+                MessageBox.Show(this, ex.Message, "Failed to parse " + ex.ConfigPath, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
             Dictionary<string, string> modules = stagedFiles
                 .Where(item => item.IsSubmodule)
