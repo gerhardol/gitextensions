@@ -20,7 +20,7 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
         {
             InitializeComponent();
             CaptionCol.Width = DpiUtil.Scale(150);
-            splitContainer1.Panel1MinSize = toolStripManageCategories.Width;
+            splitContainer1.Panel1MinSize = _NO_TRANSLATE_toolStripManageCategories.Width;
             Text = "Revision links";
             InitializeComplete();
             LinksGrid.AutoGenerateColumns = false;

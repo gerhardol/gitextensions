@@ -30,7 +30,7 @@
         {
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.toolStripManageCategories = new System.Windows.Forms.ToolStrip();
+            this._NO_TRANSLATE_toolStripManageCategories = new System.Windows.Forms.ToolStrip();
             this.Add = new System.Windows.Forms.ToolStripSplitButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.Remove = new System.Windows.Forms.ToolStripButton();
@@ -76,7 +76,7 @@
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
-            this.toolStripManageCategories.SuspendLayout();
+            this._NO_TRANSLATE_toolStripManageCategories.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.LinksGrid)).BeginInit();
             this.panel1.SuspendLayout();
             this.detailPanel.SuspendLayout();
@@ -122,7 +122,7 @@
             this.tableLayoutPanel1.BackColor = System.Drawing.SystemColors.Control;
             this.tableLayoutPanel1.ColumnCount = 1;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel1.Controls.Add(this.toolStripManageCategories, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_toolStripManageCategories, 0, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 524);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -131,20 +131,20 @@
             this.tableLayoutPanel1.Size = new System.Drawing.Size(192, 25);
             this.tableLayoutPanel1.TabIndex = 3;
             // 
-            // toolStripManageCategories
+            // _NO_TRANSLATE_toolStripManageCategories
             // 
-            this.toolStripManageCategories.AllowMerge = false;
-            this.toolStripManageCategories.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStripManageCategories.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this._NO_TRANSLATE_toolStripManageCategories.AllowMerge = false;
+            this._NO_TRANSLATE_toolStripManageCategories.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this._NO_TRANSLATE_toolStripManageCategories.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.Add,
             this.toolStripSeparator1,
             this.Remove});
-            this.toolStripManageCategories.Location = new System.Drawing.Point(5, 0);
-            this.toolStripManageCategories.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
-            this.toolStripManageCategories.Name = "toolStripManageCategories";
-            this.toolStripManageCategories.Size = new System.Drawing.Size(182, 25);
-            this.toolStripManageCategories.TabIndex = 5;
-            this.toolStripManageCategories.Text = "toolStrip1";
+            this._NO_TRANSLATE_toolStripManageCategories.Location = new System.Drawing.Point(5, 0);
+            this._NO_TRANSLATE_toolStripManageCategories.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
+            this._NO_TRANSLATE_toolStripManageCategories.Name = "_NO_TRANSLATE_toolStripManageCategories";
+            this._NO_TRANSLATE_toolStripManageCategories.Size = new System.Drawing.Size(182, 25);
+            this._NO_TRANSLATE_toolStripManageCategories.TabIndex = 5;
+            this._NO_TRANSLATE_toolStripManageCategories.Text = "toolStrip1";
             // 
             // Add
             // 
@@ -651,8 +651,8 @@
             this.splitContainer1.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
-            this.toolStripManageCategories.ResumeLayout(false);
-            this.toolStripManageCategories.PerformLayout();
+            this._NO_TRANSLATE_toolStripManageCategories.ResumeLayout(false);
+            this._NO_TRANSLATE_toolStripManageCategories.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.LinksGrid)).EndInit();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
@@ -721,7 +721,7 @@
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel4;
         private System.Windows.Forms.TextBox _NO_TRANSLATE_UseRemotes;
         private System.Windows.Forms.CheckBox chkOnlyFirstRemote;
-        private System.Windows.Forms.ToolStrip toolStripManageCategories;
+        private System.Windows.Forms.ToolStrip _NO_TRANSLATE_toolStripManageCategories;
         private System.Windows.Forms.ToolStripSplitButton Add;
         private System.Windows.Forms.ToolStripButton Remove;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
