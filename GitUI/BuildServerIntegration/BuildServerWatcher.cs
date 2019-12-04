@@ -27,8 +27,7 @@ namespace GitUI.BuildServerIntegration
 {
     public sealed class BuildServerWatcher : IBuildServerWatcher, IDisposable
     {
-        private const int PollIntervalWhenSomeBuildsAreRunning = 10;
-        private const int PollIntervalWhenNoBuildsAreRunning = 120;
+        private const int NumberOfPollSkipWhenNoBuildsAreRunning = 12;
         private readonly CancellationTokenSequence _launchCancellation = new CancellationTokenSequence();
         private readonly object _buildServerCredentialsLock = new object();
         private readonly RevisionGridControl _revisionGrid;
@@ -82,6 +81,14 @@ namespace GitUI.BuildServerIntegration
             var fromNowObservable = buildServerAdapter.GetFinishedBuildsSince(scheduler, DateTime.Now);
 
             var isBuildRunning = false;
+
+            // We are only interested by the 'OnComplete' which occurs:
+            // * after 10s if a build is running
+            // * after (NumberOfPollSkipWhenNoBuildsAreRunning * 10s) if no builds are running
+            var delayObservable = Observable.Interval(TimeSpan.FromSeconds(10))
+                .TakeWhile(a => !isBuildRunning && a < NumberOfPollSkipWhenNoBuildsAreRunning)
+                .SkipWhile(_ => true).Select(_ => new BuildInfo());
+
             var cancellationToken = new CompositeDisposable
                     {
                         fullDayObservable.OnErrorResumeNext(fullObservable)
@@ -94,11 +101,8 @@ namespace GitUI.BuildServerIntegration
                                          .Subscribe(OnBuildInfoUpdate),
 
                         runningBuildsObservable.Do(_ => isBuildRunning = true)
-                                               .Finally(() =>
-                                               {
-                                                   Thread.Sleep(TimeSpan.FromSeconds(isBuildRunning ? PollIntervalWhenSomeBuildsAreRunning : PollIntervalWhenNoBuildsAreRunning));
-                                                   isBuildRunning = false;
-                                               })
+                                               .OnErrorResumeNext(delayObservable)
+                                               .Finally(() => isBuildRunning = false)
                                                .Retry()
                                                .Repeat()
                                                .ObserveOn(MainThreadScheduler.Instance)
