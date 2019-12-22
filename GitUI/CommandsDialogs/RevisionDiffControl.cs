@@ -207,14 +207,24 @@ namespace GitUI.CommandsDialogs
         }
 
         /// <summary>
+        /// Checks if it is possible to reset to the revision.
+        /// For artificial is Index is possible but not WorkTree or Combined
+        /// </summary>
+        /// <param name="rev">The GitRevision</param>
+        /// <returns>If it is possible to reset to the revisions</returns>
+        private bool CanResetToRevision(GitRevision rev)
+        {
+            return rev.ObjectId != ObjectId.WorkTreeId
+                     && rev.ObjectId != ObjectId.CombinedDiffId;
+        }
+
+        /// <summary>
         /// Provide a description for the first selected or parent to the "primary" selected last
         /// </summary>
         /// <returns>A description of the selected parent</returns>
-        private string DescribeSelectedParentRevision(bool showWorkTreeAndCombined)
+        private string DescribeSelectedParentRevision()
         {
             var parents = DiffFiles.SelectedItemParents
-                .Where(i => showWorkTreeAndCombined ||
-                    !(i.Guid.IsNullOrWhiteSpace() || i.Guid == GitRevision.WorkTreeGuid || i.Guid == GitRevision.CombinedDiffGuid))
                 .Distinct()
                 .Count();
 
@@ -694,7 +704,7 @@ namespace GitUI.CommandsDialogs
                 MenuUtil.SetAsCaptionMenuItem(selectedDiffCaptionMenuItem, DiffContextMenu);
 
                 firstDiffCaptionMenuItem.Text = _firstRevision + ":";
-                var parentDesc = DescribeSelectedParentRevision(true);
+                var parentDesc = DescribeSelectedParentRevision();
                 if (parentDesc.IsNotNullOrWhitespace())
                 {
                     firstDiffCaptionMenuItem.Text += " (" + parentDesc + ")";
@@ -732,18 +742,23 @@ namespace GitUI.CommandsDialogs
                 return;
             }
 
-            if (DiffFiles.Revision.Guid == GitRevision.WorkTreeGuid)
+            if (!CanResetToRevision(DiffFiles.Revision))
             {
                 resetFileToSelectedToolStripMenuItem.Visible = false;
             }
             else
             {
                 resetFileToSelectedToolStripMenuItem.Visible = true;
-                resetFileToSelectedToolStripMenuItem.Text = _selectedRevision + " (" + _revisionGrid.DescribeRevision(DiffFiles.Revision, 50) + ")";
+                resetFileToSelectedToolStripMenuItem.Text =
+                    _selectedRevision + " (" + _revisionGrid.DescribeRevision(DiffFiles.Revision, 50) + ")";
             }
 
-            var parentDesc = DescribeSelectedParentRevision(false);
-            if (parentDesc.IsNullOrWhiteSpace())
+            var canResetToAllParents = DiffFiles.SelectedItemParents
+                .All(i => CanResetToRevision(i));
+
+            // The description is only valid if it is possible to reset to all parent revisions
+            var parentDesc = DescribeSelectedParentRevision();
+            if (!canResetToAllParents || parentDesc.IsNullOrWhiteSpace())
             {
                 resetFileToParentToolStripMenuItem.Visible = false;
             }
