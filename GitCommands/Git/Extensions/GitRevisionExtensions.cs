@@ -6,7 +6,8 @@
         {
             return sha1 == GitRevision.WorkTreeGuid ||
                    sha1 == GitRevision.IndexGuid ||
-                   sha1 == GitRevision.CombinedDiffGuid;
+                   sha1 == GitRevision.CombinedDiffGuid ||
+                   sha1 == GitRevision.BaseADiffGuid;
         }
     }
 }

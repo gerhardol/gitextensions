@@ -188,6 +188,14 @@ namespace GitCommandsTests.Git
             Assert.AreEqual(
                 ObjectId.CombinedDiffId,
                 ObjectId.Parse(GitRevision.CombinedDiffGuid));
+
+            Assert.AreEqual(
+                ObjectId.BaseADiffId,
+                ObjectId.BaseADiffId);
+
+            Assert.AreEqual(
+                ObjectId.BaseADiffId,
+                ObjectId.Parse(GitRevision.BaseADiffGuid));
         }
 
         [Test]

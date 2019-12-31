@@ -60,7 +60,8 @@ namespace GitCommands.Git
         private ArgumentString GetInternal([CanBeNull] string firstRevision, [CanBeNull] string secondRevision, string fileName = null, string oldFileName = null, bool isTracked = true)
         {
             // Combined Diff artificial commit should not be included in diffs
-            if (firstRevision == GitRevision.CombinedDiffGuid || secondRevision == GitRevision.CombinedDiffGuid)
+            if (firstRevision == GitRevision.CombinedDiffGuid || secondRevision == GitRevision.CombinedDiffGuid
+                || firstRevision == GitRevision.BaseADiffGuid || secondRevision == GitRevision.BaseADiffGuid)
             {
                 throw new ArgumentOutOfRangeException(nameof(firstRevision), firstRevision,
                     "CombinedDiff artificial commit cannot be explicitly compared: " +

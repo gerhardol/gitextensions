@@ -50,6 +50,14 @@ namespace GitCommandsTests.Git
             Assert.Throws<ArgumentOutOfRangeException>(() => _revisionDiffProvider.Get(firstRevision, secondRevision));
         }
 
+        // BASE-A artificial commit should not be included in diffs
+        [TestCase(GitRevision.BaseADiffGuid, "")]
+        [TestCase("", GitRevision.BaseADiffGuid)]
+        public void RevisionDiffProvider_should_throw_if_any_base_a_diff(string firstRevision, string secondRevision)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => _revisionDiffProvider.Get(firstRevision, secondRevision));
+        }
+
         [TestCase(GitRevision.IndexGuid, GitRevision.WorkTreeGuid)]
         [TestCase("^", "")]
         [TestCase(GitRevision.IndexGuid, null)]

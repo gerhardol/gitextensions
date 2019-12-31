@@ -31,6 +31,7 @@ namespace GitUI
         private static readonly TimeSpan SelectedIndexChangeThrottleDuration = TimeSpan.FromMilliseconds(50);
         private readonly TranslationString _diffWithParent = new TranslationString("Diff with:");
         public readonly TranslationString CombinedDiff = new TranslationString("Combined Diff");
+        private readonly TranslationString _diffBaseToA = new TranslationString("Diff {0} with {1}:");
         private readonly IGitRevisionTester _revisionTester;
         private readonly IFullPathResolver _fullPathResolver;
         private readonly SortDiffListContextMenuItem _sortByContextMenu;
@@ -43,6 +44,7 @@ namespace GitUI
         private IReadOnlyList<(GitRevision revision, IReadOnlyList<GitItemStatus> statuses)> _itemsWithParent = Array.Empty<(GitRevision, IReadOnlyList<GitItemStatus>)>();
         [CanBeNull] private IDisposable _selectedIndexChangeSubscription;
         [CanBeNull] private IDisposable _diffListSortSubscription;
+        private Dictionary<ObjectId, (GitRevision, GitRevision)> _artificialParents = new Dictionary<ObjectId, (GitRevision, GitRevision)>();
 
         private bool _updatingColumnWidth;
 
@@ -394,6 +396,22 @@ namespace GitUI
         [DefaultValue(true)]
         public bool SelectFirstItemOnSetItems { get; set; }
 
+        public (GitRevision first, GitRevision selected) GetFirstAndSelectedFromParent(GitRevision first = null)
+        {
+            first = first ?? SelectedItemParent;
+            GitRevision selected;
+            if (first?.ObjectId == ObjectId.BaseADiffId)
+            {
+                (first, selected) = _artificialParents[ObjectId.BaseADiffId];
+            }
+            else
+            {
+                selected = Revision;
+            }
+
+            return (first, selected);
+        }
+
         public int UnfilteredItemsCount => GitItemStatusesWithParents?.Sum(tuple => tuple.statuses.Count) ?? 0;
 
         // Public methods
@@ -638,8 +656,11 @@ namespace GitUI
                             && baseRevGuid != revA
                             && baseRevGuid != revB)
                         {
-                            Array.Resize(ref parentRevs, 2);
+                            Array.Resize(ref parentRevs, 3);
                             parentRevs[1] = new GitRevision(baseRevGuid);
+
+                            parentRevs[2] = new GitRevision(ObjectId.BaseADiffId);
+                            _artificialParents[ObjectId.BaseADiffId] = (parentRevs[1], parentRevs[0]);
                         }
                     }
                 }
@@ -661,9 +682,13 @@ namespace GitUI
                         parentRevs = new[] { parentRevs[0] };
                     }
 
-                    foreach (var rev in parentRevs)
+                    foreach (var par in parentRevs)
                     {
-                        tuples.Add((rev, Module.GetDiffFilesWithSubmodulesStatus(rev.Guid, Revision.Guid, Revision.ParentIds?.FirstOrDefault()?.ToString())));
+                        var revs = GetFirstAndSelectedFromParent(par);
+
+                        tuples.Add((par,
+                            Module.GetDiffFilesWithSubmodulesStatus(revs.first.Guid, revs.selected.Guid,
+                                revs.selected.ParentIds?.FirstOrDefault()?.ToString())));
                     }
 
                     // Show combined (merge conflicts) only when all first (A) are parents to selected (B)
@@ -882,6 +907,13 @@ namespace GitUI
                     if (revision.ObjectId == ObjectId.CombinedDiffId)
                     {
                         groupName = CombinedDiff.Text;
+                    }
+                    else if (revision.ObjectId == ObjectId.BaseADiffId)
+                    {
+                        var (first, selected) = _artificialParents[ObjectId.BaseADiffId];
+                        groupName = string.Format(_diffBaseToA.Text,
+                            GetDescriptionForRevision(selected.ObjectId),
+                            GetDescriptionForRevision(first.ObjectId));
                     }
                     else
                     {

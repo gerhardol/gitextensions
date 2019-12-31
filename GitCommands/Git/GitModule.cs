@@ -3447,7 +3447,7 @@ namespace GitCommands
         [CanBeNull]
         public ObjectId GetFileBlobHash(string fileName, ObjectId objectId)
         {
-            if (objectId == ObjectId.WorkTreeId || objectId == ObjectId.CombinedDiffId)
+            if (objectId == ObjectId.WorkTreeId || objectId == ObjectId.CombinedDiffId || objectId == ObjectId.BaseADiffId)
             {
                 throw new ArgumentException($"Tried to get blob for unsupported revision: {objectId} and file: {fileName}");
             }

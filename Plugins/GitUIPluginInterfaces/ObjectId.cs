@@ -37,6 +37,12 @@ namespace GitUIPluginInterfaces
         public static ObjectId CombinedDiffId { get; } = new ObjectId(0x33333333, 0x33333333, 0x33333333, 0x33333333, 0x33333333);
 
         /// <summary>
+        /// Gets the artificial ObjectId used to represent a diff for first (A) to BASE diff.
+        /// </summary>
+        [NotNull]
+        public static ObjectId BaseADiffId { get; } = new ObjectId(0x44444444, 0x44444444, 0x44444444, 0x44444444, 0x44444444);
+
+        /// <summary>
         /// Produces an <see cref="ObjectId"/> populated with random bytes.
         /// </summary>
         [NotNull]
@@ -51,7 +57,7 @@ namespace GitUIPluginInterfaces
                 unchecked((uint)_random.Next()));
         }
 
-        public bool IsArtificial => this == WorkTreeId || this == IndexId || this == CombinedDiffId;
+        public bool IsArtificial => this == WorkTreeId || this == IndexId || this == CombinedDiffId || this == BaseADiffId;
 
         private const int Sha1ByteCount = 20;
         public const int Sha1CharCount = 40;

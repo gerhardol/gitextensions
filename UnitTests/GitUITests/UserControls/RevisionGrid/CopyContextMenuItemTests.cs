@@ -205,6 +205,7 @@ namespace GitUITests.UserControls.RevisionGrid
                 yield return ObjectId.WorkTreeId;
                 yield return ObjectId.IndexId;
                 yield return ObjectId.CombinedDiffId;
+                yield return ObjectId.BaseADiffId;
             }
         }
     }

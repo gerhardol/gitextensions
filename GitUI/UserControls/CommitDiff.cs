@@ -99,7 +99,8 @@ namespace GitUI.UserControls
                 return;
             }
 
-            await DiffText.ViewChangesAsync(DiffFiles.SelectedItemParent?.ObjectId, DiffFiles.Revision?.ObjectId, DiffFiles.SelectedItem, string.Empty,
+            var revs = DiffFiles.GetFirstAndSelectedFromParent();
+            await DiffText.ViewChangesAsync(revs.first?.ObjectId, revs.selected?.ObjectId, DiffFiles.SelectedItem, string.Empty,
                 openWithDifftool: null /* use default */);
         }
     }
