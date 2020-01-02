@@ -230,7 +230,7 @@ Detail of the error:");
                         observer.OnNext(buildInfo);
                     }
 
-                    return;
+                    sinceDate = CacheAzureDevOps.LastCall;
                 }
 
                 var builds = running ?
@@ -244,6 +244,10 @@ Detail of the error:");
                     if (!running)
                     {
                         CacheAzureDevOps.FinishedBuilds.Add(buildInfo);
+                        if (build.FinishTime.HasValue && build.FinishTime.Value >= CacheAzureDevOps.LastCall)
+                        {
+                            CacheAzureDevOps.LastCall = build.FinishTime.Value.AddSeconds(1);
+                        }
                     }
                 }
             }
