@@ -167,6 +167,8 @@ namespace GitUI.Editor
             };
 
             _fullPathResolver = new FullPathResolver(() => Module.WorkingDir);
+            CherryPickContextMenuEntry_Update(Strings.CherrypickSelectedLines, Properties.Images.CherryPick, "");
+            RevertSelectedContextMenuEntry_Update(Strings.RevertSelectedLines, Properties.Images.ResetFileTo, "");
         }
 
         // Public properties
@@ -310,6 +312,72 @@ namespace GitUI.Editor
             return toolStripItem;
         }
 
+        /// <summary>
+        /// If the file viewer menu supports line patch editing
+        /// </summary>
+        public bool SupportLinePatching { get; private set; }
+
+        /// <summary>
+        /// Override the default event handlers
+        /// </summary>
+        /// <param name="cherryToolStripItemClick">Cherry pick event handler</param>
+        /// <param name="resetToolStripItemClick">Reset event handler</param>
+        public void CherryPickContextMenuEntry_OverrideClick(EventHandler cherryToolStripItemClick, EventHandler resetToolStripItemClick)
+        {
+            cherrypickSelectedLinesToolStripMenuItem.Click
+                -= cherrypickSelectedLinesToolStripMenuItem_Click;
+            cherrypickSelectedLinesToolStripMenuItem.Click
+                += cherryToolStripItemClick;
+
+            revertSelectedLinesToolStripMenuItem.Click
+                -= revertSelectedLinesToolStripMenuItem_Click;
+            revertSelectedLinesToolStripMenuItem.Click
+                += resetToolStripItemClick;
+        }
+
+        /// <summary>
+        /// Set the text/index/key shortcut for the menu item
+        /// </summary>
+        /// <param name="text">Menu text</param>
+        /// <param name="image">Menu image</param>
+        /// <param name="shortcut">Menu shortcut</param>
+        public void CherryPickContextMenuEntry_Update(string text, Image image, string shortcut)
+        {
+            cherrypickSelectedLinesToolStripMenuItem.Text = text;
+            cherrypickSelectedLinesToolStripMenuItem.Image = image;
+            cherrypickSelectedLinesToolStripMenuItem.ShortcutKeyDisplayString = shortcut;
+        }
+
+        /// <summary>
+        /// Set the visibility for the cherry-pick (stage) menu item
+        /// </summary>
+        public void CherryPickContextMenuEntry_Visible()
+        {
+            SupportLinePatching = true;
+            cherrypickSelectedLinesToolStripMenuItem.Visible = SupportLinePatching;
+        }
+
+        /// <summary>
+        /// Set the text/index/key shortcut for the menu item
+        /// </summary>
+        /// <param name="text">Menu text</param>
+        /// <param name="image">Menu image</param>
+        /// <param name="shortcut">Menu shortcut</param>
+        public void RevertSelectedContextMenuEntry_Update(string text, Image image, string shortcut)
+        {
+            revertSelectedLinesToolStripMenuItem.Text = text;
+            revertSelectedLinesToolStripMenuItem.Image = image;
+            revertSelectedLinesToolStripMenuItem.ShortcutKeyDisplayString = shortcut;
+        }
+
+        /// <summary>
+        /// Set the visibility for the revert (reset) menu item
+        /// </summary>
+        public void RevertSelectedContextMenuEntry_Visible()
+        {
+            revertSelectedLinesToolStripMenuItem.Visible = true;
+        }
+
         public void EnableScrollBars(bool enable)
         {
             internalFileViewer.EnableScrollBars(enable);
@@ -363,57 +431,6 @@ namespace GitUI.Editor
         }
 
         public string GetText() => internalFileViewer.GetText();
-
-        public void ViewCurrentChanges(GitItemStatus item, bool isStaged, [CanBeNull] Action openWithDifftool)
-        {
-            ThreadHelper.JoinableTaskFactory.RunAsync(
-                async () =>
-                {
-                    if (!string.IsNullOrWhiteSpace(item?.ErrorMessage))
-                    {
-                        // Present error (e.g. parsing Git)
-                        await ViewTextAsync(item.Name, item.ErrorMessage);
-                        return;
-                    }
-
-                    if (item.IsSubmodule)
-                    {
-                        var getStatusTask = item.GetSubmoduleStatusAsync();
-                        if (getStatusTask != null)
-                        {
-                            var status = await getStatusTask;
-                            if (status == null)
-                            {
-                                await ViewTextAsync(item.Name, $"Submodule \"{item.Name}\" has unresolved conflicts");
-                                return;
-                            }
-
-                            await ViewTextAsync(item.Name, LocalizationHelpers.ProcessSubmoduleStatus(Module, status));
-                            return;
-                        }
-
-                        var changes = await Module.GetCurrentChangesAsync(item.Name, item.OldName, isStaged,
-                            GetExtraDiffArguments(), Encoding);
-                        var text = LocalizationHelpers.ProcessSubmodulePatch(Module, item.Name, changes);
-                        await ViewTextAsync(item.Name, text);
-                        return;
-                    }
-
-                    if (!item.IsTracked || item.IsNew)
-                    {
-                        var id = isStaged ? ObjectId.IndexId : ObjectId.WorkTreeId;
-                        await ViewGitItemRevisionAsync(item, id, openWithDifftool);
-                    }
-                    else
-                    {
-                        var patch = await Module.GetCurrentChangesAsync(
-                            item.Name, item.OldName, isStaged, GetExtraDiffArguments(), Encoding);
-                        await ViewPatchAsync(item.Name, patch?.Text ?? "", openWithDifftool);
-                    }
-
-                    SetVisibilityDiffContextMenuStaging();
-                });
-        }
 
         /// <summary>
         /// Present the text as a patch in the file viewer
@@ -765,33 +782,27 @@ namespace GitUI.Editor
             ClipboardUtil.TrySetText(code.AdjustLineEndings(Module.EffectiveConfigFile.core.autocrlf.ValueOrDefault));
         }
 
-        private void SetVisibilityDiffContextMenu(bool visibleTextFile, [CanBeNull] string fileName)
+        private void SetVisibilityDiffContextMenu(bool isDiff, [CanBeNull] string fileName)
         {
-            _currentViewIsPatch = visibleTextFile;
-            ignoreWhitespaceAtEolToolStripMenuItem.Visible = visibleTextFile;
-            ignoreWhitespaceChangesToolStripMenuItem.Visible = visibleTextFile;
-            ignoreAllWhitespaceChangesToolStripMenuItem.Visible = visibleTextFile;
-            increaseNumberOfLinesToolStripMenuItem.Visible = visibleTextFile;
-            decreaseNumberOfLinesToolStripMenuItem.Visible = visibleTextFile;
-            showEntireFileToolStripMenuItem.Visible = visibleTextFile;
-            toolStripSeparator2.Visible = visibleTextFile;
-            treatAllFilesAsTextToolStripMenuItem.Visible = visibleTextFile;
-            copyNewVersionToolStripMenuItem.Visible = visibleTextFile;
-            copyOldVersionToolStripMenuItem.Visible = visibleTextFile;
+            _currentViewIsPatch = isDiff;
+            ignoreWhitespaceAtEolToolStripMenuItem.Visible = isDiff;
+            ignoreWhitespaceChangesToolStripMenuItem.Visible = isDiff;
+            ignoreAllWhitespaceChangesToolStripMenuItem.Visible = isDiff;
+            increaseNumberOfLinesToolStripMenuItem.Visible = isDiff;
+            decreaseNumberOfLinesToolStripMenuItem.Visible = isDiff;
+            showEntireFileToolStripMenuItem.Visible = isDiff;
+            toolStripSeparator2.Visible = isDiff;
+            treatAllFilesAsTextToolStripMenuItem.Visible = isDiff;
+            copyNewVersionToolStripMenuItem.Visible = isDiff;
+            copyOldVersionToolStripMenuItem.Visible = isDiff;
+            copyPatchToolStripMenuItem.Visible = isDiff;
 
             bool fileExists = !string.IsNullOrWhiteSpace(fileName)
                               && File.Exists(_fullPathResolver.Resolve(fileName));
 
-            cherrypickSelectedLinesToolStripMenuItem.Visible =
-                revertSelectedLinesToolStripMenuItem.Visible =
-                    visibleTextFile && fileExists && !Module.IsBareRepository();
-            copyPatchToolStripMenuItem.Visible = visibleTextFile;
-        }
-
-        private void SetVisibilityDiffContextMenuStaging()
-        {
-            cherrypickSelectedLinesToolStripMenuItem.Visible = false;
-            revertSelectedLinesToolStripMenuItem.Visible = false;
+            SupportLinePatching = isDiff && fileExists && !Module.IsBareRepository();
+            cherrypickSelectedLinesToolStripMenuItem.Visible = SupportLinePatching;
+            revertSelectedLinesToolStripMenuItem.Visible = SupportLinePatching;
         }
 
         private void OnExtraDiffArgumentsChanged()
@@ -1513,6 +1524,7 @@ namespace GitUI.Editor
             var args = new GitArgumentBuilder("apply")
             {
                 "--3way",
+                "--index",
                 "--whitespace=nowarn"
             };
 
