@@ -38,6 +38,8 @@ namespace GitUI.Editor
         public event EventHandler<SelectedLineEventArgs> SelectedLineChanged;
         public event EventHandler HScrollPositionChanged;
         public event EventHandler VScrollPositionChanged;
+        public event EventHandler BottomScrollReached;
+        public event EventHandler TopScrollReached;
         public event EventHandler RequestDiffView;
         public new event EventHandler TextChanged;
         public event EventHandler TextLoaded;
@@ -89,6 +91,8 @@ namespace GitUI.Editor
             internalFileViewer.MouseMove += (_, e) => OnMouseMove(e);
             internalFileViewer.KeyUp += (_, e) => OnKeyUp(e);
             internalFileViewer.EscapePressed += () => EscapePressed?.Invoke();
+            internalFileViewer.BottomScrollReached += _internalFileViewer_BottomScrollReached;
+            internalFileViewer.TopScrollReached += _internalFileViewer_TopScrollReached;
 
             _async = new AsyncLoader();
             _async.LoadingError +=
@@ -320,6 +324,22 @@ namespace GitUI.Editor
         public void ReloadHotkeys()
         {
             Hotkeys = HotkeySettingsManager.LoadHotkeys(HotkeySettingsName);
+        }
+
+        private void _internalFileViewer_BottomScrollReached(object sender, EventArgs e)
+        {
+            if (BottomScrollReached != null)
+            {
+                BottomScrollReached(sender, e);
+            }
+        }
+
+        private void _internalFileViewer_TopScrollReached(object sender, EventArgs e)
+        {
+            if (TopScrollReached != null)
+            {
+                TopScrollReached(sender, e);
+            }
         }
 
         public ToolStripSeparator AddContextMenuSeparator()

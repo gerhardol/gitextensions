@@ -1084,6 +1084,87 @@ namespace GitUI
             FilterVisibleInternal = FilterVisible && filesPresent;
         }
 
+        public void SelectPreviousVisibleItem()
+        {
+            if (FileStatusListView.Items.Count <= 1)
+            {
+                return;
+            }
+
+            if (FileStatusListView.Groups.Count != 0)
+            {
+                var selectNext = false;
+                ListViewItem selectedItemFound = null;
+                for (int i = FileStatusListView.Groups.Count - 1; i >= 0; i--)
+                {
+                    var group = FileStatusListView.Groups[i];
+                    var groupItems = FileStatusListView.Items.Cast<ListViewItem>().Where(item => item.Group == group).Reverse();
+                    foreach (var item in groupItems)
+                    {
+                        if (selectNext)
+                        {
+                            selectedItemFound.Selected = false;
+                            item.Selected = true;
+                            return;
+                        }
+
+                        if (item.Selected)
+                        {
+                            selectedItemFound = item;
+                            selectNext = true;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (SelectedIndex != 0)
+                {
+                    FileStatusListView.Items[SelectedIndex - 1].Selected = true;
+                }
+            }
+        }
+
+        public void SelectNextVisibleItem()
+        {
+            if (FileStatusListView.Items.Count <= 1)
+            {
+                return;
+            }
+
+            if (FileStatusListView.Groups.Count != 0)
+            {
+                var selectNext = false;
+                ListViewItem selectedItemFound = null;
+                foreach (var group in FileStatusListView.Groups)
+                {
+                    var groupItems = FileStatusListView.Items.Cast<ListViewItem>().Where(item => item.Group == group);
+                    foreach (var item in groupItems)
+                    {
+                        if (selectNext)
+                        {
+                            selectedItemFound.Selected = false;
+                            item.Selected = true;
+                            return;
+                        }
+
+                        if (item.Selected)
+                        {
+                            selectedItemFound = item;
+                            selectNext = true;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (SelectedIndex < FileStatusListView.Items.Count - 1)
+                {
+                    FileStatusListView.Items[SelectedIndex + 1].Selected = true;
+                }
+            }
+        }
+
         // Event handlers
 
         private void FileStatusListView_ClientSizeChanged(object sender, EventArgs e)

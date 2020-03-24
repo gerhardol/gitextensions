@@ -24,6 +24,8 @@ namespace GitUI.Editor
         event EventHandler TextChanged;
         event EventHandler HScrollPositionChanged;
         event EventHandler VScrollPositionChanged;
+        event EventHandler BottomScrollReached;
+        event EventHandler TopScrollReached;
         event EventHandler<SelectedLineEventArgs> SelectedLineChanged;
         event KeyEventHandler KeyDown;
         event KeyEventHandler KeyUp;

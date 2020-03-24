@@ -33,6 +33,7 @@ namespace GitUI.Editor
         private readonly CurrentViewPositionCache _currentViewPositionCache;
         private DiffViewerLineNumberControl _lineNumbersControl;
         private DiffHighlightService _diffHighlightService = DiffHighlightService.Instance;
+        private DateTime _lastScrollEventFiredDate = DateTime.MinValue;
 
         public FileViewerInternal()
         {
@@ -73,6 +74,7 @@ namespace GitUI.Editor
                     new SelectedLineEventArgs(
                         TextEditor.ActiveTextAreaControl.TextArea.TextView.GetLogicalLine(e.Y)));
             };
+            TextEditor.ActiveTextAreaControl.TextArea.MouseWheel += TextArea_MouseWheel;
 
             HighlightingManager.Manager.DefaultHighlighting.SetColorFor("LineNumbers",
                 new HighlightColor(SystemColors.ControlText, SystemColors.Control, false, false));
@@ -201,7 +203,53 @@ namespace GitUI.Editor
 
         public event EventHandler HScrollPositionChanged;
         public event EventHandler VScrollPositionChanged;
+        public event EventHandler TopScrollReached;
+        public event EventHandler BottomScrollReached;
         public new event EventHandler TextChanged;
+
+        private void TextArea_MouseWheel(object sender, MouseEventArgs e)
+        {
+            var isScrollingTowardTop = e.Delta > 0;
+            var isScrollingTowardBottom = e.Delta < 0;
+
+            if (isScrollingTowardTop && TextEditor.ActiveTextAreaControl.VScrollBar.Value == 0)
+            {
+                CallTopScrollReachedEvent(sender, e);
+            }
+
+            if (isScrollingTowardBottom && TextEditor.ActiveTextAreaControl.VScrollBar.Value + TextEditor.ActiveTextAreaControl.VScrollBar.Height >
+                TextEditor.ActiveTextAreaControl.VScrollBar.Maximum)
+            {
+                CallBottomScrollReachedEvent(sender, e);
+            }
+        }
+
+        private bool IsScrollTooFast()
+        {
+            return DateTime.Now - _lastScrollEventFiredDate < TimeSpan.FromMilliseconds(600);
+        }
+
+        private void CallBottomScrollReachedEvent(object sender, EventArgs e)
+        {
+            if (IsScrollTooFast())
+            {
+                return;
+            }
+
+            _lastScrollEventFiredDate = DateTime.Now;
+            BottomScrollReached?.Invoke(sender, e);
+        }
+
+        private void CallTopScrollReachedEvent(object sender, EventArgs e)
+        {
+            if (IsScrollTooFast())
+            {
+                return;
+            }
+
+            _lastScrollEventFiredDate = DateTime.Now;
+            TopScrollReached?.Invoke(sender, e);
+        }
 
         public string GetText()
         {

@@ -49,6 +49,24 @@ namespace GitUI.CommandsDialogs
             _findFilePredicateProvider = new FindFilePredicateProvider();
             _gitRevisionTester = new GitRevisionTester(_fullPathResolver);
             _revisionDiffContextMenuController = new FileStatusListContextMenuController();
+            DiffText.TopScrollReached += DiffText_TopScrollReached;
+            DiffText.BottomScrollReached += DiffText_BottomScrollReached;
+        }
+
+        private void DiffText_TopScrollReached(object sender, EventArgs e)
+        {
+            if (Control.ModifierKeys == Keys.Alt)
+            {
+                DiffFiles.SelectPreviousVisibleItem();
+            }
+        }
+
+        private void DiffText_BottomScrollReached(object sender, EventArgs e)
+        {
+            if (Control.ModifierKeys == Keys.Alt)
+            {
+                DiffFiles.SelectNextVisibleItem();
+            }
         }
 
         public void RefreshArtificial()
