@@ -1091,37 +1091,44 @@ namespace GitUI
                 return;
             }
 
-            if (FileStatusListView.Groups.Count != 0)
+            if (FileStatusListView.Groups.Count == 0)
             {
-                var selectNext = false;
-                ListViewItem selectedItemFound = null;
-                for (int i = FileStatusListView.Groups.Count - 1; i >= 0; i--)
-                {
-                    var group = FileStatusListView.Groups[i];
-                    var groupItems = FileStatusListView.Items.Cast<ListViewItem>().Where(item => item.Group == group).Reverse();
-                    foreach (var item in groupItems)
-                    {
-                        if (selectNext)
-                        {
-                            selectedItemFound.Selected = false;
-                            item.Selected = true;
-                            return;
-                        }
+                var index = SelectedIndex == 0 ? FileStatusListView.Items.Count - 1 : SelectedIndex - 1;
+                var item = FileStatusListView.Items[index];
+                item.Selected = true;
+                item.EnsureVisible();
+            }
 
-                        if (item.Selected)
-                        {
-                            selectedItemFound = item;
-                            selectNext = true;
-                        }
+            ListViewItem selectedItemFound = null;
+            for (int i = FileStatusListView.Groups.Count - 1; i >= 0; i--)
+            {
+                var group = FileStatusListView.Groups[i];
+                var groupItems = FileStatusListView.Items.Cast<ListViewItem>().Where(item => item.Group == group)
+                    .Reverse();
+                foreach (var item in groupItems)
+                {
+                    if (selectedItemFound != null)
+                    {
+                        selectedItemFound.Selected = false;
+                        item.Selected = true;
+                        item.EnsureVisible();
+                        return;
+                    }
+
+                    if (item.Selected)
+                    {
+                        selectedItemFound = item;
                     }
                 }
             }
-            else
+
+            if (selectedItemFound != null)
             {
-                if (SelectedIndex != 0)
-                {
-                    FileStatusListView.Items[SelectedIndex - 1].Selected = true;
-                }
+                // wrap around
+                selectedItemFound.Selected = false;
+                var item = FileStatusListView.Items[FileStatusListView.Items.Count - 1];
+                item.Selected = true;
+                item.EnsureVisible();
             }
         }
 
@@ -1132,36 +1139,42 @@ namespace GitUI
                 return;
             }
 
-            if (FileStatusListView.Groups.Count != 0)
+            if (FileStatusListView.Groups.Count == 0)
             {
-                var selectNext = false;
-                ListViewItem selectedItemFound = null;
-                foreach (var group in FileStatusListView.Groups)
-                {
-                    var groupItems = FileStatusListView.Items.Cast<ListViewItem>().Where(item => item.Group == group);
-                    foreach (var item in groupItems)
-                    {
-                        if (selectNext)
-                        {
-                            selectedItemFound.Selected = false;
-                            item.Selected = true;
-                            return;
-                        }
+                var index = SelectedIndex >= FileStatusListView.Items.Count - 1 ? 0 : SelectedIndex + 1;
+                var item = FileStatusListView.Items[index];
+                item.Selected = true;
+                item.EnsureVisible();
+            }
 
-                        if (item.Selected)
-                        {
-                            selectedItemFound = item;
-                            selectNext = true;
-                        }
+            ListViewItem selectedItemFound = null;
+            foreach (var group in FileStatusListView.Groups)
+            {
+                var groupItems = FileStatusListView.Items.Cast<ListViewItem>().Where(item => item.Group == group);
+                foreach (var item in groupItems)
+                {
+                    if (selectedItemFound != null)
+                    {
+                        selectedItemFound.Selected = false;
+                        item.Selected = true;
+                        item.EnsureVisible();
+                        return;
+                    }
+
+                    if (item.Selected)
+                    {
+                        selectedItemFound = item;
                     }
                 }
             }
-            else
+
+            if (selectedItemFound != null)
             {
-                if (SelectedIndex < FileStatusListView.Items.Count - 1)
-                {
-                    FileStatusListView.Items[SelectedIndex + 1].Selected = true;
-                }
+                // wrap around, last was selected
+                selectedItemFound.Selected = false;
+                var item = FileStatusListView.Items[0];
+                item.Selected = true;
+                item.EnsureVisible();
             }
         }
 
