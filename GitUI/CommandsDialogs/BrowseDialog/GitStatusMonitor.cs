@@ -438,12 +438,14 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                                     if (isSuccess)
                                     {
                                         // Adjust the min time to next update
-                                        var commandTime = Environment.TickCount - commandStartTime;
-                                        _nextEarliestTime = commandStartTime + Math.Max(MinUpdateInterval, 3 * commandTime);
                                         if (_pendingUpdate)
                                         {
-                                            // Schedule the update, a request is pending
-                                            _nextUpdateTime = _nextEarliestTime;
+                                            // a request is already pending
+                                        }
+                                        else
+                                        {
+                                            var commandTime = Environment.TickCount - commandStartTime;
+                                            _nextEarliestTime = commandStartTime + Math.Max(MinUpdateInterval, 3 * commandTime);
                                         }
                                     }
 
@@ -496,6 +498,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             // Start commands, also if running already
             lock (_statusSequence)
             {
+                _pendingUpdate = true;
                 _commandIsRunning = false;
                 _statusSequence.CancelCurrent();
                 _nextUpdateTime
