@@ -28,11 +28,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
         /// </summary>
         private const int MinUpdateInterval = 5000;
 
-        /// <summary>
-        /// Update every 5min, just to make sure something didn't slip through the cracks.
-        /// </summary>
-        private const int PeriodicUpdateInterval = 5 * 60 * 1000;
-
         private readonly FileSystemWatcher _workTreeWatcher = new FileSystemWatcher();
         private readonly FileSystemWatcher _gitDirWatcher = new FileSystemWatcher();
         private readonly System.Windows.Forms.Timer _timerRefresh;
@@ -50,11 +45,26 @@ namespace GitUI.CommandsDialogs.BrowseDialog
         private bool _pendingUpdate;
         private GitStatusMonitorState _currentStatus;
 
+        /// <summary>
+        /// Delay from activating to first run
+        /// </summary>
+        internal int InitialUpdateDelay { get; set; } = FileChangedUpdateDelay;
+
+        /// <summary>
+        /// Update every 5min, just to make sure something didn't slip through the cracks.
+        /// </summary>
+        internal int PeriodicUpdateInterval { get; set; } = 5 * 60 * 1000;
+
         public bool Active
         {
             get => CurrentStatus != GitStatusMonitorState.Stopped;
             set => CurrentStatus = value ? GitStatusMonitorState.Running : GitStatusMonitorState.Stopped;
         }
+
+        /// <summary>
+        /// Run also if the repo is locked by GE (like Commit dialogue)
+        /// </summary>
+        public bool IgnoreRepoLocked { get; set; }
 
         /// <summary>
         /// Occurs whenever git status monitor state changes.
@@ -136,7 +146,11 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             {
                 if (e.FullPath.StartsWith(_gitPath))
                 {
-                    GitDirChanged(sender, e);
+                    if (_gitDirWatcher.EnableRaisingEvents)
+                    {
+                        GitDirChanged(sender, e);
+                    }
+
                     return;
                 }
 
@@ -215,9 +229,10 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                             lock (_statusSequence)
                             {
                                 // An interactive update will be requested separately
-                                _nextUpdateTime
-                                    = _nextEarliestTime
-                                    = Environment.TickCount + FileChangedUpdateDelay;
+                                var ticks = Environment.TickCount;
+                                _nextEarliestTime = ticks + FileChangedUpdateDelay;
+                                _nextUpdateTime = ticks + InitialUpdateDelay;
+
                                 _pendingUpdate = true;
                                 _commandIsRunning = false;
                                 _statusSequence.CancelCurrent();
@@ -340,7 +355,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
             // don't update status while repository is being modified by GitExt,
             // repository status may change after these actions.
-            if (UICommandsSource.UICommands.RepoChangedNotifier.IsLocked ||
+            if ((UICommandsSource.UICommands.RepoChangedNotifier.IsLocked && !IgnoreRepoLocked) ||
                 (GitVersion.Current.RaceConditionWhenGitStatusIsUpdatingIndex && Module.IsRunningGitProcess()))
             {
                 return;
