@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
 using GitUIPluginInterfaces;
@@ -22,7 +21,7 @@ namespace GitCommands
         Unknown
     }
 
-    public sealed class GitItemStatus : IEqualityComparer<GitItemStatus>
+    public sealed class GitItemStatus
     {
         [Flags]
         private enum Flags
@@ -162,32 +161,6 @@ namespace GitCommands
             }
 
             return value;
-        }
-
-        public bool Equals(GitItemStatus x, GitItemStatus y)
-        {
-            if (x == y)
-            {
-                return true;
-            }
-
-            if (x == null || y == null)
-            {
-                return false;
-            }
-
-            var result = x.CompareName(y) == 0;
-            if (result)
-            {
-                result = x._flags.Equals(y._flags) && x.Staged.Equals(y.Staged);
-            }
-
-            return result;
-        }
-
-        public int GetHashCode(GitItemStatus obj)
-        {
-            return (obj?.Name?.GetHashCode() ?? 0) ^ (obj?.OldName?.GetHashCode() ?? 0) ^ _flags.GetHashCode() ^ Staged.GetHashCode();
         }
 
         public override string ToString()

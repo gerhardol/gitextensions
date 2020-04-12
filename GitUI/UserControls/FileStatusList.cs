@@ -719,10 +719,9 @@ namespace GitUI
                         var allBaseToB = Module.GetDiffFilesWithSubmodulesStatus(baseRevGuid, selectedRev.ObjectId, selectedRev.FirstParentGuid);
                         var allBaseToA = Module.GetDiffFilesWithSubmodulesStatus(baseRevGuid, firstRev.ObjectId, firstRev.FirstParentGuid);
 
-                        var commonBaseToAandB = allBaseToB.Intersect(allBaseToA)
-                            .Except(allAToB)
-                            .ToList();
-                        var uniqueBaseToB = allBaseToB.Except(commonBaseToAandB).ToList();
+                        var comparer = new GitItemStatusNameEqualityComparer();
+                        var commonBaseToAandB = allBaseToB.Intersect(allBaseToA, comparer).Except(allAToB, comparer).ToList();
+                        var uniqueBaseToB = allBaseToB.Except(commonBaseToAandB, comparer).ToList();
 
                         var revBase = new GitRevision(baseRevGuid);
                         tuples.Add((revBase, _diffBaseToB.Text + GetDescriptionForRevision(selectedRev.ObjectId), uniqueBaseToB));
