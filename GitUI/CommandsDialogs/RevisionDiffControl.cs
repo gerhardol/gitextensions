@@ -5,10 +5,14 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitCommands;
 using GitCommands.Git;
+using GitCommands.Patches;
+using GitCommands.Utils;
+using GitExtUtils;
 using GitUI.CommandsDialogs.BrowseDialog;
 using GitUI.HelperDialogs;
 using GitUI.Hotkey;
@@ -40,6 +44,7 @@ namespace GitUI.CommandsDialogs
         private readonly IFullPathResolver _fullPathResolver;
         private readonly IFindFilePredicateProvider _findFilePredicateProvider;
         private readonly IGitRevisionTester _gitRevisionTester;
+        private bool _selectedDiffReloaded = true;
 
         public RevisionDiffControl()
         {
@@ -51,6 +56,7 @@ namespace GitUI.CommandsDialogs
             _findFilePredicateProvider = new FindFilePredicateProvider();
             _gitRevisionTester = new GitRevisionTester(_fullPathResolver);
             _revisionDiffContextMenuController = new FileStatusListContextMenuController();
+            DiffText.CherryPickContextMenuEntry_OverrideClick(StageSelectedLinesToolStripMenuItemClick, ResetSelectedLinesToolStripMenuItemClick);
             DiffText.TopScrollReached += FileViewer_TopScrollReached;
             DiffText.BottomScrollReached += FileViewer_BottomScrollReached;
         }
@@ -102,7 +108,10 @@ namespace GitUI.CommandsDialogs
             OpenAsTempFile = 5,
             OpenAsTempFileWith = 6,
             OpenWithDifftoolFirstToLocal = 7,
-            OpenWithDifftoolSelectedToLocal = 8
+            OpenWithDifftoolSelectedToLocal = 8,
+            ResetSelectedFiles = 9,
+            StageSelectedFile = 10,
+            UnStageSelectedFile = 11,
         }
 
         public CommandStatus ExecuteCommand(Command cmd)
@@ -130,6 +139,9 @@ namespace GitUI.CommandsDialogs
                 case Command.EditFile: diffEditWorkingDirectoryFileToolStripMenuItem.PerformClick(); break;
                 case Command.OpenAsTempFile: diffOpenRevisionFileToolStripMenuItem.PerformClick(); break;
                 case Command.OpenAsTempFileWith: diffOpenRevisionFileWithToolStripMenuItem.PerformClick(); break;
+                case Command.ResetSelectedFiles: return ResetSelectedFiles();
+                case Command.StageSelectedFile: return StageSelectedFiles();
+                case Command.UnStageSelectedFile: return UnstageSelectedFiles();
 
                 default: return base.ExecuteCommand(cmd);
             }
@@ -149,6 +161,9 @@ namespace GitUI.CommandsDialogs
             diffEditWorkingDirectoryFileToolStripMenuItem.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Command.EditFile);
             diffOpenRevisionFileToolStripMenuItem.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Command.OpenAsTempFile);
             diffOpenRevisionFileWithToolStripMenuItem.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Command.OpenAsTempFileWith);
+            resetFileToParentToolStripMenuItem.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Command.ResetSelectedFiles);
+            stageFileToolStripMenuItem.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Command.StageSelectedFile);
+            unstageFileToolStripMenuItem.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Command.UnStageSelectedFile);
 
             DiffText.ReloadHotkeys();
         }
@@ -526,6 +541,11 @@ namespace GitUI.CommandsDialogs
 
         private void StageFileToolStripMenuItemClick(object sender, EventArgs e)
         {
+            StageFiles();
+        }
+
+        private void StageFiles()
+        {
             var files = DiffFiles.SelectedItems.Where(item => item.Item.Staged == StagedStatus.WorkTree).Select(i => i.Item).ToList();
 
             Module.StageFiles(files, out _);
@@ -533,6 +553,11 @@ namespace GitUI.CommandsDialogs
         }
 
         private void UnstageFileToolStripMenuItemClick(object sender, EventArgs e)
+        {
+            UnstageFiles();
+        }
+
+        private void UnstageFiles()
         {
             Module.BatchUnstageFiles(DiffFiles.SelectedItems.Where(item => item.Item.Staged == StagedStatus.Index).Select(i => i.Item).ToList());
             RefreshArtificial();
@@ -666,7 +691,7 @@ namespace GitUI.CommandsDialogs
         private void SaveSelectedItemToTempFile(Action<string> onSaved)
         {
             var item = DiffFiles.SelectedItem;
-            if (item?.Item?.Name == null || item.SecondRevision == null)
+            if (item?.Item.Name == null)
             {
                 return;
             }
@@ -947,6 +972,373 @@ namespace GitUI.CommandsDialogs
             {
                 DiffFiles.Focus();
             }
+        }
+
+        /// <summary>
+        /// Hotkey handler
+        /// </summary>
+        /// <returns>true if executed</returns>
+        private bool StageSelectedFiles()
+        {
+            if (DiffText.ContainsFocus && DiffText.SupportLinePatching && DiffFiles.SelectedItem?.SecondRevision.ObjectId != ObjectId.IndexId)
+            {
+                // In addition to workTree, cherry-picking for commits will stage lines
+                StageOrCherryPickSelectedLines();
+                return true;
+            }
+
+            var selectedIds = DiffFiles.SelectedItems.Select(it => it.SecondRevision.ObjectId).Distinct().ToList();
+            if (!DiffFiles.Focused || selectedIds.Count != 1 || selectedIds.FirstOrDefault() != ObjectId.WorkTreeId)
+            {
+                return false;
+            }
+
+            StageFiles();
+            return true;
+        }
+
+        /// <summary>
+        /// Hotkey handler
+        /// </summary>
+        /// <returns>true if executed</returns>
+        private bool UnstageSelectedFiles()
+        {
+            if (DiffText.ContainsFocus && DiffText.SupportLinePatching && DiffFiles.SelectedItem?.SecondRevision.ObjectId == ObjectId.IndexId)
+            {
+                StageOrCherryPickSelectedLines();
+                return true;
+            }
+
+            var selectedIds = DiffFiles.SelectedItems.Select(it => it.SecondRevision.ObjectId).Distinct().ToList();
+            if (!DiffFiles.Focused || selectedIds.Count != 1 || selectedIds.FirstOrDefault() != ObjectId.IndexId)
+            {
+                return false;
+            }
+
+            UnstageFiles();
+            return true;
+        }
+
+        /// <summary>
+        /// Hotkey handler
+        /// </summary>
+        /// <returns>true if executed</returns>
+        private bool ResetSelectedFiles()
+        {
+            if (DiffText.ContainsFocus && DiffText.SupportLinePatching)
+            {
+                ResetOrRevertSelectedLines();
+                return true;
+            }
+
+            var parentIds = DiffFiles.SelectedItems.Select(it => it.FirstRevision.ObjectId).Distinct().ToList();
+            if (!DiffFiles.Focused || parentIds.Count != 1 || !CanResetToRevision(parentIds.FirstOrDefault()))
+            {
+                return false;
+            }
+
+            // Reset to first (parent)
+            ResetSelectedItemsTo(actsAsChild: false);
+            return true;
+        }
+
+        private void DiffText_TextLoaded(object sender, EventArgs e)
+        {
+            _selectedDiffReloaded = true;
+
+            var item = DiffFiles?.SelectedItem;
+            if (item == null)
+            {
+                return;
+            }
+
+            // Show the menu texts etc for the currently displayed file
+            if (IsWorkTreeOrIndexWithParent())
+            {
+                // HEAD -> Index, Index -> Worktree allows unstaging/staging
+                if (item.SecondRevision.ObjectId == ObjectId.IndexId)
+                {
+                    DiffText.CherryPickContextMenuEntry_Update(
+                        Strings.UnstageSelectedLines,
+                        Properties.Images.Unstage,
+                        GetShortcutKeyDisplayString(Command.UnStageSelectedFile));
+                }
+                else
+                {
+                    DiffText.CherryPickContextMenuEntry_Update(
+                        Strings.StageSelectedLines,
+                        Properties.Images.Stage,
+                        GetShortcutKeyDisplayString(Command.StageSelectedFile));
+                }
+
+                DiffText.RevertSelectedContextMenuEntry_Update(
+                    Strings.ResetSelectedLines,
+                    Properties.Images.ResetWorkingDirChanges,
+                    GetShortcutKeyDisplayString(Command.ResetSelectedFiles));
+
+                if (item.Item.IsNew && !FileHelper.IsImage(item.Item.Name))
+                {
+                    // Add visibility, not for normal file displays
+                    DiffText.CherryPickContextMenuEntry_Visible();
+                    DiffText.RevertSelectedContextMenuEntry_Visible();
+                }
+
+                return;
+            }
+
+            DiffText.CherryPickContextMenuEntry_Update(
+                Strings.CherrypickSelectedLines,
+                Properties.Images.CherryPick,
+                GetShortcutKeyDisplayString(Command.StageSelectedFile));
+
+            DiffText.RevertSelectedContextMenuEntry_Update(
+                Strings.RevertSelectedLines,
+                Properties.Images.ResetFileTo,
+                GetShortcutKeyDisplayString(Command.ResetSelectedFiles));
+        }
+
+        /// <summary>
+        /// Check if the commits for the currenly selected item is the same as in FormCommit,
+        /// i.e. HEAD->Index or Index->WorkTree
+        /// </summary>
+        /// <returns>If 'artificial' handling</returns>
+        private bool IsWorkTreeOrIndexWithParent()
+        {
+            var item = DiffFiles.SelectedItem;
+            if (item == null || !item.SecondRevision.IsArtificial)
+            {
+                return false;
+            }
+
+            return (item.SecondRevision.ObjectId == ObjectId.WorkTreeId
+                    || item.SecondRevision.ObjectId == ObjectId.IndexId)
+                   && item.SecondRevision.FirstParentId == item.FirstRevision?.ObjectId;
+        }
+
+        private void StageSelectedLinesToolStripMenuItemClick(object sender, EventArgs e)
+        {
+            StageOrCherryPickSelectedLines();
+        }
+
+        private void StageOrCherryPickSelectedLines()
+        {
+            // to prevent multiple clicks
+            if (!_selectedDiffReloaded)
+            {
+                return;
+            }
+
+            // File no longer selected
+            if (DiffFiles.SelectedItem == null)
+            {
+                return;
+            }
+
+            if (IsWorkTreeOrIndexWithParent())
+            {
+                StageSelectedLines();
+                return;
+            }
+
+            ApplySelectedLines(false);
+        }
+
+        /// <summary>
+        /// Apply patches
+        /// Similar to FileViewer.ApplySelectedLines()
+        /// </summary>
+        /// <param name="reverse"><see langword="true"/> if patches is to be reversed; otherwise <see langword="false"/></param>.
+        private void ApplySelectedLines(bool reverse)
+        {
+            byte[] patch;
+            if (reverse)
+            {
+                patch = PatchManager.GetResetWorkTreeLinesAsPatch(
+                    Module, DiffText.GetText(),
+                    DiffText.GetSelectionPosition(), DiffText.GetSelectionLength(), DiffText.Encoding);
+            }
+            else
+            {
+                patch = PatchManager.GetSelectedLinesAsPatch(
+                    DiffText.GetText(),
+                    DiffText.GetSelectionPosition(), DiffText.GetSelectionLength(),
+                    false, DiffText.Encoding, false);
+            }
+
+            if (patch == null || patch.Length == 0)
+            {
+                return;
+            }
+
+            var args = new GitArgumentBuilder("apply")
+            {
+                "--3way",
+                "--index",
+                "--whitespace=nowarn"
+            };
+
+            string output = Module.GitExecutable.GetOutput(args, patch);
+            ProcessApplyOutput(output, patch);
+        }
+
+        /// <summary>
+        /// Stage lines in WorkTree or Unstage lines in Index
+        /// </summary>
+        private void StageSelectedLines()
+        {
+            byte[] patch;
+            var item = DiffFiles.SelectedItem;
+            var currentItemStaged = item.SecondRevision.ObjectId == ObjectId.IndexId;
+            if (item.Item.IsNew)
+            {
+                var treeGuid = currentItemStaged ? item.Item.TreeGuid?.ToString() : null;
+                patch = PatchManager.GetSelectedLinesAsNewPatch(
+                    Module,
+                    item.Item.Name,
+                    DiffText.GetText(),
+                    DiffText.GetSelectionPosition(),
+                    DiffText.GetSelectionLength(),
+                    DiffText.Encoding,
+                    false,
+                    DiffText.FilePreamble,
+                    treeGuid);
+            }
+            else
+            {
+                patch = PatchManager.GetSelectedLinesAsPatch(
+                    DiffText.GetText(),
+                    DiffText.GetSelectionPosition(),
+                    DiffText.GetSelectionLength(),
+                    currentItemStaged,
+                    DiffText.Encoding,
+                    item.Item.IsNew);
+            }
+
+            if (patch == null || patch.Length == 0)
+            {
+                return;
+            }
+
+            var args = new GitArgumentBuilder("apply")
+            {
+                "--cached",
+                "--index",
+                "--whitespace=nowarn",
+                { currentItemStaged, "--reverse" }
+            };
+
+            string output = Module.GitExecutable.GetOutput(args, patch);
+            ProcessApplyOutput(output, patch);
+        }
+
+        private void ResetSelectedLinesToolStripMenuItemClick(object sender, EventArgs e)
+        {
+            ResetOrRevertSelectedLines();
+        }
+
+        private void ResetOrRevertSelectedLines()
+        {
+            // to prevent multiple clicks
+            if (!_selectedDiffReloaded)
+            {
+                return;
+            }
+
+            // File no longer selected
+            if (DiffFiles.SelectedItem == null)
+            {
+                return;
+            }
+
+            if (MessageBox.Show(this, Strings.ResetSelectedLinesConfirmation, Strings.ResetChangesCaption,
+                MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
+            {
+                return;
+            }
+
+            if (IsWorkTreeOrIndexWithParent())
+            {
+                ResetSelectedLines();
+                return;
+            }
+
+            ApplySelectedLines(true);
+        }
+
+        /// <summary>
+        /// Reset lines in Index or Worktree
+        /// </summary>
+        private void ResetSelectedLines()
+        {
+            byte[] patch;
+            var item = DiffFiles.SelectedItem;
+            var currentItemStaged = item.SecondRevision.ObjectId == ObjectId.IndexId;
+            if (item.Item.IsNew)
+            {
+                var treeGuid = currentItemStaged ? item.Item.TreeGuid?.ToString() : null;
+                patch = PatchManager.GetSelectedLinesAsNewPatch(
+                    Module,
+                    item.Item.Name,
+                    DiffText.GetText(),
+                    DiffText.GetSelectionPosition(),
+                    DiffText.GetSelectionLength(),
+                    DiffText.Encoding,
+                    true,
+                    DiffText.FilePreamble,
+                    treeGuid);
+            }
+            else if (currentItemStaged)
+            {
+                patch = PatchManager.GetSelectedLinesAsPatch(
+                    DiffText.GetText(),
+                    DiffText.GetSelectionPosition(),
+                    DiffText.GetSelectionLength(),
+                    currentItemStaged,
+                    DiffText.Encoding,
+                    item.Item.IsNew);
+            }
+            else
+            {
+                patch = PatchManager.GetResetWorkTreeLinesAsPatch(
+                    Module,
+                    DiffText.GetText(),
+                    DiffText.GetSelectionPosition(),
+                    DiffText.GetSelectionLength(),
+                    DiffText.Encoding);
+            }
+
+            if (patch == null || patch.Length == 0)
+            {
+                return;
+            }
+
+            var args = new GitArgumentBuilder("apply")
+            {
+                "--whitespace=nowarn",
+                { currentItemStaged, "--reverse --index" }
+            };
+
+            string output = Module.GitExecutable.GetOutput(args, patch);
+
+            if (EnvUtils.RunningOnWindows())
+            {
+                // remove file mode warnings on windows
+                var regEx = new Regex("warning: .*has type .* expected .*", RegexOptions.Compiled);
+                output = output.RemoveLines(regEx.IsMatch);
+            }
+
+            ProcessApplyOutput(output, patch);
+        }
+
+        private void ProcessApplyOutput(string output, byte[] patch)
+        {
+            if (!string.IsNullOrEmpty(output))
+            {
+                MessageBox.Show(this, output + "\n\n" + DiffText.Encoding.GetString(patch), Strings.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            _selectedDiffReloaded = false;
+            RefreshArtificial();
         }
     }
 }

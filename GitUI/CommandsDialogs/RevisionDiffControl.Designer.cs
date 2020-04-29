@@ -418,6 +418,7 @@ namespace GitUI.CommandsDialogs
             this.DiffText.Size = new System.Drawing.Size(423, 360);
             this.DiffText.TabIndex = 0;
             this.DiffText.ExtraDiffArgumentsChanged += new System.EventHandler<System.EventArgs>(this.DiffText_ExtraDiffArgumentsChanged);
+            this.DiffText.TextLoaded += new System.EventHandler(this.DiffText_TextLoaded);
             // 
             // saveToolStripMenuItem
             // 
