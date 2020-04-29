@@ -42,7 +42,7 @@ namespace CommonTestUtils
                     workingDirectory: module.WorkingDir,
                     gitStatus: gitStatus);
 
-            AsyncTestHelper.WaitForPendingOperations(AsyncTestHelper.UnexpectedTimeout);
+            await AsyncTestHelper.JoinPendingOperationsAsync(AsyncTestHelper.UnexpectedTimeout);
 
             provider.StatusUpdated -= Provider_StatusUpdated;
 

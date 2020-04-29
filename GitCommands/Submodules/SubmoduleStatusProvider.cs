@@ -106,10 +106,11 @@ namespace GitCommands.Submodules
                 _submoduleInfos[info.Path] = info;
             }
 
-                if (!_submoduleInfos.ContainsKey(result.TopProject.Path))
-                {
-                    _submoduleInfos.Add(result.TopProject.Path, result.TopProject);
-                }
+            if (!_submoduleInfos.ContainsKey(result.TopProject.Path))
+            {
+                _submoduleInfos.Add(result.TopProject.Path, result.TopProject);
+            }
+
             // Start update status for the submodules
             if (updateStatus)
             {

@@ -409,7 +409,10 @@ namespace GitUI.CommandsDialogs
                                 catch (GitConfigurationException ex)
                                 {
                                     await this.SwitchToMainThreadAsync();
-                                    MessageBox.Show(this, ex.Message, "Failed to parse " + ex.ConfigPath, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                    MessageBox.Show(this,
+                                        string.Format(ResourceManager.Strings.GeneralGitConfigExceptionMessage, ex.ConfigPath, Environment.NewLine, (ex.InnerException ?? ex).Message),
+                                        ResourceManager.Strings.GeneralGitConfigExceptionCaption,
+                                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                 }
                             });
                         }
@@ -2591,7 +2594,10 @@ namespace GitUI.CommandsDialogs
                 catch (GitConfigurationException ex)
                 {
                     await this.SwitchToMainThreadAsync();
-                    MessageBox.Show(this, ex.Message, "Failed to parse " + ex.ConfigPath, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show(this,
+                        string.Format(ResourceManager.Strings.GeneralGitConfigExceptionMessage, ex.ConfigPath, Environment.NewLine, (ex.InnerException ?? ex).Message),
+                        ResourceManager.Strings.GeneralGitConfigExceptionCaption,
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             });
         }

@@ -45,7 +45,7 @@ Yes, I allow telemetry!");
 
         private readonly TranslationString _deleteFile = new TranslationString("{0:Delete file|Delete files}");
 
-        private readonly TranslationString _generalGitConfigExceptionMessage = new TranslationString("Failed to read \"{0}\" due to the following error:{1}{1}{2}{1}{1}Due to the nature of this problem, the behavior of the application cannot be guaranteed and must be closed.  Please correct this issue and re-open GitExtensions.");
+        private readonly TranslationString _generalGitConfigExceptionMessage = new TranslationString("Failed to read \"{0}\" due to the following error:{1}{1}{2}{1}{1}Due to the nature of this problem, the behavior of the application cannot be guaranteed and it must be closed.{1}{1}Please correct this issue and re-open Git Extensions.");
         private readonly TranslationString _generalGitConfigExceptionCaption = new TranslationString("Configuration Error");
 
         // public only because of FormTranslate
