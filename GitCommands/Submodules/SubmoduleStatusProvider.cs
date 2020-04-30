@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using GitCommands.Git;
@@ -38,11 +37,11 @@ namespace GitCommands.Submodules
 
     public sealed class SubmoduleStatusProvider : ISubmoduleStatusProvider
     {
+        private readonly CancellationTokenSequence _submodulesStructureSequence = new CancellationTokenSequence();
         private readonly CancellationTokenSequence _submodulesStatusSequence = new CancellationTokenSequence();
         private DateTime _previousSubmoduleUpdateTime;
         private SubmoduleInfoResult _submoduleInfoResult;
         private readonly Dictionary<string, SubmoduleInfo> _submoduleInfos = new Dictionary<string, SubmoduleInfo>();
-        private IReadOnlyList<GitItemStatus> _gitStatusWhileUpdatingStructure;
 
         // Singleton accessor
         public static SubmoduleStatusProvider Default { get; } = new SubmoduleStatusProvider();
@@ -55,12 +54,14 @@ namespace GitCommands.Submodules
 
         public void Dispose()
         {
+            _submodulesStructureSequence.Dispose();
             _submodulesStatusSequence.Dispose();
         }
 
         public void Init()
         {
             // Cancel any previous async activities:
+            _submodulesStructureSequence.Next();
             _submodulesStatusSequence.Next();
         }
 
@@ -68,11 +69,13 @@ namespace GitCommands.Submodules
         public async Task UpdateSubmodulesStructureAsync(string workingDirectory, string noBranchText, bool updateStatus)
         {
             _submoduleInfoResult = null;
-            _gitStatusWhileUpdatingStructure = null;
             _submoduleInfos.Clear();
 
             // Cancel any previous async activities:
-            var cancelToken = _submodulesStatusSequence.Next();
+            var cancelToken = _submodulesStructureSequence.Next();
+
+            // Cancel any ongoing status updates
+            _submodulesStatusSequence.Next();
 
             // Do not throttle next status update
             _previousSubmoduleUpdateTime = DateTime.MinValue;
@@ -111,21 +114,11 @@ namespace GitCommands.Submodules
                 _submoduleInfos.Add(result.TopProject.Path, result.TopProject);
             }
 
-            // Start update status for the submodules
-            if (updateStatus)
+            if (updateStatus && result.SuperProject != null)
             {
-                if (result.SuperProject != null)
-                {
-                    // Update from top module (will stop at current)
-                    await GetSubmoduleDetailedStatusAsync(currentModule.GetTopModule(), cancelToken);
-                }
-
-                if (_gitStatusWhileUpdatingStructure != null)
-                {
-                    // Current module must be updated separately (not in _submoduleInfos)
-                    await UpdateSubmodulesStatusAsync(currentModule, _gitStatusWhileUpdatingStructure, cancelToken);
-                }
-
+                // Update status from top module once (will stop at current)
+                // Further refresh only updates the current module and below
+                await GetSubmoduleDetailedStatusAsync(currentModule.GetTopModule(), cancelToken);
                 OnStatusUpdated(result, cancelToken);
             }
 
@@ -135,22 +128,34 @@ namespace GitCommands.Submodules
         /// <inheritdoc />
         public async Task UpdateSubmodulesStatusAsync(string workingDirectory, [CanBeNull] IReadOnlyList<GitItemStatus> gitStatus, bool forceUpdate)
         {
-            if (_submoduleInfoResult == null)
+            if (gitStatus == null)
             {
-                _gitStatusWhileUpdatingStructure = gitStatus;
-                return;
-            }
-
-            // Throttle updates triggered from status updates
-            TimeSpan elapsed = DateTime.Now - _previousSubmoduleUpdateTime;
-            if (gitStatus == null || (!forceUpdate && elapsed.TotalSeconds <= 15))
-            {
-                Console.WriteLine($"{MethodBase.GetCurrentMethod().Name} called too early again - aborting");
                 return;
             }
 
             var cancelToken = _submodulesStatusSequence.Next();
-            _gitStatusWhileUpdatingStructure = null;
+            while (_submoduleInfoResult == null && !cancelToken.IsCancellationRequested)
+            {
+                // Wait while the structure is built
+                await Task.Delay(TimeSpan.FromMilliseconds(500), cancelToken);
+            }
+
+            if (cancelToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            // Throttle updates triggered from status updates
+            TimeSpan remaining = _previousSubmoduleUpdateTime - DateTime.Now + TimeSpan.FromSeconds(15);
+            if (!forceUpdate && remaining > TimeSpan.Zero)
+            {
+                await Task.Delay(remaining, cancelToken);
+            }
+
+            if (cancelToken.IsCancellationRequested)
+            {
+                return;
+            }
 
             await TaskScheduler.Default;
 
