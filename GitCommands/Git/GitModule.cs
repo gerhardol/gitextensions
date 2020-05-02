@@ -1285,7 +1285,7 @@ namespace GitCommands
 
             if (configFile == null)
             {
-                yield return default;
+                yield return null;
             }
 
             var args = new GitArgumentBuilder("submodule") { "status" };

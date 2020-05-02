@@ -65,8 +65,8 @@ namespace GitCommandsTests.Submodules
             public async Task UpdateSubmoduleStructure_valid_result_for_top_module()
             {
                 var result = await SubmoduleTestHelpers.UpdateSubmoduleStructureAndWaitForResultAsync(_provider, _repo1Module).ConfigureAwait(false);
-                result.Should().NotBeNull();
 
+                result.Should().NotBeNull();
                 result.TopProject.Path.Should().Be(_repo1Module.WorkingDir);
                 result.SuperProject.Should().Be(null);
                 result.CurrentSubmoduleName.Should().Be(null);
@@ -79,8 +79,8 @@ namespace GitCommandsTests.Submodules
             public async Task UpdateSubmoduleStructure_valid_result_for_first_nested_submodule()
             {
                 var result = await SubmoduleTestHelpers.UpdateSubmoduleStructureAndWaitForResultAsync(_provider, _repo2Module, true).ConfigureAwait(false);
-                result.Should().NotBeNull();
 
+                result.Should().NotBeNull();
                 result.TopProject.Path.Should().Be(_repo1Module.WorkingDir);
                 result.SuperProject.Should().Be(result.TopProject);
                 result.CurrentSubmoduleName.Should().Be("repo2");
@@ -93,8 +93,8 @@ namespace GitCommandsTests.Submodules
             public async Task UpdateSubmoduleStructure_valid_result_for_second_nested_submodule()
             {
                 var result = await SubmoduleTestHelpers.UpdateSubmoduleStructureAndWaitForResultAsync(_provider, _repo3Module, true).ConfigureAwait(false);
-                result.Should().NotBeNull();
 
+                result.Should().NotBeNull();
                 result.TopProject.Path.Should().Be(_repo1Module.WorkingDir);
                 result.SuperProject.Path.Should().Be(_repo2Module.WorkingDir);
                 result.CurrentSubmoduleName.Should().Be("repo3");
@@ -108,6 +108,7 @@ namespace GitCommandsTests.Submodules
             {
                 var currentModule = _repo1Module;
                 var result = await SubmoduleTestHelpers.UpdateSubmoduleStructureAndWaitForResultAsync(_provider, currentModule).ConfigureAwait(false);
+
                 result.Should().NotBeNull();
 
                 // No changes in repo
@@ -122,8 +123,7 @@ namespace GitCommandsTests.Submodules
                 changedFiles.Should().HaveCount(1);
                 await SubmoduleTestHelpers.UpdateSubmoduleStatusAndWaitForResultAsync(_provider, currentModule, changedFiles);
 
-                // Disabled test as the test case does not await async retrieval of submodule status
-                ////result.OurSubmodules[0].Detailed.IsDirty.Should().BeTrue();
+                result.OurSubmodules[0].Detailed.IsDirty.Should().BeTrue();
                 result.OurSubmodules[1].Detailed.Should().BeNull();
 
                 // Revert the change
@@ -139,6 +139,7 @@ namespace GitCommandsTests.Submodules
             {
                 var currentModule = _repo2Module;
                 var result = await SubmoduleTestHelpers.UpdateSubmoduleStructureAndWaitForResultAsync(_provider, currentModule).ConfigureAwait(false);
+
                 result.Should().NotBeNull();
 
                 // No changes in repo

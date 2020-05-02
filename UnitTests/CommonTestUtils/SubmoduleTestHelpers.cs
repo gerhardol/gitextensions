@@ -40,7 +40,8 @@ namespace CommonTestUtils
 
             await provider.UpdateSubmodulesStatusAsync(
                     workingDirectory: module.WorkingDir,
-                    gitStatus: gitStatus);
+                    gitStatus: gitStatus,
+                    forceUpdate: true);
 
             await AsyncTestHelper.JoinPendingOperationsAsync(AsyncTestHelper.UnexpectedTimeout);
 

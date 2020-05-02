@@ -78,7 +78,7 @@ namespace GitUI.CommandsDialogs
             };
             _bw.DoWork += (sender, e) =>
             {
-                foreach (var oldSubmodule in Module.GetSubmodulesInfo())
+                foreach (var oldSubmodule in Module.GetSubmodulesInfo().Where(submodule => submodule != null))
                 {
                     if (_bw.CancellationPending)
                     {
@@ -147,10 +147,10 @@ namespace GitUI.CommandsDialogs
             {
                 Module.UnstageFile(SubModuleLocalPath.Text);
 
-                ConfigFile configFile;
+                ConfigFile submoduleConfigFile;
                 try
                 {
-                    configFile = Module.GetSubmoduleConfigFile();
+                    submoduleConfigFile = Module.GetSubmoduleConfigFile();
                 }
                 catch (GitConfigurationException ex)
                 {
@@ -161,10 +161,10 @@ namespace GitUI.CommandsDialogs
                     return;
                 }
 
-                configFile.RemoveConfigSection("submodule \"" + SubModuleName.Text + "\"");
-                if (configFile.ConfigSections.Count > 0)
+                submoduleConfigFile.RemoveConfigSection("submodule \"" + SubModuleName.Text + "\"");
+                if (submoduleConfigFile.ConfigSections.Count > 0)
                 {
-                    configFile.Save();
+                    submoduleConfigFile.Save();
                     Module.StageFile(".gitmodules");
                 }
                 else
@@ -172,9 +172,9 @@ namespace GitUI.CommandsDialogs
                     Module.UnstageFile(".gitmodules");
                 }
 
-                var configFileSettings = Module.LocalConfigFile;
-                configFileSettings.RemoveConfigSection("submodule \"" + SubModuleName.Text + "\"");
-                configFileSettings.Save();
+                var configFile = Module.LocalConfigFile;
+                configFile.RemoveConfigSection("submodule \"" + SubModuleName.Text + "\"");
+                configFile.Save();
 
                 Initialize();
             }
