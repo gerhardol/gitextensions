@@ -21,7 +21,6 @@ using GitExtUtils;
 using GitExtUtils.GitUI;
 using GitExtUtils.GitUI.Theming;
 using GitUI.AutoCompletion;
-using GitUI.CommandsDialogs.BrowseDialog;
 using GitUI.CommandsDialogs.CommitDialog;
 using GitUI.Editor;
 using GitUI.Hotkey;
@@ -159,8 +158,6 @@ namespace GitUI.CommandsDialogs
         private readonly Subject<string> _selectionFilterSubject = new Subject<string>();
         private readonly IFullPathResolver _fullPathResolver;
         private readonly List<string> _formattedLines = new List<string>();
-        private readonly GitStatusMonitor _gitStatusMonitor;
-        private IEnumerable<GitItemStatus> _currentGitItemStatus;
 
         private CommitKind _commitKind;
         private FileStatusList _currentFilesList;
@@ -358,7 +355,6 @@ namespace GitUI.CommandsDialogs
                             selectionFilter.Items.Insert(0, filterText);
                         }
                     });
-            InitStatusMonitor(out _gitStatusMonitor);
 
             return;
 
@@ -370,37 +366,6 @@ namespace GitUI.CommandsDialogs
                     ? _enterCommitMessageHint.Text
                     : _commitMessageDisabled.Text;
             }
-
-            void InitStatusMonitor(out GitStatusMonitor gitStatusMonitor)
-            {
-                gitStatusMonitor = new GitStatusMonitor(this)
-                {
-                    // Not interested in initial or periodic updates, only changes so time is long
-                    InitialUpdateDelay = 60 * 60 * 1000,
-                    PeriodicUpdateInterval = 60 * 60 * 1000,
-                    IgnoreRepoLocked = true
-                };
-
-                gitStatusMonitor.GitWorkingDirectoryStatusChanged += (s, e) =>
-                {
-                    // Compare current git-status to current status
-                    // This compares name (could also compare stage status),
-                    // to also detect changed files, the timestamp is needed too
-                    var comparer = new GitItemStatusNameEqualityComparer();
-                    var status = e.ItemStatuses?.ToList();
-
-                    if (status != null && _currentGitItemStatus != null
-                                       && (status.Except(_currentGitItemStatus, comparer).Any()
-                                           || _currentGitItemStatus.Except(status, comparer).Any()))
-                    {
-                        toolRefreshItem.Image = Images.ReloadRevisionsDirty;
-                    }
-                    else
-                    {
-                        toolRefreshItem.Image = Images.ReloadRevisions;
-                    }
-                };
-            }
         }
 
         protected override void Dispose(bool disposing)
@@ -410,7 +375,6 @@ namespace GitUI.CommandsDialogs
                 _unstagedLoader.Dispose();
                 _interactiveAddSequence.Dispose();
                 components?.Dispose();
-                _gitStatusMonitor?.Dispose();
             }
 
             base.Dispose(disposing);
@@ -861,9 +825,6 @@ namespace GitUI.CommandsDialogs
                     showUntrackedFilesToolStripMenuItem.Checked ? UntrackedFilesMode.Default : UntrackedFilesMode.No);
             }
 
-            _gitStatusMonitor.Active = false;
-            toolRefreshItem.Image = Images.ReloadRevisions;
-
             if (doAsync)
             {
                 ThreadHelper.JoinableTaskFactory.RunAsync(() =>
@@ -1156,8 +1117,6 @@ namespace GitUI.CommandsDialogs
             var (headRev, indexRev, workTreeRev) = GetHeadRevisions();
             Unstaged.SetDiffs(indexRev, workTreeRev, unstagedFiles);
             Staged.SetDiffs(headRev, indexRev, stagedFiles);
-            _currentGitItemStatus = allChangedFiles;
-            _gitStatusMonitor.Active = true;
 
             var doChangesExist = Unstaged.AllItems.Any() || Staged.AllItems.Any();
 
