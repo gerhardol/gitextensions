@@ -2578,7 +2578,7 @@ namespace GitUI.CommandsDialogs
         private void UpdateSubmodulesStructure()
         {
             // Submodule status is updated on git-status updates. To make sure supermodule status is updated, update immediately (once)
-            var updateStatus = AppSettings.ShowSubmoduleStatus && _gitStatusMonitor.Active && (Module.SuperprojectModule != null);
+            var updateStatus = AppSettings.ShowSubmoduleStatus && _gitStatusMonitor.Active;
 
             toolStripButtonLevelUp.ToolTipText = "";
 
@@ -2643,7 +2643,7 @@ namespace GitUI.CommandsDialogs
                 }
 
                 newItems.Add(CreateSubmoduleMenuItem(cancelToken, result.SuperProject, _superprojectModuleFormat.Text));
-                newItems.AddRange(result.SuperSubmodules.Select(submodule => CreateSubmoduleMenuItem(cancelToken, submodule)));
+                newItems.AddRange(result.AllSubmodules.Select(submodule => CreateSubmoduleMenuItem(cancelToken, submodule)));
                 toolStripButtonLevelUp.ToolTipText = _goToSuperProject.Text;
             }
 
