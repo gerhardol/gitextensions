@@ -256,6 +256,58 @@ namespace GitCommandsTests.Submodules
         }
 
         [Test]
+        public async Task Submodule_status_changes_for_top_module_with_first_nested_module_commit_second_nested_module_change()
+        {
+            var currentModule = _repo1Module;
+            var result = await SubmoduleTestHelpers.UpdateSubmoduleStructureAndWaitForResultAsync(_provider, currentModule);
+
+            result.Should().NotBeNull();
+
+            // No changes in repo
+            var changedFiles = GetStatusChangedFiles(currentModule);
+            changedFiles.Should().HaveCount(0);
+            await SubmoduleTestHelpers.UpdateSubmoduleStatusAndWaitForResultAsync(_provider, currentModule, changedFiles);
+            result.AllSubmodules.All(i => i.Detailed == null).Should().BeTrue();
+            result.OurSubmodules.Should().BeEquivalentTo(result.AllSubmodules);
+            result.TopProject.Detailed.Should().BeNull();
+
+            // Make a change in repo3
+            _repo1.CreateFile(_repo3Module.WorkingDir, "test.txt", "test");
+            _repo2Module.GitExecutable.GetOutput(@"commit --allow-empty -m ""Dummy commit""");
+            changedFiles = GetStatusChangedFiles(currentModule);
+            changedFiles.Should().HaveCount(1);
+            await SubmoduleTestHelpers.UpdateSubmoduleStatusAndWaitForResultAsync(_provider, currentModule, changedFiles);
+            result.AllSubmodules[0].Detailed.IsDirty.Should().BeTrue();
+            result.AllSubmodules[0].Detailed.Status.Should().BeEquivalentTo(SubmoduleStatus.FastForward);
+            result.AllSubmodules[1].Detailed.IsDirty.Should().BeTrue();
+            result.AllSubmodules[1].Detailed.Status.Should().BeEquivalentTo(SubmoduleStatus.Unknown);
+            result.OurSubmodules.Should().BeEquivalentTo(result.AllSubmodules);
+            result.TopProject.Detailed.IsDirty.Should().BeTrue();
+            result.TopProject.Detailed.Status.Should().BeEquivalentTo(SubmoduleStatus.Unknown);
+
+            // Revert the change for repo3
+            File.Delete(Path.Combine(_repo3Module.WorkingDir, "test.txt"));
+            changedFiles = GetStatusChangedFiles(currentModule);
+            changedFiles.Should().HaveCount(1);
+            await SubmoduleTestHelpers.UpdateSubmoduleStatusAndWaitForResultAsync(_provider, currentModule, changedFiles);
+            result.AllSubmodules[0].Detailed.IsDirty.Should().BeFalse();
+            result.AllSubmodules[0].Detailed.Status.Should().BeEquivalentTo(SubmoduleStatus.FastForward);
+            result.AllSubmodules[1].Detailed.Should().BeNull();
+            result.OurSubmodules.Should().BeEquivalentTo(result.AllSubmodules);
+            result.TopProject.Detailed.IsDirty.Should().BeTrue();
+            result.TopProject.Detailed.Status.Should().BeEquivalentTo(SubmoduleStatus.Unknown);
+
+            // Revert the change
+            _repo2Module.GitExecutable.GetOutput(@"checkout HEAD^");
+            changedFiles = GetStatusChangedFiles(currentModule);
+            changedFiles.Should().HaveCount(0);
+            await SubmoduleTestHelpers.UpdateSubmoduleStatusAndWaitForResultAsync(_provider, currentModule, changedFiles);
+            result.AllSubmodules.All(i => i.Detailed == null).Should().BeTrue();
+            result.OurSubmodules.Should().BeEquivalentTo(result.AllSubmodules);
+            result.TopProject.Detailed.Should().BeNull();
+        }
+
+        [Test]
         public async Task Submodule_status_changes_for_top_module_with_second_nested_module_commit()
         {
             var currentModule = _repo1Module;
