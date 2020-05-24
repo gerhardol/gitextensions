@@ -217,6 +217,20 @@ namespace GitUI.CommandsDialogs
             DiffText.Font = AppSettings.FixedWidthFont;
             ReloadHotkeys();
 
+            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            {
+                var tools = await Module.GetCustomDiffMergeTools(isDiff: true);
+                ContextMenuStrip customDiffToolDropDown = new ContextMenuStrip();
+                foreach (var tool in tools)
+                {
+                    var toolStripItem = new ToolStripMenuItem(tool) { Tag = tool };
+                    toolStripItem.Click += openWithDifftoolToolStripMenuItem_Click;
+                    customDiffToolDropDown.Items.Add(toolStripItem);
+                }
+
+                openWithCustomDifftoolToolStripMenuItem.DropDown = customDiffToolDropDown;
+            }).FileAndForget();
+
             base.OnRuntimeLoad();
         }
 
@@ -618,6 +632,7 @@ namespace GitUI.CommandsDialogs
         private void openWithDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
         {
             RevisionDiffKind diffKind;
+            string toolName = (sender as ToolStripMenuItem)?.Tag as string;
 
             if (sender == firstToLocalToolStripMenuItem)
             {
@@ -651,7 +666,7 @@ namespace GitUI.CommandsDialogs
 
                 // If item.FirstRevision is null, compare to root commit
                 GitRevision[] revs = new[] { item.SecondRevision, item.FirstRevision };
-                UICommands.OpenWithDifftool(this, revs, item.Item.Name, item.Item.OldName, diffKind, item.Item.IsTracked);
+                UICommands.OpenWithDifftool(this, revs, item.Item.Name, item.Item.OldName, diffKind, item.Item.IsTracked, customTool: toolName);
             }
         }
 
@@ -767,6 +782,8 @@ namespace GitUI.CommandsDialogs
             selectedParentToLocalToolStripMenuItem.Enabled = _revisionDiffContextMenuController.ShouldShowMenuSelectedParentToLocal(selectionInfo);
             firstParentToLocalToolStripMenuItem.Visible = _revisionDiffContextMenuController.ShouldDisplayMenuFirstParentToLocal(selectionInfo);
             selectedParentToLocalToolStripMenuItem.Visible = _revisionDiffContextMenuController.ShouldDisplayMenuSelectedParentToLocal(selectionInfo);
+
+            openWithCustomDifftoolToolStripMenuItem.Enabled = openWithCustomDifftoolToolStripMenuItem.DropDown.Items.Count > 0;
         }
 
         private void resetFileToolStripMenuItem_Click(object sender, EventArgs e)
