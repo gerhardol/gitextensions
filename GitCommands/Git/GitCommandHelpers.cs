@@ -1018,6 +1018,66 @@ namespace GitCommands
             return result;
         }
 
+        /// <summary>
+        /// Parse the output from --tool-help
+        /// </summary>
+        /// <param name="output">The output string</param>
+        /// <returns>list with tool names</returns>
+        public static List<string> ParseCustomDiffMergeTool(string output)
+        {
+            var tools = new List<string>();
+
+            // Simple parsing of the textual output opposite to porcelain format
+            // Explanation of the modes:
+            //  0: Initial mode (to detect first line, direct transit to next mode)
+            //  1: Built in tools, in the path (first is header, ended by a newline)
+            //  2: Newlines separating tools
+            //  3: Built in tools, in the path (first is header, ended by a newline)
+            //  4: Newlines separating tools
+            //  5: Unavailable tools, skipped
+            //  6: End note, skipped
+            //  5: Newlines
+            int mode = 0;
+            foreach (var l in output.Split('\n'))
+            {
+                if (mode >= 4)
+                {
+                    break;
+                }
+
+                if (mode == 2 && string.IsNullOrWhiteSpace(l))
+                {
+                    continue;
+                }
+
+                if (mode == 0 || mode == 2 || ((mode == 1 || mode == 3) && string.IsNullOrWhiteSpace(l)))
+                {
+                    mode++;
+                    continue;
+                }
+
+                // mode 1 or 3
+                // tool is first, cmd (if split in 3) in second
+                // cmd is unreliable for diff and not needed but could be used for mergetool special handling
+                string[] delimit = { " ", ".cmd" };
+                var tool = l.TrimStart().Split(delimit, 2, StringSplitOptions.None);
+                if (tool.Length == 0)
+                {
+                    continue;
+                }
+
+                // Ignore tools that must run in a terminal
+                string[] ignoredTools = { "vimdiff", "vimdiff2", "vimdiff3" };
+                var toolName = tool[0];
+                if (!string.IsNullOrWhiteSpace(toolName) && !tools.Contains(toolName) && !ignoredTools.Contains(toolName))
+                {
+                    tools.Add(toolName);
+                }
+            }
+
+            return tools;
+        }
+
         private static GitItemStatus GitItemStatusFromCopyRename(StagedStatus staged, bool fromDiff, string nextFile, string fileName, char x, string status)
         {
             var gitItemStatus = new GitItemStatus();

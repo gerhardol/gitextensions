@@ -35,6 +35,7 @@ namespace GitUI.CommandsDialogs
             this.DiffFiles = new GitUI.FileStatusList();
             this.DiffContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.openWithDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openWithCustomDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.diffRememberStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.diffTwoSelectedDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.diffWithRememberedDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -155,6 +156,7 @@ namespace GitUI.CommandsDialogs
                 this.secondDiffCaptionMenuItem,
                 this.firstDiffCaptionMenuItem,
                 this.firstToSelectedToolStripMenuItem,
+                this.openWithCustomDifftoolToolStripMenuItem,
                 this.selectedToLocalToolStripMenuItem,
                 this.firstToLocalToolStripMenuItem,
                 this.selectedParentToLocalToolStripMenuItem,
@@ -170,6 +172,13 @@ namespace GitUI.CommandsDialogs
             this.openWithDifftoolToolStripMenuItem.Size = new System.Drawing.Size(296, 22);
             this.openWithDifftoolToolStripMenuItem.Text = "Open with difftool";
             this.openWithDifftoolToolStripMenuItem.DropDownOpening += new System.EventHandler(this.openWithDifftoolToolStripMenuItem_DropDownOpening);
+            // 
+            // openWithCustomDifftoolToolStripMenuItem
+            // 
+            this.openWithCustomDifftoolToolStripMenuItem.Image = global::GitUI.Properties.Images.Diff;
+            this.openWithCustomDifftoolToolStripMenuItem.Name = "openWithCustomDifftoolToolStripMenuItem";
+            this.openWithCustomDifftoolToolStripMenuItem.Size = new System.Drawing.Size(296, 22);
+            this.openWithCustomDifftoolToolStripMenuItem.Text = "Open with custom difftool";
             // 
             // diffRememberStripSeparator
             // 
@@ -518,6 +527,7 @@ namespace GitUI.CommandsDialogs
         private ToolStripMenuItem saveAsToolStripMenuItem1;
         private ToolStripMenuItem saveToolStripMenuItem;
         private ToolStripMenuItem openWithDifftoolToolStripMenuItem;
+        private ToolStripMenuItem openWithCustomDifftoolToolStripMenuItem;
         private ToolStripSeparator diffRememberStripSeparator;
         private ToolStripMenuItem diffTwoSelectedDifftoolToolStripMenuItem;
         private ToolStripMenuItem diffWithRememberedDifftoolToolStripMenuItem;
