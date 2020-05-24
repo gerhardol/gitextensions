@@ -1196,14 +1196,14 @@ namespace GitCommands
                 return (' ', null);
             }
 
-            string submodule = lines[0];
+            string submodule = lines[0].Substring(1);
 
             if (submodule.Length < 43)
             {
                 return (' ', null);
             }
 
-            return (submodule[0], ObjectId.Parse(submodule, 1));
+            return (submodule[0], ObjectId.Parse(submodule));
         }
 
         public bool ExistsMergeCommit(string startRev, string endRev)

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -697,7 +698,7 @@ namespace GitCommandsTests
             }
         }
 
-        [Ignore("Flaky test - issue #7681")]
+        ////[Ignore("Flaky test - issue #7681")]
         [Test]
         public void GetSuperprojectCurrentCheckout()
         {
@@ -720,6 +721,14 @@ namespace GitCommandsTests
                 // Assert
                 ThreadHelper.JoinableTaskFactory.Run(async () =>
                 {
+                    var args = new GitArgumentBuilder("submodule")
+                    {
+                        "status",
+                        "--cached",
+                        moduleSub.SubmodulePath.Quote()
+                    };
+                    var output = await moduleTestHelperSuper.Module.GitExecutable.GetOutputAsync(args).ConfigureAwait(false);
+                    Console.Out.WriteLine($"xxx {moduleSub.WorkingDir} : {output}");
                     (char code, ObjectId commitId) = await moduleSub.GetSuperprojectCurrentCheckoutAsync();
                     Assert.AreEqual(32, code);
                     Assert.AreEqual(commitRef, commitId.ToString());
