@@ -35,6 +35,7 @@ namespace GitUI.CommandsDialogs
             this.DiffFiles = new GitUI.FileStatusList();
             this.DiffContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.openWithDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openWithCustomDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.firstDiffCaptionMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.selectedDiffCaptionMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.firstToSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -147,18 +148,26 @@ namespace GitUI.CommandsDialogs
             // openWithDifftoolToolStripMenuItem
             // 
             this.openWithDifftoolToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.firstDiffCaptionMenuItem,
-            this.selectedDiffCaptionMenuItem,
-            this.firstToSelectedToolStripMenuItem,
-            this.firstToLocalToolStripMenuItem,
-            this.selectedToLocalToolStripMenuItem,
-            this.firstParentToLocalToolStripMenuItem,
-            this.selectedParentToLocalToolStripMenuItem});
+                this.firstDiffCaptionMenuItem,
+                this.selectedDiffCaptionMenuItem,
+                this.firstToSelectedToolStripMenuItem,
+                this.openWithCustomDifftoolToolStripMenuItem,
+                this.firstToLocalToolStripMenuItem,
+                this.selectedToLocalToolStripMenuItem,
+                this.firstParentToLocalToolStripMenuItem,
+                this.selectedParentToLocalToolStripMenuItem});
             this.openWithDifftoolToolStripMenuItem.Image = global::GitUI.Properties.Images.Diff;
             this.openWithDifftoolToolStripMenuItem.Name = "openWithDifftoolToolStripMenuItem";
             this.openWithDifftoolToolStripMenuItem.Size = new System.Drawing.Size(296, 22);
             this.openWithDifftoolToolStripMenuItem.Text = "Open with difftool";
             this.openWithDifftoolToolStripMenuItem.DropDownOpening += new System.EventHandler(this.openWithDifftoolToolStripMenuItem_DropDownOpening);
+            // 
+            // openWithCustomDifftoolToolStripMenuItem
+            // 
+            this.openWithCustomDifftoolToolStripMenuItem.Image = global::GitUI.Properties.Images.Diff;
+            this.openWithCustomDifftoolToolStripMenuItem.Name = "openWithCustomDifftoolToolStripMenuItem";
+            this.openWithCustomDifftoolToolStripMenuItem.Size = new System.Drawing.Size(296, 22);
+            this.openWithCustomDifftoolToolStripMenuItem.Text = "Open with custom difftool";
             // 
             // firstDiffCaptionMenuItem
             // 
@@ -474,10 +483,11 @@ namespace GitUI.CommandsDialogs
         private ToolStripSeparator diffToolStripSeparator13;
         private ToolStripMenuItem resetFileToToolStripMenuItem;
         private ToolStripMenuItem saveAsToolStripMenuItem1;
-        private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem openWithDifftoolToolStripMenuItem;
-        private System.Windows.Forms.SplitContainer DiffSplitContainer;
-        private System.Windows.Forms.ContextMenuStrip DiffContextMenu;
+        private ToolStripMenuItem saveToolStripMenuItem;
+        private ToolStripMenuItem openWithDifftoolToolStripMenuItem;
+        private ToolStripMenuItem openWithCustomDifftoolToolStripMenuItem;
+        private SplitContainer DiffSplitContainer;
+        private ContextMenuStrip DiffContextMenu;
         private FileStatusList DiffFiles;
         private Editor.FileViewer DiffText;
         private ToolStripMenuItem diffEditWorkingDirectoryFileToolStripMenuItem;

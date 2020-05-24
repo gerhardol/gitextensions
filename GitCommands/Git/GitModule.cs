@@ -906,11 +906,12 @@ namespace GitCommands
             }
         }
 
-        public void RunMergeTool([CanBeNull] string fileName = "")
+        public void RunMergeTool([CanBeNull] string fileName = "", [CanBeNull] string customTool = null)
         {
+            var gui = GitVersion.Current.SupportGuiMergeTool ? "--gui" : "";
             var args = new GitArgumentBuilder("mergetool")
             {
-                { GitVersion.Current.SupportGuiMergeTool, "--gui" },
+                { string.IsNullOrWhiteSpace(customTool), gui, $"--tool={customTool}" },
                 { !string.IsNullOrWhiteSpace(fileName), "--" },
                 fileName.ToPosixPath().QuoteNE()
             };
@@ -3633,17 +3634,63 @@ namespace GitCommands
                 });
         }
 
+        public async Task<List<string>> GetCustomDiffMergeTools(bool isDiff)
+        {
+            var tools = new List<string>();
+
+            // Note that --gui has no effect here
+            var args = new GitArgumentBuilder(isDiff ? "difftool" : "mergetool") { "--tool-help" };
+            string output = await _gitExecutable.GetOutputAsync(args);
+
+            // TODO more robust parsing
+            int mode = 0;
+            foreach (var l in output.Split('\n'))
+            {
+                if (mode == 4 && string.IsNullOrWhiteSpace(l))
+                {
+                    break;
+                }
+
+                if (mode == 0 || (mode == 1 && string.IsNullOrWhiteSpace(l)) || mode == 2 || mode == 3)
+                {
+                    mode++;
+                    continue;
+                }
+
+                string[] delimit = { " ", ".cmd" };
+                var t = l.TrimStart().Split(delimit, 2, StringSplitOptions.None);
+
+                if (t.Length == 0)
+                {
+                    continue;
+                }
+
+                // tool is first, cmd (if set) in second
+                // cmd is unreliable for diff and not needed but could be used for mergetool special handling
+
+                // Blacklist tools that must run in a terminal
+                string[] ignoredTools = { "vimdiff", "vimdiff2", "vimdiff3" };
+                var tool = t[0];
+                if (!string.IsNullOrWhiteSpace(tool) && !tools.Contains(tool) && !ignoredTools.Contains(tool))
+                {
+                    tools.Add(tool);
+                }
+            }
+
+            return tools;
+        }
+
         public string OpenWithDifftoolDirDiff(string firstRevision = GitRevision.IndexGuid, string secondRevision = GitRevision.WorkTreeGuid, string extraDiffArguments = null)
         {
             extraDiffArguments = ((extraDiffArguments ?? "") + " --dir-diff").Trim();
             return OpenWithDifftool(null, null, firstRevision: firstRevision, secondRevision: secondRevision, extraDiffArguments: extraDiffArguments);
         }
 
-        public string OpenWithDifftool(string filename, string oldFileName = "", string firstRevision = GitRevision.IndexGuid, string secondRevision = GitRevision.WorkTreeGuid, string extraDiffArguments = null, bool isTracked = true)
+        public string OpenWithDifftool(string filename, string oldFileName = "", string firstRevision = GitRevision.IndexGuid, string secondRevision = GitRevision.WorkTreeGuid, string extraDiffArguments = null, bool isTracked = true, string customTool = null)
         {
             _gitCommandRunner.RunDetached(new GitArgumentBuilder("difftool")
             {
-                "--gui",
+                { string.IsNullOrWhiteSpace(customTool), "--gui", $"--tool={customTool}" },
                 "--no-prompt",
                 extraDiffArguments,
                 _revisionDiffProvider.Get(firstRevision, secondRevision, filename, oldFileName, isTracked)
