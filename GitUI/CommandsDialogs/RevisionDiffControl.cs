@@ -619,6 +619,38 @@ namespace GitUI.CommandsDialogs
             UICommands.StartFileHistoryDialog(this, item.Item.Name, item.SecondRevision);
         }
 
+        private FileStatusItem _prev;
+        private void saveForLaterDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            _prev = DiffFiles.SelectedItem;
+        }
+
+        private string GetRev(FileStatusItem f) =>
+            (f.Item.IsDeleted ? f.FirstRevision : f.SecondRevision).ObjectId.ToString();
+
+        private void compareToExistingDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var second = DiffFiles.SelectedItem;
+            if (_prev == null || second == null)
+            {
+                return;
+            }
+
+            Module.OpenWithDifftool2(_prev.Item.Name, second.Item.Name, GetRev(_prev), GetRev(second));
+        }
+
+        private void compareTwoSelectedDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (DiffFiles.SelectedItems.Count() != 2)
+            {
+                return;
+            }
+
+            var second = DiffFiles.SelectedItems.ToList()[0];
+            var first = DiffFiles.SelectedItems.ToList()[1];
+            Module.OpenWithDifftool2(first.Item.Name, second.Item.Name, GetRev(first), GetRev(second));
+        }
+
         private void openContainingFolderToolStripMenuItem_Click(object sender, EventArgs e)
         {
             FormBrowse.OpenContainingFolder(DiffFiles, Module);
@@ -779,6 +811,10 @@ namespace GitUI.CommandsDialogs
             selectedParentToLocalToolStripMenuItem.Visible = _revisionDiffContextMenuController.ShouldDisplayMenuSelectedParentToLocal(selectionInfo);
 
             openWithCustomDifftoolToolStripMenuItem.Enabled = openWithCustomDifftoolToolStripMenuItem.DropDown.Items.Count > 0;
+
+            saveForLaterDifftoolToolStripMenuItem.Visible = DiffFiles.SelectedItems.Count() == 1;
+            compareToExistingDifftoolToolStripMenuItem.Visible = DiffFiles.SelectedItems.Count() == 1 && _prev != null;
+            compareTwoSelectedDifftoolToolStripMenuItem.Visible = DiffFiles.SelectedItems.Count() == 2;
         }
 
         private void resetFileToolStripMenuItem_Click(object sender, EventArgs e)

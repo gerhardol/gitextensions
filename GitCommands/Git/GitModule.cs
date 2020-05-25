@@ -3701,6 +3701,21 @@ namespace GitCommands
             return "";
         }
 
+        public string OpenWithDifftool2(string filename, string oldFileName = "", string firstRevision = GitRevision.IndexGuid, string secondRevision = GitRevision.WorkTreeGuid, string extraDiffArguments = null, bool isTracked = true, string customTool = null)
+        {
+            _gitCommandRunner.RunDetached(new GitArgumentBuilder("difftool")
+            {
+                { string.IsNullOrWhiteSpace(customTool), "--gui", $"--tool={customTool}" },
+                "--no-prompt",
+                extraDiffArguments,
+                $"{firstRevision}:{filename} {secondRevision}:{oldFileName}"
+            });
+
+            // This method is supposed to return an error message, but the detached process is untracked
+            // TODO track the process somehow, so errors can be reported
+            return "";
+        }
+
         [CanBeNull]
         public ObjectId RevParse(string revisionExpression)
         {
