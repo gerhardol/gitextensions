@@ -8039,6 +8039,10 @@ To show all branches, right click the revision grid, select 'view' and then the 
   </file>
   <file datatype="plaintext" original="RevisionDiffControl" source-language="en">
     <body>
+      <trans-unit id="_compareSelectedFile.Text">
+        <source>Compare selected file to {0}</source>
+        <target />
+      </trans-unit>
       <trans-unit id="_deleteFailed.Text">
         <source>Delete file failed</source>
         <target />
@@ -8077,6 +8081,10 @@ To show all branches, right click the revision grid, select 'view' and then the 
       </trans-unit>
       <trans-unit id="cherryPickSelectedDiffFileToolStripMenuItem.Text">
         <source>Cherry pick changes</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="compareTwoSelectedDifftoolToolStripMenuItem.Text">
+        <source>Compare the two selected files</source>
         <target />
       </trans-unit>
       <trans-unit id="copyFilenameToClipboardToolStripMenuItem1.Text">
@@ -8161,6 +8169,10 @@ To show all branches, right click the revision grid, select 'view' and then the 
       </trans-unit>
       <trans-unit id="saveAsToolStripMenuItem1.Text">
         <source>Save selected as...</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="saveForLaterDifftoolToolStripMenuItem.Text">
+        <source>Save selected file to later</source>
         <target />
       </trans-unit>
       <trans-unit id="saveToolStripMenuItem.Text">

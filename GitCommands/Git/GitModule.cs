@@ -3695,6 +3695,26 @@ namespace GitCommands
             return "";
         }
 
+        /// <summary>
+        /// Compare two Git commitish; blob or rev:path
+        /// </summary>
+        /// <param name="firstGitCommit">commitish</param>
+        /// <param name="secondGitCommit">commitish</param>
+        /// <returns>empty string</returns>
+        public string OpenFilesWithDifftool(string firstGitCommit, string secondGitCommit)
+        {
+            _gitCommandRunner.RunDetached(new GitArgumentBuilder("difftool")
+            {
+                "--gui",
+                "--no-prompt",
+                "-M -C",
+                firstGitCommit.QuoteNE(),
+                secondGitCommit.QuoteNE()
+            });
+
+            return "";
+        }
+
         [CanBeNull]
         public ObjectId RevParse(string revisionExpression)
         {

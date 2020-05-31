@@ -14,7 +14,6 @@ using GitCommands.Patches;
 using GitCommands.Utils;
 using GitExtUtils;
 using GitUI.CommandsDialogs.BrowseDialog;
-using GitUI.HelperDialogs;
 using GitUI.Hotkey;
 using GitUI.UserControls;
 using GitUI.UserControls.RevisionGrid;
@@ -36,6 +35,7 @@ namespace GitUI.CommandsDialogs
         private readonly TranslationString _multipleDescription = new TranslationString("<multiple>");
         private readonly TranslationString _selectedRevision = new TranslationString("Selected: b/");
         private readonly TranslationString _firstRevision = new TranslationString("First: a/");
+        private readonly TranslationString _compareSelectedFile = new TranslationString("Compare selected file to {0}");
 
         private RevisionGridControl _revisionGrid;
         private RevisionFileTreeControl _revisionFileTree;
@@ -45,6 +45,7 @@ namespace GitUI.CommandsDialogs
         private readonly IFindFilePredicateProvider _findFilePredicateProvider;
         private readonly IGitRevisionTester _gitRevisionTester;
         private bool _selectedDiffReloaded = true;
+        private FileStatusItem _savedCompareFileItem;
 
         public RevisionDiffControl()
         {
@@ -59,7 +60,7 @@ namespace GitUI.CommandsDialogs
             DiffText.CherryPickContextMenuEntry_OverrideClick(StageSelectedLinesToolStripMenuItemClick, ResetSelectedLinesToolStripMenuItemClick);
             DiffText.TopScrollReached += FileViewer_TopScrollReached;
             DiffText.BottomScrollReached += FileViewer_BottomScrollReached;
-        }
+         }
 
         private void FileViewer_TopScrollReached(object sender, EventArgs e)
         {
@@ -71,6 +72,11 @@ namespace GitUI.CommandsDialogs
         {
             DiffFiles.SelectNextVisibleItem();
             DiffText.ScrollToTop();
+        }
+
+        public void UICommands_PostRepositoryChanged(object sender, GitUIEventArgs e)
+        {
+            _savedCompareFileItem = null;
         }
 
         public void RefreshArtificial()
@@ -670,6 +676,41 @@ namespace GitUI.CommandsDialogs
             }
         }
 
+        private void compareTwoSelectedDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var diffFiles = DiffFiles.SelectedItems.ToList();
+            if (diffFiles.Count() != 2)
+            {
+                return;
+            }
+
+            var first = _revisionDiffContextMenuController.GetGitCommit(Module, diffFiles[1], true);
+            var second = _revisionDiffContextMenuController.GetGitCommit(Module, diffFiles[0], false);
+            if (string.IsNullOrWhiteSpace(first) || string.IsNullOrWhiteSpace(second))
+            {
+                return;
+            }
+
+            Module.OpenFilesWithDifftool(first, second);
+        }
+
+        private void compareToExistingDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var first = _revisionDiffContextMenuController.GetGitCommit(Module, _savedCompareFileItem, true);
+            var second = _revisionDiffContextMenuController.GetGitCommit(Module, DiffFiles.SelectedItem, false);
+            if (string.IsNullOrWhiteSpace(first) || string.IsNullOrWhiteSpace(second))
+            {
+                return;
+            }
+
+            Module.OpenFilesWithDifftool(first, second);
+        }
+
+        private void saveForLaterDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            _savedCompareFileItem = DiffFiles.SelectedItem;
+        }
+
         private void diffEditWorkingDirectoryFileToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (DiffFiles.SelectedItem == null)
@@ -784,6 +825,17 @@ namespace GitUI.CommandsDialogs
             selectedParentToLocalToolStripMenuItem.Visible = _revisionDiffContextMenuController.ShouldDisplayMenuSelectedParentToLocal(selectionInfo);
 
             openWithCustomDifftoolToolStripMenuItem.Enabled = openWithCustomDifftoolToolStripMenuItem.DropDown.Items.Count > 0;
+
+            var diffFiles = DiffFiles.SelectedItems.ToList();
+            compareTwoSelectedDifftoolToolStripMenuItem.Visible = diffFiles.Count == 2;
+            compareTwoSelectedDifftoolToolStripMenuItem.Enabled = diffFiles.Count == 2
+                                                                  && _revisionDiffContextMenuController.ShouldEnableFirstSpecialCompare(diffFiles[1])
+                                                                  && _revisionDiffContextMenuController.ShouldEnableSecondSpecialCompare(diffFiles[0]);
+            compareToExistingDifftoolToolStripMenuItem.Visible = diffFiles.Count == 1 && _savedCompareFileItem != null;
+            compareToExistingDifftoolToolStripMenuItem.Enabled = diffFiles.Count == 1 && _revisionDiffContextMenuController.ShouldEnableSecondSpecialCompare(diffFiles[0]);
+            compareToExistingDifftoolToolStripMenuItem.Text = _savedCompareFileItem != null ? string.Format(_compareSelectedFile.Text, _savedCompareFileItem.Item.Name) : string.Empty;
+            saveForLaterDifftoolToolStripMenuItem.Visible = diffFiles.Count == 1;
+            saveForLaterDifftoolToolStripMenuItem.Enabled = diffFiles.Count == 1 && _revisionDiffContextMenuController.ShouldEnableFirstSpecialCompare(diffFiles[0]);
         }
 
         private void resetFileToolStripMenuItem_Click(object sender, EventArgs e)
