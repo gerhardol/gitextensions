@@ -3753,7 +3753,7 @@ namespace GitCommands
 
             if (commit == oldCommit)
             {
-                return SubmoduleStatus.Unknown;
+                return SubmoduleStatus.SameCommit;
             }
 
             ObjectId baseOid = GetMergeBase(commit, oldCommit);

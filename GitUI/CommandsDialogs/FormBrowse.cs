@@ -2546,6 +2546,11 @@ namespace GitUI.CommandsDialogs
                     return Images.FolderSubmodule;
                 }
 
+                if (details.Status == SubmoduleStatus.SameCommit)
+                {
+                    return details.IsDirty ? Images.SubmoduleDirty : Images.SubmodulesManage;
+                }
+
                 if (details.Status == SubmoduleStatus.FastForward)
                 {
                     return details.IsDirty ? Images.SubmoduleRevisionUpDirty : Images.SubmoduleRevisionUp;

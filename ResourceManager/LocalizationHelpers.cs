@@ -231,6 +231,9 @@ namespace ResourceManager
                 case SubmoduleStatus.SameTime:
                     sb.AppendLine("Same commit time");
                     break;
+                case SubmoduleStatus.SameCommit:
+                    sb.AppendLine(status.IsDirty ? "Dirty" : "Commit unchanged");
+                    break;
                 default:
                     sb.AppendLine(status.IsDirty ? "Dirty" : "Unknown");
 
