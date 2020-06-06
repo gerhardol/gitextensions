@@ -133,6 +133,11 @@ namespace GitUI.BranchTreePanel
                         return nameof(Images.FolderSubmodule);
                     }
 
+                    if (details.Status == SubmoduleStatus.SameCommit)
+                    {
+                        return details.IsDirty ? nameof(Images.SubmoduleDirty) : nameof(Images.SubmodulesManage);
+                    }
+
                     if (details.Status == SubmoduleStatus.FastForward)
                     {
                         return details.IsDirty ? nameof(Images.SubmoduleRevisionUpDirty) : nameof(Images.SubmoduleRevisionUp);

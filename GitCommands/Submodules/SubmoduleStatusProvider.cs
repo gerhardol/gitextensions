@@ -299,7 +299,8 @@ namespace GitCommands.Submodules
             else if (_submoduleInfos[module.WorkingDir].Detailed != null)
             {
                 // No Git changes for this module, clear dirty status (but unknown for super projects)
-                if (_submoduleInfos[module.WorkingDir].Detailed.Status == SubmoduleStatus.Unknown)
+                if (_submoduleInfos[module.WorkingDir].Detailed.Status == SubmoduleStatus.Unknown
+                || _submoduleInfos[module.WorkingDir].Detailed.Status == SubmoduleStatus.SameCommit)
                 {
                     _submoduleInfos[module.WorkingDir].Detailed = null;
                 }
@@ -354,7 +355,7 @@ namespace GitCommands.Submodules
             {
                 _submoduleInfos[path].Detailed = new DetailedSubmoduleInfo
                 {
-                    Status = SubmoduleStatus.Unknown,
+                    Status = SubmoduleStatus.SameCommit,
                     IsDirty = true,
                     AddedAndRemovedText = ""
                 };

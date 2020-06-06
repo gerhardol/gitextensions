@@ -1128,7 +1128,7 @@ namespace GitUI
                     }
 
                     var status = gitItemStatus.GetSubmoduleStatusAsync().CompletedResult();
-                    if (status == null)
+                    if (status == null || status.Status == SubmoduleStatus.Unknown)
                     {
                         return gitItemStatus.IsDirty ? nameof(Images.SubmoduleDirty) : nameof(Images.SubmodulesManage);
                     }
@@ -1147,9 +1147,11 @@ namespace GitUI
                         SubmoduleStatus.OlderTime => status.IsDirty
                             ? nameof(Images.SubmoduleRevisionSemiDownDirty)
                             : nameof(Images.SubmoduleRevisionSemiDown),
+
+                        // SameCommit SameTime NewSubmodule
                         _ => status.IsDirty
                             ? nameof(Images.SubmoduleDirty)
-                            : nameof(Images.FolderSubmodule)
+                            : nameof(Images.SubmodulesManage),
                     };
                 }
 
