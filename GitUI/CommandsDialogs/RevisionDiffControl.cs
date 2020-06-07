@@ -708,7 +708,22 @@ namespace GitUI.CommandsDialogs
 
         private void saveForLaterDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            _savedCompareFileItem = DiffFiles.SelectedItem;
+             _savedCompareFileItem = DiffFiles.SelectedItem;
+        }
+
+        private void saveParentForLaterDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var item = new FileStatusItem(
+                firstRev: _savedCompareFileItem.SecondRevision,
+                secondRev: _savedCompareFileItem.FirstRevision,
+                item: _savedCompareFileItem.Item);
+            if (!_revisionDiffContextMenuController.ShouldEnableFirstSpecialCompare(item)
+                || !_revisionDiffContextMenuController.ShouldEnableSecondSpecialCompare(item))
+            {
+                return;
+            }
+
+            _savedCompareFileItem = item;
         }
 
         private void diffEditWorkingDirectoryFileToolStripMenuItem_Click(object sender, EventArgs e)
@@ -834,8 +849,24 @@ namespace GitUI.CommandsDialogs
             compareToExistingDifftoolToolStripMenuItem.Visible = diffFiles.Count == 1 && _savedCompareFileItem != null;
             compareToExistingDifftoolToolStripMenuItem.Enabled = diffFiles.Count == 1 && _revisionDiffContextMenuController.ShouldEnableSecondSpecialCompare(diffFiles[0]);
             compareToExistingDifftoolToolStripMenuItem.Text = _savedCompareFileItem != null ? string.Format(_compareSelectedFile.Text, _savedCompareFileItem.Item.Name) : string.Empty;
-            saveForLaterDifftoolToolStripMenuItem.Visible = diffFiles.Count == 1;
-            saveForLaterDifftoolToolStripMenuItem.Enabled = diffFiles.Count == 1 && _revisionDiffContextMenuController.ShouldEnableFirstSpecialCompare(diffFiles[0]);
+            if (_savedCompareFileItem == DiffFiles.SelectedItem)
+            {
+                var item = new FileStatusItem(
+                    firstRev: _savedCompareFileItem.SecondRevision,
+                    secondRev: _savedCompareFileItem.FirstRevision,
+                    item: _savedCompareFileItem.Item);
+                saveParentForLaterDifftoolToolStripMenuItem.Visible = diffFiles.Count == 1;
+                saveParentForLaterDifftoolToolStripMenuItem.Enabled =
+                    diffFiles.Count == 1 && _revisionDiffContextMenuController.ShouldEnableFirstSpecialCompare(item);
+                saveForLaterDifftoolToolStripMenuItem.Visible = false;
+            }
+            else
+            {
+                saveForLaterDifftoolToolStripMenuItem.Visible = diffFiles.Count == 1;
+                saveForLaterDifftoolToolStripMenuItem.Enabled =
+                    diffFiles.Count == 1 && _revisionDiffContextMenuController.ShouldEnableFirstSpecialCompare(diffFiles[0]);
+                saveParentForLaterDifftoolToolStripMenuItem.Visible = false;
+            }
         }
 
         private void resetFileToolStripMenuItem_Click(object sender, EventArgs e)

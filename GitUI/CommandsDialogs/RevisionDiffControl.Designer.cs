@@ -39,6 +39,7 @@ namespace GitUI.CommandsDialogs
             this.compareTwoSelectedDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.compareToExistingDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveForLaterDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveParentForLaterDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.firstDiffCaptionMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.selectedDiffCaptionMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.firstToSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -161,7 +162,8 @@ namespace GitUI.CommandsDialogs
                 this.selectedParentToLocalToolStripMenuItem,
                 this.compareTwoSelectedDifftoolToolStripMenuItem,
                 this.compareToExistingDifftoolToolStripMenuItem,
-                this.saveForLaterDifftoolToolStripMenuItem
+                this.saveForLaterDifftoolToolStripMenuItem,
+                this.saveParentForLaterDifftoolToolStripMenuItem
             });
             this.openWithDifftoolToolStripMenuItem.Image = global::GitUI.Properties.Images.Diff;
             this.openWithDifftoolToolStripMenuItem.Name = "openWithDifftoolToolStripMenuItem";
@@ -195,6 +197,13 @@ namespace GitUI.CommandsDialogs
             this.saveForLaterDifftoolToolStripMenuItem.Size = new System.Drawing.Size(296, 22);
             this.saveForLaterDifftoolToolStripMenuItem.Text = "Save selected file to later";
             this.saveForLaterDifftoolToolStripMenuItem.Click += new System.EventHandler(this.saveForLaterDifftoolToolStripMenuItem_Click);
+            // 
+            // saveParentForLaterDifftoolToolStripMenuItem
+            // 
+            this.saveParentForLaterDifftoolToolStripMenuItem.Name = "saveParentForLaterDifftoolToolStripMenuItem";
+            this.saveParentForLaterDifftoolToolStripMenuItem.Size = new System.Drawing.Size(296, 22);
+            this.saveParentForLaterDifftoolToolStripMenuItem.Text = "Save parent to selected file to later";
+            this.saveParentForLaterDifftoolToolStripMenuItem.Click += new System.EventHandler(this.saveParentForLaterDifftoolToolStripMenuItem_Click);
             // 
             // firstDiffCaptionMenuItem
             // 
@@ -516,6 +525,7 @@ namespace GitUI.CommandsDialogs
         private ToolStripMenuItem compareTwoSelectedDifftoolToolStripMenuItem;
         private ToolStripMenuItem compareToExistingDifftoolToolStripMenuItem;
         private ToolStripMenuItem saveForLaterDifftoolToolStripMenuItem;
+        private ToolStripMenuItem saveParentForLaterDifftoolToolStripMenuItem;
         private SplitContainer DiffSplitContainer;
         private ContextMenuStrip DiffContextMenu;
         private FileStatusList DiffFiles;
