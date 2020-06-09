@@ -8040,7 +8040,7 @@ To show all branches, right click the revision grid, select 'view' and then the 
   <file datatype="plaintext" original="RevisionDiffControl" source-language="en">
     <body>
       <trans-unit id="_compareSelectedFile.Text">
-        <source>Compare selected file to {0}</source>
+        <source>Compare selected file to "{0}"</source>
         <target />
       </trans-unit>
       <trans-unit id="_deleteFailed.Text">
@@ -8172,11 +8172,11 @@ To show all branches, right click the revision grid, select 'view' and then the 
         <target />
       </trans-unit>
       <trans-unit id="saveForLaterDifftoolToolStripMenuItem.Text">
-        <source>Save selected file to later</source>
+        <source>Save selected file for later comparison</source>
         <target />
       </trans-unit>
       <trans-unit id="saveParentForLaterDifftoolToolStripMenuItem.Text">
-        <source>Save parent to selected file to later</source>
+        <source>Save first commit for selected file for later comparison</source>
         <target />
       </trans-unit>
       <trans-unit id="saveToolStripMenuItem.Text">
