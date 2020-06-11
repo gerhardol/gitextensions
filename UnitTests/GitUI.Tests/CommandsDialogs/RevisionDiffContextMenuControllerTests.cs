@@ -12,6 +12,17 @@ namespace GitUITests.CommandsDialogs
     {
         private FileStatusListContextMenuController _revisionDiffContextMenuController;
 
+        /// <summary>
+        /// Mock of GitModule.GetFileBlobHash
+        /// </summary>
+        /// <param name="name">The git blob name</param>
+        /// <param name="id">The commit id</param>
+        /// <returns>The Git blob for the item</returns>
+        private static ObjectId GetFileBlobHash(string name, ObjectId id)
+        {
+            return id;
+        }
+
         [SetUp]
         public void Setup()
         {
@@ -155,33 +166,30 @@ namespace GitUITests.CommandsDialogs
         [Test]
         public void BrowseDiff_GetGitCommit_FirstDisabled()
         {
-            var module = new GitModule(".");
             var rev = new GitRevision(ObjectId.Random());
             var workTree = new GitRevision(ObjectId.WorkTreeId);
             var item = new FileStatusItem(
                 firstRev: workTree,
                 secondRev: rev,
                 item: new GitItemStatus());
-            _revisionDiffContextMenuController.GetGitCommit(module, item, true).Should().BeNull();
+            _revisionDiffContextMenuController.GetGitCommit(null, item, true).Should().BeNull();
         }
 
         [Test]
         public void BrowseDiff_GetGitCommit_SecondDisabled()
         {
-            var module = new GitModule(".");
             var rev = new GitRevision(ObjectId.Random());
             var workTree = new GitRevision(ObjectId.WorkTreeId);
             var item = new FileStatusItem(
                 firstRev: rev,
                 secondRev: workTree,
                 item: new GitItemStatus { IsSubmodule = true });
-            _revisionDiffContextMenuController.GetGitCommit(module, item, false).Should().BeNull();
+            _revisionDiffContextMenuController.GetGitCommit(null, item, false).Should().BeNull();
         }
 
         [Test]
         public void BrowseDiff_GetGitCommit_SecondWorkTree()
         {
-            var module = new GitModule(".");
             var rev = new GitRevision(ObjectId.Random());
             var workTree = new GitRevision(ObjectId.WorkTreeId);
             var name = "WorkTreeFile";
@@ -189,21 +197,33 @@ namespace GitUITests.CommandsDialogs
                 firstRev: rev,
                 secondRev: workTree,
                 item: new GitItemStatus { Name = name });
-            _revisionDiffContextMenuController.GetGitCommit(module, item, false).Should().Be(name);
+            _revisionDiffContextMenuController.GetGitCommit(null, item, false).Should().Be(name);
         }
 
         [Test]
-        public void BrowseDiff_GetGitCommit_Index()
+        public void BrowseDiff_GetGitCommit_Index_Tree()
         {
-            var module = new GitModule(".");
             var rev = new GitRevision(ObjectId.Random());
-            var workTree = new GitRevision(ObjectId.WorkTreeId);
-            const string name = "WorkTreeFile";
+            var workTree = new GitRevision(ObjectId.IndexId);
+            const string name = "File";
             var item = new FileStatusItem(
                 firstRev: rev,
                 secondRev: workTree,
-                item: new GitItemStatus { Name = name });
-            _revisionDiffContextMenuController.GetGitCommit(module, item, false).Should().Be(name);
+                item: new GitItemStatus { Name = name, TreeGuid = ObjectId.Random() });
+            _revisionDiffContextMenuController.GetGitCommit(null, item, false).Should().Be(item.Item.TreeGuid?.ToString());
+        }
+
+        [Test]
+        public void BrowseDiff_GetGitCommit_Index_GetBlob()
+        {
+            var rev = new GitRevision(ObjectId.Random());
+            var workTree = new GitRevision(ObjectId.IndexId);
+            const string name = "File";
+            var item = new FileStatusItem(
+                firstRev: rev,
+                secondRev: workTree,
+                item: new GitItemStatus { Name = name, TreeGuid = null });
+            _revisionDiffContextMenuController.GetGitCommit(GetFileBlobHash, item, false).Should().Be(ObjectId.IndexId.ToString());
         }
 
         [TestCase(true, true)]
@@ -212,7 +232,6 @@ namespace GitUITests.CommandsDialogs
         [TestCase(false, false)]
         public void BrowseDiff_GetGitCommit_Commit(bool isFirst, bool isDeleted)
         {
-            var module = new GitModule(".");
             var id = ObjectId.Random();
             var rev = new GitRevision(id);
             const string newName = "newName";
@@ -227,7 +246,7 @@ namespace GitUITests.CommandsDialogs
                     IsDeleted = isDeleted
                 });
             var expected = $"{id}:{(isDeleted ? oldName : newName)}";
-            _revisionDiffContextMenuController.GetGitCommit(module, item, isFirst).Should().Be(expected);
+            _revisionDiffContextMenuController.GetGitCommit(null, item, isFirst).Should().Be(expected);
         }
     }
 }

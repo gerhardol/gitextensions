@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using GitCommands;
 using GitUI.UserControls;
@@ -23,10 +24,10 @@ namespace GitUI.CommandsDialogs
         /// A Git commitish representation of an object
         /// https://git-scm.com/docs/gitrevisions#_specifying_revisions
         /// </summary>
-        /// <param name="module">the Git module</param>
+        /// <param name="getFileBlobHash">the Git module function to get the blob</param>
         /// <param name="item">the item</param>
         /// <returns>A Git commitish</returns>
-        string GetGitCommit([CanBeNull] GitModule module, [CanBeNull] FileStatusItem item, bool isFirst);
+        string GetGitCommit([CanBeNull] Func<string, ObjectId, ObjectId> getFileBlobHash, [CanBeNull] FileStatusItem item, bool isFirst);
     }
 
     public sealed class ContextMenuDiffToolInfo
@@ -129,9 +130,9 @@ namespace GitUI.CommandsDialogs
         }
 
         /// <inheritdoc/>>
-        public string GetGitCommit([CanBeNull] GitModule module, [CanBeNull] FileStatusItem item, bool isFirst)
+        public string GetGitCommit([CanBeNull] Func<string, ObjectId, ObjectId> getFileBlobHash, [CanBeNull] FileStatusItem item, bool isFirst)
         {
-            if (module == null || (isFirst ? !ShouldEnableFirstSpecialCompare(item) : !ShouldEnableSecondSpecialCompare(item)))
+            if (isFirst ? !ShouldEnableFirstSpecialCompare(item) : !ShouldEnableSecondSpecialCompare(item))
             {
                 return null;
             }
@@ -157,7 +158,9 @@ namespace GitUI.CommandsDialogs
                 // Must be referenced by blob - no commit. File name presented in tool will be blob or the other file
                 return item.Item.TreeGuid != null
                     ? item.Item.TreeGuid.ToString()
-                    : module.GetFileBlobHash(name, id)?.ToString();
+                    : getFileBlobHash != null
+                        ? getFileBlobHash(name, id)?.ToString()
+                        : null;
             }
 
             // revision:path

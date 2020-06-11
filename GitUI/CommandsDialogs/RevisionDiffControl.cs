@@ -684,8 +684,8 @@ namespace GitUI.CommandsDialogs
                 return;
             }
 
-            var first = _revisionDiffContextMenuController.GetGitCommit(Module, diffFiles[1], true);
-            var second = _revisionDiffContextMenuController.GetGitCommit(Module, diffFiles[0], false);
+            var first = _revisionDiffContextMenuController.GetGitCommit(Module.GetFileBlobHash, diffFiles[1], true);
+            var second = _revisionDiffContextMenuController.GetGitCommit(Module.GetFileBlobHash, diffFiles[0], false);
             if (string.IsNullOrWhiteSpace(first) || string.IsNullOrWhiteSpace(second))
             {
                 return;
@@ -696,8 +696,8 @@ namespace GitUI.CommandsDialogs
 
         private void compareToExistingDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var first = _revisionDiffContextMenuController.GetGitCommit(Module, _savedCompareFileItem, true);
-            var second = _revisionDiffContextMenuController.GetGitCommit(Module, DiffFiles.SelectedItem, false);
+            var first = _revisionDiffContextMenuController.GetGitCommit(Module.GetFileBlobHash, _savedCompareFileItem, true);
+            var second = _revisionDiffContextMenuController.GetGitCommit(Module.GetFileBlobHash, DiffFiles.SelectedItem, false);
             if (string.IsNullOrWhiteSpace(first) || string.IsNullOrWhiteSpace(second))
             {
                 return;
