@@ -8039,10 +8039,6 @@ To show all branches, right click the revision grid, select 'view' and then the 
   </file>
   <file datatype="plaintext" original="RevisionDiffControl" source-language="en">
     <body>
-      <trans-unit id="_compareSelectedFile.Text">
-        <source>Compare selected file to "{0}"</source>
-        <target />
-      </trans-unit>
       <trans-unit id="_deleteFailed.Text">
         <source>Delete file failed</source>
         <target />
@@ -8053,6 +8049,10 @@ To show all branches, right click the revision grid, select 'view' and then the 
       </trans-unit>
       <trans-unit id="_deleteSelectedFilesCaption.Text">
         <source>Delete</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_diffSelectedWithSavedFile.Text">
+        <source>Compare selected file to "{0}"</source>
         <target />
       </trans-unit>
       <trans-unit id="_firstRevision.Text">
@@ -8081,10 +8081,6 @@ To show all branches, right click the revision grid, select 'view' and then the 
       </trans-unit>
       <trans-unit id="cherryPickSelectedDiffFileToolStripMenuItem.Text">
         <source>Cherry pick changes</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="compareTwoSelectedDifftoolToolStripMenuItem.Text">
-        <source>Compare the two selected files</source>
         <target />
       </trans-unit>
       <trans-unit id="copyFilenameToClipboardToolStripMenuItem1.Text">
@@ -8125,6 +8121,10 @@ To show all branches, right click the revision grid, select 'view' and then the 
       </trans-unit>
       <trans-unit id="diffStashSubmoduleChangesToolStripMenuItem.Text">
         <source>Stash submodule changes</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="diffTwoSelectedDifftoolToolStripMenuItem.Text">
+        <source>Diff the selected files</source>
         <target />
       </trans-unit>
       <trans-unit id="diffUpdateSubmoduleMenuItem.Text">
@@ -8171,12 +8171,12 @@ To show all branches, right click the revision grid, select 'view' and then the 
         <source>Save selected as...</source>
         <target />
       </trans-unit>
-      <trans-unit id="saveForLaterDifftoolToolStripMenuItem.Text">
-        <source>Save selected file for later comparison</source>
+      <trans-unit id="saveFirstRevForLaterDiffToolStripMenuItem.Text">
+        <source>Save First for later</source>
         <target />
       </trans-unit>
-      <trans-unit id="saveParentForLaterDifftoolToolStripMenuItem.Text">
-        <source>Save first commit for selected file for later comparison</source>
+      <trans-unit id="saveSecondRevForLaterDiffToolStripMenuItem.Text">
+        <source>Save Second for later</source>
         <target />
       </trans-unit>
       <trans-unit id="saveToolStripMenuItem.Text">

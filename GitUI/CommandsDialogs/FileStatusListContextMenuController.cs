@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using GitCommands;
-using GitUI.UserControls;
 using GitUIPluginInterfaces;
 using JetBrains.Annotations;
 
@@ -17,17 +15,6 @@ namespace GitUI.CommandsDialogs
         bool ShouldShowMenuSelectedParentToLocal(ContextMenuDiffToolInfo selectionInfo);
         bool ShouldDisplayMenuFirstParentToLocal(ContextMenuDiffToolInfo selectionInfo);
         bool ShouldDisplayMenuSelectedParentToLocal(ContextMenuDiffToolInfo selectionInfo);
-        bool ShouldEnableFirstSpecialCompare([CanBeNull] FileStatusItem item);
-        bool ShouldEnableSecondSpecialCompare([CanBeNull] FileStatusItem item);
-
-        /// <summary>
-        /// A Git commitish representation of an object
-        /// https://git-scm.com/docs/gitrevisions#_specifying_revisions
-        /// </summary>
-        /// <param name="getFileBlobHash">the Git module function to get the blob</param>
-        /// <param name="item">the item</param>
-        /// <returns>A Git commitish</returns>
-        string GetGitCommit([CanBeNull] Func<string, ObjectId, ObjectId> getFileBlobHash, [CanBeNull] FileStatusItem item, bool isFirst);
     }
 
     public sealed class ContextMenuDiffToolInfo
@@ -115,56 +102,6 @@ namespace GitUI.CommandsDialogs
         {
             // Not visible if same revision as ShouldShowMenuFirstToLocal()
             return !selectionInfo.FirstIsParent;
-        }
-
-        public bool ShouldEnableFirstSpecialCompare(FileStatusItem item)
-        {
-            // First item must be a git reference, i.e. other than work tree
-            return item != null && !item.Item.IsSubmodule && item.SecondRevision.ObjectId != ObjectId.WorkTreeId;
-        }
-
-        public bool ShouldEnableSecondSpecialCompare(FileStatusItem item)
-        {
-            // Work tree file must exist on file system
-            return item != null && !item.Item.IsSubmodule && (item.SecondRevision.ObjectId != ObjectId.WorkTreeId || !item.Item.IsDeleted);
-        }
-
-        /// <inheritdoc/>>
-        public string GetGitCommit([CanBeNull] Func<string, ObjectId, ObjectId> getFileBlobHash, [CanBeNull] FileStatusItem item, bool isFirst)
-        {
-            if (isFirst ? !ShouldEnableFirstSpecialCompare(item) : !ShouldEnableSecondSpecialCompare(item))
-            {
-                return null;
-            }
-
-            var name = item.Item.IsDeleted && !string.IsNullOrWhiteSpace(item.Item.OldName)
-                ? item.Item.OldName
-                : item.Item.Name;
-
-            var id = (item.Item.IsDeleted ? item.FirstRevision : item.SecondRevision)?.ObjectId;
-            if (string.IsNullOrWhiteSpace(name) || id == null)
-            {
-                return null;
-            }
-
-            if (id == ObjectId.WorkTreeId)
-            {
-                // A file system file
-                return name;
-            }
-
-            if (id == ObjectId.IndexId)
-            {
-                // Must be referenced by blob - no commit. File name presented in tool will be blob or the other file
-                return item.Item.TreeGuid != null
-                    ? item.Item.TreeGuid.ToString()
-                    : getFileBlobHash != null
-                        ? getFileBlobHash(name, id)?.ToString()
-                        : null;
-            }
-
-            // revision:path
-            return $"{id}:{name}";
         }
     }
 }

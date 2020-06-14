@@ -3703,6 +3703,11 @@ namespace GitCommands
         /// <returns>empty string</returns>
         public string OpenFilesWithDifftool(string firstGitCommit, string secondGitCommit)
         {
+            if (string.IsNullOrWhiteSpace(firstGitCommit) || string.IsNullOrWhiteSpace(secondGitCommit))
+            {
+                return null;
+            }
+
             _gitCommandRunner.RunDetached(new GitArgumentBuilder("difftool")
             {
                 "--gui",

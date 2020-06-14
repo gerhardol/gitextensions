@@ -36,11 +36,11 @@ namespace GitUI.CommandsDialogs
             this.DiffContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.openWithDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openWithCustomDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.compareSpecialStripSeparator = new System.Windows.Forms.ToolStripSeparator();
-            this.compareTwoSelectedDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.compareToExistingDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.saveForLaterDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.saveParentForLaterDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.diffSavedForLaterStripSeparator = new System.Windows.Forms.ToolStripSeparator();
+            this.diffTwoSelectedDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.diffWithSavedDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveSecondRevForLaterDiffToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveFirstRevForLaterDiffToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.firstDiffCaptionMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.selectedDiffCaptionMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.firstToSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -161,11 +161,11 @@ namespace GitUI.CommandsDialogs
                 this.selectedToLocalToolStripMenuItem,
                 this.firstParentToLocalToolStripMenuItem,
                 this.selectedParentToLocalToolStripMenuItem,
-                this.compareSpecialStripSeparator,
-                this.compareTwoSelectedDifftoolToolStripMenuItem,
-                this.compareToExistingDifftoolToolStripMenuItem,
-                this.saveForLaterDifftoolToolStripMenuItem,
-                this.saveParentForLaterDifftoolToolStripMenuItem
+                this.diffSavedForLaterStripSeparator,
+                this.diffTwoSelectedDifftoolToolStripMenuItem,
+                this.diffWithSavedDifftoolToolStripMenuItem,
+                this.saveFirstRevForLaterDiffToolStripMenuItem,
+                this.saveSecondRevForLaterDiffToolStripMenuItem
             });
             this.openWithDifftoolToolStripMenuItem.Image = global::GitUI.Properties.Images.Diff;
             this.openWithDifftoolToolStripMenuItem.Name = "openWithDifftoolToolStripMenuItem";
@@ -180,37 +180,37 @@ namespace GitUI.CommandsDialogs
             this.openWithCustomDifftoolToolStripMenuItem.Size = new System.Drawing.Size(296, 22);
             this.openWithCustomDifftoolToolStripMenuItem.Text = "Open with custom difftool";
             // 
-            // compareSpecialStripSeparator
+            // diffSavedForLaterStripSeparator
             // 
-            this.compareSpecialStripSeparator.Name = "compareSpecialStripSeparator";
-            this.compareSpecialStripSeparator.Size = new System.Drawing.Size(293, 6);
+            this.diffSavedForLaterStripSeparator.Name = "diffSavedForLaterStripSeparator";
+            this.diffSavedForLaterStripSeparator.Size = new System.Drawing.Size(293, 6);
             // 
-            // compareTwoSelectedDifftoolToolStripMenuItem
+            // diffTwoSelectedDifftoolToolStripMenuItem
             // 
-            this.compareTwoSelectedDifftoolToolStripMenuItem.Name = "compareTwoSelectedDifftoolToolStripMenuItem";
-            this.compareTwoSelectedDifftoolToolStripMenuItem.Size = new System.Drawing.Size(296, 22);
-            this.compareTwoSelectedDifftoolToolStripMenuItem.Text = "Compare the two selected files";
-            this.compareTwoSelectedDifftoolToolStripMenuItem.Click += new System.EventHandler(this.compareTwoSelectedDifftoolToolStripMenuItem_Click);
+            this.diffTwoSelectedDifftoolToolStripMenuItem.Name = "diffTwoSelectedDifftoolToolStripMenuItem";
+            this.diffTwoSelectedDifftoolToolStripMenuItem.Size = new System.Drawing.Size(296, 22);
+            this.diffTwoSelectedDifftoolToolStripMenuItem.Text = "Diff the selected files";
+            this.diffTwoSelectedDifftoolToolStripMenuItem.Click += new System.EventHandler(this.diffTwoSelectedDiffToolToolStripMenuItem_Click);
             // 
-            // compareToExistingDifftoolToolStripMenuItem
+            // diffWithSavedDifftoolToolStripMenuItem
             // 
-            this.compareToExistingDifftoolToolStripMenuItem.Name = "compareToExistingDifftoolToolStripMenuItem";
-            this.compareToExistingDifftoolToolStripMenuItem.Size = new System.Drawing.Size(296, 22);
-            this.compareToExistingDifftoolToolStripMenuItem.Click += new System.EventHandler(this.compareToExistingDifftoolToolStripMenuItem_Click);
+            this.diffWithSavedDifftoolToolStripMenuItem.Name = "diffWithSavedDifftoolToolStripMenuItem";
+            this.diffWithSavedDifftoolToolStripMenuItem.Size = new System.Drawing.Size(296, 22);
+            this.diffWithSavedDifftoolToolStripMenuItem.Click += new System.EventHandler(this.diffWithSavedDiffToolToolStripMenuItem_Click);
             // 
-            // saveForLaterDifftoolToolStripMenuItem
+            // saveFirstRevForLaterDiffToolStripMenuItem
             // 
-            this.saveForLaterDifftoolToolStripMenuItem.Name = "saveForLaterDifftoolToolStripMenuItem";
-            this.saveForLaterDifftoolToolStripMenuItem.Size = new System.Drawing.Size(296, 22);
-            this.saveForLaterDifftoolToolStripMenuItem.Text = "Save selected file for later comparison";
-            this.saveForLaterDifftoolToolStripMenuItem.Click += new System.EventHandler(this.saveForLaterDifftoolToolStripMenuItem_Click);
+            this.saveFirstRevForLaterDiffToolStripMenuItem.Name = "saveFirstRevForLaterDiffToolStripMenuItem";
+            this.saveFirstRevForLaterDiffToolStripMenuItem.Size = new System.Drawing.Size(296, 22);
+            this.saveFirstRevForLaterDiffToolStripMenuItem.Text = "Save First for later";
+            this.saveFirstRevForLaterDiffToolStripMenuItem.Click += new System.EventHandler(this.saveFirstForLaterDiffToolToolStripMenuItem_Click);
             // 
-            // saveParentForLaterDifftoolToolStripMenuItem
+            // saveSecondRevForLaterDiffToolStripMenuItem
             // 
-            this.saveParentForLaterDifftoolToolStripMenuItem.Name = "saveParentForLaterDifftoolToolStripMenuItem";
-            this.saveParentForLaterDifftoolToolStripMenuItem.Size = new System.Drawing.Size(296, 22);
-            this.saveParentForLaterDifftoolToolStripMenuItem.Text = "Save first commit for selected file for later comparison";
-            this.saveParentForLaterDifftoolToolStripMenuItem.Click += new System.EventHandler(this.saveParentForLaterDifftoolToolStripMenuItem_Click);
+            this.saveSecondRevForLaterDiffToolStripMenuItem.Name = "saveSecondRevForLaterDiffToolStripMenuItem";
+            this.saveSecondRevForLaterDiffToolStripMenuItem.Size = new System.Drawing.Size(296, 22);
+            this.saveSecondRevForLaterDiffToolStripMenuItem.Text = "Save Second for later";
+            this.saveSecondRevForLaterDiffToolStripMenuItem.Click += new System.EventHandler(this.saveSecondForLaterDiffToolToolStripMenuItem_Click);
             // 
             // firstDiffCaptionMenuItem
             // 
@@ -529,11 +529,11 @@ namespace GitUI.CommandsDialogs
         private ToolStripMenuItem saveToolStripMenuItem;
         private ToolStripMenuItem openWithDifftoolToolStripMenuItem;
         private ToolStripMenuItem openWithCustomDifftoolToolStripMenuItem;
-        private ToolStripSeparator compareSpecialStripSeparator;
-        private ToolStripMenuItem compareTwoSelectedDifftoolToolStripMenuItem;
-        private ToolStripMenuItem compareToExistingDifftoolToolStripMenuItem;
-        private ToolStripMenuItem saveForLaterDifftoolToolStripMenuItem;
-        private ToolStripMenuItem saveParentForLaterDifftoolToolStripMenuItem;
+        private ToolStripSeparator diffSavedForLaterStripSeparator;
+        private ToolStripMenuItem diffTwoSelectedDifftoolToolStripMenuItem;
+        private ToolStripMenuItem diffWithSavedDifftoolToolStripMenuItem;
+        private ToolStripMenuItem saveSecondRevForLaterDiffToolStripMenuItem;
+        private ToolStripMenuItem saveFirstRevForLaterDiffToolStripMenuItem;
         private SplitContainer DiffSplitContainer;
         private ContextMenuStrip DiffContextMenu;
         private FileStatusList DiffFiles;
