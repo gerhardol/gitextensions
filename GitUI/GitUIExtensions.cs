@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -72,6 +73,15 @@ namespace GitUI
             {
                 // View blob guid from revision, or file for worktree
                 return fileViewer.ViewGitItemRevisionAsync(item.Item, item.SecondRevision.ObjectId, openWithDiffTool);
+            }
+
+            if (item.Item.RangeDiff)
+            {
+                // Present as a file
+                return fileViewer.ViewTextAsync(item.Item.Name,
+                    fileViewer.Module.GetRangeDiff(firstId,
+                    item.SecondRevision.ObjectId,
+                    fileViewer.GetExtraDiffArguments()));
             }
 
             string selectedPatch = GetSelectedPatch(fileViewer, firstId, item.SecondRevision.ObjectId, item.Item)

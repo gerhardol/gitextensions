@@ -53,6 +53,7 @@ namespace GitCommands
         public string RenameCopyPercentage { get; set; }
 
         public StagedStatus Staged { get; set; }
+        public bool RangeDiff { get; set; }
 
         #region Flags
 

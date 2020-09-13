@@ -32,6 +32,7 @@ namespace GitUI
         private readonly TranslationString _diffWithParent = new TranslationString("Diff with a/");
         private readonly TranslationString _diffBaseToB = new TranslationString("Unique diff BASE with b/");
         private readonly TranslationString _diffCommonBase = new TranslationString("Common diff with BASE a/");
+        private readonly TranslationString _diffRange = new TranslationString("Range diff");
         private readonly TranslationString _combinedDiff = new TranslationString("Combined diff");
         private readonly IFullPathResolver _fullPathResolver;
         private readonly SortDiffListContextMenuItem _sortByContextMenu;
@@ -143,7 +144,8 @@ namespace GitUI
                     (nameof(Images.SubmoduleRevisionSemiUp), ScaleHeight(Images.SubmoduleRevisionSemiUp)),
                     (nameof(Images.SubmoduleRevisionSemiUpDirty), ScaleHeight(Images.SubmoduleRevisionSemiUpDirty)),
                     (nameof(Images.SubmoduleRevisionSemiDown), ScaleHeight(Images.SubmoduleRevisionSemiDown)),
-                    (nameof(Images.SubmoduleRevisionSemiDownDirty), ScaleHeight(Images.SubmoduleRevisionSemiDownDirty))
+                    (nameof(Images.SubmoduleRevisionSemiDownDirty), ScaleHeight(Images.SubmoduleRevisionSemiDownDirty)),
+                    (nameof(Images.Diff), ScaleHeight(Images.Diff))
                 };
 
                 for (var i = 0; i < images.Length; i++)
@@ -817,6 +819,25 @@ namespace GitUI
                 statuses = commonBaseToAandB
             });
 
+            // Git range-diff is slow and memory consuming, so just skip if diff is large
+            // to avoid that GE seem to hang when selecting the range diff
+            const int maxRangeDiffCommits = 100;
+            int? count = Module.GetCommitCount(firstRevHead.ToString(), selectedRevHead.ToString());
+            if (!GitVersion.Current.SupportRangeDiffTool || count is null || count > maxRangeDiffCommits)
+            {
+                GitItemStatusesWithDescription = tuples;
+                return;
+            }
+
+            // Add rangeDiff as a separate group (range is not the same as diff with artificial commits)
+            List<GitItemStatus> statuses = new List<GitItemStatus> { new GitItemStatus { Name = _diffRange.Text, RangeDiff = true } };
+
+            var desc = _diffRange.Text + ": " + GetDescriptionForRevision(firstRevHead) + " -> " + GetDescriptionForRevision(selectedRevHead);
+            var first = firstRev.ObjectId == firstRevHead ? firstRev : new GitRevision(firstRevHead);
+            var selected = selectedRev.ObjectId == selectedRevHead ? selectedRev : new GitRevision(selectedRevHead);
+            var rangeDiff = new FileStatusWithDescription { firstRev = first, secondRev = selected, summary = desc, statuses = statuses };
+            tuples.Add(rangeDiff);
+
             GitItemStatusesWithDescription = tuples;
             return;
 
@@ -872,12 +893,7 @@ namespace GitUI
 
         private string GetDescriptionForRevision(ObjectId objectId)
         {
-            if (DescribeRevision != null)
-            {
-                return DescribeRevision(objectId);
-            }
-
-            return objectId?.ToShortString();
+            return DescribeRevision != null ? DescribeRevision(objectId) : objectId?.ToShortString();
         }
 
         public void SetNoFilesText(string text)
@@ -1164,7 +1180,7 @@ namespace GitUI
 
             static string GetItemImageKey(GitItemStatus gitItemStatus)
             {
-                if (!gitItemStatus.IsNew && !gitItemStatus.IsDeleted && !gitItemStatus.IsTracked)
+                if (!gitItemStatus.IsNew && !gitItemStatus.IsDeleted && !gitItemStatus.IsTracked && !gitItemStatus.RangeDiff)
                 {
                     // Illegal combinations, no flags set?
                     return nameof(Images.FileStatusUnknown);
@@ -1173,6 +1189,11 @@ namespace GitUI
                 if (gitItemStatus.IsDeleted)
                 {
                     return nameof(Images.FileStatusRemoved);
+                }
+
+                if (gitItemStatus.RangeDiff)
+                {
+                    return nameof(Images.Diff);
                 }
 
                 if (gitItemStatus.IsNew || (!gitItemStatus.IsTracked && !gitItemStatus.IsSubmodule))

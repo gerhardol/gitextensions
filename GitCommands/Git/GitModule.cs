@@ -2314,6 +2314,35 @@ namespace GitCommands
             return GetPatch(patches, fileName, oldFileName);
         }
 
+        [NotNull]
+        public string GetRangeDiff(
+            [NotNull] ObjectId firstId,
+            [NotNull] ObjectId secondId,
+            [NotNull] string extraDiffArguments)
+        {
+            if (firstId.IsArtificial || secondId.IsArtificial)
+            {
+                throw new ArgumentException($"Tried to get range diff for artificial commit: {firstId} and file: {secondId}");
+            }
+
+            // Supported since Git 2.19 (checks when adding the command)
+            var args = new GitArgumentBuilder("range-diff")
+            {
+                "--no-color",
+                extraDiffArguments,
+                { AppSettings.UseHistogramDiffAlgorithm, "--histogram" },
+                "-M -C",
+                $"{firstId}...{secondId}"
+            };
+
+            var patch = _gitExecutable.GetOutput(
+                args,
+                cache: GitCommandCache,
+                outputEncoding: LosslessEncoding);
+
+            return patch;
+        }
+
         [CanBeNull]
         private static Patch GetPatch([NotNull, ItemNotNull] IReadOnlyList<Patch> patches, [CanBeNull] string fileName, [CanBeNull] string oldFileName)
         {

@@ -1308,6 +1308,10 @@ Please make sure git (Git for Windows or cygwin) is installed or set the correct
         <source>Common diff with BASE a/</source>
         <target />
       </trans-unit>
+      <trans-unit id="_diffRange.Text">
+        <source>Range diff</source>
+        <target />
+      </trans-unit>
       <trans-unit id="_diffWithParent.Text">
         <source>Diff with a/</source>
         <target />
