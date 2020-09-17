@@ -705,20 +705,24 @@ namespace GitUI
             else
             {
                 // With more than 4, only first -> selected is interesting
-                // Limited selections: Show multi selection if more than two selected
-                var multipleParents = AppSettings.ShowDiffForAllParents && revisions.Count <= 4 ? revisions.Count - 1 : 1;
-                tuples.AddRange(revisions
-                    .Skip(1)
-                    .Take(multipleParents)
-                    .Select(firstRev =>
-                        (firstRev,
-                            selectedRev,
-                            _diffWithParent.Text + GetDescriptionForRevision(firstRev.ObjectId),
-                            Module.GetDiffFilesWithSubmodulesStatus(firstRev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId))));
+                // Show multi compare if 2-4 are selected
+                const int maxMultiCompare = 4;
+                var firstRev = revisions.Last();
+                var parents = AppSettings.ShowDiffForAllParents && revisions.Count <= maxMultiCompare
+                    ? revisions.Skip(1)
+                    : new List<GitRevision> { firstRev };
 
+                tuples.AddRange(
+                    parents
+                        .Select(rev =>
+                            (rev,
+                                selectedRev,
+                                _diffWithParent.Text + GetDescriptionForRevision(rev.ObjectId),
+                                Module.GetDiffFilesWithSubmodulesStatus(rev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId))));
+
+                // Extra information with limited selection
                 if (AppSettings.ShowDiffForAllParents && revisions.Count == 2)
                 {
-                    var firstRev = revisions.Last();
                     var allAToB = tuples[0].statuses;
 
                     // Get base commit, add as parent if unique
