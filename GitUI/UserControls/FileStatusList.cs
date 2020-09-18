@@ -713,22 +713,22 @@ namespace GitUI
             // With more than 4, only first -> selected is interesting
             // Show multi compare if 2-4 are selected
             const int maxMultiCompare = 4;
-            var firstRev =  revisions.Last();
-            var parents = AppSettings.ShowDiffForAllParents && revisions.Count <= maxMultiCompare
-                ? revisions.Skip(1)
-                : new List<GitRevision> { firstRev };
 
-            tuples.AddRange(
-                parents
-                    .Select(rev => new FileStatusWithDescription
-                    {
-                        firstRev = rev,
-                        secondRev = selectedRev,
-                        summary = _diffWithParent.Text + GetDescriptionForRevision(rev.ObjectId),
-                        statuses = Module.GetDiffFilesWithSubmodulesStatus(rev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId)
-                    }));
+            // With 4 selected, assume that ranges are selected: baseA..headA baseB..headB
+            // the first item is therefore the second selected
+            var firstRev = AppSettings.ShowDiffForAllParents && revisions.Count == maxMultiCompare
+                ? revisions[2]
+                : revisions.Last();
 
-            if (!AppSettings.ShowDiffForAllParents || revisions.Count > 2)
+            tuples.Add(new FileStatusWithDescription
+            {
+                firstRev = firstRev,
+                secondRev = selectedRev,
+                summary = _diffWithParent.Text + GetDescriptionForRevision(firstRev.ObjectId),
+                statuses = Module.GetDiffFilesWithSubmodulesStatus(firstRev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId)
+            });
+
+            if (!AppSettings.ShowDiffForAllParents || revisions.Count > maxMultiCompare)
             {
                 GitItemStatusesWithDescription = tuples;
                 return;
@@ -743,16 +743,43 @@ namespace GitUI
                 : new Lazy<ObjectId>(() => Module.RevParse("HEAD"));
             var firstRevHead = GetRevisionOrHead(firstRev, head);
             var selectedRevHead = GetRevisionOrHead(selectedRev, head);
-            var baseRevGuid = Module.GetMergeBase(GetRevisionOrHead(firstRev, head),
-                GetRevisionOrHead(selectedRev, head));
+            var baseRevGuid = Module.GetMergeBase(firstRevHead, selectedRevHead);
 
-            // Add if separate branches (note that artificial commits both have HEAD as BASE)
-            // Check for separate branches (note that artificial commits both have HEAD as BASE)
-            // (no actual range check for 4 selections)
-            if (baseRevGuid == null
-                || baseRevGuid == firstRevHead
-                || baseRevGuid == selectedRevHead)
+            // Four selected, to check if two ranges are selected
+            var baseA = (revisions.Count != 4 || baseRevGuid is null)
+                ? null
+                : Module.GetMergeBase(GetRevisionOrHead(revisions[3], head), firstRevHead);
+            var baseB = baseA is null || baseA != revisions[3].ObjectId
+                ? null
+                : Module.GetMergeBase(GetRevisionOrHead(revisions[1], head), selectedRevHead);
+            if (baseB != revisions[1].ObjectId)
             {
+                baseB = null;
+            }
+
+            // Check for separate branches (note that artificial commits both have HEAD as BASE)
+            if (baseRevGuid is null
+                || baseRevGuid == firstRevHead
+                || baseRevGuid == selectedRevHead
+
+                // For three, show multi-diff if not base is selected
+                || (revisions.Count == 3 && baseRevGuid != revisions[1].ObjectId)
+
+                // For four, two ranges must be selected
+                || (revisions.Count == 4 && (baseA is null || baseB is null)))
+            {
+                // No variant of range diff, show multi diff
+                tuples.AddRange(
+                    revisions
+                        .Where(rev => rev != firstRev && rev != selectedRev)
+                        .Select(rev => new FileStatusWithDescription
+                        {
+                            firstRev = rev,
+                            secondRev = selectedRev,
+                            summary = _diffWithParent.Text + GetDescriptionForRevision(rev.ObjectId),
+                            statuses = Module.GetDiffFilesWithSubmodulesStatus(rev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId)
+                        }));
+
                 GitItemStatusesWithDescription = tuples;
                 return;
             }
