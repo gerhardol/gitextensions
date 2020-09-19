@@ -302,6 +302,8 @@ namespace GitUI
         {
             public GitRevision firstRev;
             public GitRevision secondRev;
+            public ObjectId baseA;
+            public ObjectId baseB;
             public string summary;
             public IReadOnlyList<GitItemStatus> statuses;
         }
@@ -836,6 +838,8 @@ namespace GitUI
             var first = firstRev.ObjectId == firstRevHead ? firstRev : new GitRevision(firstRevHead);
             var selected = selectedRev.ObjectId == selectedRevHead ? selectedRev : new GitRevision(selectedRevHead);
             var rangeDiff = new FileStatusWithDescription { firstRev = first, secondRev = selected, summary = desc, statuses = statuses };
+            rangeDiff.baseA = baseA;
+            rangeDiff.baseB = baseB;
             tuples.Add(rangeDiff);
 
             GitItemStatusesWithDescription = tuples;
@@ -1135,7 +1139,7 @@ namespace GitUI
                         listItem.Selected = true;
                     }
 
-                    listItem.Tag = new FileStatusItem(i.firstRev, i.secondRev, item);
+                    listItem.Tag = new FileStatusItem(i.firstRev, i.secondRev, item, i.baseA, i.baseB);
                     list.Add(listItem);
                 }
             }

@@ -2318,9 +2318,14 @@ namespace GitCommands
         public string GetRangeDiff(
             [NotNull] ObjectId firstId,
             [NotNull] ObjectId secondId,
+            [CanBeNull] ObjectId firstBase,
+            [CanBeNull] ObjectId secondBase,
             [NotNull] string extraDiffArguments)
         {
-            if (firstId.IsArtificial || secondId.IsArtificial)
+            if (firstId.IsArtificial
+                || secondId.IsArtificial
+                || (firstBase?.IsArtificial ?? false)
+                || (secondBase?.IsArtificial ?? false))
             {
                 throw new ArgumentException($"Tried to get range diff for artificial commit: {firstId} and file: {secondId}");
             }
@@ -2332,7 +2337,7 @@ namespace GitCommands
                 extraDiffArguments,
                 { AppSettings.UseHistogramDiffAlgorithm, "--histogram" },
                 "-M -C",
-                $"{firstId}...{secondId}"
+                { firstBase is null || secondBase is null,  $"{firstId}...{secondId}", $"{firstBase}..{firstId} {secondBase}..{secondId}" }
             };
 
             var patch = _gitExecutable.GetOutput(

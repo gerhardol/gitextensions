@@ -77,11 +77,14 @@ namespace GitUI
 
             if (item.Item.RangeDiff)
             {
-                // Present as a file
-                return fileViewer.ViewTextAsync(item.Item.Name,
-                    fileViewer.Module.GetRangeDiff(firstId,
-                    item.SecondRevision.ObjectId,
-                    fileViewer.GetExtraDiffArguments()));
+                string output = fileViewer.Module.GetRangeDiff(
+                        firstId,
+                        item.SecondRevision.ObjectId,
+                        item.BaseA,
+                        item.BaseB,
+                        fileViewer.GetExtraDiffArguments());
+
+                return fileViewer.ViewTextAsync(item.Item.Name, output ?? defaultText);
             }
 
             string selectedPatch = GetSelectedPatch(fileViewer, firstId, item.SecondRevision.ObjectId, item.Item)
