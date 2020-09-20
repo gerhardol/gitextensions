@@ -699,89 +699,98 @@ namespace GitUI
                     if (conflicts.Count != 0)
                     {
                         // Create an artificial commit
-                        var desc = _combinedDiff.Text;
                         tuples.Add(new FileStatusWithDescription
                         {
-                            firstRev = new GitRevision(ObjectId.CombinedDiffId), secondRev = selectedRev, summary = desc, statuses = conflicts
+                            firstRev = new GitRevision(ObjectId.CombinedDiffId), secondRev = selectedRev, summary = _combinedDiff.Text, statuses = conflicts
                         });
                     }
                 }
+
+                GitItemStatusesWithDescription = tuples;
+                return;
             }
-            else
-            {
-                // With more than 4, only first -> selected is interesting
-                // Show multi compare if 2-4 are selected
-                const int maxMultiCompare = 4;
-                var firstRev = revisions.Last();
-                var parents = AppSettings.ShowDiffForAllParents && revisions.Count <= maxMultiCompare
-                    ? revisions.Skip(1)
-                    : new List<GitRevision> { firstRev };
 
-                tuples.AddRange(
-                    parents
-                        .Select(rev => new FileStatusWithDescription
-                        {
-                            firstRev = rev,
-                            secondRev = selectedRev,
-                            summary = _diffWithParent.Text + GetDescriptionForRevision(rev.ObjectId),
-                            statuses = Module.GetDiffFilesWithSubmodulesStatus(rev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId)
-                        }));
+            // With more than 4, only first -> selected is interesting
+            // Show multi compare if 2-4 are selected
+            const int maxMultiCompare = 4;
+            var firstRev =  revisions.Last();
+            var parents = AppSettings.ShowDiffForAllParents && revisions.Count <= maxMultiCompare
+                ? revisions.Skip(1)
+                : new List<GitRevision> { firstRev };
 
-                // Extra information with limited selection
-                if (AppSettings.ShowDiffForAllParents && revisions.Count == 2)
-                {
-                    var allAToB = tuples[0].statuses;
-
-                    // Get base commit, add as parent if unique
-                    Lazy<ObjectId> head = getRevision != null
-                        ? new Lazy<ObjectId>(() => getRevision(ObjectId.IndexId).FirstParentId)
-                        : new Lazy<ObjectId>(() => Module.RevParse("HEAD"));
-                    var baseRevGuid = Module.GetMergeBase(GetRevisionOrHead(firstRev, head),
-                        GetRevisionOrHead(selectedRev, head));
-
-                    // Add if separate branches (note that artificial commits both have HEAD as BASE)
-                    if (baseRevGuid != null
-                        && baseRevGuid != GetRevisionOrHead(firstRev, head)
-                        && baseRevGuid != GetRevisionOrHead(selectedRev, head))
+            tuples.AddRange(
+                parents
+                    .Select(rev => new FileStatusWithDescription
                     {
-                            // Present common files in BASE->B, BASE->A separately
-                            // For the following diff:  A->B a,c,d; BASE->B a,b,c; BASE->A a,b,d
-                            // (the file a has unique changes, b has the same change and c,d is changed in one of the branches)
-                            // The following groups will be shown: A->B a,c,d; BASE->B a,c; BASE->A a,d; Common BASE b
-                            var allBaseToB = Module.GetDiffFilesWithSubmodulesStatus(baseRevGuid, selectedRev.ObjectId, selectedRev.FirstParentId);
-                            var allBaseToA = Module.GetDiffFilesWithSubmodulesStatus(baseRevGuid, firstRev.ObjectId, firstRev.FirstParentId);
+                        firstRev = rev,
+                        secondRev = selectedRev,
+                        summary = _diffWithParent.Text + GetDescriptionForRevision(rev.ObjectId),
+                        statuses = Module.GetDiffFilesWithSubmodulesStatus(rev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId)
+                    }));
 
-                            var comparer = new GitItemStatusNameEqualityComparer();
-                            var commonBaseToAandB = allBaseToB.Intersect(allBaseToA, comparer).Except(allAToB, comparer).ToList();
-
-                            var revBase = new GitRevision(baseRevGuid);
-                            tuples.Add(new FileStatusWithDescription
-                            {
-                                firstRev = revBase,
-                                secondRev = selectedRev,
-                                summary = _diffBaseToB.Text + GetDescriptionForRevision(selectedRev.ObjectId),
-                                statuses = allBaseToB.Except(commonBaseToAandB, comparer).ToList()
-                            });
-                            tuples.Add(new FileStatusWithDescription
-                            {
-                                firstRev = revBase,
-                                secondRev = firstRev,
-                                summary = _diffBaseToB.Text + GetDescriptionForRevision(firstRev.ObjectId),
-                                statuses = allBaseToA.Except(commonBaseToAandB, comparer).ToList()
-                            });
-                            tuples.Add(new FileStatusWithDescription
-                            {
-                                firstRev = revBase,
-                                secondRev = selectedRev,
-                                summary = _diffCommonBase.Text + GetDescriptionForRevision(baseRevGuid),
-                                statuses = commonBaseToAandB
-                            });
-                    }
-                }
+            if (!AppSettings.ShowDiffForAllParents || revisions.Count > 2)
+            {
+                GitItemStatusesWithDescription = tuples;
+                return;
             }
+
+            // Extra information with limited selection
+            var allAToB = tuples[0].statuses;
+
+            // Get base commit, add as parent if unique
+            Lazy<ObjectId> head = getRevision != null
+                ? new Lazy<ObjectId>(() => getRevision(ObjectId.IndexId).FirstParentId)
+                : new Lazy<ObjectId>(() => Module.RevParse("HEAD"));
+            var firstRevHead = GetRevisionOrHead(firstRev, head);
+            var selectedRevHead = GetRevisionOrHead(selectedRev, head);
+            var baseRevGuid = Module.GetMergeBase(GetRevisionOrHead(firstRev, head),
+                GetRevisionOrHead(selectedRev, head));
+
+            // Add if separate branches (note that artificial commits both have HEAD as BASE)
+            // Check for separate branches (note that artificial commits both have HEAD as BASE)
+            // (no actual range check for 4 selections)
+            if (baseRevGuid == null
+                || baseRevGuid == firstRevHead
+                || baseRevGuid == selectedRevHead)
+            {
+                GitItemStatusesWithDescription = tuples;
+                return;
+            }
+
+            // Present common files in BASE->B, BASE->A separately
+            // For the following diff:  A->B a,c,d; BASE->B a,b,c; BASE->A a,b,d
+            // (the file a has unique changes, b has the same change and c,d is changed in one of the branches)
+            // The following groups will be shown: A->B a,c,d; BASE->B a,c; BASE->A a,d; Common BASE b
+            var allBaseToB = Module.GetDiffFilesWithSubmodulesStatus(baseRevGuid, selectedRev.ObjectId, selectedRev.FirstParentId);
+            var allBaseToA = Module.GetDiffFilesWithSubmodulesStatus(baseRevGuid, firstRev.ObjectId, firstRev.FirstParentId);
+
+            var comparer = new GitItemStatusNameEqualityComparer();
+            var commonBaseToAandB = allBaseToB.Intersect(allBaseToA, comparer).Except(allAToB, comparer).ToList();
+
+            var revBase = new GitRevision(baseRevGuid);
+            tuples.Add(new FileStatusWithDescription
+            {
+                firstRev = revBase,
+                secondRev = selectedRev,
+                summary = _diffBaseToB.Text + GetDescriptionForRevision(selectedRev.ObjectId),
+                statuses = allBaseToB.Except(commonBaseToAandB, comparer).ToList()
+            });
+            tuples.Add(new FileStatusWithDescription
+            {
+                firstRev = revBase,
+                secondRev = firstRev,
+                summary = _diffBaseToB.Text + GetDescriptionForRevision(firstRev.ObjectId),
+                statuses = allBaseToA.Except(commonBaseToAandB, comparer).ToList()
+            });
+            tuples.Add(new FileStatusWithDescription
+            {
+                firstRev = revBase,
+                secondRev = selectedRev,
+                summary = _diffCommonBase.Text + GetDescriptionForRevision(baseRevGuid),
+                statuses = commonBaseToAandB
+            });
 
             GitItemStatusesWithDescription = tuples;
-
             return;
 
             static ObjectId GetRevisionOrHead(GitRevision rev, Lazy<ObjectId> head)
