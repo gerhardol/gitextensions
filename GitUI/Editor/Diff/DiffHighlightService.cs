@@ -147,31 +147,42 @@ namespace GitUI.Editor.Diff
         }
 
         protected void ProcessLineSegment(IDocument document, ref int line,
-            LineSegment lineSegment, string prefixStr, Color color)
+            LineSegment lineSegment, string prefixStr, Color color, bool invertMatch = false)
         {
-            if (LinePrefixHelper.DoesLineStartWith(document, lineSegment.Offset, prefixStr))
+            if (!DoesLineStartWith(document, lineSegment.Offset, prefixStr, invertMatch))
             {
-                var endLine = document.GetLineSegment(line);
+                return;
+            }
 
-                for (; line < document.TotalNumberOfLines
-                    && LinePrefixHelper.DoesLineStartWith(document, endLine.Offset, prefixStr);
-                    line++)
-                {
-                    endLine = document.GetLineSegment(line);
-                }
+            var endLine = document.GetLineSegment(line);
 
-                line--;
-                line--;
+            for (;
+                line < document.TotalNumberOfLines
+                && DoesLineStartWith(document, endLine.Offset, prefixStr, invertMatch);
+                line++)
+            {
                 endLine = document.GetLineSegment(line);
+            }
 
-                document.MarkerStrategy.AddMarker(new TextMarker(lineSegment.Offset,
-                                                        (endLine.Offset + endLine.TotalLength) -
-                                                        lineSegment.Offset, TextMarkerType.SolidBlock, color,
-                                                        ColorHelper.GetForeColorForBackColor(color)));
+            line--;
+            line--;
+            endLine = document.GetLineSegment(line);
+
+            document.MarkerStrategy.AddMarker(new TextMarker(lineSegment.Offset,
+                (endLine.Offset + endLine.TotalLength) -
+                lineSegment.Offset, TextMarkerType.SolidBlock, color,
+                ColorHelper.GetForeColorForBackColor(color)));
+
+            return;
+
+            bool DoesLineStartWith(IDocument document, int offset, string prefixStr, bool invertMatch)
+            {
+                return (!invertMatch && LinePrefixHelper.DoesLineStartWith(document, offset, prefixStr))
+                       || (invertMatch && !LinePrefixHelper.DoesLineStartWith(document, offset, prefixStr));
             }
         }
 
-        public void AddPatchHighlighting(IDocument document)
+        public virtual void AddPatchHighlighting(IDocument document)
         {
             bool forceAbort = false;
 

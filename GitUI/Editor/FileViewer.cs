@@ -46,6 +46,9 @@ namespace GitUI.Editor
             // Diffs that will not be affected by diff arguments like white space etc (limited options)
             FixedDiff,
 
+            // range-diff output
+            RangeDiff,
+
             // Image viewer
             Image
         }
@@ -470,6 +473,11 @@ namespace GitUI.Editor
             await ViewPrivateAsync(fileName, text, openWithDifftool, ViewMode.FixedDiff);
         }
 
+        public async Task ViewRangeDiffAsync(string fileName, string text)
+        {
+            await ViewPrivateAsync(fileName, text, null, ViewMode.RangeDiff);
+        }
+
         public void ViewText([CanBeNull] string fileName,
             [NotNull] string text,
             [CanBeNull] Action openWithDifftool = null)
@@ -755,7 +763,7 @@ namespace GitUI.Editor
 
         private static bool IsDiffView(ViewMode viewMode)
         {
-            return viewMode == ViewMode.Diff || viewMode == ViewMode.FixedDiff;
+            return viewMode == ViewMode.Diff || viewMode == ViewMode.FixedDiff || viewMode == ViewMode.RangeDiff;
         }
 
         private async Task ViewPrivateAsync(string fileName, string text, Action openWithDifftool, ViewMode viewMode = ViewMode.Diff)
@@ -765,7 +773,7 @@ namespace GitUI.Editor
                 () =>
                 {
                     ResetView(viewMode, fileName);
-                    internalFileViewer.SetText(text, openWithDifftool, isDiff: IsDiffView(_viewMode));
+                    internalFileViewer.SetText(text, openWithDifftool, isDiff: IsDiffView(_viewMode), isRangeDiff: _viewMode == ViewMode.RangeDiff);
 
                     TextLoaded?.Invoke(this, null);
                     return Task.CompletedTask;
@@ -820,29 +828,31 @@ namespace GitUI.Editor
 
             cherrypickSelectedLinesToolStripMenuItem.Visible = changePhysicalFile;
             revertSelectedLinesToolStripMenuItem.Visible = changePhysicalFile;
-            copyPatchToolStripMenuItem.Visible = IsDiffView(viewMode);
-            copyNewVersionToolStripMenuItem.Visible = IsDiffView(viewMode);
-            copyOldVersionToolStripMenuItem.Visible = IsDiffView(viewMode);
 
-            ignoreWhitespaceAtEolToolStripMenuItem.Visible = viewMode == ViewMode.Diff;
-            ignoreWhitespaceChangesToolStripMenuItem.Visible = viewMode == ViewMode.Diff;
-            ignoreAllWhitespaceChangesToolStripMenuItem.Visible = viewMode == ViewMode.Diff;
-            increaseNumberOfLinesToolStripMenuItem.Visible = viewMode == ViewMode.Diff;
-            decreaseNumberOfLinesToolStripMenuItem.Visible = viewMode == ViewMode.Diff;
-            showEntireFileToolStripMenuItem.Visible = viewMode == ViewMode.Diff;
+            // RangeDiff patch is undefined, could be new/old commit or to parents
+            copyPatchToolStripMenuItem.Visible = viewMode == ViewMode.Diff || viewMode == ViewMode.FixedDiff;
+            copyNewVersionToolStripMenuItem.Visible = viewMode == ViewMode.Diff || viewMode == ViewMode.FixedDiff;
+            copyOldVersionToolStripMenuItem.Visible = viewMode == ViewMode.Diff || viewMode == ViewMode.FixedDiff;
+
+            ignoreWhitespaceAtEolToolStripMenuItem.Visible = viewMode == ViewMode.Diff || viewMode == ViewMode.RangeDiff;
+            ignoreWhitespaceChangesToolStripMenuItem.Visible = viewMode == ViewMode.Diff || viewMode == ViewMode.RangeDiff;
+            ignoreAllWhitespaceChangesToolStripMenuItem.Visible = viewMode == ViewMode.Diff || viewMode == ViewMode.RangeDiff;
+            increaseNumberOfLinesToolStripMenuItem.Visible = viewMode == ViewMode.Diff || viewMode == ViewMode.RangeDiff;
+            decreaseNumberOfLinesToolStripMenuItem.Visible = viewMode == ViewMode.Diff || viewMode == ViewMode.RangeDiff;
+            showEntireFileToolStripMenuItem.Visible = viewMode == ViewMode.Diff || viewMode == ViewMode.RangeDiff;
             toolStripSeparator2.Visible = IsDiffView(viewMode);
             treatAllFilesAsTextToolStripMenuItem.Visible = IsDiffView(viewMode);
 
             // toolbar
             nextChangeButton.Visible = IsDiffView(viewMode);
             previousChangeButton.Visible = IsDiffView(viewMode);
-            increaseNumberOfLines.Visible = viewMode == ViewMode.Diff;
-            decreaseNumberOfLines.Visible = viewMode == ViewMode.Diff;
-            showEntireFileButton.Visible = viewMode == ViewMode.Diff;
+            increaseNumberOfLines.Visible = viewMode == ViewMode.Diff || viewMode == ViewMode.RangeDiff;
+            decreaseNumberOfLines.Visible = viewMode == ViewMode.Diff || viewMode == ViewMode.RangeDiff;
+            showEntireFileButton.Visible = viewMode == ViewMode.Diff || viewMode == ViewMode.RangeDiff;
             showSyntaxHighlighting.Visible = IsDiffView(viewMode);
-            ignoreWhitespaceAtEol.Visible = viewMode == ViewMode.Diff;
-            ignoreWhiteSpaces.Visible = viewMode == ViewMode.Diff;
-            ignoreAllWhitespaces.Visible = viewMode == ViewMode.Diff;
+            ignoreWhitespaceAtEol.Visible = viewMode == ViewMode.Diff || viewMode == ViewMode.RangeDiff;
+            ignoreWhiteSpaces.Visible = viewMode == ViewMode.Diff || viewMode == ViewMode.RangeDiff;
+            ignoreAllWhitespaces.Visible = viewMode == ViewMode.Diff || viewMode == ViewMode.RangeDiff;
         }
 
         private void SetVisibilityDiffContextMenuStaging()
@@ -1306,6 +1316,11 @@ namespace GitUI.Editor
             OnExtraDiffArgumentsChanged();
         }
 
+        /// <summary>
+        /// Copy selected text, excluding diff added/deleted information
+        /// </summary>
+        /// <param name="sender">sender object</param>
+        /// <param name="e">event args</param>
         private void CopyToolStripMenuItemClick(object sender, EventArgs e)
         {
             string code = internalFileViewer.GetSelectedText();
@@ -1317,16 +1332,17 @@ namespace GitUI.Editor
 
             if (IsDiffView(_viewMode))
             {
-                // add artificial space if selected text is not starting from line beginning, it will be removed later
                 int pos = internalFileViewer.GetSelectionPosition();
                 string fileText = internalFileViewer.GetText();
                 int hpos = fileText.IndexOf("\n@@");
 
                 // if header is selected then don't remove diff extra chars
+                // for range-diff, copy all info (hpos will never match)
                 if (hpos <= pos)
                 {
                     if (pos > 0)
                     {
+                        // add artificial space if selected text is not starting from line beginning, it will be removed later
                         if (fileText[pos - 1] != '\n')
                         {
                             code = " " + code;
@@ -1345,11 +1361,14 @@ namespace GitUI.Editor
 
             string RemovePrefix(string line)
             {
-                var isCombinedDiff = DiffHighlightService.IsCombinedDiff(internalFileViewer.GetText());
-                var specials = isCombinedDiff ? new[] { "  ", "++", "+ ", " +", "--", "- ", " -" }
-                    : new[] { " ", "-", "+" };
+                var specials = _viewMode == ViewMode.RangeDiff
+                    ? new[] { "      ", "    ++", "    + ", "     +", "    --", "    - ", "     -", "    +-", "    -+", "    " }
+                    : DiffHighlightService.IsCombinedDiff(internalFileViewer.GetText())
+                        ? new[] { "  ", "++", "+ ", " +", "--", "- ", " -" }
+                        : new[] { " ", "-", "+" };
 
-                if (string.IsNullOrWhiteSpace(line))
+                // Assume all specials are at least as long as the first
+                if (line.Length < specials[0].Length)
                 {
                     return line;
                 }
@@ -1363,6 +1382,11 @@ namespace GitUI.Editor
             }
         }
 
+        /// <summary>
+        /// Copy selected text as a patch
+        /// </summary>
+        /// <param name="sender">sender object</param>
+        /// <param name="e">event args</param>
         private void CopyPatchToolStripMenuItemClick(object sender, EventArgs e)
         {
             var selectedText = internalFileViewer.GetSelectedText();
@@ -1381,25 +1405,33 @@ namespace GitUI.Editor
             }
         }
 
+        /// <summary>
+        /// Go to next change
+        /// For normal diffs, this is the next diff
+        /// For range-diff, it is the next commit summary header
+        /// </summary>
+        /// <param name="sender">sender object</param>
+        /// <param name="e">event args</param>
         private void NextChangeButtonClick(object sender, EventArgs e)
         {
             Focus();
 
             var currentVisibleLine = internalFileViewer.LineAtCaret;
             var totalNumberOfLines = internalFileViewer.TotalNumberOfLines;
-            var emptyLineCheck = false;
+            var emptyLineCheck = _viewMode == ViewMode.RangeDiff;
 
-            // skip the first pseudo-change containing the file names
-            var startLine = Math.Max(4, currentVisibleLine + 1);
+            // skip the first pseudo-change containing the file names for normal diffs
+            var headerEndLine = _viewMode == ViewMode.RangeDiff ? 0 : 4;
+            var startLine = Math.Max(headerEndLine, currentVisibleLine + 1);
             for (var line = startLine; line < totalNumberOfLines; line++)
             {
                 var lineContent = internalFileViewer.GetLineText(line);
 
-                if (IsDiffLine(internalFileViewer.GetText(), lineContent))
+                if (IsChangeLine(internalFileViewer.GetText(), lineContent))
                 {
                     if (emptyLineCheck)
                     {
-                        internalFileViewer.FirstVisibleLine = Math.Max(line - 4, 0);
+                        internalFileViewer.FirstVisibleLine = Math.Max(line - headerEndLine, 0);
                         internalFileViewer.LineAtCaret = line;
                         return;
                     }
@@ -1415,12 +1447,13 @@ namespace GitUI.Editor
 
             return;
 
-            bool IsDiffLine(string wholeText, string lineContent)
-            {
-                var isCombinedDiff = DiffHighlightService.IsCombinedDiff(wholeText);
-                return lineContent.StartsWithAny(isCombinedDiff ? new[] { "+", "-", " +", " -" }
-                    : new[] { "+", "-" });
-            }
+            bool IsChangeLine(string wholeText, string lineContent) =>
+                _viewMode == ViewMode.RangeDiff
+                    ? !lineContent.StartsWith("    ")
+                    : lineContent.StartsWithAny(
+                        DiffHighlightService.IsCombinedDiff(wholeText)
+                            ? new[] { "+", "-", " +", " -" }
+                            : new[] { "+", "-" });
         }
 
         private void PreviousChangeButtonClick(object sender, EventArgs e)
@@ -1431,10 +1464,25 @@ namespace GitUI.Editor
             var emptyLineCheck = false;
 
             // go to the top of change block
+            // Note that combined diff is not handled
+            var inChange = _viewMode == ViewMode.RangeDiff ? new[] { "    " } : new[] { "+", "-" };
+            if (_viewMode == ViewMode.RangeDiff)
+            {
+                // Start checking line above current
+                startLine--;
+            }
+
             while (startLine > 0 &&
-                internalFileViewer.GetLineText(startLine).StartsWithAny(new[] { "+", "-" }))
+                   internalFileViewer.GetLineText(startLine).StartsWithAny(inChange))
             {
                 startLine--;
+            }
+
+            if (_viewMode == ViewMode.RangeDiff)
+            {
+                internalFileViewer.FirstVisibleLine = startLine;
+                internalFileViewer.LineAtCaret = startLine;
+                return;
             }
 
             for (var line = startLine; line > 0; line--)
@@ -1445,16 +1493,17 @@ namespace GitUI.Editor
                     && !lineContent.StartsWithAny(new[] { "++", "--" }))
                 {
                     emptyLineCheck = true;
+                    continue;
                 }
-                else
+
+                if (!emptyLineCheck)
                 {
-                    if (emptyLineCheck)
-                    {
-                        internalFileViewer.FirstVisibleLine = Math.Max(0, line - 3);
-                        internalFileViewer.LineAtCaret = line + 1;
-                        return;
-                    }
+                    continue;
                 }
+
+                internalFileViewer.FirstVisibleLine = Math.Max(0, line - 3);
+                internalFileViewer.LineAtCaret = line + 1;
+                return;
             }
 
             // Do not go to the start of the file if no change is found
