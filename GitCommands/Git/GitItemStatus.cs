@@ -38,7 +38,10 @@ namespace GitCommands
             IsSkipWorktree = 1 << 10,
             IsSubmodule = 1 << 11,
             IsDirty = 1 << 12,
-            IsStatusOnly = 1 << 13
+
+            // Other flags are parsed from Git status, set fake flags for special uses
+            IsStatusOnly = 1 << 13,
+            IsRangeDiff = 1 << 14
         }
 
         private JoinableTask<GitSubmoduleStatus> _submoduleStatus;
@@ -53,7 +56,6 @@ namespace GitCommands
         public string RenameCopyPercentage { get; set; }
 
         public StagedStatus Staged { get; set; }
-        public bool RangeDiff { get; set; }
 
         #region Flags
 
@@ -145,6 +147,16 @@ namespace GitCommands
         {
             get => _flags.HasFlag(Flags.IsStatusOnly);
             set => SetFlag(value, Flags.IsStatusOnly);
+        }
+
+        /// <summary>
+        /// This item is not a native Git item, just status information
+        /// The item is to be calculated with Git range-diff
+        /// </summary>
+        public bool IsRangeDiff
+        {
+            get => _flags.HasFlag(Flags.IsRangeDiff);
+            set => SetFlag(value, Flags.IsRangeDiff);
         }
 
         private void SetFlag(bool isSet, Flags flag)

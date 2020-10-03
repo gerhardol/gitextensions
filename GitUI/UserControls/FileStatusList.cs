@@ -832,7 +832,7 @@ namespace GitUI
             }
 
             // Add rangeDiff as a separate group (range is not the same as diff with artificial commits)
-            List<GitItemStatus> statuses = new List<GitItemStatus> { new GitItemStatus { Name = _diffRange.Text, RangeDiff = true } };
+            List<GitItemStatus> statuses = new List<GitItemStatus> { new GitItemStatus { Name = _diffRange.Text, IsRangeDiff = true } };
 
             var desc = _diffRange.Text + ": " + GetDescriptionForRevision(firstRevHead) + " -> " + GetDescriptionForRevision(selectedRevHead);
             var first = firstRev.ObjectId == firstRevHead ? firstRev : new GitRevision(firstRevHead);
@@ -895,10 +895,8 @@ namespace GitUI
             GitItemStatusesWithDescription = new List<FileStatusWithDescription>();
         }
 
-        private string GetDescriptionForRevision(ObjectId objectId)
-        {
-            return DescribeRevision != null ? DescribeRevision(objectId) : objectId?.ToShortString();
-        }
+        private string GetDescriptionForRevision(ObjectId objectId) =>
+            DescribeRevision != null ? DescribeRevision(objectId) : objectId?.ToShortString();
 
         public void SetNoFilesText(string text)
         {
@@ -1184,9 +1182,9 @@ namespace GitUI
 
             static string GetItemImageKey(GitItemStatus gitItemStatus)
             {
-                if (!gitItemStatus.IsNew && !gitItemStatus.IsDeleted && !gitItemStatus.IsTracked && !gitItemStatus.RangeDiff)
+                if (!gitItemStatus.IsNew && !gitItemStatus.IsDeleted && !gitItemStatus.IsTracked && !gitItemStatus.IsRangeDiff)
                 {
-                    // Illegal combinations, no flags set?
+                    // Illegal flag combinations or no flags set?
                     return nameof(Images.FileStatusUnknown);
                 }
 
@@ -1195,7 +1193,7 @@ namespace GitUI
                     return nameof(Images.FileStatusRemoved);
                 }
 
-                if (gitItemStatus.RangeDiff)
+                if (gitItemStatus.IsRangeDiff)
                 {
                     return nameof(Images.Diff);
                 }

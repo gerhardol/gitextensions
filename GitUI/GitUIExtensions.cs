@@ -75,7 +75,7 @@ namespace GitUI
                 return fileViewer.ViewGitItemRevisionAsync(item.Item, item.SecondRevision.ObjectId, openWithDiffTool);
             }
 
-            if (item.Item.RangeDiff)
+            if (item.Item.IsRangeDiff)
             {
                 string output = fileViewer.Module.GetRangeDiff(
                         firstId,
