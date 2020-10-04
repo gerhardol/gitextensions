@@ -298,16 +298,6 @@ namespace GitUI
             }
         }
 
-        private class FileStatusWithDescription
-        {
-            public GitRevision FirstRev;
-            public GitRevision SecondRev;
-            public ObjectId BaseA;
-            public ObjectId BaseB;
-            public string Summary;
-            public IReadOnlyList<GitItemStatus> Statuses;
-        }
-
         private IReadOnlyList<FileStatusWithDescription> GitItemStatusesWithDescription
         {
             get { return _itemsWithDescription; }
