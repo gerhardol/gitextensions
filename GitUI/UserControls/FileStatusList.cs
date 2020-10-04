@@ -20,20 +20,14 @@ using GitUI.Properties;
 using GitUI.UserControls;
 using GitUIPluginInterfaces;
 using JetBrains.Annotations;
-using ResourceManager;
 
 namespace GitUI
 {
     public sealed partial class FileStatusList : GitModuleControl
     {
         private static readonly TimeSpan SelectedIndexChangeThrottleDuration = TimeSpan.FromMilliseconds(50);
-        private readonly TranslationString _diffWithParent = new TranslationString("Diff with a/");
-        private readonly TranslationString _diffBaseToB = new TranslationString("Unique diff BASE with b/");
-        private readonly TranslationString _diffCommonBase = new TranslationString("Common diff with BASE a/");
-        private readonly TranslationString _diffRange = new TranslationString("Range diff");
-        private readonly TranslationString _combinedDiff = new TranslationString("Combined diff");
         private readonly IFullPathResolver _fullPathResolver;
-        private readonly DiffCalculator _diffCalculator;
+        private readonly FileStatusDiffCalculator _diffCalculator;
         private readonly SortDiffListContextMenuItem _sortByContextMenu;
         private readonly IReadOnlyList<GitItemStatus> _noItemStatuses;
 
@@ -98,7 +92,7 @@ namespace GitUI
             FilterWatermarkLabel.Font = new Font(FilterWatermarkLabel.Font, FontStyle.Italic);
             FilterComboBox.Font = new Font(FilterComboBox.Font, FontStyle.Bold);
 
-            _diffCalculator = new DiffCalculator(() => Module);
+            _diffCalculator = new FileStatusDiffCalculator(() => Module);
             _fullPathResolver = new FullPathResolver(() => Module.WorkingDir);
             _noItemStatuses = new[]
             {
@@ -642,6 +636,13 @@ namespace GitUI
             _nextIndexToSelect = -1;
         }
 
+        public void SetDiffs(IReadOnlyList<GitRevision> revisions, Func<ObjectId, GitRevision> getRevision = null)
+        {
+            _revisions = revisions;
+            _getRevision = getRevision;
+            GitItemStatusesWithDescription = _diffCalculator.SetDiffs(revisions, DescribeRevision, getRevision);
+        }
+
         /// <summary>
         /// FormStash init for WorkTree and Index
         /// </summary>
@@ -689,7 +690,7 @@ namespace GitUI
                 {
                     FirstRev = firstRev,
                     SecondRev = secondRev,
-                    Summary = _diffWithParent.Text + GetDescriptionForRevision(firstRev?.ObjectId),
+                    Summary = Strings.DiffWithParent + GetDescriptionForRevision(firstRev?.ObjectId),
                     Statuses = items
                 }
             };
@@ -1757,224 +1758,6 @@ namespace GitUI
             internal Regex Filter => _fileStatusList._filter;
             internal bool FilterWatermarkLabelVisible => _fileStatusList.FilterWatermarkLabel.Visible;
             internal void StoreFilter(string value) => _fileStatusList.StoreFilter(value);
-        }
-    }
-
-    public class DiffCalculator
-    {
-        private readonly Func<IGitModule> _getModule;
-
-        public DiffCalculator(Func<IGitModule> getModule)
-        {
-            _getModule = getModule;
-        }
-
-        public IReadOnlyList<FileStatusWithDescription> SetDiffs(in IReadOnlyList<GitRevision> revisions, Func<ObjectId, string> describeRevision, Func<ObjectId, GitRevision> getRevision = null)
-        {
-            var selectedRev = revisions?.FirstOrDefault();
-            if (selectedRev == null)
-            {
-                return Array.Empty<FileStatusWithDescription>();
-            }
-
-            IGitModule module = GetModule();
-
-            var tuples = new List<FileStatusWithDescription>();
-            if (revisions.Count == 1)
-            {
-                if (selectedRev.ParentIds == null || selectedRev.ParentIds.Count == 0)
-                {
-                    // No parent for the initial commit
-                    tuples.Add(new FileStatusWithDescription
-                    {
-                        FirstRev = null,
-                        SecondRev = selectedRev,
-                        Summary = GetDescriptionForRevision(describeRevision, selectedRev.ObjectId),
-                        Statuses = module.GetTreeFiles(selectedRev.TreeGuid, full: true)
-                    });
-                }
-                else
-                {
-                    // Get the parents for the selected revision
-                    var multipleParents = AppSettings.ShowDiffForAllParents ? selectedRev.ParentIds.Count : 1;
-                    tuples.AddRange(selectedRev
-                        .ParentIds?
-                        .Take(multipleParents)
-                        .Select(parentId =>
-                            new FileStatusWithDescription
-                            {
-                                FirstRev = new GitRevision(parentId),
-                                SecondRev = selectedRev,
-                                Summary = _diffWithParent.Text + GetDescriptionForRevision(describeRevision, parentId),
-                                Statuses = module.GetDiffFilesWithSubmodulesStatus(parentId, selectedRev.ObjectId, selectedRev.FirstParentId)
-                            }));
-                }
-
-                // Show combined (merge conflicts) when a single merge commit is selected
-                var isMergeCommit = tuples.Count > 1;
-                if (AppSettings.ShowDiffForAllParents && isMergeCommit)
-                {
-                    var conflicts = module.GetCombinedDiffFileList(selectedRev.Guid);
-                    if (conflicts.Count != 0)
-                    {
-                        // Create an artificial commit
-                        tuples.Add(new FileStatusWithDescription
-                        {
-                            FirstRev = new GitRevision(ObjectId.CombinedDiffId),
-                            SecondRev = selectedRev,
-                            Summary = _combinedDiff.Text,
-                            Statuses = conflicts
-                        });
-                    }
-                }
-
-                return tuples;
-            }
-
-            // With more than 4, only first -> selected is interesting
-            // Show multi compare if 2-4 are selected
-            const int maxMultiCompare = 4;
-
-            // With 4 selected, assume that ranges are selected: baseA..headA baseB..headB
-            // the first item is therefore the second selected
-            var firstRev = AppSettings.ShowDiffForAllParents && revisions.Count == maxMultiCompare
-                ? revisions[2]
-                : revisions.Last();
-
-            tuples.Add(new FileStatusWithDescription
-            {
-                FirstRev = firstRev,
-                SecondRev = selectedRev,
-                Summary = _diffWithParent.Text + GetDescriptionForRevision(describeRevision, firstRev.ObjectId),
-                Statuses = module.GetDiffFilesWithSubmodulesStatus(firstRev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId)
-            });
-
-            if (!AppSettings.ShowDiffForAllParents || revisions.Count > maxMultiCompare)
-            {
-                return tuples;
-            }
-
-            // Extra information with limited selection
-            var allAToB = tuples[0].Statuses;
-
-            // Get base commit, add as parent if unique
-            Lazy<ObjectId> head = getRevision != null
-                ? new Lazy<ObjectId>(() => getRevision(ObjectId.IndexId).FirstParentId)
-                : new Lazy<ObjectId>(() => module.RevParse("HEAD"));
-            var firstRevHead = GetRevisionOrHead(firstRev, head);
-            var selectedRevHead = GetRevisionOrHead(selectedRev, head);
-            var baseRevGuid = module.GetMergeBase(firstRevHead, selectedRevHead);
-
-            // Four selected, to check if two ranges are selected
-            var baseA = (revisions.Count != 4 || baseRevGuid is null)
-                ? null
-                : module.GetMergeBase(GetRevisionOrHead(revisions[3], head), firstRevHead);
-            var baseB = baseA is null || baseA != revisions[3].ObjectId
-                ? null
-                : module.GetMergeBase(GetRevisionOrHead(revisions[1], head), selectedRevHead);
-            if (baseB != revisions[1].ObjectId)
-            {
-                baseB = null;
-            }
-
-            // Check for separate branches (note that artificial commits both have HEAD as BASE)
-            if (baseRevGuid is null
-                || baseRevGuid == firstRevHead
-                || baseRevGuid == selectedRevHead
-
-                // For three, show multi-diff if not base is selected
-                || (revisions.Count == 3 && baseRevGuid != revisions[1].ObjectId)
-
-                // For four, two ranges must be selected
-                || (revisions.Count == 4 && (baseA is null || baseB is null)))
-            {
-                // No variant of range diff, show multi diff
-                tuples.AddRange(
-                    revisions
-                        .Where(rev => rev != firstRev && rev != selectedRev)
-                        .Select(rev => new FileStatusWithDescription
-                        {
-                            FirstRev = rev,
-                            SecondRev = selectedRev,
-                            Summary = _diffWithParent.Text + GetDescriptionForRevision(describeRevision, rev.ObjectId),
-                            Statuses = module.GetDiffFilesWithSubmodulesStatus(rev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId)
-                        }));
-
-                return tuples;
-            }
-
-            // Present common files in BASE->B, BASE->A separately
-            // For the following diff:  A->B a,c,d; BASE->B a,b,c; BASE->A a,b,d
-            // (the file a has unique changes, b has the same change and c,d is changed in one of the branches)
-            // The following groups will be shown: A->B a,c,d; BASE->B a,c; BASE->A a,d; Common BASE b
-            var allBaseToB = module.GetDiffFilesWithSubmodulesStatus(baseRevGuid, selectedRev.ObjectId, selectedRev.FirstParentId);
-            var allBaseToA = module.GetDiffFilesWithSubmodulesStatus(baseRevGuid, firstRev.ObjectId, firstRev.FirstParentId);
-
-            var comparer = new GitItemStatusNameEqualityComparer();
-            var commonBaseToAandB = allBaseToB.Intersect(allBaseToA, comparer).Except(allAToB, comparer).ToList();
-
-            var revBase = new GitRevision(baseRevGuid);
-            tuples.Add(new FileStatusWithDescription
-            {
-                FirstRev = revBase,
-                SecondRev = selectedRev,
-                Summary = _diffBaseToB.Text + GetDescriptionForRevision(describeRevision, selectedRev.ObjectId),
-                Statuses = allBaseToB.Except(commonBaseToAandB, comparer).ToList()
-            });
-            tuples.Add(new FileStatusWithDescription
-            {
-                FirstRev = revBase,
-                SecondRev = firstRev,
-                Summary = _diffBaseToB.Text + GetDescriptionForRevision(describeRevision, firstRev.ObjectId),
-                Statuses = allBaseToA.Except(commonBaseToAandB, comparer).ToList()
-            });
-            tuples.Add(new FileStatusWithDescription
-            {
-                FirstRev = revBase,
-                SecondRev = selectedRev,
-                Summary = _diffCommonBase.Text + GetDescriptionForRevision(baseRevGuid),
-                Statuses = commonBaseToAandB
-            });
-
-            // Git range-diff is slow and memory consuming, so just skip if diff is large
-            // to avoid that GE seem to hang when selecting the range diff
-            const int maxRangeDiffCommits = 100;
-            int? count = module.GetCommitCount(firstRevHead.ToString(), selectedRevHead.ToString());
-            if (!GitVersion.Current.SupportRangeDiffTool || count is null || count > maxRangeDiffCommits)
-            {
-                return tuples;
-            }
-
-            // Add rangeDiff as a separate group (range is not the same as diff with artificial commits)
-            List<GitItemStatus> statuses = new List<GitItemStatus> { new GitItemStatus { Name = _diffRange.Text, IsRangeDiff = true } };
-
-            var desc = _diffRange.Text + ": " + GetDescriptionForRevision(describeRevision, firstRevHead) + " -> " + GetDescriptionForRevision(describeRevision, selectedRevHead);
-            var first = firstRev.ObjectId == firstRevHead ? firstRev : new GitRevision(firstRevHead);
-            var selected = selectedRev.ObjectId == selectedRevHead ? selectedRev : new GitRevision(selectedRevHead);
-            var rangeDiff = new FileStatusWithDescription { FirstRev = first, SecondRev = selected, Summary = desc, Statuses = statuses };
-            rangeDiff.BaseA = baseA;
-            rangeDiff.BaseB = baseB;
-            tuples.Add(rangeDiff);
-
-            return tuples;
-
-            static ObjectId GetRevisionOrHead(GitRevision rev, Lazy<ObjectId> head)
-                => rev.IsArtificial ? head.Value : rev.ObjectId;
-
-            static string GetDescriptionForRevision(Func<ObjectId, string> describeRevision, ObjectId objectId)
-                => describeRevision != null ? describeRevision(objectId) : objectId?.ToShortString();
-        }
-
-        private IGitModule GetModule()
-        {
-            var module = _getModule();
-
-            if (module == null)
-            {
-                throw new ArgumentException($"Require a valid instance of {nameof(IGitModule)}");
-            }
-
-            return module;
         }
     }
 }
