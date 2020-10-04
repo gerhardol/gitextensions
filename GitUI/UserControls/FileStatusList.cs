@@ -739,7 +739,7 @@ namespace GitUI
             var selectedRevHead = GetRevisionOrHead(selectedRev, head);
             var baseRevGuid = Module.GetMergeBase(firstRevHead, selectedRevHead);
 
-            // Four selected, to check if two ranges are selected
+            // Four selected, check if two ranges are selected
             var baseA = (revisions.Count != 4 || baseRevGuid is null)
                 ? null
                 : Module.GetMergeBase(GetRevisionOrHead(revisions[3], head), firstRevHead);
@@ -821,15 +821,21 @@ namespace GitUI
                 return;
             }
 
-            // Add rangeDiff as a separate group (range is not the same as diff with artificial commits)
+            // Add rangeDiff as a separate group (same commits as first group, except for artificial commits)
             List<GitItemStatus> statuses = new List<GitItemStatus> { new GitItemStatus { Name = _diffRange.Text, IsRangeDiff = true } };
 
             var desc = _diffRange.Text + ": " + GetDescriptionForRevision(firstRevHead) + " -> " + GetDescriptionForRevision(selectedRevHead);
             var first = firstRev.ObjectId == firstRevHead ? firstRev : new GitRevision(firstRevHead);
             var selected = selectedRev.ObjectId == selectedRevHead ? selectedRev : new GitRevision(selectedRevHead);
-            var rangeDiff = new FileStatusWithDescription { FirstRev = first, SecondRev = selected, Summary = desc, Statuses = statuses };
-            rangeDiff.BaseA = baseA;
-            rangeDiff.BaseB = baseB;
+            var rangeDiff = new FileStatusWithDescription
+            {
+                FirstRev = first,
+                SecondRev = selected,
+                Summary = desc,
+                Statuses = statuses,
+                BaseA = baseA,
+                BaseB = baseB
+            };
             tuples.Add(rangeDiff);
 
             GitItemStatusesWithDescription = tuples;
