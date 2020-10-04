@@ -32,13 +32,13 @@ namespace GitUI.UserControls
         public GitRevision SecondRevision { get; }
 
         /// <summary>
-        /// If ranges are selected, the first commit (base) for FirstRevision (head)
+        /// If ranges are selected, the first commit (base) for <see cref="FirstRevision"/> (head)
         /// </summary>
         [CanBeNull]
         public ObjectId BaseA { get; }
 
         /// <summary>
-        /// If ranges are selected, the first commit (base) for SecondRevision (head)
+        /// If ranges are selected, the first commit (base) for <see cref="SecondRevision"/> (head)
         /// </summary>
         [CanBeNull]
         public ObjectId BaseB { get; }
