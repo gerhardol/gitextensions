@@ -139,20 +139,20 @@ namespace GitCommands
             set => SetFlag(value, Flags.IsDirty);
         }
 
-        /// <summary>
+        /// <remarks>
         /// This item is not a Git item, just status information
         /// If ErrorMessage is set, this is an error from Git, otherwise just a marker that nothing is changed
-        /// </summary>
+        /// </remarks>
         public bool IsStatusOnly
         {
             get => _flags.HasFlag(Flags.IsStatusOnly);
             set => SetFlag(value, Flags.IsStatusOnly);
         }
 
-        /// <summary>
-        /// This item is not a native Git item, just status information
-        /// The item is to be calculated with Git range-diff
-        /// </summary>
+        /// <remarks>
+        /// This item is not a native git item, but a status information
+        /// calculated with git range-diff command.
+        /// </remarks>
         public bool IsRangeDiff
         {
             get => _flags.HasFlag(Flags.IsRangeDiff);
