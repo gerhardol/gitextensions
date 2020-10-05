@@ -1106,10 +1106,8 @@ namespace GitUI.CommandsDialogs
             using (WaitCursorScope.Enter())
             {
                 SolveMergeconflicts.Visible = Module.InTheMiddleOfConflictedMerge();
-                Staged.SetDiffs(
-                    GetHeadRevision(),
-                    new GitRevision(ObjectId.IndexId),
-                    Module.GetIndexFilesWithSubmodulesStatus());
+                var (headRev, indexRev, _) = GetHeadRevisions();
+                Staged.SetDiffs(headRev, indexRev, Module.GetIndexFilesWithSubmodulesStatus());
             }
         }
 
@@ -1140,8 +1138,9 @@ namespace GitUI.CommandsDialogs
                 }
             }
 
-            Unstaged.SetDiffs(new GitRevision(ObjectId.IndexId), new GitRevision(ObjectId.WorkTreeId), unstagedFiles);
-            Staged.SetDiffs(GetHeadRevision(), new GitRevision(ObjectId.IndexId), stagedFiles);
+            var (headRev, indexRev, workTreeRev) = GetHeadRevisions();
+            Unstaged.SetDiffs(indexRev, workTreeRev, unstagedFiles);
+            Staged.SetDiffs(headRev, indexRev, stagedFiles);
 
             var doChangesExist = Unstaged.AllItems.Any() || Staged.AllItems.Any();
 
@@ -1847,8 +1846,9 @@ namespace GitUI.CommandsDialogs
                         unstagedFiles.Add(item);
                     }
 
-                    Unstaged.SetDiffs(new GitRevision(ObjectId.IndexId), new GitRevision(ObjectId.WorkTreeId), unstagedFiles);
-                    Staged.SetDiffs(GetHeadRevision(), new GitRevision(ObjectId.IndexId), stagedFiles);
+                    var (headRev, indexRev, workTreeRev) = GetHeadRevisions();
+                    Unstaged.SetDiffs(indexRev, workTreeRev, unstagedFiles);
+                    Staged.SetDiffs(headRev, indexRev, stagedFiles);
                     _skipUpdate = false;
                     Staged.SelectStoredNextIndex();
 
@@ -1882,16 +1882,24 @@ namespace GitUI.CommandsDialogs
             }
         }
 
-        [CanBeNull]
-        private GitRevision GetHeadRevision()
+        private (GitRevision headRev, GitRevision indexRev, GitRevision workTreeRev) GetHeadRevisions()
         {
+            GitRevision headRev;
+            GitRevision indexRev;
             var headId = Module.RevParse("HEAD");
             if (headId != null)
             {
-                return new GitRevision(headId);
+                headRev = new GitRevision(headId);
+                indexRev = new GitRevision(ObjectId.IndexId) { ParentIds = new[] { headId } };
+            }
+            else
+            {
+                headRev = null;
+                indexRev = new GitRevision(ObjectId.IndexId);
             }
 
-            return null;
+            var workTreeRev = new GitRevision(ObjectId.WorkTreeId) { ParentIds = new[] { ObjectId.IndexId } };
+            return (headRev, indexRev, workTreeRev);
         }
 
         private void StageClick(object sender, EventArgs e)
@@ -2051,7 +2059,8 @@ namespace GitUI.CommandsDialogs
                             item.GetSubmoduleStatusAsync().CompletedResult().Status = SubmoduleStatus.Unknown;
                         }
 
-                        Unstaged.SetDiffs(new GitRevision(ObjectId.IndexId), new GitRevision(ObjectId.WorkTreeId), unstagedFiles);
+                        var (_, indexRev, workTreeRev) = GetHeadRevisions();
+                        Unstaged.SetDiffs(indexRev, workTreeRev, unstagedFiles);
                         Unstaged.ClearSelected();
                         _skipUpdate = false;
                         Unstaged.SelectStoredNextIndex();
