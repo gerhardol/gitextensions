@@ -346,7 +346,12 @@ namespace GitUI.Hotkey
                     Hk(FileViewer.Commands.ShowEntireFile, Keys.None),
                     Hk(FileViewer.Commands.TreatFileAsText, Keys.None),
                     Hk(FileViewer.Commands.NextOccurrence, Keys.Alt | Keys.Right),
-                    Hk(FileViewer.Commands.PreviousOccurrence, Keys.Alt | Keys.Left)),
+                    Hk(FileViewer.Commands.PreviousOccurrence, Keys.Alt | Keys.Left),
+                    Hk(FileViewer.Commands.StageLines, Keys.S),
+                    Hk(FileViewer.Commands.UnstageLines, Keys.U),
+                    Hk(FileViewer.Commands.ResetLines, Keys.R),
+                    Hk(FileViewer.Commands.CherryPickLines, Keys.H),
+                    Hk(FileViewer.Commands.RevertLines, Keys.T)),
                 new HotkeySettings(
                     FormResolveConflicts.HotkeySettingsName,
                     Hk(FormResolveConflicts.Commands.ChooseBase, Keys.B),

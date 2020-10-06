@@ -5,11 +5,13 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitCommands;
 using GitCommands.Patches;
 using GitCommands.Settings;
+using GitCommands.Utils;
 using GitExtUtils;
 using GitExtUtils.GitUI;
 using GitExtUtils.GitUI.Theming;
@@ -18,6 +20,7 @@ using GitUI.CommandsDialogs.SettingsDialog.Pages;
 using GitUI.Editor.Diff;
 using GitUI.Hotkey;
 using GitUI.Properties;
+using GitUI.UserControls;
 using GitUIPluginInterfaces;
 using JetBrains.Annotations;
 using ResourceManager;
@@ -66,6 +69,7 @@ namespace GitUI.Editor
         public event EventHandler TextLoaded;
         public event CancelEventHandler ContextMenuOpening;
         public event EventHandler<EventArgs> ExtraDiffArgumentsChanged;
+        public event EventHandler<EventArgs> PatchApplied;
 
         private readonly AsyncLoader _async;
         private readonly IFullPathResolver _fullPathResolver;
@@ -73,6 +77,7 @@ namespace GitUI.Editor
         private Encoding _encoding;
         private Func<Task> _deferShowFunc;
         private readonly ContinuousScrollEventManager _continuousScrollEventManager;
+        private FileStatusItem _viewItem;
 
         private static string[] _rangeDiffFullPrefixes = { "      ", "    ++", "    + ", "     +", "    --", "    - ", "     -", "    +-", "    -+", "    " };
         private static string[] _combinedDiffFullPrefixes = { "  ", "++", "+ ", " +", "--", "- ", " -" };
@@ -105,6 +110,7 @@ namespace GitUI.Editor
             PictureBox.MouseWheel += PictureBox_MouseWheel;
             internalFileViewer.SetContinuousScrollManager(_continuousScrollEventManager);
 
+            TextLoaded += (sender, args) => AllowLinePatching = SupportLinePatching;
             _async = new AsyncLoader();
             _async.LoadingError +=
                 (_, e) =>
@@ -195,6 +201,7 @@ namespace GitUI.Editor
             };
 
             _fullPathResolver = new FullPathResolver(() => Module.WorkingDir);
+            SupportLinePatching = false;
         }
 
         // Public properties
@@ -321,6 +328,11 @@ namespace GitUI.Editor
         public void ReloadHotkeys()
         {
             Hotkeys = HotkeySettingsManager.LoadHotkeys(HotkeySettingsName);
+            stageSelectedLinesToolStripMenuItem.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Commands.StageLines);
+            unstageSelectedLinesToolStripMenuItem.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Commands.UnstageLines);
+            resetSelectedLinesToolStripMenuItem.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Commands.ResetLines);
+            cherrypickSelectedLinesToolStripMenuItem.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Commands.CherryPickLines);
+            revertSelectedLinesToolStripMenuItem.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Commands.RevertLines);
         }
 
         public ToolStripSeparator AddContextMenuSeparator()
@@ -395,73 +407,25 @@ namespace GitUI.Editor
 
         public string GetText() => internalFileViewer.GetText();
 
-        public void ViewCurrentChanges(GitItemStatus item, bool isStaged, [CanBeNull] Action openWithDifftool)
-        {
-            ThreadHelper.JoinableTaskFactory.RunAsync(
-                async () =>
-                {
-                    if (item?.IsStatusOnly ?? false)
-                    {
-                        // Present error (e.g. parsing Git)
-                        await ViewTextAsync(item.Name, item.ErrorMessage);
-                        return;
-                    }
-
-                    if (item.IsSubmodule)
-                    {
-                        var getStatusTask = item.GetSubmoduleStatusAsync();
-                        if (getStatusTask != null)
-                        {
-                            var status = await getStatusTask;
-                            if (status == null)
-                            {
-                                await ViewTextAsync(item.Name, $"Submodule \"{item.Name}\" has unresolved conflicts");
-                                return;
-                            }
-
-                            await ViewTextAsync(item.Name, LocalizationHelpers.ProcessSubmoduleStatus(Module, status));
-                            return;
-                        }
-
-                        var changes = await Module.GetCurrentChangesAsync(item.Name, item.OldName, isStaged,
-                            GetExtraDiffArguments(), Encoding);
-                        var text = LocalizationHelpers.ProcessSubmodulePatch(Module, item.Name, changes);
-                        await ViewTextAsync(item.Name, text);
-                        return;
-                    }
-
-                    if (!item.IsTracked || item.IsNew)
-                    {
-                        var id = isStaged ? ObjectId.IndexId : ObjectId.WorkTreeId;
-                        await ViewGitItemRevisionAsync(item, id, openWithDifftool);
-                    }
-                    else
-                    {
-                        var patch = await Module.GetCurrentChangesAsync(
-                            item.Name, item.OldName, isStaged, GetExtraDiffArguments(), Encoding);
-                        await ViewPatchAsync(item.Name, patch?.Text ?? "", openWithDifftool);
-                    }
-
-                    SetVisibilityDiffContextMenuStaging();
-                });
-        }
-
         /// <summary>
         /// Present the text as a patch in the file viewer
         /// </summary>
-        /// <param name="fileName">The fileName to present</param>
+        /// <param name="item">The gitItem to present</param>
         /// <param name="text">The patch text</param>
         /// <param name="openWithDifftool">The action to open the difftool</param>
-        public void ViewPatch([CanBeNull] string fileName,
-            [NotNull] string text,
-            [CanBeNull] Action openWithDifftool = null)
+        public async Task ViewPatchAsync(FileStatusItem item, string text, Action openWithDifftool)
         {
-            ThreadHelper.JoinableTaskFactory.Run(
-                () => ViewPatchAsync(fileName, text, openWithDifftool));
-        }
+            await ShowOrDeferAsync(
+               text.Length,
+               () =>
+               {
+                   ResetView(ViewMode.Diff, item.Item.Name, item, text: text);
+                   internalFileViewer.SetText(text, openWithDifftool, isDiff: IsDiffView(_viewMode), isRangeDiff: _viewMode == ViewMode.RangeDiff);
 
-        public async Task ViewPatchAsync(string fileName, string text, Action openWithDifftool)
-            => await ViewPrivateAsync(fileName, text, openWithDifftool, ViewMode.Diff);
+                   TextLoaded?.Invoke(this, null);
+                   return Task.CompletedTask;
+               });
+        }
 
         /// <summary>
         /// Present the text as a patch in the file viewer, for GitHub
@@ -690,10 +654,23 @@ namespace GitUI.Editor
             ThreadHelper.JoinableTaskFactory.Run(() => ViewTextAsync("", ""));
         }
 
-        public bool HasAnyPatches()
-        {
-            return internalFileViewer.GetText() != null && internalFileViewer.GetText().Contains("@@");
-        }
+        /// <summary>
+        /// If the file viewer contents support line patches
+        /// </summary>
+        public bool SupportLinePatching { get; private set; }
+
+        /// <summary>
+        /// Configuration to require that the form using the viewer reloads contents before allowing next line patch
+        /// by clearing <see cref="AllowLinePatching" />
+        /// Used for index/worktree where line patches modifies the diff
+        /// </summary>
+        public bool LinePatchingBlocksUntilReload { private get; set; }
+
+        /// <summary>
+        /// Current state for line patching allowed for worktree/index
+        /// Cleared when the file is reloaded
+        /// </summary>
+        private bool AllowLinePatching { get; set; }
 
         public void SetFileLoader(GetNextFileFnc fileLoader)
         {
@@ -702,10 +679,7 @@ namespace GitUI.Editor
 
         public void CherryPickAllChanges()
         {
-            if (GetText().Length > 0)
-            {
-                applySelectedLines(0, GetText().Length, reverse: false);
-            }
+            ApplySelectedLines(allFile: true, reverse: false);
         }
 
         // Protected
@@ -768,7 +742,9 @@ namespace GitUI.Editor
 
         private static bool IsDiffView(ViewMode viewMode)
         {
-            return viewMode == ViewMode.Diff || viewMode == ViewMode.FixedDiff || viewMode == ViewMode.RangeDiff;
+            return viewMode == ViewMode.Diff
+                   || viewMode == ViewMode.FixedDiff
+                   || viewMode == ViewMode.RangeDiff;
         }
 
         private async Task ViewPrivateAsync(string fileName, string text, Action openWithDifftool, ViewMode viewMode = ViewMode.Diff)
@@ -777,7 +753,7 @@ namespace GitUI.Editor
                 text.Length,
                 () =>
                 {
-                    ResetView(viewMode, fileName);
+                    ResetView(viewMode, fileName, text: text);
                     internalFileViewer.SetText(text, openWithDifftool, isDiff: IsDiffView(_viewMode), isRangeDiff: _viewMode == ViewMode.RangeDiff);
 
                     TextLoaded?.Invoke(this, null);
@@ -824,14 +800,34 @@ namespace GitUI.Editor
             ClipboardUtil.TrySetText(code.AdjustLineEndings(Module.EffectiveConfigFile.core.autocrlf.Value));
         }
 
-        private void SetVisibilityDiffContextMenu(ViewMode viewMode, [CanBeNull] string fileName)
+        private void SetVisibilityDiffContextMenu(ViewMode viewMode)
         {
-            bool changePhysicalFile = (viewMode == ViewMode.Diff || viewMode == ViewMode.FixedDiff)
-                                      && !Module.IsBareRepository()
-                                      && File.Exists(_fullPathResolver.Resolve(fileName));
+            var stagedStatus = _viewItem?.Item?.Staged;
+            if (stagedStatus == null || stagedStatus == StagedStatus.Unknown)
+            {
+                stagedStatus = GitModule.GetStagedStatus(_viewItem?.FirstRevision?.ObjectId,
+                    _viewItem?.SecondRevision?.ObjectId,
+                    _viewItem?.SecondRevision?.FirstParentId);
+            }
 
-            cherrypickSelectedLinesToolStripMenuItem.Visible = changePhysicalFile;
-            revertSelectedLinesToolStripMenuItem.Visible = changePhysicalFile;
+            // stage/unstage and reset is exclusive to cherry-pick/revert
+            // .Visible is not readable, use temp variable
+            var stageVisible = viewMode == ViewMode.Diff
+                && stagedStatus == StagedStatus.WorkTree
+                && SupportLinePatching;
+            var unstageVisible = viewMode == ViewMode.Diff
+                && stagedStatus == StagedStatus.Index
+                && SupportLinePatching;
+            var resetVisible = viewMode == ViewMode.Diff
+                && (stagedStatus == StagedStatus.WorkTree
+                    || stagedStatus == StagedStatus.Index)
+                && SupportLinePatching;
+            stageSelectedLinesToolStripMenuItem.Visible = stageVisible;
+            unstageSelectedLinesToolStripMenuItem.Visible = unstageVisible;
+            resetSelectedLinesToolStripMenuItem.Visible = resetVisible;
+
+            cherrypickSelectedLinesToolStripMenuItem.Visible = SupportLinePatching && !(stageVisible || unstageVisible);
+            revertSelectedLinesToolStripMenuItem.Visible = SupportLinePatching && !resetVisible;
 
             // RangeDiff patch is undefined, could be new/old commit or to parents
             copyPatchToolStripMenuItem.Visible = viewMode == ViewMode.Diff || viewMode == ViewMode.FixedDiff;
@@ -857,12 +853,6 @@ namespace GitUI.Editor
             ignoreWhitespaceAtEol.Visible = viewMode == ViewMode.Diff || viewMode == ViewMode.RangeDiff;
             ignoreWhiteSpaces.Visible = viewMode == ViewMode.Diff || viewMode == ViewMode.RangeDiff;
             ignoreAllWhitespaces.Visible = viewMode == ViewMode.Diff || viewMode == ViewMode.RangeDiff;
-        }
-
-        private void SetVisibilityDiffContextMenuStaging()
-        {
-            cherrypickSelectedLinesToolStripMenuItem.Visible = false;
-            revertSelectedLinesToolStripMenuItem.Visible = false;
         }
 
         private void OnExtraDiffArgumentsChanged()
@@ -987,9 +977,10 @@ namespace GitUI.Editor
             AppSettings.IgnoreWhitespaceKind = IgnoreWhitespace;
         }
 
-        private void ResetView(ViewMode viewMode, [CanBeNull] string fileName)
+        private void ResetView(ViewMode viewMode, [CanBeNull] string fileName, [CanBeNull] FileStatusItem item = null, string text = null)
         {
             _viewMode = viewMode;
+            _viewItem = item;
             if (_viewMode == ViewMode.Text
                 && !string.IsNullOrEmpty(fileName)
                 && (fileName.EndsWith(".diff", StringComparison.OrdinalIgnoreCase)
@@ -998,7 +989,12 @@ namespace GitUI.Editor
                 _viewMode = ViewMode.FixedDiff;
             }
 
-            SetVisibilityDiffContextMenu(_viewMode, fileName);
+            SupportLinePatching = IsDiffView(_viewMode)
+                    && !Module.IsBareRepository()
+                    && File.Exists(_fullPathResolver.Resolve(fileName))
+                    && (text?.Contains("@@") ?? false);
+
+            SetVisibilityDiffContextMenu(_viewMode);
             ClearImage();
             PictureBox.Visible = _viewMode == ViewMode.Image;
             internalFileViewer.Visible = _viewMode != ViewMode.Image;
@@ -1315,6 +1311,242 @@ namespace GitUI.Editor
             OnExtraDiffArgumentsChanged();
         }
 
+        private void settingsButton_Click(object sender, EventArgs e)
+        {
+            UICommands.StartSettingsDialog(ParentForm, DiffViewerSettingsPage.GetPageReference());
+        }
+
+        private void IgnoreAllWhitespaceChangesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (IgnoreWhitespace == IgnoreWhitespaceKind.AllSpace)
+            {
+                IgnoreWhitespace = IgnoreWhitespaceKind.None;
+            }
+            else
+            {
+                IgnoreWhitespace = IgnoreWhitespaceKind.AllSpace;
+            }
+
+            OnIgnoreWhitespaceChanged();
+            OnExtraDiffArgumentsChanged();
+        }
+
+        private void stageSelectedLinesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            StageSelectedLines(true);
+        }
+
+        private void unstageSelectedLinesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            StageSelectedLines(false);
+        }
+
+        private void cherrypickSelectedLinesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ApplySelectedLines(allFile: false, reverse: false);
+        }
+
+        private void resetSelectedLinesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ResetSelectedLines();
+        }
+
+        private void revertSelectedLinesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ApplySelectedLines(allFile: false, reverse: true);
+        }
+
+        /// <summary>
+        /// Stage lines in WorkTree or Unstage lines in Index
+        /// </summary>
+        public void StageSelectedLines(bool stage)
+        {
+            if (!AllowLinePatching || _viewItem is null)
+            {
+                // reload not completed
+                return;
+            }
+
+            byte[] patch;
+            if (_viewItem.Item.IsNew)
+            {
+                var treeGuid = !stage ? _viewItem.Item.TreeGuid?.ToString() : null;
+                patch = PatchManager.GetSelectedLinesAsNewPatch(
+                    Module,
+                    _viewItem.Item.Name,
+                    GetText(),
+                    GetSelectionPosition(),
+                    GetSelectionLength(),
+                    Encoding,
+                    false,
+                    FilePreamble,
+                    treeGuid);
+            }
+            else
+            {
+                patch = PatchManager.GetSelectedLinesAsPatch(
+                    GetText(),
+                    GetSelectionPosition(),
+                    GetSelectionLength(),
+                    !stage,
+                    Encoding,
+                    _viewItem.Item.IsNew);
+            }
+
+            if (patch == null || patch.Length == 0)
+            {
+                return;
+            }
+
+            var args = new GitArgumentBuilder("apply")
+            {
+                "--cached",
+                "--index",
+                "--whitespace=nowarn",
+                { !stage, "--reverse" }
+            };
+
+            string output = Module.GitExecutable.GetOutput(args, patch);
+            ProcessApplyOutput(output, patch, patchUpdateDiff: true);
+        }
+
+        /// <summary>
+        /// Reset lines in Index or Worktree
+        /// </summary>
+        public void ResetSelectedLines()
+        {
+            if (!AllowLinePatching || _viewItem is null)
+            {
+                // reload not completed
+                return;
+            }
+
+            byte[] patch;
+            var currentItemStaged = _viewItem.SecondRevision.ObjectId == ObjectId.IndexId;
+            if (_viewItem.Item.IsNew)
+            {
+                var treeGuid = currentItemStaged ? _viewItem.Item.TreeGuid?.ToString() : null;
+                patch = PatchManager.GetSelectedLinesAsNewPatch(
+                    Module,
+                    _viewItem.Item.Name,
+                    GetText(),
+                    GetSelectionPosition(),
+                    GetSelectionLength(),
+                    Encoding,
+                    true,
+                    FilePreamble,
+                    treeGuid);
+            }
+            else if (currentItemStaged)
+            {
+                patch = PatchManager.GetSelectedLinesAsPatch(
+                    GetText(),
+                    GetSelectionPosition(),
+                    GetSelectionLength(),
+                    currentItemStaged,
+                    Encoding,
+                    _viewItem.Item.IsNew);
+            }
+            else
+            {
+                patch = PatchManager.GetResetWorkTreeLinesAsPatch(
+                    Module,
+                    GetText(),
+                    GetSelectionPosition(),
+                    GetSelectionLength(),
+                    Encoding);
+            }
+
+            if (patch == null || patch.Length == 0)
+            {
+                return;
+            }
+
+            var args = new GitArgumentBuilder("apply")
+            {
+                "--whitespace=nowarn",
+                { currentItemStaged, "--reverse --index" }
+            };
+
+            string output = Module.GitExecutable.GetOutput(args, patch);
+            if (EnvUtils.RunningOnWindows())
+            {
+                // remove file mode warnings
+                var regEx = new Regex("warning: .*has type .* expected .*", RegexOptions.Compiled);
+                output = output.RemoveLines(regEx.IsMatch);
+            }
+
+            ProcessApplyOutput(output, patch, patchUpdateDiff: true);
+        }
+
+        /// <summary>
+        /// Cherry-pick/revert patches (not worktree or index)
+        /// </summary>
+        /// <param name="reverse"><see langword="true"/> if patches is to be reversed; otherwise <see langword="false"/></param>.
+        private void ApplySelectedLines(bool allFile, bool reverse)
+        {
+            int selectionStart = allFile ? 0 : GetSelectionPosition();
+            int selectionLength = allFile ? GetText().Length : GetSelectionLength();
+            if (allFile && selectionLength == 0)
+            {
+                return;
+            }
+
+            byte[] patch;
+            if (reverse)
+            {
+                patch = PatchManager.GetResetWorkTreeLinesAsPatch(
+                    Module,
+                    GetText(),
+                    selectionStart,
+                    selectionLength,
+                    Encoding);
+            }
+            else
+            {
+                patch = PatchManager.GetSelectedLinesAsPatch(
+                    GetText(),
+                    selectionStart,
+                    selectionLength,
+                    false,
+                    Encoding,
+                    false);
+            }
+
+            if (patch == null || patch.Length == 0)
+            {
+                return;
+            }
+
+            var args = new GitArgumentBuilder("apply")
+            {
+                "--3way",
+                "--index",
+                "--whitespace=nowarn"
+            };
+
+            string output = Module.GitExecutable.GetOutput(args, patch);
+            ProcessApplyOutput(output, patch);
+        }
+
+        private void ProcessApplyOutput(string output, byte[] patch, bool patchUpdateDiff = false)
+        {
+            if (!string.IsNullOrEmpty(output))
+            {
+                if (patchUpdateDiff || !MergeConflictHandler.HandleMergeConflicts(UICommands, this, false, false))
+                {
+                    MessageBox.Show(this, output + "\n\n" + Encoding.GetString(patch), Strings.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+
+            if (patchUpdateDiff && LinePatchingBlocksUntilReload)
+            {
+                AllowLinePatching = false;
+            }
+
+            PatchApplied?.Invoke(this, EventArgs.Empty);
+        }
+
         /// <summary>
         /// Copy selected text, excluding diff added/deleted information
         /// </summary>
@@ -1396,6 +1628,16 @@ namespace GitUI.Editor
             {
                 ClipboardUtil.TrySetText(text);
             }
+        }
+
+        private void copyNewVersionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CopyNotStartingWith('-');
+        }
+
+        private void copyOldVersionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CopyNotStartingWith('+');
         }
 
         /// <summary>
@@ -1569,85 +1811,6 @@ namespace GitUI.Editor
             }
         }
 
-        private void copyNewVersionToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            CopyNotStartingWith('-');
-        }
-
-        private void copyOldVersionToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            CopyNotStartingWith('+');
-        }
-
-        private void applySelectedLines(int selectionStart, int selectionLength, bool reverse)
-        {
-            // Prepare git command
-            var args = new GitArgumentBuilder("apply")
-            {
-                "--3way",
-                "--whitespace=nowarn"
-            };
-
-            byte[] patch;
-
-            if (reverse)
-            {
-                patch = PatchManager.GetResetWorkTreeLinesAsPatch(
-                    Module, GetText(),
-                    selectionStart, selectionLength, Encoding);
-            }
-            else
-            {
-                patch = PatchManager.GetSelectedLinesAsPatch(
-                    GetText(),
-                    selectionStart, selectionLength,
-                    false, Encoding, false);
-            }
-
-            if (patch != null && patch.Length > 0)
-            {
-                string output = Module.GitExecutable.GetOutput(args, patch);
-
-                if (!string.IsNullOrEmpty(output))
-                {
-                    if (!MergeConflictHandler.HandleMergeConflicts(UICommands, this, false, false))
-                    {
-                        MessageBox.Show(this, output + "\n\n" + Encoding.GetString(patch), Strings.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-            }
-        }
-
-        private void cherrypickSelectedLinesToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            applySelectedLines(GetSelectionPosition(), GetSelectionLength(), reverse: false);
-        }
-
-        private void settingsButton_Click(object sender, EventArgs e)
-        {
-            UICommands.StartSettingsDialog(ParentForm, DiffViewerSettingsPage.GetPageReference());
-        }
-
-        private void revertSelectedLinesToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            applySelectedLines(GetSelectionPosition(), GetSelectionLength(), reverse: true);
-        }
-
-        private void IgnoreAllWhitespaceChangesToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (IgnoreWhitespace == IgnoreWhitespaceKind.AllSpace)
-            {
-                IgnoreWhitespace = IgnoreWhitespaceKind.None;
-            }
-            else
-            {
-                IgnoreWhitespace = IgnoreWhitespaceKind.AllSpace;
-            }
-
-            OnIgnoreWhitespaceChanged();
-            OnExtraDiffArgumentsChanged();
-        }
-
         #region Hotkey commands
 
         public static readonly string HotkeySettingsName = "FileViewer";
@@ -1665,7 +1828,12 @@ namespace GitUI.Editor
             NextChange = 6,
             PreviousChange = 7,
             NextOccurrence = 10,
-            PreviousOccurrence = 11
+            PreviousOccurrence = 11,
+            StageLines = 12,
+            UnstageLines = 13,
+            ResetLines = 14,
+            CherryPickLines = 15,
+            RevertLines = 16
         }
 
         protected override CommandStatus ExecuteCommand(int cmd)
@@ -1686,10 +1854,20 @@ namespace GitUI.Editor
                 case Commands.PreviousChange: PreviousChangeButtonClick(null, null); break;
                 case Commands.NextOccurrence: internalFileViewer.GoToNextOccurrence(); break;
                 case Commands.PreviousOccurrence: internalFileViewer.GoToPreviousOccurrence(); break;
+                case Commands.StageLines: StageSelectedLines(true); break;
+                case Commands.UnstageLines: StageSelectedLines(false); break;
+                case Commands.ResetLines: ResetSelectedLines(); break;
+                case Commands.CherryPickLines: ApplySelectedLines(allFile: false, reverse: true); break;
+                case Commands.RevertLines: ApplySelectedLines(allFile: false, reverse: true); break;
                 default: return base.ExecuteCommand(cmd);
             }
 
             return true;
+        }
+
+        private string GetShortcutKeyDisplayString(Commands cmd)
+        {
+            return GetShortcutKeys((int)cmd).ToShortcutKeyDisplayString();
         }
 
         #endregion
@@ -1733,6 +1911,18 @@ namespace GitUI.Editor
             internal void IgnoreWhitespaceAtEolToolStripMenuItem_Click(object sender, EventArgs e) => _fileViewer.IgnoreWhitespaceAtEolToolStripMenuItem_Click(sender, e);
             internal void IgnoreWhitespaceChangesToolStripMenuItemClick(object sender, EventArgs e) => _fileViewer.IgnoreWhitespaceChangesToolStripMenuItemClick(sender, e);
             internal void IgnoreAllWhitespaceChangesToolStripMenuItem_Click(object sender, EventArgs e) => _fileViewer.IgnoreAllWhitespaceChangesToolStripMenuItem_Click(sender, e);
+
+            public void ViewPatch([CanBeNull] string fileName,
+                [NotNull] string text,
+                [CanBeNull] Action openWithDifftool = null)
+            {
+                FileStatusItem f = new FileStatusItem(new GitRevision(ObjectId.Random()),
+                    new GitRevision(ObjectId.Random()),
+                    new GitItemStatus { Name = fileName });
+                var fileViewer = _fileViewer;
+                ThreadHelper.JoinableTaskFactory.Run(
+                    () => fileViewer.ViewPatchAsync(f, text, openWithDifftool));
+            }
         }
     }
 }
