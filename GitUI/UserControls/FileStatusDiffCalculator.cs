@@ -181,15 +181,6 @@ namespace GitUI
                 Statuses = commonBaseToAandB
             });
 
-            // Git range-diff is slow and memory consuming, so just skip if diff is large
-            // to avoid that GE seem to hang when selecting the range diff
-            const int maxRangeDiffCommits = 100;
-            int? count = module.GetCommitDiffCount(firstRevHead.ToString(), selectedRevHead.ToString());
-            if (!GitVersion.Current.SupportRangeDiffTool || count is null || count > maxRangeDiffCommits)
-            {
-                return fileStatusDescs;
-            }
-
             // Add rangeDiff as a separate group (range is not the same as diff with artificial commits)
             List<GitItemStatus> statuses = new List<GitItemStatus> { new GitItemStatus { Name = Strings.DiffRange, IsRangeDiff = true } };
 
@@ -207,6 +198,23 @@ namespace GitUI
                 BaseB = baseB
             };
             fileStatusDescs.Add(rangeDiff);
+
+            // Git range-diff is slow and memory consuming, so just skip if diff is large
+            // to avoid that GE seem to hang when selecting the range diff
+            const int maxRangeDiffCommits = 100;
+            int count = module.GetCommitDiffCount(firstRevHead.ToString(), selectedRevHead.ToString()) ?? 0;
+            if (!GitVersion.Current.SupportRangeDiffTool || count > maxRangeDiffCommits)
+            {
+                var range = baseA is null || baseB is null
+                    ? $"{first.ObjectId}...{selected.ObjectId}"
+                    : $"{baseA}..{first.ObjectId} {baseB}..{selected.ObjectId}";
+                statuses[0].IsStatusOnly = true;
+                statuses[0].ErrorMessage = $"# The symmetric difference from {first.ObjectId.ToShortString()} to {selected.ObjectId.ToShortString()} is {count} which is higher than the limit {maxRangeDiffCommits}\n" +
+                    "# Git range-diff may take a long time and Git Extensions seem to hang during execution, why the command is not executed\n" +
+                    "# You can still run the command in a Git terminal\n" +
+                    "# Remove '--no-patch' to see changes to files too\n" +
+                    $"git range-diff {range} --no-patch";
+            }
 
             return fileStatusDescs;
 
