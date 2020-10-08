@@ -343,6 +343,9 @@ namespace GitUI.Editor
                 { IgnoreWhitespace == IgnoreWhitespaceKind.Change, "--ignore-space-change" },
                 { IgnoreWhitespace == IgnoreWhitespaceKind.Eol, "--ignore-space-at-eol" },
                 { ShowEntireFile, "--inter-hunk-context=9000 --unified=9000", $"--unified={NumberOfContextLines}" },
+
+                // Handle zero context as showing no file changes, to get the summary only
+                { _viewMode == ViewMode.RangeDiff && NumberOfContextLines == 0, "--no-patch " },
                 { TreatAllFilesAsText, "--text" }
             };
         }
