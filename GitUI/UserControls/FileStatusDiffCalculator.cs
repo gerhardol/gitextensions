@@ -184,7 +184,7 @@ namespace GitUI
             // Git range-diff is slow and memory consuming, so just skip if diff is large
             // to avoid that GE seem to hang when selecting the range diff
             const int maxRangeDiffCommits = 100;
-            int? count = module.GetCommitCount(firstRevHead.ToString(), selectedRevHead.ToString());
+            int? count = module.GetCommitDiffCount(firstRevHead.ToString(), selectedRevHead.ToString());
             if (!GitVersion.Current.SupportRangeDiffTool || count is null || count > maxRangeDiffCommits)
             {
                 return fileStatusDescs;

@@ -818,6 +818,23 @@ namespace GitCommands
             return null;
         }
 
+        public int? GetCommitDiffCount(string parentHash, string childHash)
+        {
+            var args = new GitArgumentBuilder("rev-list")
+            {
+                $"{parentHash}...{childHash}",
+                "--count"
+            };
+            var output = _gitExecutable.GetOutput(args);
+
+            if (int.TryParse(output, out var commitCount))
+            {
+                return commitCount;
+            }
+
+            return null;
+        }
+
         public string GetCommitCountString(string from, string to)
         {
             int? removed = GetCommitCount(from, to);
