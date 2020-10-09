@@ -33,13 +33,11 @@ namespace GitUI
                 if (selectedRev.ParentIds == null || selectedRev.ParentIds.Count == 0)
                 {
                     // No parent for the initial commit
-                    fileStatusDescs.Add(new FileStatusWithDescription
-                    {
-                        FirstRev = null,
-                        SecondRev = selectedRev,
-                        Summary = GetDescriptionForRevision(describeRevision, selectedRev.ObjectId),
-                        Statuses = module.GetTreeFiles(selectedRev.TreeGuid, full: true)
-                    });
+                    fileStatusDescs.Add(new FileStatusWithDescription(
+                        firstRev: null,
+                        secondRev: selectedRev,
+                        summary: GetDescriptionForRevision(describeRevision, selectedRev.ObjectId),
+                        statuses: module.GetTreeFiles(selectedRev.TreeGuid, full: true)));
                 }
                 else
                 {
@@ -49,13 +47,11 @@ namespace GitUI
                         .ParentIds?
                         .Take(multipleParents)
                         .Select(parentId =>
-                            new FileStatusWithDescription
-                            {
-                                FirstRev = new GitRevision(parentId),
-                                SecondRev = selectedRev,
-                                Summary = Strings.DiffWithParent + GetDescriptionForRevision(describeRevision, parentId),
-                                Statuses = module.GetDiffFilesWithSubmodulesStatus(parentId, selectedRev.ObjectId, selectedRev.FirstParentId)
-                            }));
+                            new FileStatusWithDescription(
+                                firstRev: new GitRevision(parentId),
+                                secondRev: selectedRev,
+                                summary: Strings.DiffWithParent + GetDescriptionForRevision(describeRevision, parentId),
+                                statuses: module.GetDiffFilesWithSubmodulesStatus(parentId, selectedRev.ObjectId, selectedRev.FirstParentId))));
                 }
 
                 // Show combined (merge conflicts) when a single merge commit is selected
@@ -66,10 +62,8 @@ namespace GitUI
                     if (conflicts.Count != 0)
                     {
                         // Create an artificial commit
-                        fileStatusDescs.Add(new FileStatusWithDescription
-                        {
-                            FirstRev = new GitRevision(ObjectId.CombinedDiffId), SecondRev = selectedRev, Summary = Strings.CombinedDiff, Statuses = conflicts
-                        });
+                        fileStatusDescs.Add(new FileStatusWithDescription(
+                            firstRev: new GitRevision(ObjectId.CombinedDiffId), secondRev: selectedRev, summary: Strings.CombinedDiff, statuses: conflicts));
                     }
                 }
 
@@ -86,13 +80,11 @@ namespace GitUI
                 ? revisions[2]
                 : revisions.Last();
 
-            fileStatusDescs.Add(new FileStatusWithDescription
-            {
-                FirstRev = firstRev,
-                SecondRev = selectedRev,
-                Summary = Strings.DiffWithParent + GetDescriptionForRevision(describeRevision, firstRev.ObjectId),
-                Statuses = module.GetDiffFilesWithSubmodulesStatus(firstRev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId)
-            });
+            fileStatusDescs.Add(new FileStatusWithDescription(
+                firstRev: firstRev,
+                secondRev: selectedRev,
+                summary: Strings.DiffWithParent + GetDescriptionForRevision(describeRevision, firstRev.ObjectId),
+                statuses: module.GetDiffFilesWithSubmodulesStatus(firstRev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId)));
 
             if (!AppSettings.ShowDiffForAllParents || revisions.Count > maxMultiCompare)
             {
@@ -137,13 +129,11 @@ namespace GitUI
                 fileStatusDescs.AddRange(
                     revisions
                         .Where(rev => rev != firstRev && rev != selectedRev)
-                        .Select(rev => new FileStatusWithDescription
-                        {
-                            FirstRev = rev,
-                            SecondRev = selectedRev,
-                            Summary = Strings.DiffWithParent + GetDescriptionForRevision(describeRevision, rev.ObjectId),
-                            Statuses = module.GetDiffFilesWithSubmodulesStatus(rev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId)
-                        }));
+                        .Select(rev => new FileStatusWithDescription(
+                            firstRev: rev,
+                            secondRev: selectedRev,
+                            summary: Strings.DiffWithParent + GetDescriptionForRevision(describeRevision, rev.ObjectId),
+                            statuses: module.GetDiffFilesWithSubmodulesStatus(rev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId))));
 
                 return fileStatusDescs;
             }
@@ -159,27 +149,21 @@ namespace GitUI
             var commonBaseToAandB = allBaseToB.Intersect(allBaseToA, comparer).Except(allAToB, comparer).ToList();
 
             var revBase = new GitRevision(baseRevGuid);
-            fileStatusDescs.Add(new FileStatusWithDescription
-            {
-                FirstRev = revBase,
-                SecondRev = selectedRev,
-                Summary = Strings.DiffBaseToB + GetDescriptionForRevision(describeRevision, selectedRev.ObjectId),
-                Statuses = allBaseToB.Except(commonBaseToAandB, comparer).ToList()
-            });
-            fileStatusDescs.Add(new FileStatusWithDescription
-            {
-                FirstRev = revBase,
-                SecondRev = firstRev,
-                Summary = Strings.DiffBaseToB + GetDescriptionForRevision(describeRevision, firstRev.ObjectId),
-                Statuses = allBaseToA.Except(commonBaseToAandB, comparer).ToList()
-            });
-            fileStatusDescs.Add(new FileStatusWithDescription
-            {
-                FirstRev = revBase,
-                SecondRev = selectedRev,
-                Summary = Strings.DiffCommonBase + GetDescriptionForRevision(describeRevision, baseRevGuid),
-                Statuses = commonBaseToAandB
-            });
+            fileStatusDescs.Add(new FileStatusWithDescription(
+                firstRev: revBase,
+                secondRev: selectedRev,
+                summary: Strings.DiffBaseToB + GetDescriptionForRevision(describeRevision, selectedRev.ObjectId),
+                statuses: allBaseToB.Except(commonBaseToAandB, comparer).ToList()));
+            fileStatusDescs.Add(new FileStatusWithDescription(
+                firstRev: revBase,
+                secondRev: firstRev,
+                summary: Strings.DiffBaseToB + GetDescriptionForRevision(describeRevision, firstRev.ObjectId),
+                statuses: allBaseToA.Except(commonBaseToAandB, comparer).ToList()));
+            fileStatusDescs.Add(new FileStatusWithDescription(
+                firstRev: revBase,
+                secondRev: selectedRev,
+                summary: Strings.DiffCommonBase + GetDescriptionForRevision(describeRevision, baseRevGuid),
+                statuses: commonBaseToAandB));
 
             // Add rangeDiff as a separate group (range is not the same as diff with artificial commits)
             List<GitItemStatus> statuses = new List<GitItemStatus> { new GitItemStatus { Name = Strings.DiffRange, IsRangeDiff = true } };
@@ -188,15 +172,13 @@ namespace GitUI
                        GetDescriptionForRevision(describeRevision, selectedRevHead);
             var first = firstRev.ObjectId == firstRevHead ? firstRev : new GitRevision(firstRevHead);
             var selected = selectedRev.ObjectId == selectedRevHead ? selectedRev : new GitRevision(selectedRevHead);
-            var rangeDiff = new FileStatusWithDescription
-            {
-                FirstRev = first,
-                SecondRev = selected,
-                Summary = desc,
-                Statuses = statuses,
-                BaseA = baseA,
-                BaseB = baseB
-            };
+            var rangeDiff = new FileStatusWithDescription(
+                firstRev: first,
+                secondRev: selected,
+                summary: desc,
+                statuses: statuses,
+                baseA: baseA,
+                baseB: baseB);
             fileStatusDescs.Add(rangeDiff);
 
             // Git range-diff is slow and memory consuming, so just skip if diff is large

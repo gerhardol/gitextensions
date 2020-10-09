@@ -664,20 +664,16 @@ namespace GitUI
             GroupByRevision = true;
             GitItemStatusesWithDescription = new List<FileStatusWithDescription>
             {
-                new FileStatusWithDescription
-                {
-                    FirstRev = indexRev,
-                    SecondRev = workTreeRev,
-                    Summary = workTreeDesc,
-                    Statuses = workTreeItems
-                },
-                new FileStatusWithDescription
-                {
-                    FirstRev = headRev,
-                    SecondRev = indexRev,
-                    Summary = indexDesc,
-                    Statuses = indexItems
-                }
+                new FileStatusWithDescription(
+                    firstRev: indexRev,
+                    secondRev: workTreeRev,
+                    summary: workTreeDesc,
+                    statuses: workTreeItems),
+                new FileStatusWithDescription(
+                    firstRev: headRev,
+                    secondRev: indexRev,
+                    summary: indexDesc,
+                    statuses: indexItems)
             };
         }
 
@@ -686,13 +682,11 @@ namespace GitUI
             GroupByRevision = false;
             GitItemStatusesWithDescription = new List<FileStatusWithDescription>
             {
-                new FileStatusWithDescription
-                {
-                    FirstRev = firstRev,
-                    SecondRev = secondRev,
-                    Summary = Strings.DiffWithParent + GetDescriptionForRevision(firstRev?.ObjectId),
-                    Statuses = items
-                }
+                new FileStatusWithDescription(
+                    firstRev: firstRev,
+                    secondRev: secondRev,
+                    summary: Strings.DiffWithParent + GetDescriptionForRevision(firstRev?.ObjectId),
+                    statuses: items)
             };
         }
 
