@@ -335,7 +335,7 @@ namespace GitUI.Editor
             internalFileViewer.EnableScrollBars(enable);
         }
 
-        public ArgumentString GetExtraDiffArguments()
+        public ArgumentString GetExtraDiffArguments(bool isRangeDiff = false)
         {
             return new ArgumentBuilder
             {
@@ -345,7 +345,7 @@ namespace GitUI.Editor
                 { ShowEntireFile, "--inter-hunk-context=9000 --unified=9000", $"--unified={NumberOfContextLines}" },
 
                 // Handle zero context as showing no file changes, to get the summary only
-                { _viewMode == ViewMode.RangeDiff && NumberOfContextLines == 0, "--no-patch " },
+                { isRangeDiff && NumberOfContextLines == 0, "--no-patch " },
                 { TreatAllFilesAsText, "--text" }
             };
         }

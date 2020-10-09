@@ -87,7 +87,7 @@ namespace GitUI
                         item.SecondRevision.ObjectId,
                         item.BaseA,
                         item.BaseB,
-                        fileViewer.GetExtraDiffArguments());
+                        fileViewer.GetExtraDiffArguments(true));
 
                 // Try set highlighting from first found filename
                 var match = new Regex(@"\n\s*(@@|##)\s+(?<file>[^#:\n]+)").Match(output ?? "");
