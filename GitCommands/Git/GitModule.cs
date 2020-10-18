@@ -2998,7 +2998,7 @@ namespace GitCommands
             //
             // Lines may also use \t as a column delimiter, such as output of "ls-remote --heads origin".
 
-            var regex = new Regex(@"^(?<objectid>[0-9a-f]{40})[ \t](?<refname>.+)$", RegexOptions.Multiline);
+            var regex = new Regex(@"^(?<objectid>[0-9a-f]{40})[ \t](?<refname>.+)$", RegexOptions.Multiline | RegexOptions.Compiled);
 
             var matches = regex.Matches(refList);
 
@@ -3014,6 +3014,7 @@ namespace GitCommands
 
                 if (GitRefName.IsRemoteHead(refName))
                 {
+                    // TODO only one of the heads?
                     headByRemote[remoteName] = head;
                 }
                 else
