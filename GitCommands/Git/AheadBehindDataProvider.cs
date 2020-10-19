@@ -17,10 +17,14 @@ namespace GitCommands.Git
     {
         private readonly Func<IExecutable> _getGitExecutable;
 
-        // TODO handle [gone] status to show that remote branch no longer exists
+        // Parse info about remote branches, see below for explanation
         private readonly Regex _aheadBehindRegEx =
-            new Regex(@"^(\[(ahead (?<ahead_p>\d+))?(, )?(behind (?<behind_p>\d+))?\])?::(\[(ahead (?<ahead_u>\d+))?(, )?(behind (?<behind_u>\d+))?\])?::(?<branch>.*)$",
-                RegexOptions.Compiled | RegexOptions.Multiline);
+            new Regex(
+                @"^((?<gone_p>gone)|((ahead\s(?<ahead_p>\d+))?(,\s)?(behind\s(?<behind_p>\d+))?)|.*?)::
+                   ((?<gone_u>gone)|((ahead\s(?<ahead_u>\d+))?(,\s)?(behind\s(?<behind_u>\d+))?)|.*?)::
+                   (?<remote_p>.*?)::(?<remote_u>.*?)::(?<branch>.*)$",
+                RegexOptions.Compiled | RegexOptions.Multiline | RegexOptions.IgnorePatternWhitespace | RegexOptions.ExplicitCapture);
+        private readonly string _refFormat = @"%(push:track,nobracket)::%(upstream:track,nobracket)::%(push)::%(upstream)::%(refname:short)";
 
         public AheadBehindDataProvider(Func<IExecutable> getGitExecutable)
         {
@@ -46,14 +50,15 @@ namespace GitCommands.Git
                 throw new ArgumentException(nameof(branchName));
             }
 
-            if (branchName == "(no branch)")
+            if (branchName == DetachedHeadParser.DetachedBranch)
             {
                 return null;
             }
 
             var aheadBehindGitCommand = new GitArgumentBuilder("for-each-ref")
             {
-                "--format=\"%(push:track)::%(upstream:track)::%(refname:short)\"",
+                $"--color=never",
+                $"--format=\"{_refFormat}\"",
                 "refs/heads/" + branchName
             };
 
@@ -64,22 +69,39 @@ namespace GitCommands.Git
             }
 
             var matches = _aheadBehindRegEx.Matches(result);
-            if (matches.Count < 1 || (matches.Count == 1 && (!matches[0].Groups["branch"].Success ||
-                                                             !(matches[0].Groups["ahead_p"].Success || matches[0].Groups["ahead_u"].Success ||
-                                                               matches[0].Groups["behind_p"].Success || matches[0].Groups["behind_u"].Success))))
-            {
-                return null;
-            }
-
             var aheadBehindForBranchesData = new Dictionary<string, AheadBehindData>();
             foreach (Match match in matches)
             {
+                var branch = match.Groups["branch"].Value;
+                var remoteRef = (match.Groups["remote_p"].Success && !string.IsNullOrEmpty(match.Groups["remote_p"].Value))
+                            ? match.Groups["remote_p"].Value
+                            : match.Groups["remote_u"].Value;
+                if (string.IsNullOrEmpty(branch) || string.IsNullOrEmpty(remoteRef))
+                {
+                    continue;
+                }
+
                 aheadBehindForBranchesData.Add(match.Groups["branch"].Value,
                     new AheadBehindData
                     {
-                        // The information is displayed in the push button, so the push info  is preferred (may differ from upstream)
-                        Branch = match.Groups["branch"].Value,
-                        AheadCount = match.Groups["ahead_p"].Success ? match.Groups["ahead_p"].Value : match.Groups["ahead_u"].Value,
+                        // The information is displayed in the push button, so the push info is preferred (may differ from upstream)
+                        Branch = branch,
+                        AheadCount =
+
+                            // Prefer push to upstream for the count
+                            match.Groups["ahead_p"].Success
+                            ? match.Groups["ahead_p"].Value
+                            : match.Groups["ahead_u"].Success
+                            ? match.Groups["ahead_u"].Value
+
+                            // No information about the remote branch, it is gone
+                            : match.Groups["gone_p"].Success || match.Groups["gone_u"].Success
+                            ? AheadBehindData.Gone
+
+                            // A remote exists, but "track" does not display the count if ahead/behind match
+                            : "0",
+
+                        // Behind do not track '0' or 'gone', only in Ahead
                         BehindCount = match.Groups["behind_p"].Success ? match.Groups["behind_p"].Value : match.Groups["behind_u"].Value
                     });
             }
