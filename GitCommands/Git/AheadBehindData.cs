@@ -10,13 +10,13 @@
         public string ToDisplay()
         {
             return AheadCount == Gone
-                ? Gone
+                ? "-"
                 : AheadCount == "0" && string.IsNullOrEmpty(BehindCount)
                 ? "0↑↓"
                 : (!string.IsNullOrEmpty(AheadCount) && AheadCount != "0"
                     ? AheadCount + "↑" + (!string.IsNullOrEmpty(BehindCount) ? " " : string.Empty)
                     : string.Empty)
-                    + (!string.IsNullOrEmpty(BehindCount) ? BehindCount + "↓" : string.Empty);
+                + (!string.IsNullOrEmpty(BehindCount) ? BehindCount + "↓" : string.Empty);
         }
     }
 }
