@@ -711,11 +711,21 @@ namespace GitUI
             _gridView.Update();
         }
 
+        private int? _coreabbrev;
         public string DescribeRevision(GitRevision revision, int maxLength = 0)
         {
+            if (_coreabbrev is null && int.TryParse(Module.GetEffectiveSetting("core.abbrev"), out int i))
+            {
+                _coreabbrev = i;
+            }
+            else
+            {
+                _coreabbrev = 8;
+            }
+
             var description = revision.IsArtificial
                 ? string.Empty
-                : revision.ObjectId.ToShortString() + ": ";
+                : revision.ObjectId.ToShortString(_coreabbrev ?? 8) + ": ";
 
             var gitRefListsForRevision = new GitRefListsForRevision(revision);
 
