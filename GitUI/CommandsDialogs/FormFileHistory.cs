@@ -196,6 +196,19 @@ namespace GitUI.CommandsDialogs
             {
                 FileChanges.Visible = false;
             }
+
+            LoadCustomDifftools();
+        }
+
+        public void LoadCustomDifftools()
+        {
+            List<CustomDiffMergeTool> menus = new()
+            {
+                new(openWithDifftoolToolStripMenuItem, OpenWithDifftoolToolStripMenuItem_Click),
+                new(diffToolRemoteLocalStripMenuItem, diffToolRemoteLocalStripMenuItem_Click),
+            };
+
+            CustomDiffMergeTool.LoadCustomDiffMergeTools(Module, menus, components, isDiff: true, useSetting: true);
         }
 
         private void LoadFileHistory()
@@ -431,15 +444,28 @@ namespace GitUI.CommandsDialogs
             FileChanges.ViewSelectedRevisions();
         }
 
-        private void OpenWithDifftoolToolStripMenuItemClick(object sender, EventArgs e)
+        private void OpenWithDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var selectedRevisions = FileChanges.GetSelectedRevisions();
+            OpenWithCustomDifftoolToolStripMenuItem_Click(RevisionDiffKind.DiffAB, sender);
+        }
 
+        private void OpenWithCustomDifftoolToolStripMenuItem_Click(RevisionDiffKind diffKind, object sender)
+        {
+            var item = sender as ToolStripMenuItem;
+            if (item?.DropDownItems != null)
+            {
+                // "main menu" clicked, cancel dropdown manually, invoke default mergetool
+                item.HideDropDown();
+                item.Owner.Hide();
+            }
+
+            var toolName = item?.Tag as string;
+            var selectedRevisions = FileChanges.GetSelectedRevisions();
             var orgFileName = selectedRevisions.Count != 0
                 ? selectedRevisions[0].Name
                 : null;
 
-            UICommands.OpenWithDifftool(this, selectedRevisions, FileName, orgFileName, RevisionDiffKind.DiffAB, true);
+            UICommands.OpenWithDifftool(this, selectedRevisions, FileName, orgFileName, diffKind, true, customTool: toolName);
         }
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -578,7 +604,7 @@ namespace GitUI.CommandsDialogs
 
         private void diffToolRemoteLocalStripMenuItem_Click(object sender, EventArgs e)
         {
-            UICommands.OpenWithDifftool(this, FileChanges.GetSelectedRevisions(), FileName, string.Empty, RevisionDiffKind.DiffBLocal, true);
+            OpenWithCustomDifftoolToolStripMenuItem_Click(RevisionDiffKind.DiffBLocal, sender);
         }
 
         private void toolStripSplitLoad_ButtonClick(object sender, EventArgs e)

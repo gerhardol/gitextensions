@@ -3580,10 +3580,13 @@ namespace GitCommands
         /// <returns>the list.</returns>
         public async Task<IEnumerable<string>> GetCustomDiffMergeTools(bool isDiff)
         {
+            var toolKey = isDiff ? SettingKeyString.DiffToolKey : SettingKeyString.MergeToolKey;
+
             // Note that --gui has no effect here
             var args = new GitArgumentBuilder(isDiff ? "difftool" : "mergetool") { "--tool-help" };
-            string output = await _gitExecutable.GetOutputAsync(args);
-            return ParseCustomDiffMergeTool(output);
+            string output = await _gitExecutable.GetOutputAsync(args, cache: GitCommandCache);
+            var defaultTool = GetEffectiveSetting(SettingKeyString.DiffToolKey);
+            return ParseCustomDiffMergeTool(output, defaultTool);
         }
 
         /// <summary>
@@ -3591,7 +3594,7 @@ namespace GitCommands
         /// </summary>
         /// <param name="output">The output string.</param>
         /// <returns>list with tool names.</returns>
-        private static IEnumerable<string> ParseCustomDiffMergeTool(string output)
+        private static IEnumerable<string> ParseCustomDiffMergeTool(string output, string? defaultTool)
         {
             var tools = new List<string>();
 
@@ -3623,7 +3626,7 @@ namespace GitCommands
                     continue;
                 }
 
-                // Ignore tools that must run in a terminal
+                // Ignore (known) tools that must run in a terminal
                 string[] ignoredTools = { "vimdiff", "vimdiff2", "vimdiff3" };
                 var toolName = tool[0];
                 if (!string.IsNullOrWhiteSpace(toolName) && !tools.Contains(toolName) && !ignoredTools.Contains(toolName))
@@ -3632,12 +3635,13 @@ namespace GitCommands
                 }
             }
 
-            return tools.OrderBy(i => i);
+            // Return the default tool first
+            return tools.OrderBy(tool => tool != defaultTool).ThenBy(tool => tool);
         }
 
-        public string OpenWithDifftoolDirDiff(string firstRevision, string secondRevision)
+        public string OpenWithDifftoolDirDiff(string firstRevision, string secondRevision, string? customTool = null)
         {
-            return OpenWithDifftool(null, firstRevision: firstRevision, secondRevision: secondRevision, extraDiffArguments: "--dir-diff");
+            return OpenWithDifftool(null, firstRevision: firstRevision, secondRevision: secondRevision, extraDiffArguments: "--dir-diff", customTool: customTool);
         }
 
         public string OpenWithDifftool(string? filename, string oldFileName = "", string firstRevision = GitRevision.IndexGuid, string secondRevision = GitRevision.WorkTreeGuid, string? extraDiffArguments = null, bool isTracked = true, string? customTool = null)
@@ -3662,7 +3666,7 @@ namespace GitCommands
         /// <param name="firstGitCommit">commitish.</param>
         /// <param name="secondGitCommit">commitish.</param>
         /// <returns>empty string, or null if either input is null.</returns>
-        public string? OpenFilesWithDifftool(string? firstGitCommit, string? secondGitCommit)
+        public string? OpenFilesWithDifftool(string? firstGitCommit, string? secondGitCommit, string? customTool = null)
         {
             if (Strings.IsNullOrWhiteSpace(firstGitCommit) || Strings.IsNullOrWhiteSpace(secondGitCommit))
             {
@@ -3671,7 +3675,7 @@ namespace GitCommands
 
             _gitCommandRunner.RunDetached(new GitArgumentBuilder("difftool")
             {
-                "--gui",
+                { Strings.IsNullOrWhiteSpace(customTool), "--gui", $"--tool={customTool}" },
                 "--no-prompt",
                 "-M -C",
                 firstGitCommit.QuoteNE(),
@@ -4301,8 +4305,8 @@ namespace GitCommands
             public StagedStatus GetStagedStatus(ObjectId? firstId, ObjectId? secondId, ObjectId? parentToSecond)
                 => GitModule.GetStagedStatus(firstId, secondId, parentToSecond);
 
-            public IEnumerable<string> ParseCustomDiffMergeTool(string output)
-                => GitModule.ParseCustomDiffMergeTool(output);
+            public IEnumerable<string> ParseCustomDiffMergeTool(string output, string defaultTool)
+                => GitModule.ParseCustomDiffMergeTool(output, defaultTool);
         }
     }
 }

@@ -244,6 +244,8 @@ namespace GitUI.CommandsDialogs
             openToolStripMenuItem.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Command.OpenFile);
             openWithToolStripMenuItem.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Command.OpenFileWith);
             editFileToolStripMenuItem.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Command.EditFile);
+            openWithDifftoolToolStripMenuItem.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Command.OpenWithDifftool);
+            stagedOpenDifftoolToolStripMenuItem9.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Command.OpenWithDifftool);
 
             stageSubmoduleToolStripMenuItem.ShortcutKeyDisplayString = GetShortcutKeyDisplayString(Command.StageSelectedFile);
 
@@ -447,6 +449,7 @@ namespace GitUI.CommandsDialogs
         {
             showUntrackedFilesToolStripMenuItem.Checked = Module.EffectiveConfigFile.GetValue("status.showUntrackedFiles") != "no";
             MinimizeBox = Owner is null;
+            LoadCustomDifftools();
             base.OnLoad(e);
         }
 
@@ -576,6 +579,17 @@ namespace GitUI.CommandsDialogs
             }
 
             return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        public void LoadCustomDifftools()
+        {
+            List<CustomDiffMergeTool> menus = new()
+            {
+                new(openWithDifftoolToolStripMenuItem, UnstagedOpenWithDifftoolToolStripMenuItem_Click),
+                new(stagedOpenDifftoolToolStripMenuItem9, StagedOpenDifftoolToolStripMenuItem_Click),
+            };
+
+            CustomDiffMergeTool.LoadCustomDiffMergeTools(Module, menus, components, isDiff: true, useSetting: true);
         }
 
         private void FileViewer_TopScrollReached(object sender, EventArgs e)
@@ -2498,23 +2512,37 @@ namespace GitUI.CommandsDialogs
             ClipboardUtil.TrySetText(fileNames.ToString());
         }
 
-        private void OpenFilesWithDiffTool(IEnumerable<FileStatusItem> items)
+        private void OpenWithCustomDifftoolToolStripMenuItem_Click(IEnumerable<FileStatusItem> items, object sender)
+        {
+            var item = sender as ToolStripMenuItem;
+            if (item?.DropDownItems != null)
+            {
+                // "main menu" clicked, cancel dropdown manually, invoke default mergetool
+                item.HideDropDown();
+                item.Owner.Hide();
+            }
+
+            string toolName = item?.Tag as string;
+            OpenFilesWithDiffTool(items, toolName);
+        }
+
+        private void OpenFilesWithDiffTool(IEnumerable<FileStatusItem> items, string toolName = null)
         {
             foreach (var item in items)
             {
                 GitRevision[] revs = new[] { item.SecondRevision, item.FirstRevision };
-                UICommands.OpenWithDifftool(this, revs, item.Item.Name, item.Item.OldName, RevisionDiffKind.DiffAB, item.Item.IsTracked);
+                UICommands.OpenWithDifftool(this, revs, item.Item.Name, item.Item.OldName, RevisionDiffKind.DiffAB, item.Item.IsTracked, customTool: toolName);
             }
         }
 
-        private void OpenWithDifftoolToolStripMenuItemClick(object sender, EventArgs e)
+        private void UnstagedOpenWithDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFilesWithDiffTool(Unstaged.SelectedItems);
+            OpenWithCustomDifftoolToolStripMenuItem_Click(Unstaged.SelectedItems, sender);
         }
 
         private void OpenWithDiffTool()
         {
-            (_currentItemStaged ? stagedOpenDifftoolToolStripMenuItem9 : openWithDifftoolToolStripMenuItem).PerformClick();
+            OpenFilesWithDiffTool(_currentItemStaged ? Staged.SelectedItems : Unstaged.SelectedItems);
         }
 
         private void ResetPartOfFileToolStripMenuItemClick(object sender, EventArgs e)
@@ -3081,9 +3109,9 @@ namespace GitUI.CommandsDialogs
             }
         }
 
-        private void stagedOpenDifftoolToolStripMenuItem9_Click(object sender, EventArgs e)
+        private void StagedOpenDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFilesWithDiffTool(Staged.SelectedItems);
+            OpenWithCustomDifftoolToolStripMenuItem_Click(Staged.SelectedItems, sender);
         }
 
         private void openFolderToolStripMenuItem10_Click(object sender, EventArgs e)
