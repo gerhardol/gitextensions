@@ -47,6 +47,17 @@ namespace GitCommands
         }
 
         /// <summary>
+        /// Clear the cache.
+        /// </summary>
+        public void Clear()
+        {
+            lock (_cache)
+            {
+                _cache.Clear();
+            }
+        }
+
+        /// <summary>
         /// Gets the list of commands stored within the cache.
         /// </summary>
         public IReadOnlyList<string> GetCachedCommands()
