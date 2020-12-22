@@ -149,7 +149,8 @@ namespace GitUI.CommandsDialogs
             this.openWithDifftoolToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
             this.openWithDifftoolToolStripMenuItem.Size = new System.Drawing.Size(339, 22);
             this.openWithDifftoolToolStripMenuItem.Text = "Open with difftool";
-            this.openWithDifftoolToolStripMenuItem.Click += new System.EventHandler(this.OpenWithDifftoolToolStripMenuItemClick);
+            this.openWithDifftoolToolStripMenuItem.ToolTipText = Strings.CustomDiffToolToolTip;
+            this.openWithDifftoolToolStripMenuItem.MouseDown += new System.Windows.Forms.MouseEventHandler(this.OpenWithDifftoolToolStripMenuItem_MouseDown);
             // 
             // diffToolRemoteLocalStripMenuItem
             // 

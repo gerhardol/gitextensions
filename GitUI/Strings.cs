@@ -71,6 +71,7 @@ namespace GitUI
         private readonly TranslationString _diffCommonBase = new TranslationString("Common diff with BASE a/");
         private readonly TranslationString _diffRange = new TranslationString("Range diff");
         private readonly TranslationString _combinedDiff = new TranslationString("Combined diff");
+        private readonly TranslationString _customDiffToolToolTip = new TranslationString("Right-click to toggle custom difftool dropdown");
 
         private readonly TranslationString _showDiffForAllParentsText = new TranslationString("Show file differences for all parents in browse dialog");
         private readonly TranslationString _showDiffForAllParentsTooltip = new TranslationString(@"Show all differences between the selected commits, not limiting to only one difference.
@@ -173,6 +174,7 @@ namespace GitUI
         public static string DiffCommonBase => _instance.Value._diffCommonBase.Text;
         public static string DiffRange => _instance.Value._diffRange.Text;
         public static string CombinedDiff => _instance.Value._combinedDiff.Text;
+        public static string CustomDiffToolToolTip => _instance.Value._customDiffToolToolTip.Text;
         public static string ShowDiffForAllParentsText => _instance.Value._showDiffForAllParentsText.Text;
         public static string ShowDiffForAllParentsTooltip => _instance.Value._showDiffForAllParentsTooltip.Text;
 

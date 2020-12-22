@@ -297,19 +297,26 @@ namespace GitUI.CommandsDialogs
 
         private void LoadCustomMergetools()
         {
+            customMergetool.DropDown = null;
             ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
+                var mergetool = Module.GetEffectiveSetting(SettingKeyString.MergeToolKey);
                 var tools = await Module.GetCustomDiffMergeTools(isDiff: false);
-                customMergetool.DropDown = null;
-                ContextMenuStrip customDiffToolDropDown = new ContextMenuStrip();
+                customMergetool.DropDown = new ContextMenuStrip();
                 foreach (var tool in tools)
                 {
                     var toolStripItem = new ToolStripMenuItem(tool) { Tag = tool };
                     toolStripItem.Click += customMergetool_Click;
-                    customDiffToolDropDown.Items.Add(toolStripItem);
+                    if (tool == mergetool)
+                    {
+                        toolStripItem.Checked = true;
+                        customMergetool.DropDown.Items.Insert(0, toolStripItem);
+                    }
+                    else
+                    {
+                        customMergetool.DropDown.Items.Add(toolStripItem);
+                    }
                 }
-
-                customMergetool.DropDown = customDiffToolDropDown;
             }).FileAndForget();
         }
 

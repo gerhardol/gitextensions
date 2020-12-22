@@ -8268,10 +8268,6 @@ To show all branches, right click the revision grid, select 'view' and then the 
         <source>Show in folder</source>
         <target />
       </trans-unit>
-      <trans-unit id="openWithCustomDifftoolToolStripMenuItem.Text">
-        <source>First -&gt; Second...</source>
-        <target />
-      </trans-unit>
       <trans-unit id="openWithDifftoolToolStripMenuItem.Text">
         <source>Open with difftool</source>
         <target />
@@ -9327,6 +9323,10 @@ Select this commit to populate the full message.</source>
       </trans-unit>
       <trans-unit id="_createPullRequest.Text">
         <source>Create pull request</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="_customDiffToolToolTip.Text">
+        <source>Right-click to toggle custom difftool dropdown</source>
         <target />
       </trans-unit>
       <trans-unit id="_dateText.Text">

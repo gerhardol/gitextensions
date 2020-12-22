@@ -47,6 +47,10 @@ namespace GitUI.CommandsDialogs
         private readonly RememberFileContextMenuController _rememberFileContextMenuController
             = RememberFileContextMenuController.Default;
 
+        private ContextMenuStrip _firstToSelectedToolStripMenuItem;
+        private ContextMenuStrip _selectedToLocalToolStripMenuItem;
+        private ContextMenuStrip _firstToLocalToolStripMenuItem;
+
         public RevisionDiffControl()
         {
             InitializeComponent();
@@ -138,9 +142,9 @@ namespace GitUI.CommandsDialogs
                 case Command.DeleteSelectedFiles: diffDeleteFileToolStripMenuItem.PerformClick(); break;
                 case Command.ShowHistory: fileHistoryDiffToolstripMenuItem.PerformClick(); break;
                 case Command.Blame: blameToolStripMenuItem.PerformClick(); break;
-                case Command.OpenWithDifftool: firstToSelectedToolStripMenuItem.PerformClick(); break;
-                case Command.OpenWithDifftoolFirstToLocal: firstToLocalToolStripMenuItem.PerformClick(); break;
-                case Command.OpenWithDifftoolSelectedToLocal: selectedToLocalToolStripMenuItem.PerformClick(); break;
+                case Command.OpenWithDifftool: openWithDifftoolTool(RevisionDiffKind.DiffAB); break;
+                case Command.OpenWithDifftoolFirstToLocal: openWithDifftoolTool(RevisionDiffKind.DiffALocal); break;
+                case Command.OpenWithDifftoolSelectedToLocal: openWithDifftoolTool(RevisionDiffKind.DiffBLocal); break;
                 case Command.EditFile: diffEditWorkingDirectoryFileToolStripMenuItem.PerformClick(); break;
                 case Command.OpenAsTempFile: diffOpenRevisionFileToolStripMenuItem.PerformClick(); break;
                 case Command.OpenAsTempFileWith: diffOpenRevisionFileWithToolStripMenuItem.PerformClick(); break;
@@ -173,21 +177,60 @@ namespace GitUI.CommandsDialogs
             DiffText.ReloadHotkeys();
         }
 
-        public void ReloadCustomDifftools()
+        public void LoadCustomDifftools()
         {
+            firstToSelectedToolStripMenuItem.DropDown = null;
+            selectedToLocalToolStripMenuItem.DropDown = null;
+            firstToLocalToolStripMenuItem.DropDown = null;
+            diffWithRememberedDifftoolToolStripMenuItem.DropDown = null;
+            diffTwoSelectedDifftoolToolStripMenuItem.DropDown = null;
+
             ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
+                var difftool = Module.GetEffectiveSetting(GitCommands.Config.SettingKeyString.DiffToolKey);
                 var tools = await Module.GetCustomDiffMergeTools(isDiff: true);
-                openWithCustomDifftoolToolStripMenuItem.DropDown = null;
-                ContextMenuStrip customDiffToolDropDown = new ContextMenuStrip();
+
+                _firstToSelectedToolStripMenuItem = new ContextMenuStrip();
+                _selectedToLocalToolStripMenuItem = new ContextMenuStrip();
+                _firstToLocalToolStripMenuItem = new ContextMenuStrip();
+                diffWithRememberedDifftoolToolStripMenuItem.DropDown = new ContextMenuStrip();
+                diffTwoSelectedDifftoolToolStripMenuItem.DropDown = new ContextMenuStrip();
                 foreach (var tool in tools)
                 {
-                    var toolStripItem = new ToolStripMenuItem(tool) { Tag = tool };
-                    toolStripItem.Click += openWithDifftoolToolStripMenuItem_Click;
-                    customDiffToolDropDown.Items.Add(toolStripItem);
-                }
+                    var firstToSelectedItem = new ToolStripMenuItem(tool) { Tag = tool };
+                    var selectedToLocalItem = new ToolStripMenuItem(tool) { Tag = tool };
+                    var firstToLocalItem = new ToolStripMenuItem(tool) { Tag = tool };
+                    var diffTwoItem = new ToolStripMenuItem(tool) { Tag = tool };
+                    var diffRememberedItem = new ToolStripMenuItem(tool) { Tag = tool };
 
-                openWithCustomDifftoolToolStripMenuItem.DropDown = customDiffToolDropDown;
+                    firstToSelectedItem.Click += firstToSelectedToolStripMenuItem_Click;
+                    selectedToLocalItem.Click += selectedToLocalToolStripMenuItem_Click;
+                    firstToLocalItem.Click += firstToLocalToolStripMenuItem_Click;
+                    diffTwoItem.Click += diffTwoSelectedDiffToolToolStripMenuItem_Click;
+                    diffRememberedItem.Click += diffWithRememberedDiffToolToolStripMenuItem_Click;
+                    if (tool == difftool)
+                    {
+                        firstToSelectedItem.Checked = true;
+                        selectedToLocalItem.Checked = true;
+                        firstToLocalItem.Checked = true;
+                        diffTwoItem.Checked = true;
+                        diffRememberedItem.Checked = true;
+
+                        _firstToSelectedToolStripMenuItem.Items.Insert(0, firstToSelectedItem);
+                        _selectedToLocalToolStripMenuItem.Items.Insert(0, selectedToLocalItem);
+                        _firstToLocalToolStripMenuItem.Items.Insert(0, firstToLocalItem);
+                        diffWithRememberedDifftoolToolStripMenuItem.DropDown.Items.Insert(0, diffRememberedItem);
+                        diffTwoSelectedDifftoolToolStripMenuItem.DropDown.Items.Insert(0, diffTwoItem);
+                    }
+                    else
+                    {
+                        _firstToSelectedToolStripMenuItem.Items.Add(firstToSelectedItem);
+                        _selectedToLocalToolStripMenuItem.Items.Add(selectedToLocalItem);
+                        _firstToLocalToolStripMenuItem.Items.Add(firstToLocalItem);
+                        diffWithRememberedDifftoolToolStripMenuItem.DropDown.Items.Add(diffRememberedItem);
+                        diffTwoSelectedDifftoolToolStripMenuItem.DropDown.Items.Add(diffTwoItem);
+                    }
+                }
             }).FileAndForget();
         }
 
@@ -239,7 +282,7 @@ namespace GitUI.CommandsDialogs
             DiffText.SetFileLoader(GetNextPatchFile);
             DiffText.Font = AppSettings.FixedWidthFont;
             ReloadHotkeys();
-            ReloadCustomDifftools();
+            LoadCustomDifftools();
 
             base.OnRuntimeLoad();
         }
@@ -650,41 +693,106 @@ namespace GitUI.CommandsDialogs
             FormBrowse.OpenContainingFolder(DiffFiles, Module);
         }
 
-        private void openWithDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
+        private void firstToSelectedToolStripMenuItem_MouseDown(object sender, MouseEventArgs e)
         {
-            RevisionDiffKind diffKind;
-            string toolName = (sender as ToolStripMenuItem)?.Tag as string;
+            openWithCustomDifftoolToolStripMenuItem_MouseDown(RevisionDiffKind.DiffAB, _firstToSelectedToolStripMenuItem, sender, e);
+        }
 
-            if (sender == firstToLocalToolStripMenuItem)
+        private void firstToSelectedToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            openWithCustomDifftoolToolStripMenuItem_Click(RevisionDiffKind.DiffAB, sender);
+        }
+
+        private void selectedToLocalToolStripMenuItem_MouseDown(object sender, MouseEventArgs e)
+        {
+            openWithCustomDifftoolToolStripMenuItem_MouseDown(RevisionDiffKind.DiffBLocal, _selectedToLocalToolStripMenuItem, sender, e);
+        }
+
+        private void selectedToLocalToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            openWithCustomDifftoolToolStripMenuItem_Click(RevisionDiffKind.DiffBLocal, sender);
+        }
+
+        private void firstToLocalToolStripMenuItem_MouseDown(object sender, MouseEventArgs e)
+        {
+            openWithCustomDifftoolToolStripMenuItem_MouseDown(RevisionDiffKind.DiffALocal, _firstToLocalToolStripMenuItem, sender, e);
+        }
+
+        private void firstToLocalToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            openWithCustomDifftoolToolStripMenuItem_Click(RevisionDiffKind.DiffALocal, sender);
+        }
+
+        // "Main item" (possibly with a dropdown) clicked
+        private void openWithCustomDifftoolToolStripMenuItem_MouseDown(RevisionDiffKind diffKind, ToolStripDropDown dropDown, object sender, MouseEventArgs e)
+        {
+            if (e.Clicks != 1)
             {
-                diffKind = RevisionDiffKind.DiffALocal;
-            }
-            else if (sender == selectedToLocalToolStripMenuItem)
-            {
-                diffKind = RevisionDiffKind.DiffBLocal;
-            }
-            else
-            {
-                diffKind = RevisionDiffKind.DiffAB;
+                return;
             }
 
-            foreach (var item in DiffFiles.SelectedItems)
+            var item = sender as ToolStripMenuItem;
+            if (e.Button == MouseButtons.Right)
             {
-                if (item.FirstRevision?.ObjectId == ObjectId.CombinedDiffId)
+                // Toggle status of custom difftool dropdown
+                // Note that setting to null will set count to zero
+                if (item.DropDown == null || item.DropDownItems.Count == 0)
                 {
-                    // CombinedDiff cannot be viewed in a difftool
-                    // Disabled in menus but can be activated from shortcuts, just ignore
-                    continue;
+                    item.DropDown = dropDown;
+                    item.ShowDropDown();
+                }
+                else
+                {
+                    item.DropDown = null;
                 }
 
-                // If item.FirstRevision is null, compare to root commit
-                GitRevision[] revs = new[] { item.SecondRevision, item.FirstRevision };
-                UICommands.OpenWithDifftool(this, revs, item.Item.Name, item.Item.OldName, diffKind, item.Item.IsTracked, customTool: toolName);
+                return;
+            }
+
+            openWithDifftoolTool(diffKind);
+        }
+
+        private void openWithCustomDifftoolToolStripMenuItem_Click(RevisionDiffKind diffKind, object sender)
+        {
+            var item = sender as ToolStripMenuItem;
+            string toolName = item.Tag as string;
+            openWithDifftoolTool(diffKind, toolName);
+        }
+
+        private void openWithDifftoolTool(RevisionDiffKind diffKind, string toolName = null)
+        {
+            using (WaitCursorScope.Enter())
+            {
+                foreach (var item in DiffFiles.SelectedItems)
+                {
+                    if (item.FirstRevision?.ObjectId == ObjectId.CombinedDiffId)
+                    {
+                        // CombinedDiff cannot be viewed in a difftool
+                        // Disabled in menus but can be activated from shortcuts, just ignore
+                        continue;
+                    }
+
+                    // If item.FirstRevision is null, compare to root commit
+                    GitRevision[] revs = new[] { item.SecondRevision, item.FirstRevision };
+                    UICommands.OpenWithDifftool(this, revs, item.Item.Name, item.Item.OldName, diffKind, item.Item.IsTracked, customTool: toolName);
+                }
             }
         }
 
         private void diffTwoSelectedDiffToolToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (sender is ToolStripMenuItem)
+            {
+                var menu = sender as ToolStripMenuItem;
+                if (menu.DropDownItems != null)
+                {
+                    // "main menu" clicked, cancel dropdown manually, invoke default difftool
+                    menu.HideDropDown();
+                }
+            }
+
+            string toolName = (sender as ToolStripMenuItem)?.Tag as string;
+
             var diffFiles = DiffFiles.SelectedItems.ToList();
             if (diffFiles.Count != 2)
             {
@@ -700,11 +808,23 @@ namespace GitUI.CommandsDialogs
             var isSecondItemSecondRev = _rememberFileContextMenuController.ShouldEnableSecondItemDiff(DiffFiles.SelectedItem, isSecondRevision: true);
             var second = _rememberFileContextMenuController.GetGitCommit(Module.GetFileBlobHash, DiffFiles.SelectedItem, isSecondRevision: isSecondItemSecondRev);
 
-            Module.OpenFilesWithDifftool(first, second);
+            Module.OpenFilesWithDifftool(first, second, customTool: toolName);
         }
 
         private void diffWithRememberedDiffToolToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (sender is ToolStripMenuItem)
+            {
+                var menu = sender as ToolStripMenuItem;
+                if (menu.DropDownItems != null)
+                {
+                    // "main menu" clicked, cancel dropdown manually, invoke default difftool
+                    menu.HideDropDown();
+                }
+            }
+
+            string toolName = (sender as ToolStripMenuItem)?.Tag as string;
+
             // For first item, the second revision is explicitly remembered
             var first = _rememberFileContextMenuController.GetGitCommit(Module.GetFileBlobHash,
                 _rememberFileContextMenuController.RememberedDiffFileItem, isSecondRevision: true);
@@ -713,7 +833,7 @@ namespace GitUI.CommandsDialogs
             var isSecond = _rememberFileContextMenuController.ShouldEnableSecondItemDiff(DiffFiles.SelectedItem, isSecondRevision: true);
             var second = _rememberFileContextMenuController.GetGitCommit(Module.GetFileBlobHash, DiffFiles.SelectedItem, isSecondRevision: isSecond);
 
-            Module.OpenFilesWithDifftool(first, second);
+            Module.OpenFilesWithDifftool(first, second, customTool: toolName);
         }
 
         private void rememberSecondDiffToolToolStripMenuItem_Click(object sender, EventArgs e)
@@ -849,8 +969,6 @@ namespace GitUI.CommandsDialogs
             firstToSelectedToolStripMenuItem.Enabled = _revisionDiffContextMenuController.ShouldShowMenuFirstToSelected(selectionInfo);
             firstToLocalToolStripMenuItem.Enabled = _revisionDiffContextMenuController.ShouldShowMenuFirstToLocal(selectionInfo);
             selectedToLocalToolStripMenuItem.Enabled = _revisionDiffContextMenuController.ShouldShowMenuSelectedToLocal(selectionInfo);
-
-            openWithCustomDifftoolToolStripMenuItem.Enabled = openWithCustomDifftoolToolStripMenuItem.DropDown.Items.Count > 0;
 
             var diffFiles = DiffFiles.SelectedItems.ToList();
             diffRememberStripSeparator.Visible = diffFiles.Count == 1 || diffFiles.Count == 2;

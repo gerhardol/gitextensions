@@ -266,7 +266,8 @@ namespace GitUI.CommandsDialogs
             this.openWithDifftoolToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
             this.openWithDifftoolToolStripMenuItem.Size = new System.Drawing.Size(232, 22);
             this.openWithDifftoolToolStripMenuItem.Text = "Open with difftool";
-            this.openWithDifftoolToolStripMenuItem.Click += new System.EventHandler(this.OpenWithDifftoolToolStripMenuItemClick);
+            this.openWithDifftoolToolStripMenuItem.ToolTipText = Strings.CustomDiffToolToolTip;
+            this.openWithDifftoolToolStripMenuItem.MouseDown += new System.Windows.Forms.MouseEventHandler(this.UnstagedOpenWithDifftoolToolStripMenuItem_MouseDown);
             //
             // toolStripSeparator9
             //
@@ -463,7 +464,8 @@ namespace GitUI.CommandsDialogs
             this.stagedOpenDifftoolToolStripMenuItem9.ShortcutKeys = System.Windows.Forms.Keys.F3;
             this.stagedOpenDifftoolToolStripMenuItem9.Size = new System.Drawing.Size(232, 22);
             this.stagedOpenDifftoolToolStripMenuItem9.Text = "Open with difftool";
-            this.stagedOpenDifftoolToolStripMenuItem9.Click += new System.EventHandler(this.stagedOpenDifftoolToolStripMenuItem9_Click);
+            this.stagedOpenDifftoolToolStripMenuItem9.ToolTipText = Strings.CustomDiffToolToolTip;
+            this.stagedOpenDifftoolToolStripMenuItem9.MouseDown += new System.Windows.Forms.MouseEventHandler(this.StagedOpenDifftoolToolStripMenuItem_MouseDown);
             //
             // stagedToolStripSeparator18
             //
@@ -594,7 +596,7 @@ namespace GitUI.CommandsDialogs
             this.openDiffMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
             this.openDiffMenuItem.Size = new System.Drawing.Size(228, 22);
             this.openDiffMenuItem.Text = "Open with difftool";
-            this.openDiffMenuItem.Click += new System.EventHandler(this.OpenWithDifftoolToolStripMenuItemClick);
+            this.openDiffMenuItem.Click += new System.EventHandler(this.UnstagedOpenWithDifftoolToolStripMenuItem_Click);
             //
             // toolStripSeparator16
             //

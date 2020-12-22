@@ -3695,7 +3695,7 @@ namespace GitCommands
         /// <param name="firstGitCommit">commitish</param>
         /// <param name="secondGitCommit">commitish</param>
         /// <returns>empty string</returns>
-        public string OpenFilesWithDifftool(string firstGitCommit, string secondGitCommit)
+        public string OpenFilesWithDifftool(string firstGitCommit, string secondGitCommit, string customTool = null)
         {
             if (string.IsNullOrWhiteSpace(firstGitCommit) || string.IsNullOrWhiteSpace(secondGitCommit))
             {
@@ -3704,7 +3704,7 @@ namespace GitCommands
 
             _gitCommandRunner.RunDetached(new GitArgumentBuilder("difftool")
             {
-                "--gui",
+                { string.IsNullOrWhiteSpace(customTool), "--gui", $"--tool={customTool}" },
                 "--no-prompt",
                 "-M -C",
                 firstGitCommit.QuoteNE(),
