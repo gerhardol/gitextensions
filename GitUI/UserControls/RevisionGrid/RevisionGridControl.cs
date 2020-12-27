@@ -584,6 +584,34 @@ namespace GitUI
             }
 
             ForceRefreshRevisions();
+            LoadCustomDifftools();
+        }
+
+        public void LoadCustomDifftools()
+        {
+            openCommitsWithDiffToolMenuItem.DropDown = null;
+
+            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            {
+                var difftool = Module.GetEffectiveSetting(SettingKeyString.DiffToolKey);
+                var tools = await Module.GetCustomDiffMergeTools(isDiff: true);
+                openCommitsWithDiffToolMenuItem.DropDown = new ContextMenuStrip();
+                foreach (var tool in tools)
+                {
+                    var menuItem = new ToolStripMenuItem(tool) { Tag = tool };
+
+                    menuItem.Click += diffSelectedCommitsMenuItem_Click;
+                    if (tool == difftool)
+                    {
+                        menuItem.Checked = true;
+                        openCommitsWithDiffToolMenuItem.DropDown.Items.Insert(0, menuItem);
+                    }
+                    else
+                    {
+                        openCommitsWithDiffToolMenuItem.DropDown.Items.Add(menuItem);
+                    }
+                }
+            }).FileAndForget();
         }
 
         private void SetSelectedIndex(int index, bool toggleSelection = false)
@@ -2571,13 +2599,21 @@ namespace GitUI
 
         private void diffSelectedCommitsMenuItem_Click(object sender, EventArgs e)
         {
-            DiffSelectedCommitsWithDifftool();
+            var item = sender as ToolStripMenuItem;
+            if (item?.DropDownItems != null)
+            {
+                // "main menu" clicked, cancel dropdown manually, invoke default difftool
+                item.HideDropDown();
+            }
+
+            var toolName = item?.Tag as string;
+            DiffSelectedCommitsWithDifftool(toolName);
         }
 
-        public void DiffSelectedCommitsWithDifftool()
+        public void DiffSelectedCommitsWithDifftool(string customTool = null)
         {
             var (first, selected) = getFirstAndSelected();
-            Module.OpenWithDifftoolDirDiff(first?.ToString(), selected.ObjectId.ToString());
+            Module.OpenWithDifftoolDirDiff(first?.ToString(), selected.ObjectId.ToString(), customTool: customTool);
         }
 
         private void getHelpOnHowToUseTheseFeaturesToolStripMenuItem_Click(object sender, EventArgs e)

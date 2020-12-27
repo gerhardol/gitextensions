@@ -3482,10 +3482,6 @@ You can unset the template:
         <source>Show in folder</source>
         <target />
       </trans-unit>
-      <trans-unit id="openDiffMenuItem.Text">
-        <source>Open with difftool</source>
-        <target />
-      </trans-unit>
       <trans-unit id="openFolderMenuItem.Text">
         <source>Show in folder</source>
         <target />

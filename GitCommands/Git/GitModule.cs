@@ -3668,9 +3668,9 @@ namespace GitCommands
             return tools.OrderBy(i => i);
         }
 
-        public string OpenWithDifftoolDirDiff(string firstRevision, string secondRevision)
+        public string OpenWithDifftoolDirDiff(string firstRevision, string secondRevision, string customTool = null)
         {
-            return OpenWithDifftool(null, firstRevision: firstRevision, secondRevision: secondRevision, extraDiffArguments: "--dir-diff");
+            return OpenWithDifftool(null, firstRevision: firstRevision, secondRevision: secondRevision, extraDiffArguments: "--dir-diff", customTool: customTool);
         }
 
         public string OpenWithDifftool(string filename, string oldFileName = "", string firstRevision = GitRevision.IndexGuid, string secondRevision = GitRevision.WorkTreeGuid, string extraDiffArguments = null, bool isTracked = true, string customTool = null)
