@@ -2672,8 +2672,7 @@ namespace GitUI.CommandsDialogs
                 return;
             }
 
-            var item = sender as ToolStripMenuItem;
-            if (e.Button == MouseButtons.Right)
+            if (e.Button == MouseButtons.Right && sender is ToolStripMenuItem item)
             {
                 // Toggle status of custom difftool dropdown
                 // Note that setting to null will set count to zero
@@ -2696,7 +2695,7 @@ namespace GitUI.CommandsDialogs
         private void openWithCustomDifftoolToolStripMenuItem_Click(IEnumerable<FileStatusItem> items, object sender)
         {
             var item = sender as ToolStripMenuItem;
-            string toolName = item.Tag as string;
+            string toolName = item?.Tag as string;
             OpenFilesWithDiffTool(items, toolName);
         }
 

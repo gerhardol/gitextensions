@@ -200,21 +200,21 @@ namespace GitUI.CommandsDialogs
                     var firstToSelectedItem = new ToolStripMenuItem(tool) { Tag = tool };
                     var selectedToLocalItem = new ToolStripMenuItem(tool) { Tag = tool };
                     var firstToLocalItem = new ToolStripMenuItem(tool) { Tag = tool };
-                    var diffTwoItem = new ToolStripMenuItem(tool) { Tag = tool };
                     var diffRememberedItem = new ToolStripMenuItem(tool) { Tag = tool };
+                    var diffTwoItem = new ToolStripMenuItem(tool) { Tag = tool };
 
                     firstToSelectedItem.Click += firstToSelectedToolStripMenuItem_Click;
                     selectedToLocalItem.Click += selectedToLocalToolStripMenuItem_Click;
                     firstToLocalItem.Click += firstToLocalToolStripMenuItem_Click;
-                    diffTwoItem.Click += diffTwoSelectedDiffToolToolStripMenuItem_Click;
                     diffRememberedItem.Click += diffWithRememberedDiffToolToolStripMenuItem_Click;
+                    diffTwoItem.Click += diffTwoSelectedDiffToolToolStripMenuItem_Click;
                     if (tool == difftool)
                     {
                         firstToSelectedItem.Checked = true;
                         selectedToLocalItem.Checked = true;
                         firstToLocalItem.Checked = true;
-                        diffTwoItem.Checked = true;
                         diffRememberedItem.Checked = true;
+                        diffTwoItem.Checked = true;
 
                         _firstToSelectedToolStripMenuItem.Items.Insert(0, firstToSelectedItem);
                         _selectedToLocalToolStripMenuItem.Items.Insert(0, selectedToLocalItem);
@@ -731,8 +731,7 @@ namespace GitUI.CommandsDialogs
                 return;
             }
 
-            var item = sender as ToolStripMenuItem;
-            if (e.Button == MouseButtons.Right)
+            if (e.Button == MouseButtons.Right && sender is ToolStripMenuItem item)
             {
                 // Toggle status of custom difftool dropdown
                 // Note that setting to null will set count to zero
@@ -755,7 +754,7 @@ namespace GitUI.CommandsDialogs
         private void openWithCustomDifftoolToolStripMenuItem_Click(RevisionDiffKind diffKind, object sender)
         {
             var item = sender as ToolStripMenuItem;
-            string toolName = item.Tag as string;
+            var toolName = item?.Tag as string;
             openWithDifftoolTool(diffKind, toolName);
         }
 
@@ -781,18 +780,14 @@ namespace GitUI.CommandsDialogs
 
         private void diffTwoSelectedDiffToolToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (sender is ToolStripMenuItem)
+            var item = sender as ToolStripMenuItem;
+            if (item?.DropDownItems != null)
             {
-                var menu = sender as ToolStripMenuItem;
-                if (menu.DropDownItems != null)
-                {
-                    // "main menu" clicked, cancel dropdown manually, invoke default difftool
-                    menu.HideDropDown();
-                }
+                // "main menu" clicked, cancel dropdown manually, invoke default difftool
+                item.HideDropDown();
             }
 
-            string toolName = (sender as ToolStripMenuItem)?.Tag as string;
-
+            var toolName = item?.Tag as string;
             var diffFiles = DiffFiles.SelectedItems.ToList();
             if (diffFiles.Count != 2)
             {
@@ -813,17 +808,14 @@ namespace GitUI.CommandsDialogs
 
         private void diffWithRememberedDiffToolToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (sender is ToolStripMenuItem)
+            var item = sender as ToolStripMenuItem;
+            if (item?.DropDownItems != null)
             {
-                var menu = sender as ToolStripMenuItem;
-                if (menu.DropDownItems != null)
-                {
-                    // "main menu" clicked, cancel dropdown manually, invoke default difftool
-                    menu.HideDropDown();
-                }
+                // "main menu" clicked, cancel dropdown manually, invoke default difftool
+                item.HideDropDown();
             }
 
-            string toolName = (sender as ToolStripMenuItem)?.Tag as string;
+            string toolName = item?.Tag as string;
 
             // For first item, the second revision is explicitly remembered
             var first = _rememberFileContextMenuController.GetGitCommit(Module.GetFileBlobHash,

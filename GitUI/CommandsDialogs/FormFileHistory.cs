@@ -467,8 +467,7 @@ namespace GitUI.CommandsDialogs
                 return;
             }
 
-            var item = sender as ToolStripMenuItem;
-            if (e.Button == MouseButtons.Right)
+            if (e.Button == MouseButtons.Right && sender is ToolStripMenuItem item)
             {
                 // Toggle status of custom difftool dropdown
                 // Note that setting to null will set count to zero
@@ -496,7 +495,8 @@ namespace GitUI.CommandsDialogs
 
         private void OpenWithDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            string toolName = (sender as ToolStripMenuItem)?.Tag as string;
+            var item = sender as ToolStripMenuItem;
+            var toolName = item?.Tag as string;
             var selectedRevisions = FileChanges.GetSelectedRevisions();
 
             var orgFileName = selectedRevisions.Count != 0
@@ -642,17 +642,14 @@ namespace GitUI.CommandsDialogs
 
         private void diffToolRemoteLocalStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (sender is ToolStripMenuItem)
+            var item = sender as ToolStripMenuItem;
+            if (item?.DropDownItems != null)
             {
-                var menu = sender as ToolStripMenuItem;
-                if (menu.DropDownItems != null)
-                {
-                    // "main menu" clicked, cancel dropdown manually, invoke default difftool
-                    menu.HideDropDown();
-                }
+                // "main menu" clicked, cancel dropdown manually, invoke default difftool
+                item.HideDropDown();
             }
 
-            string toolName = (sender as ToolStripMenuItem)?.Tag as string;
+            var toolName = item?.Tag as string;
             UICommands.OpenWithDifftool(this, FileChanges.GetSelectedRevisions(), FileName, string.Empty, RevisionDiffKind.DiffBLocal, true, customTool: toolName);
         }
 

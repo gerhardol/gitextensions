@@ -1265,21 +1265,22 @@ namespace GitUI.CommandsDialogs
 
         private void customMergetool_Click(object sender, EventArgs e)
         {
-            if (sender == customMergetool)
+            var item = sender as ToolStripMenuItem;
+            if (item?.DropDownItems != null)
             {
                 // "main menu" clicked, cancel dropdown manually, invoke default mergetool
-                customMergetool.HideDropDown();
-                ConflictedFilesContextMenu.Hide();
+                item.HideDropDown();
+                item.Owner.Hide();
             }
 
             using (WaitCursorScope.Enter())
             {
-                string customTool = (sender as ToolStripMenuItem)?.Tag as string;
+                var customTool = item?.Tag as string;
 
-                foreach (var item in GetConflicts())
+                foreach (var conflict in GetConflicts())
                 {
                     Directory.SetCurrentDirectory(Module.WorkingDir);
-                    Module.RunMergeTool(fileName: item.Filename, customTool: customTool);
+                    Module.RunMergeTool(fileName: conflict.Filename, customTool: customTool);
                     Initialize();
                 }
             }
