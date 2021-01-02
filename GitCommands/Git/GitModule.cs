@@ -3615,7 +3615,7 @@ namespace GitCommands
         {
             // Note that --gui has no effect here
             var args = new GitArgumentBuilder(isDiff ? "difftool" : "mergetool") { "--tool-help" };
-            string output = await _gitExecutable.GetOutputAsync(args);
+            string output = await _gitExecutable.GetOutputAsync(args, cache: GitCommandCache);
             return ParseCustomDiffMergeTool(output);
         }
 

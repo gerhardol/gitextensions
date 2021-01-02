@@ -1558,6 +1558,7 @@ namespace GitUI.CommandsDialogs
             fileTree.ReloadHotkeys();
             revisionDiff.ReloadHotkeys();
             revisionDiff.LoadCustomDifftools(reload: true);
+            GitModule.GitCommandCache.Clear();
 
             _dashboard?.RefreshContent();
 
