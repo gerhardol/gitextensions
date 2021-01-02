@@ -30,6 +30,7 @@ namespace GitUI.CommandsDialogs
             this.openWithToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.stageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openWithDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.unstagedOpenDifftoolDropDown = new System.Windows.Forms.ContextMenuStrip(this.components); ;
             this.toolStripSeparator9 = new System.Windows.Forms.ToolStripSeparator();
             this.filenameToClipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openContainingFolderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -56,6 +57,7 @@ namespace GitUI.CommandsDialogs
             this.stagedOpenWithToolStripMenuItem8 = new System.Windows.Forms.ToolStripMenuItem();
             this.stagedUnstageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.stagedOpenDifftoolToolStripMenuItem9 = new System.Windows.Forms.ToolStripMenuItem();
+            this.stagedOpenDifftoolDropDown = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.stagedToolStripSeparator18 = new System.Windows.Forms.ToolStripSeparator();
             this.stagedCopyPathToolStripMenuItem14 = new System.Windows.Forms.ToolStripMenuItem();
             this.stagedOpenFolderToolStripMenuItem10 = new System.Windows.Forms.ToolStripMenuItem();
@@ -1564,6 +1566,7 @@ namespace GitUI.CommandsDialogs
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
         private System.Windows.Forms.ToolStripMenuItem stageToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openWithDifftoolToolStripMenuItem;
+        private ContextMenuStrip unstagedOpenDifftoolDropDown;
         private System.Windows.Forms.ToolTip fileTooltip;
         private System.Windows.Forms.ToolStripMenuItem resetPartOfFileToolStripMenuItem;
         private ToolStripMenuItem editFileToolStripMenuItem;
@@ -1640,6 +1643,7 @@ namespace GitUI.CommandsDialogs
         private ToolStripMenuItem stagedOpenWithToolStripMenuItem8;
         private ToolStripMenuItem stagedUnstageToolStripMenuItem;
         private ToolStripMenuItem stagedOpenDifftoolToolStripMenuItem9;
+        private ContextMenuStrip stagedOpenDifftoolDropDown;
         private ToolStripMenuItem stagedOpenFolderToolStripMenuItem10;
         private ToolStripMenuItem stagedEditFileToolStripMenuItem11;
         private ToolStripSeparator stagedToolStripSeparator18;

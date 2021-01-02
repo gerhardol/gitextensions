@@ -35,6 +35,9 @@ namespace GitUI.CommandsDialogs
             this.DiffFiles = new GitUI.FileStatusList();
             this.DiffContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.openWithDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.firstToSelectedDropDown = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.selectedToLocalDropDown = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.firstToLocalDropDown = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.diffRememberStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.diffTwoSelectedDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.diffWithRememberedDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -501,6 +504,9 @@ namespace GitUI.CommandsDialogs
         private ToolStripMenuItem saveAsToolStripMenuItem1;
         private ToolStripMenuItem saveToolStripMenuItem;
         private ToolStripMenuItem openWithDifftoolToolStripMenuItem;
+        private ContextMenuStrip firstToSelectedDropDown;
+        private ContextMenuStrip selectedToLocalDropDown;
+        private ContextMenuStrip firstToLocalDropDown;
         private ToolStripSeparator diffRememberStripSeparator;
         private ToolStripMenuItem diffTwoSelectedDifftoolToolStripMenuItem;
         private ToolStripMenuItem diffWithRememberedDifftoolToolStripMenuItem;

@@ -595,7 +595,7 @@ namespace GitUI
             {
                 var difftool = Module.GetEffectiveSetting(SettingKeyString.DiffToolKey);
                 var tools = await Module.GetCustomDiffMergeTools(isDiff: true);
-                openCommitsWithDiffToolMenuItem.DropDown = new ContextMenuStrip();
+                openCommitsWithDiffToolMenuItem.DropDown = new ContextMenuStrip(components);
                 foreach (var tool in tools)
                 {
                     var menuItem = new ToolStripMenuItem(tool) { Tag = tool };

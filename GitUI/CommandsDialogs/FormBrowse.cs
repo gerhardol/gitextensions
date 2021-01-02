@@ -1557,7 +1557,7 @@ namespace GitUI.CommandsDialogs
             RevisionGrid.ReloadTranslation();
             fileTree.ReloadHotkeys();
             revisionDiff.ReloadHotkeys();
-            revisionDiff.LoadCustomDifftools();
+            revisionDiff.LoadCustomDifftools(reload: true);
 
             _dashboard?.RefreshContent();
 

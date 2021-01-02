@@ -302,7 +302,8 @@ namespace GitUI.CommandsDialogs
             {
                 var mergetool = Module.GetEffectiveSetting(SettingKeyString.MergeToolKey);
                 var tools = await Module.GetCustomDiffMergeTools(isDiff: false);
-                customMergetool.DropDown = new ContextMenuStrip();
+
+                customMergetool.DropDown = new ContextMenuStrip(components);
                 foreach (var tool in tools)
                 {
                     var toolStripItem = new ToolStripMenuItem(tool) { Tag = tool };

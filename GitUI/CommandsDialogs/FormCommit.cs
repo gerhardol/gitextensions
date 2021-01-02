@@ -184,8 +184,6 @@ namespace GitUI.CommandsDialogs
         [CanBeNull] private IReadOnlyList<GitItemStatus> _currentSelection;
         private int _alreadyLoadedTemplatesCount = -1;
         private EventHandler _branchNameLabelOnClick;
-        private ContextMenuStrip _unstagedOpenDifftoolToolStripMenuItem;
-        private ContextMenuStrip _stagedOpenDifftoolToolStripMenuItem;
 
         private CommitKind CommitKind
         {
@@ -600,10 +598,9 @@ namespace GitUI.CommandsDialogs
 
             ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
-                var difftool = Module.GetEffectiveSetting(GitCommands.Config.SettingKeyString.DiffToolKey);
+                var difftool = Module.GetEffectiveSetting(SettingKeyString.DiffToolKey);
                 var tools = await Module.GetCustomDiffMergeTools(isDiff: true);
-                _unstagedOpenDifftoolToolStripMenuItem = new ContextMenuStrip();
-                _stagedOpenDifftoolToolStripMenuItem = new ContextMenuStrip();
+
                 foreach (var tool in tools)
                 {
                     var unstagedItem = new ToolStripMenuItem(tool) { Tag = tool };
@@ -615,13 +612,13 @@ namespace GitUI.CommandsDialogs
                     {
                         unstagedItem.Checked = true;
                         stagedItem.Checked = true;
-                        _unstagedOpenDifftoolToolStripMenuItem.Items.Insert(0, unstagedItem);
-                        _stagedOpenDifftoolToolStripMenuItem.Items.Insert(0, stagedItem);
+                        unstagedOpenDifftoolDropDown.Items.Insert(0, unstagedItem);
+                        stagedOpenDifftoolDropDown.Items.Insert(0, stagedItem);
                     }
                     else
                     {
-                        _unstagedOpenDifftoolToolStripMenuItem.Items.Add(unstagedItem);
-                        _stagedOpenDifftoolToolStripMenuItem.Items.Add(stagedItem);
+                        unstagedOpenDifftoolDropDown.Items.Add(unstagedItem);
+                        stagedOpenDifftoolDropDown.Items.Add(stagedItem);
                     }
                 }
             }).FileAndForget();
@@ -2710,7 +2707,7 @@ namespace GitUI.CommandsDialogs
 
         private void UnstagedOpenWithDifftoolToolStripMenuItem_MouseDown(object sender, MouseEventArgs e)
         {
-            openWithCustomDifftoolToolStripMenuItem_MouseDown(Unstaged.SelectedItems, _unstagedOpenDifftoolToolStripMenuItem, sender, e);
+            openWithCustomDifftoolToolStripMenuItem_MouseDown(Unstaged.SelectedItems, unstagedOpenDifftoolDropDown, sender, e);
         }
 
         private void UnstagedOpenWithDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
@@ -3289,7 +3286,7 @@ namespace GitUI.CommandsDialogs
 
         private void StagedOpenDifftoolToolStripMenuItem_MouseDown(object sender, MouseEventArgs e)
         {
-            openWithCustomDifftoolToolStripMenuItem_MouseDown(Staged.SelectedItems, _stagedOpenDifftoolToolStripMenuItem, sender, e);
+            openWithCustomDifftoolToolStripMenuItem_MouseDown(Staged.SelectedItems, stagedOpenDifftoolDropDown, sender, e);
         }
 
         private void StagedOpenDifftoolToolStripMenuItem_Click(object sender, EventArgs e)

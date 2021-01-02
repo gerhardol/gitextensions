@@ -47,10 +47,6 @@ namespace GitUI.CommandsDialogs
         private readonly RememberFileContextMenuController _rememberFileContextMenuController
             = RememberFileContextMenuController.Default;
 
-        private ContextMenuStrip _firstToSelectedToolStripMenuItem;
-        private ContextMenuStrip _selectedToLocalToolStripMenuItem;
-        private ContextMenuStrip _firstToLocalToolStripMenuItem;
-
         public RevisionDiffControl()
         {
             InitializeComponent();
@@ -177,7 +173,7 @@ namespace GitUI.CommandsDialogs
             DiffText.ReloadHotkeys();
         }
 
-        public void LoadCustomDifftools()
+        public void LoadCustomDifftools(bool reload = false)
         {
             firstToSelectedToolStripMenuItem.DropDown = null;
             selectedToLocalToolStripMenuItem.DropDown = null;
@@ -190,11 +186,15 @@ namespace GitUI.CommandsDialogs
                 var difftool = Module.GetEffectiveSetting(GitCommands.Config.SettingKeyString.DiffToolKey);
                 var tools = await Module.GetCustomDiffMergeTools(isDiff: true);
 
-                _firstToSelectedToolStripMenuItem = new ContextMenuStrip();
-                _selectedToLocalToolStripMenuItem = new ContextMenuStrip();
-                _firstToLocalToolStripMenuItem = new ContextMenuStrip();
-                diffWithRememberedDifftoolToolStripMenuItem.DropDown = new ContextMenuStrip();
-                diffTwoSelectedDifftoolToolStripMenuItem.DropDown = new ContextMenuStrip();
+                if (reload)
+                {
+                    firstToSelectedDropDown.Items.Clear();
+                    selectedToLocalDropDown.Items.Clear();
+                    firstToLocalDropDown.Items.Clear();
+                }
+
+                diffWithRememberedDifftoolToolStripMenuItem.DropDown = new ContextMenuStrip(components);
+                diffTwoSelectedDifftoolToolStripMenuItem.DropDown = new ContextMenuStrip(components);
                 foreach (var tool in tools)
                 {
                     var firstToSelectedItem = new ToolStripMenuItem(tool) { Tag = tool };
@@ -216,17 +216,17 @@ namespace GitUI.CommandsDialogs
                         diffRememberedItem.Checked = true;
                         diffTwoItem.Checked = true;
 
-                        _firstToSelectedToolStripMenuItem.Items.Insert(0, firstToSelectedItem);
-                        _selectedToLocalToolStripMenuItem.Items.Insert(0, selectedToLocalItem);
-                        _firstToLocalToolStripMenuItem.Items.Insert(0, firstToLocalItem);
+                        firstToSelectedDropDown.Items.Insert(0, firstToSelectedItem);
+                        selectedToLocalDropDown.Items.Insert(0, selectedToLocalItem);
+                        firstToLocalDropDown.Items.Insert(0, firstToLocalItem);
                         diffWithRememberedDifftoolToolStripMenuItem.DropDown.Items.Insert(0, diffRememberedItem);
                         diffTwoSelectedDifftoolToolStripMenuItem.DropDown.Items.Insert(0, diffTwoItem);
                     }
                     else
                     {
-                        _firstToSelectedToolStripMenuItem.Items.Add(firstToSelectedItem);
-                        _selectedToLocalToolStripMenuItem.Items.Add(selectedToLocalItem);
-                        _firstToLocalToolStripMenuItem.Items.Add(firstToLocalItem);
+                        firstToSelectedDropDown.Items.Add(firstToSelectedItem);
+                        selectedToLocalDropDown.Items.Add(selectedToLocalItem);
+                        firstToLocalDropDown.Items.Add(firstToLocalItem);
                         diffWithRememberedDifftoolToolStripMenuItem.DropDown.Items.Add(diffRememberedItem);
                         diffTwoSelectedDifftoolToolStripMenuItem.DropDown.Items.Add(diffTwoItem);
                     }
@@ -695,7 +695,7 @@ namespace GitUI.CommandsDialogs
 
         private void firstToSelectedToolStripMenuItem_MouseDown(object sender, MouseEventArgs e)
         {
-            openWithCustomDifftoolToolStripMenuItem_MouseDown(RevisionDiffKind.DiffAB, _firstToSelectedToolStripMenuItem, sender, e);
+            openWithCustomDifftoolToolStripMenuItem_MouseDown(RevisionDiffKind.DiffAB, firstToSelectedDropDown, sender, e);
         }
 
         private void firstToSelectedToolStripMenuItem_Click(object sender, EventArgs e)
@@ -705,7 +705,7 @@ namespace GitUI.CommandsDialogs
 
         private void selectedToLocalToolStripMenuItem_MouseDown(object sender, MouseEventArgs e)
         {
-            openWithCustomDifftoolToolStripMenuItem_MouseDown(RevisionDiffKind.DiffBLocal, _selectedToLocalToolStripMenuItem, sender, e);
+            openWithCustomDifftoolToolStripMenuItem_MouseDown(RevisionDiffKind.DiffBLocal, selectedToLocalDropDown, sender, e);
         }
 
         private void selectedToLocalToolStripMenuItem_Click(object sender, EventArgs e)
@@ -715,7 +715,7 @@ namespace GitUI.CommandsDialogs
 
         private void firstToLocalToolStripMenuItem_MouseDown(object sender, MouseEventArgs e)
         {
-            openWithCustomDifftoolToolStripMenuItem_MouseDown(RevisionDiffKind.DiffALocal, _firstToLocalToolStripMenuItem, sender, e);
+            openWithCustomDifftoolToolStripMenuItem_MouseDown(RevisionDiffKind.DiffALocal, firstToLocalDropDown, sender, e);
         }
 
         private void firstToLocalToolStripMenuItem_Click(object sender, EventArgs e)

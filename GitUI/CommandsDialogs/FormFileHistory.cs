@@ -31,7 +31,6 @@ namespace GitUI.CommandsDialogs
         private readonly FormBrowseMenus _formBrowseMenus;
         private readonly IFullPathResolver _fullPathResolver;
         private readonly FormFileHistoryController _controller = new FormFileHistoryController();
-        private ContextMenuStrip _openWithDifftoolToolStripMenuItem;
 
         private BuildReportTabPageExtension _buildReportTabPageExtension;
 
@@ -202,8 +201,8 @@ namespace GitUI.CommandsDialogs
             {
                 var difftool = Module.GetEffectiveSetting(GitCommands.Config.SettingKeyString.DiffToolKey);
                 var tools = await Module.GetCustomDiffMergeTools(isDiff: true);
-                _openWithDifftoolToolStripMenuItem = new ContextMenuStrip();
-                diffToolRemoteLocalStripMenuItem.DropDown = new ContextMenuStrip();
+
+                diffToolRemoteLocalStripMenuItem.DropDown = new ContextMenuStrip(components);
                 foreach (var tool in tools)
                 {
                     var openItem = new ToolStripMenuItem(tool) { Tag = tool };
@@ -215,12 +214,12 @@ namespace GitUI.CommandsDialogs
                     {
                         openItem.Checked = true;
                         remoteItem.Checked = true;
-                        _openWithDifftoolToolStripMenuItem.Items.Insert(0, openItem);
+                        openWithDifftoolDropDown.Items.Insert(0, openItem);
                         diffToolRemoteLocalStripMenuItem.DropDown.Items.Insert(0, remoteItem);
                     }
                     else
                     {
-                        _openWithDifftoolToolStripMenuItem.Items.Add(openItem);
+                        openWithDifftoolDropDown.Items.Add(openItem);
                         diffToolRemoteLocalStripMenuItem.DropDown.Items.Add(remoteItem);
                     }
                 }
@@ -473,7 +472,7 @@ namespace GitUI.CommandsDialogs
                 // Note that setting to null will set count to zero
                 if (item.DropDown == null || item.DropDownItems.Count == 0)
                 {
-                    item.DropDown = _openWithDifftoolToolStripMenuItem;
+                    item.DropDown = openWithDifftoolDropDown;
                     item.ShowDropDown();
                 }
                 else

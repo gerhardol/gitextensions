@@ -17,6 +17,7 @@ namespace GitUI.CommandsDialogs
             this.copyToClipboardToolStripMenuItem = new GitUI.UserControls.RevisionGrid.CopyContextMenuItem();
             this.separatorAfterCopySubmenu = new System.Windows.Forms.ToolStripSeparator();
             this.openWithDifftoolToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openWithDifftoolDropDown = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.diffToolRemoteLocalStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
@@ -655,6 +656,7 @@ namespace GitUI.CommandsDialogs
         private System.Windows.Forms.ToolStripTextBox toolStripRevisionFilterTextBox;
         private System.Windows.Forms.ToolStripDropDownButton toolStripRevisionFilterDropDownButton;
         private System.Windows.Forms.ToolStripMenuItem diffToolRemoteLocalStripMenuItem;
+        private System.Windows.Forms.ContextMenuStrip openWithDifftoolDropDown;
         private System.Windows.Forms.ToolStripSplitButton toolStripSplitLoad;
         private System.Windows.Forms.ToolStripMenuItem loadHistoryOnShowToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
