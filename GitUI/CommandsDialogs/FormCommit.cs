@@ -610,8 +610,8 @@ namespace GitUI.CommandsDialogs
                     stagedItem.Click += StagedOpenDifftoolToolStripMenuItem_Click;
                     if (tool == difftool)
                     {
-                        unstagedItem.Checked = true;
-                        stagedItem.Checked = true;
+                        unstagedItem.Font = new Font(unstagedItem.Font, FontStyle.Bold);
+                        stagedItem.Font = new Font(stagedItem.Font, FontStyle.Bold);
                         unstagedOpenDifftoolDropDown.Items.Insert(0, unstagedItem);
                         stagedOpenDifftoolDropDown.Items.Insert(0, stagedItem);
                     }

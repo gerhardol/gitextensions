@@ -212,8 +212,8 @@ namespace GitUI.CommandsDialogs
                     remoteItem.Click += diffToolRemoteLocalStripMenuItem_Click;
                     if (tool == difftool)
                     {
-                        openItem.Checked = true;
-                        remoteItem.Checked = true;
+                        openItem.Font = new Font(openItem.Font, FontStyle.Bold);
+                        remoteItem.Font = new Font(remoteItem.Font, FontStyle.Bold);
                         openWithDifftoolDropDown.Items.Insert(0, openItem);
                         diffToolRemoteLocalStripMenuItem.DropDown.Items.Insert(0, remoteItem);
                     }

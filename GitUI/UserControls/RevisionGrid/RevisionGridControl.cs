@@ -603,7 +603,7 @@ namespace GitUI
                     menuItem.Click += diffSelectedCommitsMenuItem_Click;
                     if (tool == difftool)
                     {
-                        menuItem.Checked = true;
+                        menuItem.Font = new Font(menuItem.Font, FontStyle.Bold);
                         openCommitsWithDiffToolMenuItem.DropDown.Items.Insert(0, menuItem);
                     }
                     else

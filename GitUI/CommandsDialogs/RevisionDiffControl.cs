@@ -210,11 +210,11 @@ namespace GitUI.CommandsDialogs
                     diffTwoItem.Click += diffTwoSelectedDiffToolToolStripMenuItem_Click;
                     if (tool == difftool)
                     {
-                        firstToSelectedItem.Checked = true;
-                        selectedToLocalItem.Checked = true;
-                        firstToLocalItem.Checked = true;
-                        diffRememberedItem.Checked = true;
-                        diffTwoItem.Checked = true;
+                        firstToSelectedItem.Font = new Font(firstToSelectedItem.Font, FontStyle.Bold);
+                        selectedToLocalItem.Font = new Font(selectedToLocalItem.Font, FontStyle.Bold);
+                        firstToLocalItem.Font = new Font(firstToLocalItem.Font, FontStyle.Bold);
+                        diffRememberedItem.Font = new Font(diffRememberedItem.Font, FontStyle.Bold);
+                        diffTwoItem.Font = new Font(diffTwoItem.Font, FontStyle.Bold);
 
                         firstToSelectedDropDown.Items.Insert(0, firstToSelectedItem);
                         selectedToLocalDropDown.Items.Insert(0, selectedToLocalItem);
@@ -739,13 +739,13 @@ namespace GitUI.CommandsDialogs
                 {
                     item.DropDown = dropDown;
                     item.ShowDropDown();
+
+                    return;
                 }
                 else
                 {
                     item.DropDown = null;
                 }
-
-                return;
             }
 
             openWithDifftoolTool(diffKind);

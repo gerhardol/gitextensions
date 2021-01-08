@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -310,7 +311,7 @@ namespace GitUI.CommandsDialogs
                     toolStripItem.Click += customMergetool_Click;
                     if (tool == mergetool)
                     {
-                        toolStripItem.Checked = true;
+                        toolStripItem.Font = new Font(toolStripItem.Font, FontStyle.Bold);
                         customMergetool.DropDown.Items.Insert(0, toolStripItem);
                     }
                     else
