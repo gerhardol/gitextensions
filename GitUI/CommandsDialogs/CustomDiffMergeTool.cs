@@ -20,40 +20,17 @@ namespace GitUI
         private ToolStripMenuItem _menuItem { get; set; }
         private System.EventHandler _click;
 
-        private static SemaphoreSlim _diffToolMutex = new(1);
-        private static SemaphoreSlim _mergeToolMutex = new(1);
-        private static IEnumerable<string> _diffTools = null;
-        private static IEnumerable<string> _mergeTools = null;
+        // static methods
+        private static CustomDiffMergeToolCache DiffToolCache { get; } = new();
+        private static CustomDiffMergeToolCache MergeToolCache { get; } = new();
 
         /// <summary>
         /// Clear the existing caches
         /// </summary>
         public static void Clear()
         {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-            {
-                await _diffToolMutex.WaitAsync().ConfigureAwait(false);
-
-                try
-                {
-                    _diffTools = null;
-                }
-                finally
-                {
-                    _diffToolMutex.Release();
-                }
-
-                await _mergeToolMutex.WaitAsync().ConfigureAwait(false);
-
-                try
-                {
-                    _mergeTools = null;
-                }
-                finally
-                {
-                    _mergeToolMutex.Release();
-                }
-            }).FileAndForget();
+            DiffToolCache.Clear();
+            MergeToolCache.Clear();
         }
 
         /// <summary>
@@ -75,83 +52,60 @@ namespace GitUI
 
             ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
-                // May be requested from many forms, only execute once
-                var mutex = isDiff ? _diffToolMutex : _mergeToolMutex;
-                await mutex.WaitAsync().ConfigureAwait(false);
+                // get the tools, possibly with a delay as requesting requires considerable time
+                // cache is shared
+                IEnumerable<string> tools = await (isDiff ? DiffToolCache : MergeToolCache)
+                    .GetToolsAsync(module, isDiff, delay);
 
-                try
+                if (tools.Count() <= 1)
                 {
-                    IEnumerable<string> tools = isDiff ? _diffTools : _mergeTools;
+                    // No need to show the menu
+                    return;
+                }
 
-                    if (tools == null)
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                foreach (var menu in menus)
+                {
+                    menu._menuItem.DropDown = new ContextMenuStrip(components);
+                    foreach (var tool in tools)
                     {
-                        // The command will compete with other resources, avoid delaying startup
-                        await Task.Delay(delay);
-                        tools = await module.GetCustomDiffMergeTools(isDiff: isDiff);
-                        if (isDiff)
-                        {
-                            _diffTools = tools;
-                        }
-                        else
-                        {
-                            _mergeTools = tools;
-                        }
-                    }
+                        var item = new ToolStripMenuItem(tool) { Tag = tool };
 
-                    if (tools.Count() <= 1)
-                    {
-                        // No need to show the menu
-                        return;
-                    }
-
-                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                    foreach (var menu in menus)
-                    {
-                        menu._menuItem.DropDown = new ContextMenuStrip(components);
-                        foreach (var tool in tools)
+                        item.Click += menu._click;
+                        menu._menuItem.DropDown.Items.Add(item);
+                        if (menu._menuItem.DropDownItems.Count == 1)
                         {
-                            var item = new ToolStripMenuItem(tool) { Tag = tool };
-
-                            item.Click += menu._click;
-                            menu._menuItem.DropDown.Items.Add(item);
-                            if (menu._menuItem.DropDownItems.Count == 1)
+                            item.Font = new Font(item.Font, FontStyle.Bold);
+                            if (menu._menuItem.ShortcutKeys != Keys.None)
                             {
-                                item.Font = new Font(item.Font, FontStyle.Bold);
-                                if (menu._menuItem.ShortcutKeys != Keys.None)
-                                {
-                                    item.ShortcutKeys = menu._menuItem.ShortcutKeys;
-                                }
-                                else
-                                {
-                                    item.ShortcutKeyDisplayString = menu._menuItem.ShortcutKeyDisplayString;
-                                }
+                                item.ShortcutKeys = menu._menuItem.ShortcutKeys;
+                            }
+                            else
+                            {
+                                item.ShortcutKeyDisplayString = menu._menuItem.ShortcutKeyDisplayString;
                             }
                         }
-
-                        if (isDiff)
-                        {
-                            // Allow disabling for difftools
-                            menu._menuItem.DropDown.Items.Add(new ToolStripSeparator());
-                            var disableItem = new ToolStripMenuItem
-                            {
-                                Text = ResourceManager.Strings.DisableMenuItem
-                            };
-
-                            disableItem.Click += (o, s) =>
-                            {
-                                // Disables the dropdown in the current form only
-                                // RevDiff will not be affected from other forms, requires a restart
-                                // To overcome this limitation other forms would require a reference to RevDiff
-                                AppSettings.ShowAvailableDiffTools = false;
-                                InitMenus(menus);
-                            };
-                            menu._menuItem.DropDown.Items.Add(disableItem);
-                        }
                     }
-                }
-                finally
-                {
-                    mutex.Release();
+
+                    if (isDiff)
+                    {
+                        // Allow disabling for difftools
+                        menu._menuItem.DropDown.Items.Add(new ToolStripSeparator());
+                        var disableItem = new ToolStripMenuItem
+                        {
+                            Text = ResourceManager.Strings.DisableMenuItem
+                        };
+
+                        disableItem.Click += (o, s) =>
+                        {
+                            // Disables the dropdown in the current form only
+                            // RevDiff will not be affected from other forms, requires a restart
+                            // To overcome this limitation other forms would require a reference to RevDiff
+                            AppSettings.ShowAvailableDiffTools = false;
+                            InitMenus(menus);
+                        };
+                        menu._menuItem.DropDown.Items.Add(disableItem);
+                    }
                 }
             }).FileAndForget();
             return;
