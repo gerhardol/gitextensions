@@ -459,7 +459,7 @@ namespace GitUI.CommandsDialogs
             this.stagedOpenDifftoolToolStripMenuItem9.Name = "stagedOpenDifftoolToolStripMenuItem9";
             this.stagedOpenDifftoolToolStripMenuItem9.Size = new System.Drawing.Size(232, 22);
             this.stagedOpenDifftoolToolStripMenuItem9.Text = "Open with difftool";
-            this.stagedOpenDifftoolToolStripMenuItem9.Click += new System.EventHandler(this.StagedOpenDifftoolToolStripMenuItem_Click);
+            this.stagedOpenDifftoolToolStripMenuItem9.Click += new System.EventHandler(this.stagedOpenDifftoolToolStripMenuItem9_Click);
             //
             // stagedToolStripSeparator18
             //

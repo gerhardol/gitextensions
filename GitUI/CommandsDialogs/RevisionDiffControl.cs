@@ -138,9 +138,9 @@ namespace GitUI.CommandsDialogs
                 case Command.DeleteSelectedFiles: diffDeleteFileToolStripMenuItem.PerformClick(); break;
                 case Command.ShowHistory: fileHistoryDiffToolstripMenuItem.PerformClick(); break;
                 case Command.Blame: blameToolStripMenuItem.PerformClick(); break;
-                case Command.OpenWithDifftool: openWithDifftoolTool(RevisionDiffKind.DiffAB); break;
-                case Command.OpenWithDifftoolFirstToLocal: openWithDifftoolTool(RevisionDiffKind.DiffALocal); break;
-                case Command.OpenWithDifftoolSelectedToLocal: openWithDifftoolTool(RevisionDiffKind.DiffBLocal); break;
+                case Command.OpenWithDifftool: OpenFilesWithDiffTool(RevisionDiffKind.DiffAB); break;
+                case Command.OpenWithDifftoolFirstToLocal: OpenFilesWithDiffTool(RevisionDiffKind.DiffALocal); break;
+                case Command.OpenWithDifftoolSelectedToLocal: OpenFilesWithDiffTool(RevisionDiffKind.DiffBLocal); break;
                 case Command.EditFile: diffEditWorkingDirectoryFileToolStripMenuItem.PerformClick(); break;
                 case Command.OpenAsTempFile: diffOpenRevisionFileToolStripMenuItem.PerformClick(); break;
                 case Command.OpenAsTempFileWith: diffOpenRevisionFileWithToolStripMenuItem.PerformClick(); break;
@@ -639,20 +639,20 @@ namespace GitUI.CommandsDialogs
 
         private void firstToSelectedToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            openWithCustomDifftoolToolStripMenuItem_Click(RevisionDiffKind.DiffAB, sender);
+            OpenFilesWithDiffTool(RevisionDiffKind.DiffAB, sender);
         }
 
         private void selectedToLocalToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            openWithCustomDifftoolToolStripMenuItem_Click(RevisionDiffKind.DiffBLocal, sender);
+            OpenFilesWithDiffTool(RevisionDiffKind.DiffBLocal, sender);
         }
 
         private void firstToLocalToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            openWithCustomDifftoolToolStripMenuItem_Click(RevisionDiffKind.DiffALocal, sender);
+            OpenFilesWithDiffTool(RevisionDiffKind.DiffALocal, sender);
         }
 
-        private void openWithCustomDifftoolToolStripMenuItem_Click(RevisionDiffKind diffKind, object sender)
+        private void OpenFilesWithDiffTool(RevisionDiffKind diffKind, object sender)
         {
             var item = sender as ToolStripMenuItem;
             if (item?.DropDownItems != null)
@@ -663,10 +663,10 @@ namespace GitUI.CommandsDialogs
             }
 
             var toolName = item?.Tag as string;
-            openWithDifftoolTool(diffKind, toolName);
+            OpenFilesWithDiffTool(diffKind, toolName);
         }
 
-        private void openWithDifftoolTool(RevisionDiffKind diffKind, string toolName = null)
+        private void OpenFilesWithDiffTool(RevisionDiffKind diffKind, string toolName = null)
         {
             using (WaitCursorScope.Enter())
             {

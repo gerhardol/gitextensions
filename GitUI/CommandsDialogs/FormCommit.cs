@@ -586,7 +586,7 @@ namespace GitUI.CommandsDialogs
             List<CustomDiffMergeTool> menus = new()
             {
                 new(openWithDifftoolToolStripMenuItem, UnstagedOpenWithDifftoolToolStripMenuItem_Click),
-                new(stagedOpenDifftoolToolStripMenuItem9, StagedOpenDifftoolToolStripMenuItem_Click),
+                new(stagedOpenDifftoolToolStripMenuItem9, stagedOpenDifftoolToolStripMenuItem9_Click),
             };
 
             CustomDiffMergeTool.LoadCustomDiffMergeTools(Module, menus, components, isDiff: true);
@@ -2512,7 +2512,7 @@ namespace GitUI.CommandsDialogs
             ClipboardUtil.TrySetText(fileNames.ToString());
         }
 
-        private void OpenWithCustomDifftoolToolStripMenuItem_Click(IEnumerable<FileStatusItem> items, object sender)
+        private void OpenFilesWithDiffTool(IEnumerable<FileStatusItem> items, object sender)
         {
             var item = sender as ToolStripMenuItem;
             if (item?.DropDownItems != null)
@@ -2537,7 +2537,7 @@ namespace GitUI.CommandsDialogs
 
         private void UnstagedOpenWithDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenWithCustomDifftoolToolStripMenuItem_Click(Unstaged.SelectedItems, sender);
+            OpenFilesWithDiffTool(Unstaged.SelectedItems, sender);
         }
 
         private void OpenWithDiffTool()
@@ -3109,9 +3109,9 @@ namespace GitUI.CommandsDialogs
             }
         }
 
-        private void StagedOpenDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
+        private void stagedOpenDifftoolToolStripMenuItem9_Click(object sender, EventArgs e)
         {
-            OpenWithCustomDifftoolToolStripMenuItem_Click(Staged.SelectedItems, sender);
+            OpenFilesWithDiffTool(Staged.SelectedItems, sender);
         }
 
         private void openFolderToolStripMenuItem10_Click(object sender, EventArgs e)
