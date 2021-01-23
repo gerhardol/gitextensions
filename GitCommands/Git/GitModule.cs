@@ -3580,12 +3580,12 @@ namespace GitCommands
         /// <returns>the list.</returns>
         public async Task<IEnumerable<string>> GetCustomDiffMergeTools(bool isDiff)
         {
-            var toolKey = isDiff ? SettingKeyString.DiffToolKey : SettingKeyString.MergeToolKey;
-
             // Note that --gui has no effect here
             var args = new GitArgumentBuilder(isDiff ? "difftool" : "mergetool") { "--tool-help" };
-            string output = await _gitExecutable.GetOutputAsync(args, cache: GitCommandCache);
-            var defaultTool = GetEffectiveSetting(SettingKeyString.DiffToolKey);
+            string output = await _gitExecutable.GetOutputAsync(args);
+
+            var toolKey = isDiff ? SettingKeyString.DiffToolKey : SettingKeyString.MergeToolKey;
+            var defaultTool = GetEffectiveSetting(toolKey);
             return ParseCustomDiffMergeTool(output, defaultTool);
         }
 

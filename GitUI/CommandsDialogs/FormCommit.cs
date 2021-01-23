@@ -589,7 +589,7 @@ namespace GitUI.CommandsDialogs
                 new(stagedOpenDifftoolToolStripMenuItem9, StagedOpenDifftoolToolStripMenuItem_Click),
             };
 
-            CustomDiffMergeTool.LoadCustomDiffMergeTools(Module, menus, components, isDiff: true, useSetting: true);
+            CustomDiffMergeTool.LoadCustomDiffMergeTools(Module, menus, components, isDiff: true);
         }
 
         private void FileViewer_TopScrollReached(object sender, EventArgs e)

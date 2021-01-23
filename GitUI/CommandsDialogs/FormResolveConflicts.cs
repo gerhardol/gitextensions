@@ -301,7 +301,7 @@ namespace GitUI.CommandsDialogs
                 new(customMergetool, customMergetool_Click),
             };
 
-            CustomDiffMergeTool.LoadCustomDiffMergeTools(Module, menus, components, isDiff: false, useSetting: true);
+            CustomDiffMergeTool.LoadCustomDiffMergeTools(Module, menus, components, isDiff: false);
         }
 
         private readonly Dictionary<string, string> _mergeScripts = new Dictionary<string, string>
