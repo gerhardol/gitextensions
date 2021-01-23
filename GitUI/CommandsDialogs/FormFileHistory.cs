@@ -446,10 +446,10 @@ namespace GitUI.CommandsDialogs
 
         private void OpenWithDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenWithCustomDifftoolToolStripMenuItem_Click(RevisionDiffKind.DiffAB, sender);
+            OpenFilesWithDiffTool(RevisionDiffKind.DiffAB, sender);
         }
 
-        private void OpenWithCustomDifftoolToolStripMenuItem_Click(RevisionDiffKind diffKind, object sender)
+        private void OpenFilesWithDiffTool(RevisionDiffKind diffKind, object sender)
         {
             var item = sender as ToolStripMenuItem;
             if (item?.DropDownItems != null)
@@ -604,7 +604,7 @@ namespace GitUI.CommandsDialogs
 
         private void diffToolRemoteLocalStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenWithCustomDifftoolToolStripMenuItem_Click(RevisionDiffKind.DiffBLocal, sender);
+            OpenFilesWithDiffTool(RevisionDiffKind.DiffBLocal, sender);
         }
 
         private void toolStripSplitLoad_ButtonClick(object sender, EventArgs e)
