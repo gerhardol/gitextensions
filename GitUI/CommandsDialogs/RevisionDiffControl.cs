@@ -184,7 +184,7 @@ namespace GitUI.CommandsDialogs
                 new(diffTwoSelectedDifftoolToolStripMenuItem, diffTwoSelectedDiffToolToolStripMenuItem_Click)
             };
 
-            CustomDiffMergeTool.LoadCustomDiffMergeTools(Module, menus, components, isDiff: true, delay: 5000);
+            CustomDiffMergeTool.LoadCustomDiffMergeTools(Module, menus, components, isDiff: true, delay: CustomDiffMergeTool.FormBrowseToolDelay);
         }
 
         private string GetShortcutKeyDisplayString(Command cmd)
