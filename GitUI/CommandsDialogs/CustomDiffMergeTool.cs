@@ -17,6 +17,12 @@ namespace GitUI
             _click = click;
         }
 
+        /// <summary>
+        /// Time to wait before loading custom diff tools in FormBrowse
+        /// Try avoid loading while git-log and git-diff runs
+        /// </summary>
+        public const int FormBrowseToolDelay = 15000;
+
         private ToolStripMenuItem _menuItem { get; set; }
         private System.EventHandler _click;
 
@@ -34,7 +40,7 @@ namespace GitUI
         }
 
         /// <summary>
-        /// Load the availble DiffMerge tools and apply to the menus
+        /// Load the available  DiffMerge tools and apply to the menus
         /// </summary>
         /// <param name="module">The Git module</param>
         /// <param name="menus">The menus to update</param>

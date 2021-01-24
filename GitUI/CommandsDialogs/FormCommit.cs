@@ -585,7 +585,7 @@ namespace GitUI.CommandsDialogs
         {
             List<CustomDiffMergeTool> menus = new()
             {
-                new(openWithDifftoolToolStripMenuItem, UnstagedOpenWithDifftoolToolStripMenuItem_Click),
+                new(openWithDifftoolToolStripMenuItem, openWithDifftoolToolStripMenuItem_Click),
                 new(stagedOpenDifftoolToolStripMenuItem9, stagedOpenDifftoolToolStripMenuItem9_Click),
             };
 
@@ -2535,7 +2535,7 @@ namespace GitUI.CommandsDialogs
             }
         }
 
-        private void UnstagedOpenWithDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
+        private void openWithDifftoolToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFilesWithDiffTool(Unstaged.SelectedItems, sender);
         }

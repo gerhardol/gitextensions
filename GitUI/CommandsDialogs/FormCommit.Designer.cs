@@ -263,7 +263,7 @@ namespace GitUI.CommandsDialogs
             this.openWithDifftoolToolStripMenuItem.Name = "openWithDifftoolToolStripMenuItem";
             this.openWithDifftoolToolStripMenuItem.Size = new System.Drawing.Size(232, 22);
             this.openWithDifftoolToolStripMenuItem.Text = "Open with difftool";
-            this.openWithDifftoolToolStripMenuItem.Click += new System.EventHandler(this.UnstagedOpenWithDifftoolToolStripMenuItem_Click);
+            this.openWithDifftoolToolStripMenuItem.Click += new System.EventHandler(this.openWithDifftoolToolStripMenuItem_Click);
             //
             // toolStripSeparator9
             //
