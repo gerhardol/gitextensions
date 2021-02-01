@@ -2,41 +2,26 @@
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitCommands;
 
 namespace GitUI
 {
-    public class CustomDiffMergeTool
+    public class CustomDiffMergeToolProvider
     {
-        public CustomDiffMergeTool(ToolStripMenuItem menuItem, System.EventHandler click)
-        {
-            _menuItem = menuItem;
-            _click = click;
-        }
-
         /// <summary>
         /// Time to wait before loading custom diff tools in FormBrowse
         /// Try avoid loading while git-log and git-diff runs
         /// </summary>
-        public const int FormBrowseToolDelay = 15000;
-
-        private ToolStripMenuItem _menuItem { get; set; }
-        private System.EventHandler _click;
-
-        // static methods
-        private static CustomDiffMergeToolCache DiffToolCache { get; } = new();
-        private static CustomDiffMergeToolCache MergeToolCache { get; } = new();
+        public readonly int FormBrowseToolDelay = 15000;
 
         /// <summary>
         /// Clear the existing caches
         /// </summary>
-        public static void Clear()
+        public void Clear()
         {
-            DiffToolCache.Clear();
-            MergeToolCache.Clear();
+            CustomDiffMergeToolCache.DiffToolCache.Clear();
+            CustomDiffMergeToolCache.MergeToolCache.Clear();
         }
 
         /// <summary>
@@ -47,7 +32,7 @@ namespace GitUI
         /// <param name="components">The calling Form components, to dispose correctly</param>
         /// <param name="isDiff">True if diff, false if merge</param>
         /// <param name="delay">The delay before starting the operation</param>
-        public static void LoadCustomDiffMergeTools(GitModule module, IList<CustomDiffMergeTool> menus, IContainer components, bool isDiff, int delay = 1000)
+        public void LoadCustomDiffMergeTools(GitModule module, IList<CustomDiffMergeTool> menus, IContainer components, bool isDiff, int delay = 1000)
         {
             InitMenus(menus);
 
@@ -60,8 +45,8 @@ namespace GitUI
             {
                 // get the tools, possibly with a delay as requesting requires considerable time
                 // cache is shared
-                IEnumerable<string> tools = await (isDiff ? DiffToolCache : MergeToolCache)
-                    .GetToolsAsync(module, isDiff, delay);
+                IEnumerable<string> tools = await (isDiff ? CustomDiffMergeToolCache.DiffToolCache : CustomDiffMergeToolCache.MergeToolCache)
+                    .GetToolsAsync(module, delay);
 
                 if (tools.Count() <= 1)
                 {
@@ -72,23 +57,23 @@ namespace GitUI
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 foreach (var menu in menus)
                 {
-                    menu._menuItem.DropDown = new ContextMenuStrip(components);
+                    menu.MenuItem.DropDown = new ContextMenuStrip(components);
                     foreach (var tool in tools)
                     {
                         var item = new ToolStripMenuItem(tool) { Tag = tool };
 
-                        item.Click += menu._click;
-                        menu._menuItem.DropDown.Items.Add(item);
-                        if (menu._menuItem.DropDownItems.Count == 1)
+                        item.Click += menu.Click;
+                        menu.MenuItem.DropDown.Items.Add(item);
+                        if (menu.MenuItem.DropDownItems.Count == 1)
                         {
                             item.Font = new Font(item.Font, FontStyle.Bold);
-                            if (menu._menuItem.ShortcutKeys != Keys.None)
+                            if (menu.MenuItem.ShortcutKeys != Keys.None)
                             {
-                                item.ShortcutKeys = menu._menuItem.ShortcutKeys;
+                                item.ShortcutKeys = menu.MenuItem.ShortcutKeys;
                             }
                             else
                             {
-                                item.ShortcutKeyDisplayString = menu._menuItem.ShortcutKeyDisplayString;
+                                item.ShortcutKeyDisplayString = menu.MenuItem.ShortcutKeyDisplayString;
                             }
                         }
                     }
@@ -96,7 +81,7 @@ namespace GitUI
                     if (isDiff)
                     {
                         // Allow disabling for difftools
-                        menu._menuItem.DropDown.Items.Add(new ToolStripSeparator());
+                        menu.MenuItem.DropDown.Items.Add(new ToolStripSeparator());
                         var disableItem = new ToolStripMenuItem
                         {
                             Text = ResourceManager.Strings.DisableMenuItem
@@ -110,7 +95,7 @@ namespace GitUI
                             AppSettings.ShowAvailableDiffTools = false;
                             InitMenus(menus);
                         };
-                        menu._menuItem.DropDown.Items.Add(disableItem);
+                        menu.MenuItem.DropDown.Items.Add(disableItem);
                     }
                 }
             }).FileAndForget();
@@ -120,7 +105,7 @@ namespace GitUI
             {
                 foreach (var menu in menus)
                 {
-                    menu._menuItem.DropDown = null;
+                    menu.MenuItem.DropDown = null;
                 }
             }
         }
