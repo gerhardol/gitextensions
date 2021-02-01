@@ -602,7 +602,12 @@ namespace GitUI
                 new(openCommitsWithDiffToolMenuItem, diffSelectedCommitsMenuItem_Click)
             };
 
-            CustomDiffMergeTool.LoadCustomDiffMergeTools(Module, menus, components, isDiff: true, delay: CustomDiffMergeTool.FormBrowseToolDelay);
+            CustomDiffMergeToolProvider.Default.LoadCustomDiffMergeTools(
+                Module,
+                menus,
+                components,
+                isDiff: true,
+                delay: CustomDiffMergeToolProvider.Default.FormBrowseToolDelay);
         }
 
         private void SetSelectedIndex(int index, bool toggleSelection = false)
