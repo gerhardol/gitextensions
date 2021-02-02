@@ -9,25 +9,19 @@ namespace GitUI
 {
     public class CustomDiffMergeToolProvider
     {
-        public static CustomDiffMergeToolProvider Default { get; } = new();
-
         /// <summary>
         /// Time to wait before loading custom diff tools in FormBrowse
         /// Try avoid loading while git-log and git-diff runs
         /// </summary>
         public readonly int FormBrowseToolDelay = 15000;
 
-        // static methods
-        private CustomDiffMergeToolCache DiffToolCache { get; } = new();
-        private CustomDiffMergeToolCache MergeToolCache { get; } = new();
-
         /// <summary>
         /// Clear the existing caches
         /// </summary>
         public void Clear()
         {
-            DiffToolCache.Clear();
-            MergeToolCache.Clear();
+            CustomDiffMergeToolCache.DiffToolCache.Clear();
+            CustomDiffMergeToolCache.MergeToolCache.Clear();
         }
 
         /// <summary>
@@ -51,8 +45,8 @@ namespace GitUI
             {
                 // get the tools, possibly with a delay as requesting requires considerable time
                 // cache is shared
-                IEnumerable<string> tools = await (isDiff ? DiffToolCache : MergeToolCache)
-                    .GetToolsAsync(module, isDiff, delay);
+                IEnumerable<string> tools = await (isDiff ? CustomDiffMergeToolCache.DiffToolCache : CustomDiffMergeToolCache.MergeToolCache)
+                    .GetToolsAsync(module, delay);
 
                 if (tools.Count() <= 1)
                 {

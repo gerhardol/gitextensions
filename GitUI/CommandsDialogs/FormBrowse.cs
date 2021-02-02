@@ -1585,7 +1585,7 @@ namespace GitUI.CommandsDialogs
             RevisionGrid.ReloadTranslation();
             fileTree.ReloadHotkeys();
             revisionDiff.ReloadHotkeys();
-            CustomDiffMergeToolProvider.Default.Clear();
+            new CustomDiffMergeToolProvider().Clear();
             revisionDiff.LoadCustomDifftools();
             RevisionGrid.LoadCustomDifftools();
 

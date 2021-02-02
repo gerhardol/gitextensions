@@ -10,8 +10,17 @@ namespace GitCommands
 {
     public class CustomDiffMergeToolCache
     {
+        private CustomDiffMergeToolCache(bool isDiff)
+        {
+            _isDiff = isDiff;
+        }
+
+        private bool _isDiff { get; set; }
         private SemaphoreSlim _mutex = new(1);
         private IEnumerable<string>? _tools = null;
+
+        public static CustomDiffMergeToolCache DiffToolCache { get; } = new(true);
+        public static CustomDiffMergeToolCache MergeToolCache { get; } = new(false);
 
         /// <summary>
         /// Clear the existing caches
@@ -37,9 +46,8 @@ namespace GitCommands
         /// Load the availble DiffMerge tools and apply to the menus
         /// </summary>
         /// <param name="module">The Git module</param>
-        /// <param name="isDiff">True if diff, false if merge</param>
         /// <param name="delay">The delay before starting the operation</param>
-        public async Task<IEnumerable<string>> GetToolsAsync(GitModule module, bool isDiff, int delay)
+        public async Task<IEnumerable<string>> GetToolsAsync(GitModule module, int delay)
         {
             if (_tools != null)
             {
@@ -59,9 +67,9 @@ namespace GitCommands
             {
                 if (_tools == null)
                 {
-                    var toolKey = isDiff ? SettingKeyString.DiffToolKey : SettingKeyString.MergeToolKey;
+                    var toolKey = _isDiff ? SettingKeyString.DiffToolKey : SettingKeyString.MergeToolKey;
                     var defaultTool = module.GetEffectiveSetting(toolKey);
-                    string output = await module.GetCustomDiffMergeToolsAsync(isDiff);
+                    string output = await module.GetCustomDiffMergeToolsAsync(_isDiff);
                     _tools = ParseCustomDiffMergeTool(output, defaultTool);
                 }
             }
