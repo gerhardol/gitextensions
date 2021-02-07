@@ -28,8 +28,8 @@ namespace GitUI.BuildServerIntegration
 {
     public sealed class BuildServerWatcher : IBuildServerWatcher, IDisposable
     {
-        private static readonly TimeSpan ShortPollInterval = TimeSpan.FromSeconds(10);
-        private static readonly TimeSpan LongPollInterval = TimeSpan.FromSeconds(120);
+        private static readonly TimeSpan ShortPollInterval = TimeSpan.FromSeconds(2);
+        private static readonly TimeSpan LongPollInterval = TimeSpan.FromSeconds(12);
         private readonly CancellationTokenSequence _launchCancellation = new();
         private readonly object _buildServerCredentialsLock = new();
         private readonly RevisionGridControl _revisionGrid;
