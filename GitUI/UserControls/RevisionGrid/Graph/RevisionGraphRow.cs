@@ -46,7 +46,7 @@ namespace GitUI.UserControls.RevisionGrid.Graph
         {
             foreach (var segmentLane in _segmentLanes.ToArray())
             {
-                if (segmentLane.Value == indexToMove || (moveOthers && segmentLane.Value >= indexToMove))
+                if (_segmentLanes is not null && (segmentLane.Value == indexToMove || (moveOthers && segmentLane.Value >= indexToMove)))
                 {
                     _segmentLanes[segmentLane.Key] = _segmentLanes[segmentLane.Key] + 1;
                 }

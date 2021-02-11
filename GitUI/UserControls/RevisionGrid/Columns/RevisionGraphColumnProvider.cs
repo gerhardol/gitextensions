@@ -363,7 +363,7 @@ namespace GitUI.UserControls.RevisionGrid.Columns
             }
         }
 
-        private int StraightenSegment(int index, IRevisionGraphRow nextRow, RevisionGraphSegment revisionGraphSegment, int centerLane, int endLane)
+        private int StraightenSegment(int index, IRevisionGraphRow? nextRow, RevisionGraphSegment revisionGraphSegment, int centerLane, int endLane)
         {
             // Try to detect this:
             // | |  |
@@ -384,7 +384,7 @@ namespace GitUI.UserControls.RevisionGrid.Columns
 
                 int nextNextLane = GetLaneForRow(nextNextRow, revisionGraphSegment);
 
-                if (centerLane == nextNextLane)
+                if (centerLane == nextNextLane && nextRow is not null)
                 {
                     nextRow.MoveLaneRightToStraighten(revisionGraphSegment, endLane, false);
                     endLane++;
