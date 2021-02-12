@@ -208,12 +208,8 @@ namespace GitUI.CommandsDialogs
                 new(diffToolRemoteLocalStripMenuItem, diffToolRemoteLocalStripMenuItem_Click),
             };
 
-            new CustomDiffMergeToolProvider().LoadCustomDiffMergeTools(
-                Module,
-                menus,
-                components,
-                isDiff: true,
-                delay: CustomDiffMergeToolProvider.FormBrowseToolDelay);
+            const int ToolDelay = 10000;
+            new CustomDiffMergeToolProvider().LoadCustomDiffMergeTools(Module, menus, components, isDiff: true, ToolDelay);
         }
 
         private void LoadFileHistory()

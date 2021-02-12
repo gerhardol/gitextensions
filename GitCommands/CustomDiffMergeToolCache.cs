@@ -56,7 +56,8 @@ namespace GitCommands
 
             // The command will compete with other resources, avoid delaying startup
             // Do not bother with cancel tokens
-            await Task.Delay(delay);
+            // Make sure to not continue on the UI thread
+            await Task.Delay(delay).ConfigureAwait(false);
 
             await _mutex.WaitAsync().ConfigureAwait(false);
             try
