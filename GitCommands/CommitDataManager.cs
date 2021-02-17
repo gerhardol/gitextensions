@@ -27,6 +27,7 @@ namespace GitCommands
         /// Gets <see cref="CommitData"/> for the specified <paramref name="sha1"/>.
         /// </summary>
         CommitData? GetCommitData(string sha1, out string? error);
+        CommitData? GetCommitData(string sha1, out string? error, GitModule module);
 
         /// <summary>
         /// Updates the <see cref="CommitData.Body"/> (commit message) property of <paramref name="commitData"/>.
@@ -49,7 +50,7 @@ namespace GitCommands
         /// <inheritdoc />
         public void UpdateBody(CommitData commitData, out string? error)
         {
-            if (!TryGetCommitLog(commitData.ObjectId.ToString(), BodyAndNotesFormat, out error, out var data))
+            if (!TryGetCommitLog(commitData.ObjectId.ToString(), BodyAndNotesFormat, out error, out var data, GetModule()))
             {
                 return;
             }
@@ -84,8 +85,15 @@ namespace GitCommands
         /// <inheritdoc />
         public CommitData? GetCommitData(string sha1, out string? error)
         {
-            return TryGetCommitLog(sha1, CommitDataFormat, out error, out var info)
-                ? CreateFromFormattedData(info)
+            return TryGetCommitLog(sha1, CommitDataFormat, out error, out var info, GetModule())
+                ? CreateFromFormattedData(info, GetModule())
+                : null;
+        }
+
+        public CommitData? GetCommitData(string sha1, out string? error, GitModule module)
+        {
+            return TryGetCommitLog(sha1, CommitDataFormat, out error, out var info, module)
+                ? CreateFromFormattedData(info, module)
                 : null;
         }
 
@@ -95,14 +103,12 @@ namespace GitCommands
         /// <param name="data">Data produced by a <c>git log</c> or <c>git show</c> command where <c>--format</c>
         /// was provided the string <see cref="CommitDataFormat"/>.</param>
         /// <returns>CommitData object populated with parsed info from git string.</returns>
-        internal CommitData CreateFromFormattedData(string data)
+        internal CommitData CreateFromFormattedData(string data, IGitModule module)
         {
             if (data is null)
             {
                 throw new ArgumentNullException(nameof(data));
             }
-
-            var module = GetModule();
 
             // $ git log --pretty="format:%H%n%T%n%P%n%aN <%aE>%n%at%n%cN <%cE>%n%ct%n%e%n%B%nNotes:%n%-N" -1
             // 4bc1049fc3b9191dbd390e1ae6885aedd1a4e34b
@@ -183,7 +189,7 @@ namespace GitCommands
             return module;
         }
 
-        private bool TryGetCommitLog(string commitId, string format, [NotNullWhen(returnValue: false)] out string? error, [NotNullWhen(returnValue: true)] out string? data)
+        private bool TryGetCommitLog(string commitId, string format, [NotNullWhen(returnValue: false)] out string? error, [NotNullWhen(returnValue: true)] out string? data, IGitModule module)
         {
             if (commitId.IsArtificial())
             {
@@ -200,7 +206,7 @@ namespace GitCommands
             };
 
             // Do not cache this command, since notes can be added
-            data = GetModule().GitExecutable.GetOutput(arguments, outputEncoding: GitModule.LosslessEncoding);
+            data = module.GitExecutable.GetOutput(arguments, outputEncoding: GitModule.LosslessEncoding, cache: GitModule.GitCommandCache);
 
             if (GitModule.IsGitErrorMessage(data))
             {

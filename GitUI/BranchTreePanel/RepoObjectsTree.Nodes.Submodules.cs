@@ -136,26 +136,33 @@ namespace GitUI.BranchTreePanel
                     TreeViewNode.NodeFont = new Font(AppSettings.Font, FontStyle.Bold);
                 }
 
-                if (Info.Detailed?.RawStatus is not null)
+                TreeViewNode.TreeView.MouseHover += (s, e) =>
                 {
-                    // Prefer submodule status, shows ahead/behind
-                    TreeViewNode.ToolTipText = LocalizationHelpers.ProcessSubmoduleStatus(
-                        new GitModule(Info.Path),
-                        Info.Detailed.RawStatus,
-                        moduleIsParent: false,
-                        limitOutput: true);
-                }
-                else if (GitStatus is not null)
-                {
-                    var changeCount = new ArtificialCommitChangeCount();
-                    changeCount.Update(GitStatus);
-                    TreeViewNode.ToolTipText = changeCount.GetSummary();
-                }
-                else
-                {
-                    TreeViewNode.ToolTipText = DisplayText();
-                }
+                    if (!string.IsNullOrEmpty(TreeViewNode.ToolTipText))
+                    {
+                        return;
+                    }
 
+                    if (Info.Detailed?.RawStatus is not null)
+                    {
+                        // Prefer submodule status, shows ahead/behind
+                        TreeViewNode.ToolTipText = LocalizationHelpers.ProcessSubmoduleStatus(
+                            new GitModule(Info.Path),
+                            Info.Detailed.RawStatus,
+                            moduleIsParent: false,
+                            limitOutput: true);
+                    }
+                    else if (GitStatus is not null)
+                    {
+                        var changeCount = new ArtificialCommitChangeCount();
+                        changeCount.Update(GitStatus);
+                        TreeViewNode.ToolTipText = changeCount.GetSummary();
+                    }
+                    else
+                    {
+                        TreeViewNode.ToolTipText = DisplayText();
+                    }
+                };
                 TreeViewNode.ImageKey = GetSubmoduleItemImage(Info.Detailed);
                 TreeViewNode.SelectedImageKey = TreeViewNode.ImageKey;
 
