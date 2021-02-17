@@ -798,7 +798,7 @@ namespace GitCommands
                 $"^{childHash}",
                 "--count"
             };
-            var output = _gitExecutable.GetOutput(args);
+            var output = _gitExecutable.GetOutput(args, cache: GitCommandCache);
 
             if (int.TryParse(output, out var commitCount))
             {
@@ -2746,7 +2746,7 @@ namespace GitCommands
         public async Task<Patch?> GetCurrentChangesAsync(string? fileName, string? oldFileName, bool staged, string extraDiffArguments, Encoding? encoding = null, bool noLocks = false)
         {
             var output = await _gitExecutable.GetOutputAsync(GitCommandHelpers.GetCurrentChangesCmd(fileName, oldFileName, staged, extraDiffArguments, noLocks),
-                outputEncoding: LosslessEncoding).ConfigureAwait(false);
+                outputEncoding: LosslessEncoding, cache: GitCommandCache).ConfigureAwait(false);
 
             IReadOnlyList<Patch> patches = PatchProcessor.CreatePatchesFromString(output, new Lazy<Encoding>(() => encoding ?? FilesEncoding)).ToList();
 
@@ -3658,7 +3658,7 @@ namespace GitCommands
                 a,
                 b
             };
-            var output = _gitExecutable.GetOutput(args);
+            var output = _gitExecutable.GetOutput(args, cache: GitCommandCache);
 
             return ObjectId.TryParse(output, offset: 0, out var objectId)
                 ? objectId
