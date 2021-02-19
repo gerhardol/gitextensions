@@ -43,7 +43,7 @@ namespace GitCommandsTests
                           "\n" +
                           body;
 
-            var data = _commitDataManager.CreateFromFormattedData(rawData, _module);
+            var data = _commitDataManager.CreateFromFormattedData(rawData);
 
             data.Should().NotBeNull();
             data.Author.Should().Be("John Doe (Acme Inc) <John.Doe@test.com>");

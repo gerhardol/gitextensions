@@ -152,7 +152,7 @@ namespace ResourceManager
                 {
                     if (status.OldCommit is not null)
                     {
-                        oldCommitData = commitDataManager.GetCommitData(status.OldCommit.ToString(), out _, gitModule);
+                        oldCommitData = commitDataManager.GetCommitData(status.OldCommit.ToString(), out _);
                     }
 
                     if (oldCommitData is not null)
@@ -184,7 +184,7 @@ namespace ResourceManager
             {
                 if (status.Commit is not null)
                 {
-                    commitData = commitDataManager.GetCommitData(status.Commit.ToString(), out _, gitModule);
+                    commitData = commitDataManager.GetCommitData(status.Commit.ToString(), out _);
                 }
 
                 if (commitData is not null)
