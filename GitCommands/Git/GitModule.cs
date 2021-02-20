@@ -2746,7 +2746,7 @@ namespace GitCommands
         public async Task<Patch?> GetCurrentChangesAsync(string? fileName, string? oldFileName, bool staged, string extraDiffArguments, Encoding? encoding = null, bool noLocks = false)
         {
             var output = await _gitExecutable.GetOutputAsync(GitCommandHelpers.GetCurrentChangesCmd(fileName, oldFileName, staged, extraDiffArguments, noLocks),
-                outputEncoding: LosslessEncoding, cache: GitCommandCache).ConfigureAwait(false);
+                outputEncoding: LosslessEncoding).ConfigureAwait(false);
 
             IReadOnlyList<Patch> patches = PatchProcessor.CreatePatchesFromString(output, new Lazy<Encoding>(() => encoding ?? FilesEncoding)).ToList();
 
@@ -3702,7 +3702,7 @@ namespace GitCommands
 
             if (loadData)
             {
-                oldData = _commitDataManager.GetCommitData(oldCommit.ToString(), out _);
+                oldData = _commitDataManager.GetCommitData(oldCommit.ToString(), out _, overrideCache: true);
             }
 
             if (oldData is null)
@@ -3712,7 +3712,7 @@ namespace GitCommands
 
             if (loadData)
             {
-                data = _commitDataManager.GetCommitData(commit.ToString(), out _);
+                data = _commitDataManager.GetCommitData(commit.ToString(), out _, overrideCache: true);
             }
 
             if (data is null)

@@ -178,8 +178,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog.DashboardControl
                         Text = text,
                         TextAlign = ContentAlignment.MiddleLeft
                     };
-                    linkLabel.MouseHover += (s, e) => linkLabel.LinkColor = _selectedTheme.AccentedText;
-                    linkLabel.MouseLeave += (s, e) => linkLabel.LinkColor = _selectedTheme.PrimaryText;
 
                     if (handler is not null)
                     {

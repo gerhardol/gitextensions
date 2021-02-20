@@ -135,13 +135,18 @@ namespace GitUI.BranchTreePanel
                     TreeViewNode.NodeFont = new Font(AppSettings.Font, FontStyle.Bold);
                 }
 
+                TreeViewNode.ImageKey = GetSubmoduleItemImage(Info.Detailed);
+                TreeViewNode.SelectedImageKey = TreeViewNode.ImageKey;
+
+                TreeViewNode.ToolTipText = null;
                 TreeViewNode.TreeView.MouseHover += (s, e) =>
                 {
-                    if (!string.IsNullOrEmpty(TreeViewNode.ToolTipText))
+                    if (TreeViewNode.ToolTipText is not null)
                     {
                         return;
                     }
 
+                    TreeViewNode.ToolTipText = DisplayText();
                     if (Info.Detailed?.RawStatus is not null)
                     {
                         // Prefer submodule status, shows ahead/behind
@@ -153,17 +158,12 @@ namespace GitUI.BranchTreePanel
                     }
                     else if (GitStatus is not null)
                     {
+                        // similar summary as tooltip for artificial in the grid
                         var changeCount = new ArtificialCommitChangeCount();
                         changeCount.Update(GitStatus);
                         TreeViewNode.ToolTipText = changeCount.GetSummary();
                     }
-                    else
-                    {
-                        TreeViewNode.ToolTipText = DisplayText();
-                    }
                 };
-                TreeViewNode.ImageKey = GetSubmoduleItemImage(Info.Detailed);
-                TreeViewNode.SelectedImageKey = TreeViewNode.ImageKey;
 
                 return;
 

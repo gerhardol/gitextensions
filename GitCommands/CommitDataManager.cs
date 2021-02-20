@@ -24,9 +24,9 @@ namespace GitCommands
         CommitData CreateFromRevision(GitRevision revision, IReadOnlyList<ObjectId>? children);
 
         /// <summary>
-        /// Gets <see cref="CommitData"/> for the specified <paramref name="sha1"/>.
+        /// Gets <see cref="CommitData"/> for the specified <paramref name="commitish"/>.
         /// </summary>
-        CommitData? GetCommitData(string sha1, out string? error);
+        CommitData? GetCommitData(string commitish, out string? error, bool overrideCache = false);
 
         /// <summary>
         /// Updates the <see cref="CommitData.Body"/> (commit message) property of <paramref name="commitData"/>.
@@ -82,9 +82,9 @@ namespace GitCommands
         }
 
         /// <inheritdoc />
-        public CommitData? GetCommitData(string sha1, out string? error)
+        public CommitData? GetCommitData(string sha1, out string? error, bool overrideCache = false)
         {
-            return TryGetCommitLog(sha1, CommitDataFormat, out error, out var info)
+            return TryGetCommitLog(sha1, CommitDataFormat, out error, out var info, overrideCache)
                 ? CreateFromFormattedData(info)
                 : null;
         }
@@ -188,7 +188,7 @@ namespace GitCommands
             return module;
         }
 
-        private bool TryGetCommitLog(string commitId, string format, [NotNullWhen(returnValue: false)] out string? error, [NotNullWhen(returnValue: true)] out string? data)
+        private bool TryGetCommitLog(string commitId, string format, [NotNullWhen(returnValue: false)] out string? error, [NotNullWhen(returnValue: true)] out string? data, bool overrideCache = false)
         {
             if (commitId.IsArtificial())
             {
@@ -204,8 +204,8 @@ namespace GitCommands
                 commitId
             };
 
-            // Do not cache this command, since notes can be added
-            data = GetModule().GitExecutable.GetOutput(arguments, outputEncoding: GitModule.LosslessEncoding);
+            // This command can be cached if commitId is a git sha and Notes are ignored
+            data = GetModule().GitExecutable.GetOutput(arguments, outputEncoding: GitModule.LosslessEncoding, cache: overrideCache ? GitModule.GitCommandCache : null);
 
             if (GitModule.IsGitErrorMessage(data))
             {

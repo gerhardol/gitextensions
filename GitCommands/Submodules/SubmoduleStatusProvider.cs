@@ -155,7 +155,7 @@ namespace GitCommands.Submodules
 
             TimeSpan remaining = _previousSubmoduleUpdateTime - DateTime.Now.AddSeconds(-MinRefreshInterval);
             const int extraStatusRefreshLimit = 1;
-            if (!forceUpdate && remaining.TotalSeconds > extraStatusRefreshLimit)
+            if (forceUpdate && remaining.TotalSeconds > extraStatusRefreshLimit)
             {
                 OnStatusUpdated(_submoduleInfoResult, cancelToken);
             }
