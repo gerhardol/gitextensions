@@ -782,9 +782,9 @@ namespace GitUI
         {
             if (item.IsSubmodule)
             {
-                Task<GitSubmoduleStatus?> task = item.GetSubmoduleStatusAsync();
+                Task<GitSubmoduleStatus?>? task = item.GetSubmoduleStatusAsync();
 
-                if (task.IsCompleted && task.CompletedResult() is not null)
+                if (task != null && task.IsCompleted && task.CompletedResult() is not null)
                 {
                     text += task.CompletedResult()!.AddedAndRemovedString();
                 }
@@ -804,7 +804,9 @@ namespace GitUI
 
             var submoduleName = SelectedItem.Item.Name;
 
-            var status = await SelectedItem.Item.GetSubmoduleStatusAsync().ConfigureAwait(false);
+            Task<GitSubmoduleStatus?>? task = SelectedItem.Item.GetSubmoduleStatusAsync();
+            Validates.NotNull(task);
+            var status = await task.ConfigureAwait(false);
             ObjectId? selectedId = SelectedItem.SecondRevision?.ObjectId == ObjectId.WorkTreeId
                 ? ObjectId.WorkTreeId
                 : status?.Commit;
@@ -924,14 +926,15 @@ namespace GitUI
                         listItem.ImageIndex = GetItemImageIndex(item);
                     }
 
-                    if (item.GetSubmoduleStatusAsync() is not null && !item.GetSubmoduleStatusAsync().IsCompleted)
+                    Task<GitSubmoduleStatus?>? task = item.GetSubmoduleStatusAsync();
+                    if (task is not null && !task.IsCompleted)
                     {
                         var capturedItem = item;
 
                         ThreadHelper.JoinableTaskFactory.RunAsync(
                             async () =>
                             {
-                                await capturedItem.GetSubmoduleStatusAsync();
+                                await task;
 
                                 await this.SwitchToMainThreadAsync();
 
@@ -1017,13 +1020,13 @@ namespace GitUI
 
                 if (gitItemStatus.IsSubmodule)
                 {
-                    if (gitItemStatus.GetSubmoduleStatusAsync() is null ||
-                        !gitItemStatus.GetSubmoduleStatusAsync().IsCompleted)
+                    Task<GitSubmoduleStatus?>? task = gitItemStatus.GetSubmoduleStatusAsync();
+                    if (task is null || !task.IsCompleted)
                     {
                         return gitItemStatus.IsDirty ? nameof(Images.SubmoduleDirty) : nameof(Images.SubmodulesManage);
                     }
 
-                    var status = gitItemStatus.GetSubmoduleStatusAsync().CompletedResult();
+                    var status = task.CompletedResult();
                     if (status is null)
                     {
                         return gitItemStatus.IsDirty ? nameof(Images.SubmoduleDirty) : nameof(Images.SubmodulesManage);

@@ -1952,8 +1952,8 @@ namespace GitUI.CommandsDialogs
                                     return false;
                                 }
 
-                                Task<GitSubmoduleStatus?> statusTask = item.GetSubmoduleStatusAsync();
-
+                                Task<GitSubmoduleStatus?>? statusTask = item.GetSubmoduleStatusAsync();
+                                Validates.NotNull(statusTask);
                                 if (!statusTask.IsCompleted)
                                 {
                                     return false;
@@ -1970,7 +1970,10 @@ namespace GitUI.CommandsDialogs
                                 continue;
                             }
 
-                            GitSubmoduleStatus? gitSubmoduleStatus = ThreadHelper.JoinableTaskFactory.Run(() => item.GetSubmoduleStatusAsync());
+                            GitSubmoduleStatus? gitSubmoduleStatus = ThreadHelper.JoinableTaskFactory.Run(() =>
+                            {
+                                return item.GetSubmoduleStatusAsync() ?? Task.FromResult<GitSubmoduleStatus?>(null);
+                            });
 
                             if (gitSubmoduleStatus is null || !gitSubmoduleStatus.IsDirty)
                             {

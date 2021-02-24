@@ -115,10 +115,15 @@ namespace GitUI
                 if (file.IsSubmodule)
                 {
                     // Patch already evaluated
-                    var status = ThreadHelper.JoinableTaskFactory.Run(file.GetSubmoduleStatusAsync);
-                    return status is not null
-                        ? LocalizationHelpers.ProcessSubmoduleStatus(fileViewer.Module, status)
-                        : $"Failed to get status for submodule \"{file.Name}\"";
+                    Task<GitSubmoduleStatus?>? task = file.GetSubmoduleStatusAsync();
+
+                    if (task is not null)
+                    {
+                        var status = ThreadHelper.JoinableTaskFactory.Run(() => task);
+                        return status is not null
+                            ? LocalizationHelpers.ProcessSubmoduleStatus(fileViewer.Module, status)
+                            : $"Failed to get status for submodule \"{file.Name}\"";
+                    }
                 }
 
                 var patch = GetItemPatch(fileViewer.Module, file, firstId, selectedId,
