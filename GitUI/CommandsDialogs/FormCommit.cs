@@ -1947,14 +1947,10 @@ namespace GitUI.CommandsDialogs
                         unstagedFiles.RemoveAll(
                             item =>
                             {
-                                if (!item.IsSubmodule)
-                                {
-                                    return false;
-                                }
-
-                                Task<GitSubmoduleStatus?>? statusTask = item.GetSubmoduleStatusAsync();
-                                Validates.NotNull(statusTask);
-                                if (!statusTask.IsCompleted)
+                                if (!item.IsSubmodule
+                                    || item.GetSubmoduleStatusAsync() is not Task<GitSubmoduleStatus> statusTask
+                                    || statusTask is null
+                                    || !statusTask.IsCompleted)
                                 {
                                     return false;
                                 }

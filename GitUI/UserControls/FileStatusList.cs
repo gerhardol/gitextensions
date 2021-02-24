@@ -780,14 +780,13 @@ namespace GitUI
 
         private static string AppendItemSubmoduleStatus(string text, GitItemStatus item)
         {
-            if (item.IsSubmodule)
+            if (item.IsSubmodule
+                && item.GetSubmoduleStatusAsync() is Task<GitSubmoduleStatus> task
+                && task is not null
+                && task.IsCompleted
+                && task.CompletedResult() is not null)
             {
-                Task<GitSubmoduleStatus?>? task = item.GetSubmoduleStatusAsync();
-
-                if (task != null && task.IsCompleted && task.CompletedResult() is not null)
-                {
-                    text += task.CompletedResult()!.AddedAndRemovedString();
-                }
+                text += task.CompletedResult()!.AddedAndRemovedString();
             }
 
             return text;
@@ -926,8 +925,10 @@ namespace GitUI
                         listItem.ImageIndex = GetItemImageIndex(item);
                     }
 
-                    Task<GitSubmoduleStatus?>? task = item.GetSubmoduleStatusAsync();
-                    if (task is not null && !task.IsCompleted)
+                    if (item.IsSubmodule
+                        && item.GetSubmoduleStatusAsync() is Task<GitSubmoduleStatus> task
+                        && task is not null
+                        && !task.IsCompleted)
                     {
                         var capturedItem = item;
 
@@ -1020,14 +1021,11 @@ namespace GitUI
 
                 if (gitItemStatus.IsSubmodule)
                 {
-                    Task<GitSubmoduleStatus?>? task = gitItemStatus.GetSubmoduleStatusAsync();
-                    if (task is null || !task.IsCompleted)
-                    {
-                        return gitItemStatus.IsDirty ? nameof(Images.SubmoduleDirty) : nameof(Images.SubmodulesManage);
-                    }
-
-                    var status = task.CompletedResult();
-                    if (status is null)
+                    if (gitItemStatus.GetSubmoduleStatusAsync() is not Task<GitSubmoduleStatus> task
+                        || task is null
+                        || !task.IsCompleted
+                        || task.CompletedResult() is not GitSubmoduleStatus status
+                        || status is null)
                     {
                         return gitItemStatus.IsDirty ? nameof(Images.SubmoduleDirty) : nameof(Images.SubmodulesManage);
                     }
