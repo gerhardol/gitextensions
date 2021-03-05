@@ -125,7 +125,7 @@ namespace GitUI
 
                 var task = file.GetSubmoduleStatusAsync();
 
-                if (file.IsSubmodule && task != null)
+                if (file.IsSubmodule && task is not null)
                 {
                     // Patch already evaluated
                     var status = await task;
