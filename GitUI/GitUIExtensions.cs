@@ -64,9 +64,13 @@ namespace GitUI
 
             if (item.Item.IsRangeDiff)
             {
-                // This command may take time, give an indication of what is going on
-                // The sha are incorrect if baseA/baseB is set, to simplify the presentation
-                fileViewer.ViewText("range-diff.sh", $"git range-diff {firstId}...{item.SecondRevision.ObjectId}");
+                // Git range-diff has cubic runtime complexity and can be slow and memory consuming,
+                // give an indication of what is going on
+                var range = item.BaseA is null || item.BaseB is null
+                ? $"{firstId}...{item.SecondRevision.ObjectId}"
+                : $"{item.BaseA}..{firstId} {item.BaseB}..{item.SecondRevision.ObjectId}";
+
+                fileViewer.ViewText("range-diff.sh", $"git range-diff {range}");
 
                 string output = fileViewer.Module.GetRangeDiff(
                         firstId,
