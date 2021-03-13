@@ -3745,7 +3745,7 @@ namespace GitCommands
                 throw new ArgumentNullException(nameof(branchName));
             }
 
-            string? fullBranchName = GitRefName.GetFullBranchName(branchName);
+            string fullBranchName = GitRefName.GetFullBranchName(branchName);
 
             if (RevParse(fullBranchName) is null)
             {
