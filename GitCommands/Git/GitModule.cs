@@ -3999,7 +3999,7 @@ namespace GitCommands
 
         public IReadOnlyList<GitItemStatus> GetCombinedDiffFileList(string shaOfMergeCommit)
         {
-            GitArgumentBuilder args = new($"diff-tree")
+            GitArgumentBuilder args = new("diff-tree")
             {
                 "--name-only",
                 "-z",
