@@ -283,22 +283,26 @@ namespace ResourceManager
                     }
                 }
 
-                string diffs = gitModule.GetDiffFiles(status.OldCommit.ToString(), status.Commit.ToString(), nullSeparated: false);
-                if (!string.IsNullOrEmpty(diffs))
+                var exec = gitModule.GetDiffFiles(status.OldCommit.ToString(), status.Commit.ToString(), nullSeparated: false);
+                if (!exec.ExitedSuccessfully)
                 {
-                    sb.AppendLine("\nDifferences:");
-                    if (limitOutput)
-                    {
-                        var txt = diffs.SplitLines();
-                        if (txt.Length > maxLimitedLines)
-                        {
-                            diffs = new List<string>(txt).Take(maxLimitedLines).Join(Environment.NewLine) +
-                                $"{Environment.NewLine} {txt.Length - maxLimitedLines} more differences";
-                        }
-                    }
-
-                    sb.Append(diffs);
+                    sb.Append($"Error: {exec.StandardError}");
+                    return sb.ToString();
                 }
+
+                var diffs = exec.StandardOutput;
+                sb.AppendLine("\nDifferences:");
+                if (limitOutput)
+                {
+                    var txt = diffs.SplitLines();
+                    if (txt.Length > maxLimitedLines)
+                    {
+                        diffs = new List<string>(txt).Take(maxLimitedLines).Join(Environment.NewLine) +
+                            $"{Environment.NewLine} {txt.Length - maxLimitedLines} more differences";
+                    }
+                }
+
+                sb.Append(diffs);
             }
 
             return sb.ToString();

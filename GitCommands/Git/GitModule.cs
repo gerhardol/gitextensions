@@ -2363,11 +2363,11 @@ namespace GitCommands
             });
         }
 
-        public string GetDiffFiles(string? firstRevision, string? secondRevision, bool noCache = false, bool nullSeparated = false)
+        public ExecutionResult GetDiffFiles(string? firstRevision, string? secondRevision, bool noCache = false, bool nullSeparated = false)
         {
             noCache = noCache || firstRevision.IsArtificial() || secondRevision.IsArtificial();
 
-            return _gitExecutable.GetOutput(
+            return _gitExecutable.Execute(
                 new GitArgumentBuilder("diff")
                 {
                     "--no-color",
@@ -2427,8 +2427,12 @@ namespace GitCommands
                 return status.Where(x => x.Staged == stagedStatus).ToList();
             }
 
-            var output = GetDiffFiles(firstRevision, secondRevision, noCache: noCache, nullSeparated: true);
-            var result = GetDiffChangedFilesFromString(output, stagedStatus);
+            var exec = GetDiffFiles(firstRevision, secondRevision, noCache: noCache, nullSeparated: true);
+            var result = GetDiffChangedFilesFromString(exec.StandardOutput, stagedStatus);
+            if (!exec.ExitedSuccessfully)
+            {
+                result.Add(createErrorGitItemStatus(exec.StandardError));
+            }
 
             if (firstRevision == GitRevision.WorkTreeGuid || secondRevision == GitRevision.WorkTreeGuid)
             {
@@ -2656,16 +2660,7 @@ namespace GitCommands
         /// <returns>list with the parsed GitItemStatus.</returns>
         /// <seealso href="https://git-scm.com/docs/git-diff"/>
         private List<GitItemStatus> GetDiffChangedFilesFromString(string statusString, StagedStatus staged)
-        {
-            List<GitItemStatus> result = _getAllChangedFilesOutputParser.GetAllChangedFilesFromString_v1(statusString, true, staged);
-            if (IsGitErrorMessage(statusString))
-            {
-                // No simple way to pass the error message, create fake file
-                result.Add(createErrorGitItemStatus(statusString));
-            }
-
-            return result;
-        }
+            => _getAllChangedFilesOutputParser.GetAllChangedFilesFromString_v1(statusString, true, staged);
 
         public IReadOnlyList<GitItemStatus> GetIndexFilesWithSubmodulesStatus()
         {
@@ -4136,16 +4131,6 @@ namespace GitCommands
             return !result.ExitedSuccessfully
                 ? result.StandardOutput.TrimEnd()
                 : null;
-        }
-
-        /// <summary>
-        /// Determines whether a git command's output indicates an error occurred.
-        /// </summary>
-        /// <param name="gitOutput">The output from the git command, to inspect.</param>
-        /// <returns><c>true</c> if the command detailed an error, otherwise <c>false</c>.</returns>
-        public static bool IsGitErrorMessage(string gitOutput)
-        {
-            return Regex.IsMatch(gitOutput, @"^\s*(error:|fatal)");
         }
 
         private static GitItemStatus createErrorGitItemStatus(string gitOutput)
