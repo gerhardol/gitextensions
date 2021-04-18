@@ -465,7 +465,7 @@ namespace GitUI.Editor
                     {
                         try
                         {
-                            StringBuilder summary = new()
+                            StringBuilder summary = new StringBuilder()
                                 .AppendLine("Binary file:")
                                 .AppendLine()
                                 .AppendLine(fileName)
@@ -1027,7 +1027,7 @@ namespace GitUI.Editor
                                     ResetView(ViewMode.Text, null);
 
                                     var text = getFileText();
-                                    StringBuilder summary = new()
+                                    StringBuilder summary = new StringBuilder()
                                         .AppendLine(string.Format(_cannotViewImage.Text, fileName))
                                         .AppendLine()
                                         .AppendLine($"{text.Length:N0} bytes:")
