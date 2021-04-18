@@ -106,11 +106,11 @@ namespace GitExtensions.Plugins.GitHub3
         {
             yield return PersonalAccessToken;
 
-            var generateTokenLink = new LinkLabel { Text = _generateToken.Text };
+            LinkLabel generateTokenLink = new() { Text = _generateToken.Text };
             generateTokenLink.Click += GenerateTokenLink_Click;
             yield return new PseudoSetting(generateTokenLink);
 
-            var manageTokenLink = new LinkLabel { Text = _manageToken.Text };
+            LinkLabel manageTokenLink = new() { Text = _manageToken.Text };
             manageTokenLink.Click += ManageTokenLink_Click;
             yield return new PseudoSetting(manageTokenLink);
         }
@@ -238,7 +238,7 @@ namespace GitExtensions.Plugins.GitHub3
 
             IEnumerable<IHostedRemote> Remotes()
             {
-                var set = new HashSet<IHostedRemote>();
+                HashSet<IHostedRemote> set = new();
 
                 foreach (string remote in gitModule.GetRemoteNames())
                 {
@@ -251,7 +251,7 @@ namespace GitExtensions.Plugins.GitHub3
 
                     if (new GitHubRemoteParser().TryExtractGitHubDataFromRemoteUrl(url, out var owner, out var repository))
                     {
-                        var hostedRemote = new GitHubHostedRemote(remote, owner, repository, url);
+                        GitHubHostedRemote hostedRemote = new(remote, owner, repository, url);
 
                         if (set.Add(hostedRemote))
                         {
