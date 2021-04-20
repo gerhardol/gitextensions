@@ -154,7 +154,7 @@ namespace GitCommands.Logging
 
         private static ConcurrentQueue<CommandLogEntry> _queue = new ConcurrentQueue<CommandLogEntry>();
 
-        public static bool CaptureCallStacks { get; set; }
+        public static bool CaptureCallStacks { get; set; } = true;
 
         public static IEnumerable<CommandLogEntry> Commands => _queue;
 
