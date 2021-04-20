@@ -270,7 +270,7 @@ namespace GitExtensions.Plugins.GitHub3
                 return;
             }
 
-            var toolStripMenuItem = new ToolStripMenuItem(string.Format(_viewInWebSite.Text, Name), Icon);
+            ToolStripMenuItem toolStripMenuItem = new(string.Format(_viewInWebSite.Text, Name), Icon);
             contextMenu.Items.Add(toolStripMenuItem);
             toolStripMenuItem.Click += (s, e) => Process.Start(_hostedRemotesForModule.First().Data);
 
