@@ -50,7 +50,7 @@ namespace GitCommandsTests.Settings
         [TestCase("")]
         public void SaveImpl_should_throw_if_invalid_path(string settingsFilePath)
         {
-            MockFileSettingsCache cache = new(settingsFilePath, false).GetTestAccessor();
+            var cache = new MockFileSettingsCache(settingsFilePath, false).GetTestAccessor();
             cache.SetLastModificationDate(DateTime.Now);
             ((Action)(() => cache.SaveImpl())).Should().Throw<SaveSettingsException>();
         }
@@ -63,7 +63,7 @@ namespace GitCommandsTests.Settings
 
             try
             {
-                MockFileSettingsCache cache = new(settingsFilePath, false).GetTestAccessor();
+                var cache = new MockFileSettingsCache(settingsFilePath, false).GetTestAccessor();
                 cache.SetLastModificationDate(DateTime.Now);
 
                 Directory.Exists(tempPath).Should().BeFalse();
