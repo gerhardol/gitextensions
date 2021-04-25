@@ -2312,7 +2312,7 @@ namespace GitCommands
                 : null;
 
             bool nonZeroGitExitCode = firstId == ObjectId.WorkTreeId && secondId is not null && !isTracked;
-            string patch = _gitExecutable.GetOutput(
+            string patch = await _gitExecutable.GetOutputAsync(
                 args,
                 cache: cache,
                 outputEncoding: LosslessEncoding,
