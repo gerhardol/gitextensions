@@ -33,16 +33,26 @@ namespace GitCommands
         /// </summary>
         public string Find(string gitBinDirectory)
         {
-            var ssh = _environment.GetEnvironmentVariable("GIT_SSH", EnvironmentVariableTarget.Process);
+            var ssh = _environment.GetEnvironmentVariable("GIT_SSH", EnvironmentVariableTarget.Process) ?? "";
 
-            if (string.IsNullOrEmpty(ssh))
+            if (!string.IsNullOrEmpty(ssh))
             {
-                ssh = GetSshFromGitDir(gitBinDirectory);
+                // OpenSSH uses empty path, compatibility with path set in 3.4
+                var path = GetSshFromGitDir(gitBinDirectory);
+                if (path == ssh)
+                {
+                    ssh = "";
+                }
             }
 
-            return ssh ?? "";
+            return ssh;
         }
 
+        /// <summary>
+        /// Get ssh path from Git installation.
+        /// </summary>
+        /// <param name="gitBinDirectory">Git installation directory.</param>
+        /// <returns>Path to ssh.exe or null.</returns>
         private string? GetSshFromGitDir(string gitBinDirectory)
         {
             if (string.IsNullOrEmpty(gitBinDirectory))
