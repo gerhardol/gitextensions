@@ -8,6 +8,7 @@ namespace GitCommands
     public interface ISshPathLocator
     {
         string Find(string gitBinDirectory);
+        public string? GetSshFromGitDir(string gitBinDirectory);
     }
 
     public sealed class SshPathLocator : ISshPathLocator
@@ -53,7 +54,7 @@ namespace GitCommands
         /// </summary>
         /// <param name="gitBinDirectory">Git installation directory.</param>
         /// <returns>Path to ssh.exe or null.</returns>
-        private string? GetSshFromGitDir(string gitBinDirectory)
+        public string? GetSshFromGitDir(string gitBinDirectory)
         {
             if (string.IsNullOrEmpty(gitBinDirectory))
             {
