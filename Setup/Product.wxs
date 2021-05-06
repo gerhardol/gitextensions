@@ -9,18 +9,7 @@
     <Condition Message=".NET Framework 4.6.1 must be installed prior to installation of Git Extensions.">
       Installed OR WIX_IS_NETFRAMEWORK_461_OR_LATER_INSTALLED
     </Condition>
-    <!--
-      Read the currently configured value.
-     -->
-    <Property Id="CURRENT_SSHCLIENT" Secure="yes">
-      <RegistrySearch Id="CurrentSshClient" Root="HKCU" Key="$(var.AppRegKey)" Name="gitssh" Type="raw" />
-    </Property>
-    <!--
-      Use OpenSSH by default. If we read a value from the registry - assume PuTTY.
-      These values are used only if the app is installed for the first time
-     -->
     <Property Id="SSHCLIENT" Value="OpenSSH" Secure="yes" />
-    <SetProperty Action="SetSSHCLIENT0" Id="SSHCLIENT" After="CostInitialize" Value="PuTTY"><![CDATA[CURRENT_SSHCLIENT<>""]]></SetProperty>
     <Icon Id="gitextensions.ico" SourceFile="..\Logo\git-extensions-logo.ico" />
     <?include AddRemove.wxi?>
     <?include EnableUpgrades.wxi?>
@@ -890,10 +879,6 @@
         <Condition><![CDATA[NOT Upgrading AND SSHCLIENT="PuTTY"]]></Condition>
         <RegistryValue Name="gitssh" Value="[INSTALLDIR]PuTTY\plink.exe" Root="HKCU" Key="$(var.AppRegKey)" Type="string" />
       </Component>
-      <Component Id="gitssh_current.reg" Guid="44F8A1D4-B107-457B-A599-58AB346986E1">
-        <Condition><![CDATA[Upgrading]]></Condition>
-        <RegistryValue Name="gitssh" Value="[CURRENT_SSHCLIENT]" Root="HKCU" Key="$(var.AppRegKey)" Type="string" />
-      </Component>
       <Component Id="plink.reg" Guid="*">
         <RegistryValue Name="plink" Value="[INSTALLDIR]PuTTY\plink.exe" Root="HKCU" Key="$(var.AppRegKey)" Type="string" />
       </Component>
@@ -1561,7 +1546,6 @@
       <ComponentRef Id="InstallDir.reg" />
       <ComponentRef Id="gitssh_openssh.reg" />
       <ComponentRef Id="gitssh_putty.reg" />
-      <ComponentRef Id="gitssh_current.reg" />
       <ComponentRef Id="plink.exe" />
       <ComponentRef Id="plink.reg" />
       <ComponentRef Id="pageant.exe" />
