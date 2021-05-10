@@ -479,7 +479,7 @@ namespace GitUI.CommandsDialogs
             var itemType = GetItemType(item.Filename);
             if (itemType == ItemType.Submodule)
             {
-                var form = new FormMergeSubmodule(UICommands, item.Filename);
+                FormMergeSubmodule form = new(UICommands, item.Filename);
                 if (form.ShowDialog() == DialogResult.OK)
                 {
                     StageFile(item.Filename);

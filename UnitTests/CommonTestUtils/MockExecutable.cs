@@ -85,7 +85,7 @@ namespace CommonTestUtils
                     _outputStackByArguments.TryRemove(arguments, out _);
                 }
 
-                var process = new MockProcess(item.output, item.exitCode);
+                MockProcess process = new(item.output, item.exitCode);
 
                 _processes.Add(process);
                 return process;

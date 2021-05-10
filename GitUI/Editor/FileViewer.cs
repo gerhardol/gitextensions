@@ -635,7 +635,7 @@ namespace GitUI.Editor
                 }
 
                 using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                using var reader = new StreamReader(stream, Module.FilesEncoding);
+                using StreamReader reader = new(stream, Module.FilesEncoding);
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
                 var content = reader.ReadToEnd();
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
@@ -1514,7 +1514,7 @@ namespace GitUI.Editor
             if (EnvUtils.RunningOnWindows())
             {
                 // remove file mode warnings
-                var regEx = new Regex("warning: .*has type .* expected .*", RegexOptions.Compiled);
+                Regex regEx = new("warning: .*has type .* expected .*", RegexOptions.Compiled);
                 output = output.RemoveLines(regEx.IsMatch);
             }
 
