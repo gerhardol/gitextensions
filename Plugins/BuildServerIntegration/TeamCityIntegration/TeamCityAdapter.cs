@@ -81,7 +81,7 @@ namespace TeamCityIntegration
             }
 
             string url = serverUrl + "ntlmLogin.html";
-            var cookieContainer = new CookieContainer();
+            CookieContainer cookieContainer = new();
             var request = (HttpWebRequest)WebRequest.Create(url);
             request.CookieContainer = cookieContainer;
 
@@ -250,7 +250,7 @@ namespace TeamCityIntegration
 
         private void NotifyObserverOfBuilds(string[] buildIds, IObserver<BuildInfo> observer, CancellationToken cancellationToken)
         {
-            var tasks = new List<Task>(8);
+            List<Task> tasks = new(8);
             var buildsLeft = buildIds.Length;
 
             foreach (var buildId in buildIds.OrderByDescending(int.Parse))

@@ -58,7 +58,7 @@ namespace GitUITests.UserControls.CommitInfo
                 expectedBranches.RemoveAt(0);
             }
 
-            var branches = new List<string>(expectedBranches);
+            List<string> branches = new(expectedBranches);
 
             SortAndCheckListsForEquality();
 

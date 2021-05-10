@@ -109,7 +109,7 @@ namespace GitUI.CommandsDialogs
 
         private void AddPath_Click(object sender, EventArgs e)
         {
-            var dialog = new FolderBrowserDialog()
+            FolderBrowserDialog dialog = new()
             {
                 SelectedPath = Module.WorkingDir,
             };

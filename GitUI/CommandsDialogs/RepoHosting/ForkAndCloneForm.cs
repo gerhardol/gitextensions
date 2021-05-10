@@ -407,7 +407,7 @@ namespace GitUI.CommandsDialogs.RepoHosting
                 return;
             }
 
-            var module = new GitModule(targetDir);
+            GitModule module = new(targetDir);
 
             if (addUpstreamRemoteAsCB.Text.Trim().Length > 0 && !string.IsNullOrEmpty(repo.ParentReadOnlyUrl))
             {

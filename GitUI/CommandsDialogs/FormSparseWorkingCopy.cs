@@ -22,7 +22,7 @@ namespace GitUI.CommandsDialogs
         public FormSparseWorkingCopy(GitUICommands commands)
             : base(commands)
         {
-            var sparse = new FormSparseWorkingCopyViewModel(commands);
+            FormSparseWorkingCopyViewModel sparse = new(commands);
             BindToViewModelGlobal(sparse);
             CreateView(sparse);
             InitializeComplete();
@@ -95,9 +95,9 @@ namespace GitUI.CommandsDialogs
             MinimumSize = new Size(800, 600);
 
             // Tooltips support for the form
-            var componentContainer = new Container();
+            Container componentContainer = new();
             _disposable1 = componentContainer;
-            var tooltip = new ToolTip(componentContainer) { AutomaticDelay = 100 };
+            ToolTip tooltip = new(componentContainer) { AutomaticDelay = 100 };
 
             Panel panelHeader = CreateViewHeader();
 

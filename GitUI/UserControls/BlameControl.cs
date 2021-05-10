@@ -320,7 +320,7 @@ namespace GitUI.Blame
                 return ("", "", new List<GitBlameEntry>(0));
             }
 
-            var body = new StringBuilder(capacity: 4096);
+            StringBuilder body = new(capacity: 4096);
 
             GitBlameCommit? lastCommit = null;
 
@@ -343,10 +343,10 @@ namespace GitUI.Blame
                                                      .Max();
             var lineLengthEstimate = 25 + _blame.Lines.Max(l => l.Commit.Author?.Length ?? 0) + filePathLengthEstimate;
             var lineLength = Math.Max(80, lineLengthEstimate);
-            var lineBuilder = new StringBuilder(lineLength + 2);
+            StringBuilder lineBuilder = new(lineLength + 2);
             var gutter = new StringBuilder(capacity: lineBuilder.Capacity * _blame.Lines.Count);
-            var emptyLine = new string(' ', lineLength);
-            var cacheAvatars = new Dictionary<string, Image?>();
+            string emptyLine = new(' ', lineLength);
+            Dictionary<string, Image?> cacheAvatars = new();
             var noAuthorImage = (Image)new Bitmap(Images.User80, avatarSize, avatarSize);
             for (var index = 0; index < _blame.Lines.Count; index++)
             {
@@ -611,7 +611,7 @@ namespace GitUI.Blame
                 return;
             }
 
-            using var frm = new FormCommitDiff(UICommands, revisionId);
+            using FormCommitDiff frm = new(UICommands, revisionId);
             frm.ShowDialog(this);
         }
 

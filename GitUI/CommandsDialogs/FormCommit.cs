@@ -402,7 +402,7 @@ namespace GitUI.CommandsDialogs
 
             void WorkaroundPaddingIncreaseBug()
             {
-                var padding = new Padding(1);
+                Padding padding = new(1);
 
                 splitLeft.Panel1.Padding = padding;
                 splitLeft.Panel2.Padding = padding;
@@ -1008,8 +1008,8 @@ namespace GitUI.CommandsDialogs
                 ? _currentSelection ?? Array.Empty<GitItemStatus>()
                 : Array.Empty<GitItemStatus>();
 
-            var unstagedFiles = new List<GitItemStatus>();
-            var stagedFiles = new List<GitItemStatus>();
+            List<GitItemStatus> unstagedFiles = new();
+            List<GitItemStatus> stagedFiles = new();
 
             foreach (var fileStatus in allChangedFiles)
             {
@@ -1955,7 +1955,7 @@ namespace GitUI.CommandsDialogs
                     toolStripProgressBar1.Maximum = items.Count * 2;
                     toolStripProgressBar1.Value = 0;
 
-                    var files = new List<GitItemStatus>();
+                    List<GitItemStatus> files = new();
 
                     foreach (var item in items)
                     {
@@ -1987,14 +1987,14 @@ namespace GitUI.CommandsDialogs
                         InitializedStaged();
                         var unstagedFiles = Unstaged.GitItemStatuses.ToList();
                         _skipUpdate = true;
-                        var names = new HashSet<string?>();
+                        HashSet<string?> names = new();
                         foreach (var item in files)
                         {
                             names.Add(item.Name);
                             names.Add(item.OldName);
                         }
 
-                        var unstagedItems = new HashSet<GitItemStatus>();
+                        HashSet<GitItemStatus> unstagedItems = new();
 
                         foreach (var item in unstagedFiles)
                         {
@@ -2106,9 +2106,9 @@ namespace GitUI.CommandsDialogs
                 _currentFilesList.StoreNextIndexToSelect();
 
                 var deleteNewFiles = _currentFilesList.SelectedItems.Any(item => item.Item.IsNew) && (resetType == FormResetChanges.ActionEnum.ResetAndDelete);
-                var filesInUse = new List<string>();
-                var filesToReset = new List<string>();
-                var output = new StringBuilder();
+                List<string> filesInUse = new();
+                List<string> filesToReset = new();
+                StringBuilder output = new();
                 foreach (var item in _currentFilesList.SelectedItems)
                 {
                     if (item.Item.IsNew)
@@ -2419,14 +2419,14 @@ namespace GitUI.CommandsDialogs
                 return;
             }
 
-            var sb = new StringBuilder();
+            StringBuilder sb = new();
             sb.AppendLine("Submodule" + (modules.Count == 1 ? " " : "s ") +
                 string.Join(", ", modules.Keys) + " updated");
             sb.AppendLine();
 
             foreach (var (path, name) in modules)
             {
-                var args = new GitArgumentBuilder("diff")
+                GitArgumentBuilder args = new("diff")
                 {
                     "--cached",
                     "-z",
@@ -2613,7 +2613,7 @@ namespace GitUI.CommandsDialogs
                 return;
             }
 
-            var fileNames = new StringBuilder();
+            StringBuilder fileNames = new();
             foreach (var item in list.SelectedItems)
             {
                 var fileName = _fullPathResolver.Resolve(item.Item.Name);

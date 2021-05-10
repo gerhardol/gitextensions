@@ -152,7 +152,7 @@ namespace GitUI.BranchTreePanel
 
             SearchControl<string> CreateSearchBox()
             {
-                var search = new SearchControl<string>(SearchForBranch, i => { })
+                SearchControl<string> search = new(SearchForBranch, i => { })
                 {
                     Anchor = AnchorStyles.Left | AnchorStyles.Right,
                     Name = "txtBranchCritierion",
@@ -182,7 +182,7 @@ namespace GitUI.BranchTreePanel
 
                 IEnumerable<string> CollectFilterCandidates()
                 {
-                    var list = new List<string>();
+                    List<string> list = new();
 
                     foreach (TreeNode rootNode in treeMain.Nodes)
                     {
@@ -464,8 +464,8 @@ namespace GitUI.BranchTreePanel
 
             List<TreeNode> SearchTree(string text, IEnumerable<TreeNode> nodes)
             {
-                var queue = new Queue<TreeNode>(nodes);
-                var ret = new List<TreeNode>();
+                Queue<TreeNode> queue = new(nodes);
+                List<TreeNode> ret = new();
 
                 while (queue.Count != 0)
                 {

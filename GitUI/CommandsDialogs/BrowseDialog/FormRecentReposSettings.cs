@@ -105,8 +105,8 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             MostRecentLB.Items.Clear();
             LessRecentLB.Items.Clear();
 
-            var mostRecentRepos = new List<RecentRepoInfo>();
-            var lessRecentRepos = new List<RecentRepoInfo>();
+            List<RecentRepoInfo> mostRecentRepos = new();
+            List<RecentRepoInfo> lessRecentRepos = new();
 
             var splitter = new RecentRepoSplitter
             {

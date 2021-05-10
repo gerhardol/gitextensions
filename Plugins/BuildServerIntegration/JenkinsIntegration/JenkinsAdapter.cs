@@ -252,7 +252,7 @@ namespace JenkinsIntegration
                     return;
                 }
 
-                var builds = new Dictionary<ObjectId, BuildInfo.BuildStatus>();
+                Dictionary<ObjectId, BuildInfo.BuildStatus> builds = new();
                 foreach (var build in allBuildInfos)
                 {
                     if (build.Task.IsFaulted)
@@ -387,7 +387,7 @@ namespace JenkinsIntegration
             var webUrl = buildDescription["url"].ToObject<string>();
 
             var action = buildDescription["actions"];
-            var commitHashList = new List<ObjectId>();
+            List<ObjectId> commitHashList = new();
             string testResults = string.Empty;
             foreach (var element in action)
             {
@@ -558,7 +558,7 @@ namespace JenkinsIntegration
         private async Task<string> GetResponseAsync(string relativePath, CancellationToken cancellationToken)
         {
             using var responseStream = await GetStreamAsync(relativePath, cancellationToken).ConfigureAwait(false);
-            using var reader = new StreamReader(responseStream);
+            using StreamReader reader = new(responseStream);
             return await reader.ReadToEndAsync();
         }
 

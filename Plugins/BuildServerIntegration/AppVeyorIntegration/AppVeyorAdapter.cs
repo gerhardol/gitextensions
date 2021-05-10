@@ -133,7 +133,7 @@ namespace AppVeyorIntegration
 
             static HttpClient GetHttpClient(string baseUrl, string? accountToken)
             {
-                var httpClient = new HttpClient(new HttpClientHandler { UseDefaultCredentials = true })
+                HttpClient httpClient = new(new HttpClientHandler { UseDefaultCredentials = true })
                 {
                     Timeout = TimeSpan.FromMinutes(2),
                     BaseAddress = new Uri(baseUrl, UriKind.Absolute),
@@ -149,7 +149,7 @@ namespace AppVeyorIntegration
 
             List<AppVeyorBuildInfo> FilterBuilds(IEnumerable<AppVeyorBuildInfo> allBuilds)
             {
-                var filteredBuilds = new List<AppVeyorBuildInfo>();
+                List<AppVeyorBuildInfo> filteredBuilds = new();
                 foreach (var build in allBuilds.OrderByDescending(b => b.StartDate))
                 {
                     Validates.NotNull(build.CommitId);
@@ -203,7 +203,7 @@ namespace AppVeyorIntegration
             var baseWebUrl = $"{WebSiteUrl}/project/{projectId}/build/";
             var baseApiUrl = $"{ApiBaseUrl}{projectId}/";
 
-            var buildDetails = new List<AppVeyorBuildInfo>();
+            List<AppVeyorBuildInfo> buildDetails = new();
             foreach (var b in builds)
             {
                 try

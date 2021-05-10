@@ -172,8 +172,8 @@ Detail of the error:");
                         {
                             ProjectOnErrorKey = CacheKey;
 
-                            var btnOpenSettings = new TaskDialogButton("btnOpenSettings", "Open settings");
-                            var btnIgnore = new TaskDialogButton("btnIgnoreError", "Ignore");
+                            TaskDialogButton btnOpenSettings = new("btnOpenSettings", "Open settings");
+                            TaskDialogButton btnIgnore = new("btnIgnoreError", "Ignore");
                             using var errorDialog = new TaskDialog
                             {
                                 InstructionText = errorMessage,

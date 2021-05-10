@@ -70,7 +70,7 @@ namespace GitCommands
             CommandCache? cache = null,
             bool stripAnsiEscapeCodes = true)
         {
-            var sb = new StringBuilder();
+            StringBuilder sb = new();
             foreach (var batch in batchArguments)
             {
                 sb.Append(executable.GetOutput(batch.Argument, input, outputEncoding, cache, stripAnsiEscapeCodes));
@@ -116,8 +116,8 @@ namespace GitCommands
                 process.StandardInput.Close();
             }
 
-            var outputBuffer = new MemoryStream();
-            var errorBuffer = new MemoryStream();
+            MemoryStream outputBuffer = new();
+            MemoryStream errorBuffer = new();
             var outputTask = process.StandardOutput.BaseStream.CopyToAsync(outputBuffer);
             var errorTask = process.StandardError.BaseStream.CopyToAsync(errorBuffer);
             var exitTask = process.WaitForExitAsync();
@@ -356,8 +356,8 @@ namespace GitCommands
             }
 
             using var process = executable.Start(arguments, createWindow: false, redirectInput: writeInput is not null, redirectOutput: true, outputEncoding);
-            var outputBuffer = new MemoryStream();
-            var errorBuffer = new MemoryStream();
+            MemoryStream outputBuffer = new();
+            MemoryStream errorBuffer = new();
             var outputTask = process.StandardOutput.BaseStream.CopyToAsync(outputBuffer);
             var errorTask = process.StandardError.BaseStream.CopyToAsync(errorBuffer);
 
