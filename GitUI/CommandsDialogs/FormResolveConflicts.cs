@@ -365,7 +365,7 @@ namespace GitUI.CommandsDialogs
             var filePath = _fullPathResolver.Resolve(fileName);
             DateTime lastWriteTimeBeforeMerge = File.Exists(filePath) ? File.GetLastWriteTime(filePath) : DateTime.Now;
 
-            var args = new ArgumentBuilder
+            ArgumentBuilder args = new()
             {
                 mergeScript.Quote(),
                 FixPath(filePath).Quote(),
@@ -1339,7 +1339,7 @@ namespace GitUI.CommandsDialogs
                 string fileName = PathUtil.GetFileName(conflictData.Filename);
                 var initialDirectory = _fullPathResolver.Resolve(Path.GetDirectoryName(conflictData.Filename));
 
-                using var fileDialog = new SaveFileDialog
+                using SaveFileDialog fileDialog = new()
                 {
                     FileName = fileName,
                     InitialDirectory = initialDirectory,

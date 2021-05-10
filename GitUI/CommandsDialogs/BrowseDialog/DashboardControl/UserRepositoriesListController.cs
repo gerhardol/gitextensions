@@ -58,7 +58,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog.DashboardControl
             List<RecentRepoInfo> mostRecentRepos = new();
             List<RecentRepoInfo> lessRecentRepos = new();
 
-            var splitter = new RecentRepoSplitter
+            RecentRepoSplitter splitter = new()
             {
                 Graphics = g,
                 MeasureFont = AppSettings.Font,

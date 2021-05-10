@@ -165,7 +165,7 @@ namespace GitUI
         {
             if (FindMaskPanel(control) is null)
             {
-                var panel = new LoadingControl
+                LoadingControl panel = new()
                 {
                     Dock = DockStyle.Fill,
                     IsAnimating = true,

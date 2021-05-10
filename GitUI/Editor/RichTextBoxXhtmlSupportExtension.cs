@@ -1241,7 +1241,7 @@ namespace GitUI.Editor.RichTextBoxExtension
 
             IntPtr oldMask = BeginUpdate(handleRef);
 
-            var settings = new XmlReaderSettings
+            XmlReaderSettings settings = new()
             {
                 ConformanceLevel = ConformanceLevel.Fragment,
                 CheckCharacters = false

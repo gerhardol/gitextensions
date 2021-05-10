@@ -338,7 +338,7 @@ namespace TeamCityIntegration
                 statusText = currentStageText;
             }
 
-            var buildInfo = new BuildInfo
+            BuildInfo buildInfo = new()
             {
                 Id = idValue,
                 StartDate = DecodeJsonDateTime(startDateText),
