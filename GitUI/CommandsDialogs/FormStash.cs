@@ -270,7 +270,7 @@ namespace GitUI.CommandsDialogs
                 var stashName = GetStashName();
                 if (AppSettings.StashConfirmDropShow)
                 {
-                    using var dialog = new Microsoft.WindowsAPICodePack.Dialogs.TaskDialog
+                    using Microsoft.WindowsAPICodePack.Dialogs.TaskDialog dialog = new()
                     {
                         OwnerWindowHandle = Handle,
                         Text = _areYouSure.Text,

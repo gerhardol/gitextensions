@@ -85,7 +85,7 @@ namespace GitUI.Avatars
 
                 if (isBot)
                 {
-                    var client = new Git.hub.Client();
+                    Git.hub.Client client = new();
                     var userProfile = await client.GetUserAsync(username);
 
                     if (string.IsNullOrEmpty(userProfile?.AvatarUrl))

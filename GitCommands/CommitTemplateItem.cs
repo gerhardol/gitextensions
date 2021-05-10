@@ -91,7 +91,7 @@ namespace GitCommands
                     byte[] memoryData = Convert.FromBase64String(serializedString.Substring(p + 1));
                     using MemoryStream rs = new(memoryData, 0, length);
 #pragma warning disable SYSLIB0011 // Type or member is obsolete
-                    var sf = new BinaryFormatter { Binder = new MoveNamespaceDeserializationBinder() };
+                    BinaryFormatter sf = new() { Binder = new MoveNamespaceDeserializationBinder() };
                     commitTemplateItem = (CommitTemplateItem[])sf.Deserialize(rs);
 #pragma warning restore SYSLIB0011 // Type or member is obsolete
 

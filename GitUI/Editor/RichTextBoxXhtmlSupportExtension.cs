@@ -1553,7 +1553,7 @@ namespace GitUI.Editor.RichTextBoxExtension
 
             rtb.HideSelection = true;
 
-            var settings = new XmlReaderSettings { ConformanceLevel = ConformanceLevel.Fragment };
+            XmlReaderSettings settings = new() { ConformanceLevel = ConformanceLevel.Fragment };
 
             try
             {

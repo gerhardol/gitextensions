@@ -96,7 +96,7 @@ namespace GitUI.CommandsDialogs
                 return "";
             }
 
-            var createTagArgs = new GitCreateTagArgs(textBoxTagName.Text,
+            GitCreateTagArgs createTagArgs = new(textBoxTagName.Text,
                                                      objectId,
                                                      GetSelectedOperation(annotate.SelectedIndex),
                                                      tagMessage.Text,

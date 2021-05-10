@@ -1887,7 +1887,7 @@ namespace GitUI
                 return;
             }
 
-            using var dialog = new Microsoft.WindowsAPICodePack.Dialogs.TaskDialog
+            using Microsoft.WindowsAPICodePack.Dialogs.TaskDialog dialog = new()
             {
                 OwnerWindowHandle = Handle,
                 Text = _areYouSureRebase.Text,
@@ -1926,7 +1926,7 @@ namespace GitUI
                 return;
             }
 
-            using var dialog = new Microsoft.WindowsAPICodePack.Dialogs.TaskDialog
+            using Microsoft.WindowsAPICodePack.Dialogs.TaskDialog dialog = new()
             {
                 OwnerWindowHandle = Handle,
                 Text = _areYouSureRebase.Text,

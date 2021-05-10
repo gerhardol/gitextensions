@@ -106,11 +106,11 @@ namespace GitExtensions.Plugins.GitHub3
         {
             yield return PersonalAccessToken;
 
-            var generateTokenLink = new LinkLabel { Text = _generateToken.Text };
+            LinkLabel generateTokenLink = new() { Text = _generateToken.Text };
             generateTokenLink.Click += GenerateTokenLink_Click;
             yield return new PseudoSetting(generateTokenLink);
 
-            var manageTokenLink = new LinkLabel { Text = _manageToken.Text };
+            LinkLabel manageTokenLink = new() { Text = _manageToken.Text };
             manageTokenLink.Click += ManageTokenLink_Click;
             yield return new PseudoSetting(manageTokenLink);
         }
