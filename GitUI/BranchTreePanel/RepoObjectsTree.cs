@@ -24,13 +24,13 @@ namespace GitUI.BranchTreePanel
     {
         private readonly CancellationTokenSequence _selectionCancellationTokenSequence = new();
         private readonly TranslationString _showBranchOnly =
-            new TranslationString("Filter the revision grid to show this branch only\nTo show all branches, right click the revision grid, select 'view' and then the 'show all branches'");
+            new("Filter the revision grid to show this branch only\nTo show all branches, right click the revision grid, select 'view' and then the 'show all branches'");
         private readonly TranslationString _searchTooltip = new("Search");
         private readonly TranslationString _showHideRefsTooltip = new("Show/hide branches/remotes/tags");
 
         private NativeTreeViewDoubleClickDecorator _doubleClickDecorator;
         private NativeTreeViewExplorerNavigationDecorator _explorerNavigationDecorator;
-        private readonly List<Tree> _rootNodes = new List<Tree>();
+        private readonly List<Tree> _rootNodes = new();
         private readonly SearchControl<string> _txtBranchCriterion;
         private BranchTree _branchesTree;
         private RemoteBranchTree _remotesTree;
@@ -557,7 +557,7 @@ namespace GitUI.BranchTreePanel
         }
 
         internal TestAccessor GetTestAccessor()
-            => new TestAccessor(this);
+            => new(this);
 
         internal readonly struct TestAccessor
         {

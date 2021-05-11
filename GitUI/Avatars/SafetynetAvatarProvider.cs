@@ -20,7 +20,7 @@ namespace GitUI.Avatars
         private const int _defaultSize = 64;
 
         private readonly IAvatarProvider _avatarProvider;
-        private readonly Lazy<Image> _safetyNetFallback = new Lazy<Image>(GenerateSafetynetFallback);
+        private readonly Lazy<Image> _safetyNetFallback = new(GenerateSafetynetFallback);
 
         public SafetynetAvatarProvider(IAvatarProvider avatarProvider)
         {

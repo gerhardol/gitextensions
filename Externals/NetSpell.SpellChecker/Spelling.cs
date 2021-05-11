@@ -990,7 +990,7 @@ namespace NetSpell.SpellChecker
                 && _dictionary.PhoneticRules.Count > 0)
             {
                 // generate phonetic code for possible root word
-                Dictionary<string, string> codes = new Dictionary<string, string>();
+                Dictionary<string, string> codes = new();
                 foreach (string tempWord in _dictionary.PossibleBaseWords)
                 {
                     string tempCode = _dictionary.PhoneticCode(tempWord);
@@ -1148,7 +1148,7 @@ namespace NetSpell.SpellChecker
         #region public properties
 
         private WordDictionary _dictionary;
-        private readonly HashSet<string> _autoCompleteWords = new HashSet<string>();
+        private readonly HashSet<string> _autoCompleteWords = new();
         private string _replacementWord = "";
         private StringBuilder _text = new();
         private int _wordIndex;

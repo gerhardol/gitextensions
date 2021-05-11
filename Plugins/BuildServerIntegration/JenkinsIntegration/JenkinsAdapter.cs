@@ -58,7 +58,7 @@ namespace JenkinsIntegration
         private HttpClient? _httpClient;
 
         // last known build per project
-        private readonly Dictionary<string, long> _lastProjectBuildTime = new Dictionary<string, long>();
+        private readonly Dictionary<string, long> _lastProjectBuildTime = new();
         private Regex? _ignoreBuilds;
 
         public void Initialize(IBuildServerWatcher buildServerWatcher, ISettingsSource config, Action openSettings, Func<ObjectId, bool>? isCommitInRevisionGrid = null)

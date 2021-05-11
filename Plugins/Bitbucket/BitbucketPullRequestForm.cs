@@ -27,7 +27,7 @@ namespace GitExtensions.Plugins.Bitbucket
         private readonly string _NO_TRANSLATE_LinkViewPull = "pull-requests";
 
         private readonly Settings? _settings;
-        private readonly BindingList<BitbucketUser> _reviewers = new BindingList<BitbucketUser>();
+        private readonly BindingList<BitbucketUser> _reviewers = new();
 
         public BitbucketPullRequestForm(Settings? settings, IGitModule? module)
         {
@@ -176,7 +176,7 @@ namespace GitExtensions.Plugins.Bitbucket
             });
         }
 
-        private readonly Dictionary<Repository, IEnumerable<string>> _branches = new Dictionary<Repository, IEnumerable<string>>();
+        private readonly Dictionary<Repository, IEnumerable<string>> _branches = new();
         private async Task<IEnumerable<string>> GetBitbucketBranchesAsync(Repository selectedRepo)
         {
             lock (_branches)

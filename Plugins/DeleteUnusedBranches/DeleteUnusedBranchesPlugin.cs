@@ -18,7 +18,7 @@ namespace GitExtensions.Plugins.DeleteUnusedBranches
         }
 
         private readonly StringSetting _mergedInBranch = new("Branch where all branches should be merged in", "HEAD");
-        private readonly NumberSetting<int> _daysOlderThan = new NumberSetting<int>("Delete obsolete branches older than (days)", 30);
+        private readonly NumberSetting<int> _daysOlderThan = new("Delete obsolete branches older than (days)", 30);
         private readonly BoolSetting _deleteRemoteBranchesFromFlag = new("Delete obsolete branches from remote", false);
         private readonly StringSetting _remoteName = new("Remote name obsoleted branches should be deleted from", "origin");
         private readonly BoolSetting _useRegexToFilterBranchesFlag = new("Use regex to filter branches to delete", false);

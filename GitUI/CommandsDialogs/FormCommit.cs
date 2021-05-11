@@ -45,7 +45,7 @@ namespace GitUI.CommandsDialogs
         #region Translation
 
         private readonly TranslationString _amendCommit =
-            new TranslationString("You are about to rewrite history." + Environment.NewLine +
+            new("You are about to rewrite history." + Environment.NewLine +
                                   "Only use amend if the commit is not published yet!" + Environment.NewLine +
                                   Environment.NewLine + "Do you want to continue?");
 
@@ -56,15 +56,15 @@ namespace GitUI.CommandsDialogs
         private readonly TranslationString _deleteFailed = new("Delete file failed");
 
         private readonly TranslationString _deleteSelectedFiles =
-            new TranslationString("Are you sure you want to delete the selected file(s)?");
+            new("Are you sure you want to delete the selected file(s)?");
 
         private readonly TranslationString _deleteSelectedFilesCaption = new("Delete");
 
         private readonly TranslationString _deleteUntrackedFiles =
-            new TranslationString("Are you sure you want to delete all untracked files?");
+            new("Are you sure you want to delete all untracked files?");
 
         private readonly TranslationString _deleteUntrackedFilesCaption =
-            new TranslationString("Delete untracked files.");
+            new("Delete untracked files.");
 
         private readonly TranslationString _enterCommitMessage = new("Please enter commit message");
         private readonly TranslationString _enterCommitMessageCaption = new("Commit message");
@@ -73,35 +73,35 @@ namespace GitUI.CommandsDialogs
         private readonly TranslationString _enterCommitMessageHint = new("Enter commit message");
 
         private readonly TranslationString _mergeConflicts =
-            new TranslationString("There are unresolved merge conflicts, solve merge conflicts before committing.");
+            new("There are unresolved merge conflicts, solve merge conflicts before committing.");
 
         private readonly TranslationString _mergeConflictsCaption = new("Merge conflicts");
 
         private readonly TranslationString _noFilesStagedAndConfirmAnEmptyMergeCommit =
-            new TranslationString("There are no files staged for this commit.\nAre you sure you want to commit?");
+            new("There are no files staged for this commit.\nAre you sure you want to commit?");
         private readonly TranslationString _noFilesStagedCommitAllFilteredUnstagedOption =
-            new TranslationString("Stage and commit the unstaged files that match your filter");
+            new("Stage and commit the unstaged files that match your filter");
         private readonly TranslationString _noFilesStagedCommitAllUnstagedOption =
-            new TranslationString("Stage and commit all unstaged files");
+            new("Stage and commit all unstaged files");
         private readonly TranslationString _noFilesStagedMakeEmptyCommitOption =
-            new TranslationString("Make an empty commit");
+            new("Make an empty commit");
         private readonly TranslationString _noFilesStagedCommitCaption =
-            new TranslationString("Confirm commit");
+            new("Confirm commit");
         private readonly TranslationString _noFilesStagedCommitInstructions =
-            new TranslationString("There aren't any changes in the staging area.\nHow do you want to proceed?");
+            new("There aren't any changes in the staging area.\nHow do you want to proceed?");
 
         private readonly TranslationString _noStagedChanges = new("There are no staged changes");
         private readonly TranslationString _noUnstagedChanges = new("There are no unstaged changes");
 
         private readonly TranslationString _notOnBranch =
-            new TranslationString("This commit will be unreferenced when switching to another branch and can be lost." +
+            new("This commit will be unreferenced when switching to another branch and can be lost." +
                                   Environment.NewLine + Environment.NewLine + "Do you want to continue?");
 
         private readonly TranslationString _onlyStageChunkOfSingleFileError =
-            new TranslationString("You can only use this option when selecting a single file");
+            new("You can only use this option when selecting a single file");
 
         private readonly TranslationString _resetSelectedChangesText =
-            new TranslationString("Are you sure you want to reset all selected files?");
+            new("Are you sure you want to reset all selected files?");
 
         private readonly TranslationString _resetStageChunkOfFileCaption = new("Unstage chunk of file");
         private readonly TranslationString _stageDetails = new("Stage Details");
@@ -138,7 +138,7 @@ namespace GitUI.CommandsDialogs
         private readonly TranslationString _commitCommitterToolTip = new("Click to change committer information.");
 
         private readonly TranslationString _modifyCommitMessageButtonToolTip
-            = new TranslationString("If you change the first line of the commit message, git will treat this commit as an ordinary commit," + Environment.NewLine
+            = new("If you change the first line of the commit message, git will treat this commit as an ordinary commit," + Environment.NewLine
                                     + "i.e. it may no longer be a fixup or an autosquash commit.");
 
         private readonly TranslationString _templateNotFoundCaption = new("Template Error");
@@ -165,9 +165,9 @@ namespace GitUI.CommandsDialogs
         private readonly bool _useFormCommitMessage = AppSettings.UseFormCommitMessage;
         private readonly CancellationTokenSequence _interactiveAddSequence = new();
         private readonly SplitterManager _splitterManager = new(new AppSettingsPath("CommitDialog"));
-        private readonly Subject<string> _selectionFilterSubject = new Subject<string>();
+        private readonly Subject<string> _selectionFilterSubject = new();
         private readonly IFullPathResolver _fullPathResolver;
-        private readonly List<string> _formattedLines = new List<string>();
+        private readonly List<string> _formattedLines = new();
 
         private CommitKind _commitKind;
         private FileStatusList? _currentFilesList;
@@ -3361,7 +3361,7 @@ namespace GitUI.CommandsDialogs
         }
 
         internal TestAccessor GetTestAccessor()
-            => new TestAccessor(this);
+            => new(this);
 
         internal readonly struct TestAccessor
         {

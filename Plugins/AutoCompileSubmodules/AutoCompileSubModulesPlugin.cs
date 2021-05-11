@@ -14,9 +14,9 @@ namespace GitExtensions.Plugins.AutoCompileSubmodules
     public class AutoCompileSubModulesPlugin : GitPluginBase, IGitPluginForRepository
     {
         private readonly TranslationString _doYouWantBuild =
-            new TranslationString("Do you want to build {0}?\n\n{1}");
+            new("Do you want to build {0}?\n\n{1}");
         private readonly TranslationString _enterCorrectMsBuildPath =
-            new TranslationString("Please enter correct MSBuild path in the plugin settings dialog and try again.");
+            new("Please enter correct MSBuild path in the plugin settings dialog and try again.");
 
         public AutoCompileSubModulesPlugin() : base(true)
         {

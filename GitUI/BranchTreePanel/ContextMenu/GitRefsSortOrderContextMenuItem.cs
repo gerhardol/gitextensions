@@ -58,7 +58,7 @@ namespace GitUI.BranchTreePanel.ContextMenu
             }
         }
 
-        internal TestAccessor GetTestAccessor() => new TestAccessor(this);
+        internal TestAccessor GetTestAccessor() => new(this);
 
         internal struct TestAccessor
         {

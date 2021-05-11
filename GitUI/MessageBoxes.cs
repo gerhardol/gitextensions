@@ -30,7 +30,7 @@ namespace GitUI
         private readonly TranslationString _pageantNotFound = new("Cannot load SSH key. PuTTY is not configured properly.");
 
         private readonly TranslationString _serverHostkeyNotCachedText =
-            new TranslationString("The server's host key is not cached in the registry.\n\nDo you want to trust this host key and then try again?");
+            new("The server's host key is not cached in the registry.\n\nDo you want to trust this host key and then try again?");
 
         private readonly TranslationString _updateSubmodules = new("Update submodules");
         private readonly TranslationString _theRepositorySubmodules = new("Update submodules on checkout?");

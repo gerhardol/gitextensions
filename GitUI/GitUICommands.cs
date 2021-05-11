@@ -1919,7 +1919,7 @@ namespace GitUI
 
         #endregion
 
-        internal TestAccessor GetTestAccessor() => new TestAccessor(this);
+        internal TestAccessor GetTestAccessor() => new(this);
 
         internal struct TestAccessor
         {

@@ -23,7 +23,7 @@ namespace GitUI.Hotkey
 
         #endregion
 
-        private static readonly HashSet<Keys> _usedKeys = new HashSet<Keys>();
+        private static readonly HashSet<Keys> _usedKeys = new();
 
         /// <summary>
         /// Returns whether the hotkey is already assigned.
@@ -208,7 +208,7 @@ namespace GitUI.Hotkey
 
         public static HotkeySettings[] CreateDefaultSettings()
         {
-            HotkeyCommand Hk(object en, Keys k) => new HotkeyCommand((int)en, en.ToString()) { KeyData = k };
+            HotkeyCommand Hk(object en, Keys k) => new((int)en, en.ToString()) { KeyData = k };
 
             const Keys OpenWithDifftoolHotkey = Keys.F3;
             const Keys OpenWithDifftoolFirstToLocalHotkey = Keys.Alt | Keys.F3;

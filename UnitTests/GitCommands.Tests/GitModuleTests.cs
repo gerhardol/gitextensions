@@ -775,8 +775,8 @@ namespace GitCommandsTests
         public void GetSuperprojectCurrentCheckout()
         {
             // Create super and sub repo
-            using CommonTestUtils.GitModuleTestHelper moduleTestHelperSuper = new CommonTestUtils.GitModuleTestHelper("super repo"),
-                                                       moduleTestHelperSub = new CommonTestUtils.GitModuleTestHelper("sub repo");
+            using CommonTestUtils.GitModuleTestHelper moduleTestHelperSuper = new("super repo"),
+                                                       moduleTestHelperSub = new("sub repo");
 
             // Add and init the submodule
             moduleTestHelperSuper.AddSubmodule(moduleTestHelperSub, "sub repo");

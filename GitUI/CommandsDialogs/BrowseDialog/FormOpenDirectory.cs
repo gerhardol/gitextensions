@@ -172,7 +172,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
         }
 
         internal TestAccessor GetTestAccessor()
-            => new TestAccessor(this);
+            => new(this);
 
         internal readonly struct TestAccessor
         {

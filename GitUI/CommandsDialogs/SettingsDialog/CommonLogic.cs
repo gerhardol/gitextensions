@@ -15,10 +15,10 @@ namespace GitUI.CommandsDialogs.SettingsDialog
     public sealed class CommonLogic : Translate
     {
         private static readonly TranslationString _cantReadRegistry =
-            new TranslationString("Git Extensions has insufficient permissions to check the registry.");
+            new("Git Extensions has insufficient permissions to check the registry.");
 
         private readonly TranslationString _selectFile =
-            new TranslationString("Select file");
+            new("Select file");
 
         public readonly RepoDistSettingsSet RepoDistSettingsSet;
         public readonly ConfigFileSettingsSet ConfigFileSettingsSet;

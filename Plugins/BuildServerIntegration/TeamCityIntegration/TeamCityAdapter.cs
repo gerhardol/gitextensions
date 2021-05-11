@@ -63,7 +63,7 @@ namespace TeamCityIntegration
 
         private string? _httpClientHostSuffix;
 
-        private readonly List<JoinableTask<IEnumerable<string>>> _getBuildTypesTask = new List<JoinableTask<IEnumerable<string>>>();
+        private readonly List<JoinableTask<IEnumerable<string>>> _getBuildTypesTask = new();
 
         private CookieContainer? _teamCityNtlmAuthCookie;
 

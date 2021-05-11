@@ -71,7 +71,7 @@ namespace GitUITests.UserControls.RevisionGrid
 
         private void LoadRandomRevisions()
         {
-            List<GitRevision> randomRevisions = new List<GitRevision>();
+            List<GitRevision> randomRevisions = new();
 
             for (int i = 0; i < _numberOfRevisionsAddedPerRun; i++)
             {

@@ -55,7 +55,7 @@ namespace AppVeyorIntegration
 
         private HttpClient? _httpClientAppVeyor;
 
-        private List<AppVeyorBuildInfo>? _allBuilds = new List<AppVeyorBuildInfo>();
+        private List<AppVeyorBuildInfo>? _allBuilds = new();
         private HashSet<ObjectId>? _fetchBuilds;
         private Func<ObjectId, bool>? _isCommitInRevisionGrid;
         private bool _shouldLoadTestResults;

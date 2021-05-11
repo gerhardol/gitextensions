@@ -152,7 +152,7 @@ namespace GitCommands.Logging
     {
         public static event Action? CommandsChanged;
 
-        private static ConcurrentQueue<CommandLogEntry> _queue = new ConcurrentQueue<CommandLogEntry>();
+        private static ConcurrentQueue<CommandLogEntry> _queue = new();
 
         public static bool CaptureCallStacks { get; set; }
 

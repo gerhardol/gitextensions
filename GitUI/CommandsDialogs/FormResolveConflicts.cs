@@ -81,19 +81,19 @@ namespace GitUI.CommandsDialogs
         private readonly TranslationString _chooseRemoteFileFailedText = new("Choose remote file failed.");
 
         private readonly TranslationString _currentFormatFilter =
-            new TranslationString("Current format (*.{0})");
+            new("Current format (*.{0})");
         private readonly TranslationString _allFilesFilter =
-            new TranslationString("All files (*.*)");
+            new("All files (*.*)");
 
         private readonly TranslationString _abortCurrentOperation =
-            new TranslationString("You can abort the current operation by resetting changes." + Environment.NewLine +
+            new("You can abort the current operation by resetting changes." + Environment.NewLine +
                 "All changes since the last commit will be deleted." + Environment.NewLine +
                 Environment.NewLine + "Do you want to reset changes?");
 
         private readonly TranslationString _abortCurrentOperationCaption = new("Abort");
 
         private readonly TranslationString _areYouSureYouWantDeleteFiles =
-            new TranslationString("Are you sure you want to DELETE all changes?" + Environment.NewLine +
+            new("Are you sure you want to DELETE all changes?" + Environment.NewLine +
                 Environment.NewLine + "This action cannot be made undone.");
 
         private readonly TranslationString _areYouSureYouWantDeleteFilesCaption = new("WARNING!");
@@ -309,7 +309,7 @@ namespace GitUI.CommandsDialogs
             new CustomDiffMergeToolProvider().LoadCustomDiffMergeTools(Module, menus, components, isDiff: false, ToolDelay);
         }
 
-        private readonly Dictionary<string, string> _mergeScripts = new Dictionary<string, string>
+        private readonly Dictionary<string, string> _mergeScripts = new()
         {
             { ".doc", "merge-doc.js" },
             { ".docx", "merge-doc.js" },
@@ -902,7 +902,7 @@ namespace GitUI.CommandsDialogs
         private TaskDialog CreateSolveMergeConflictTaskDialog(IntPtr handle, string text, string instructionText, string caption, string applyToAllCheckBoxText,
             string keepLocalButtonText, string keepRemoteButtonText, string keepBaseButtonText)
         {
-            TaskDialog dialog = new TaskDialog
+            TaskDialog dialog = new()
             {
                 OwnerWindowHandle = handle,
                 Text = text,
@@ -1188,9 +1188,9 @@ namespace GitUI.CommandsDialogs
                     var items = GetConflicts();
                     _conflictItemsCount = items.Count;
 
-                    List<ConflictData> filesDeletedLocallyAndModifiedRemotely = new List<ConflictData>();
-                    List<ConflictData> filesModifiedLocallyAndDeletedRemotely = new List<ConflictData>();
-                    List<ConflictData> filesRemaining = new List<ConflictData>();
+                    List<ConflictData> filesDeletedLocallyAndModifiedRemotely = new();
+                    List<ConflictData> filesModifiedLocallyAndDeletedRemotely = new();
+                    List<ConflictData> filesRemaining = new();
 
                     // Insert(0, conflictData) is needed the task dialog shows the same order of files as selected in the grid
                     foreach (var conflictData in items)

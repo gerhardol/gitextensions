@@ -14,7 +14,7 @@ namespace BugReporter
 {
     internal partial class ExceptionDetails : UserControl
     {
-        private readonly Dictionary<TreeNode, SerializableException> _exceptionDetailsList = new Dictionary<TreeNode, SerializableException>();
+        private readonly Dictionary<TreeNode, SerializableException> _exceptionDetailsList = new();
 
         public ExceptionDetails()
         {
@@ -159,7 +159,7 @@ namespace BugReporter
         }
 
         internal TestAccessor GetTestAccessor()
-            => new TestAccessor(this);
+            => new(this);
 
         internal readonly struct TestAccessor
         {

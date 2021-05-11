@@ -680,7 +680,7 @@ namespace GitCommands
         }
 
         private static readonly Dictionary<string, string> _languageCodes =
-            new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
+            new(StringComparer.InvariantCultureIgnoreCase)
             {
                 { "Czech", "cs" },
                 { "Dutch", "nl" },
@@ -856,7 +856,7 @@ namespace GitCommands
             set => SetBool("revisiongraphdrawnonrelativestextgray", value);
         }
 
-        public static readonly Dictionary<string, Encoding> AvailableEncodings = new Dictionary<string, Encoding>();
+        public static readonly Dictionary<string, Encoding> AvailableEncodings = new();
 
         public enum PullAction
         {
@@ -2065,7 +2065,7 @@ namespace GitCommands
             SetString("AvailableEncodings", availableEncodings);
         }
 
-        internal static TestAccessor GetTestAccessor() => new TestAccessor();
+        internal static TestAccessor GetTestAccessor() => new();
 
         internal struct TestAccessor
         {

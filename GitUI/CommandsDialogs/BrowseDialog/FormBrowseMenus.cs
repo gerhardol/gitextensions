@@ -37,7 +37,7 @@ namespace GitUI.CommandsDialogs
 
         // we have to remember which items we registered with the menucommands because other
         // location (RevisionGrid) can register items too!
-        private readonly List<ToolStripMenuItem> _itemsRegisteredWithMenuCommand = new List<ToolStripMenuItem>();
+        private readonly List<ToolStripMenuItem> _itemsRegisteredWithMenuCommand = new();
 
         public FormBrowseMenus(ToolStrip menuStrip)
         {

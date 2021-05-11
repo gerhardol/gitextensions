@@ -175,7 +175,7 @@ namespace GitExtensions.Plugins.ReleaseNotesGenerator
 
         internal static DataObject CreateHtmlFormatClipboardDataObject(string htmlFragment, string? title = "From Clipboard", Uri? sourceUri = null)
         {
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            System.Text.StringBuilder sb = new();
 
             // Builds the CF_HTML header. See format specification here:
             // http://msdn.microsoft.com/library/default.asp?url=/workshop/networking/clipboard/htmlclipboard.asp

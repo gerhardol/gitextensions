@@ -583,7 +583,7 @@ namespace GitUI.Editor
         {
             private readonly FileViewerInternal _viewer;
             private ViewPosition _currentViewPosition;
-            internal TestAccessor GetTestAccessor() => new TestAccessor(this);
+            internal TestAccessor GetTestAccessor() => new(this);
 
             public CurrentViewPositionCache(FileViewerInternal viewer)
             {
@@ -725,7 +725,7 @@ namespace GitUI.Editor
             internal DiffLineInfo? ActiveLineNum;
         }
 
-        internal TestAccessor GetTestAccessor() => new TestAccessor(this);
+        internal TestAccessor GetTestAccessor() => new(this);
 
         internal readonly struct TestAccessor
         {

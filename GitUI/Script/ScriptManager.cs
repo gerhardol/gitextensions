@@ -101,7 +101,7 @@ namespace GitUI.Script
                 return DeserializeFromOldFormat(xml);
             }
 
-            BindingList<ScriptInfo> GetDefaultScripts() => new BindingList<ScriptInfo>
+            BindingList<ScriptInfo> GetDefaultScripts() => new()
             {
                 new ScriptInfo
                 {

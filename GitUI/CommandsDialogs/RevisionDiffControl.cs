@@ -27,14 +27,14 @@ namespace GitUI.CommandsDialogs
         private readonly TranslationString _saveFileFilterAllFiles = new("All files");
         private readonly TranslationString _deleteSelectedFilesCaption = new("Delete");
         private readonly TranslationString _deleteSelectedFiles =
-            new TranslationString("Are you sure you want to delete the selected file(s)?");
+            new("Are you sure you want to delete the selected file(s)?");
         private readonly TranslationString _deleteFailed = new("Delete file failed");
         private readonly TranslationString _multipleDescription = new("<multiple>");
         private readonly TranslationString _selectedRevision = new("Second: b/");
         private readonly TranslationString _firstRevision = new("First: a/");
 
         private readonly TranslationString _resetSelectedChangesText =
-            new TranslationString("Are you sure you want to reset all selected files to {0}?");
+            new("Are you sure you want to reset all selected files to {0}?");
 
         private RevisionGridControl? _revisionGrid;
         private RevisionFileTreeControl? _revisionFileTree;

@@ -19,7 +19,7 @@ namespace GitCommands.Git
         // Parse info about remote branches, see below for explanation
         // This assumes that the Git output is not localised
         private readonly Regex _aheadBehindRegEx =
-            new Regex(
+            new(
                 @"^((?<gone_p>gone)|((ahead\s(?<ahead_p>\d+))?(,\s)?(behind\s(?<behind_p>\d+))?)|(?<unk_p>.*?))::
                    ((?<gone_u>gone)|((ahead\s(?<ahead_u>\d+))?(,\s)?(behind\s(?<behind_u>\d+))?)|(?<unk_u>.*?))::
                    (?<remote_p>.*?)::(?<remote_u>.*?)::(?<branch>.*)$",
@@ -133,7 +133,7 @@ namespace GitCommands.Git
         }
 
         internal TestAccessor GetTestAccessor()
-            => new TestAccessor(this);
+            => new(this);
 
         internal readonly struct TestAccessor
         {

@@ -1902,7 +1902,7 @@ namespace GitUI.Editor
 
         #endregion
 
-        internal TestAccessor GetTestAccessor() => new TestAccessor(this);
+        internal TestAccessor GetTestAccessor() => new(this);
 
         internal readonly struct TestAccessor
         {

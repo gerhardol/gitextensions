@@ -443,7 +443,7 @@ namespace GitCommands.Patches
     internal sealed class Chunk
     {
         private int _startLine;
-        private readonly List<SubChunk> _subChunks = new List<SubChunk>();
+        private readonly List<SubChunk> _subChunks = new();
         private SubChunk? _currentSubChunk;
 
         private SubChunk CurrentSubChunk

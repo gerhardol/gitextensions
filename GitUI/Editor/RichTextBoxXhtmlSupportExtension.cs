@@ -684,7 +684,7 @@ namespace GitUI.Editor.RichTextBoxExtension
             try
             {
                 // to store formatting
-                List<KeyValuePair<int, string>> colFormat = new List<KeyValuePair<int, string>>();
+                List<KeyValuePair<int, string>> colFormat = new();
                 string strT = ProcessTags(rtb, colFormat, bParaFormat);
 
                 // apply format by replacing and inserting HTML tags

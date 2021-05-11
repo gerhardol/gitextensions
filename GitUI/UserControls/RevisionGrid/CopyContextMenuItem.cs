@@ -102,8 +102,8 @@ namespace GitUI.UserControls.RevisionGrid
 
             DropDownItems.Clear();
 
-            List<string> branchNames = new List<string>();
-            List<string> tagNames = new List<string>();
+            List<string> branchNames = new();
+            List<string> tagNames = new();
             foreach (var revision in revisions)
             {
                 GitRefListsForRevision refLists = new(revision);

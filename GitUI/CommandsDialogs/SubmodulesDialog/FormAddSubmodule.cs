@@ -16,7 +16,7 @@ namespace GitUI.CommandsDialogs.SubmodulesDialog
     public partial class FormAddSubmodule : GitModuleForm
     {
         private readonly TranslationString _remoteAndLocalPathRequired
-            = new TranslationString("A remote path and local path are required");
+            = new("A remote path and local path are required");
 
         [Obsolete("For VS designer and translation test only. Do not remove.")]
         private FormAddSubmodule()

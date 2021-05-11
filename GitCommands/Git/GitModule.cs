@@ -236,7 +236,7 @@ namespace GitCommands
             }
         }
 
-        public ConfigFileSettings LocalConfigFile => new ConfigFileSettings(null, EffectiveConfigFile.SettingsCache, SettingLevel.Local);
+        public ConfigFileSettings LocalConfigFile => new(null, EffectiveConfigFile.SettingsCache, SettingLevel.Local);
 
         IConfigFileSettings IGitModule.LocalConfigFile => LocalConfigFile;
 
@@ -1132,7 +1132,7 @@ namespace GitCommands
         }
 
         public ConfigFile GetSubmoduleConfigFile()
-            => new ConfigFile(WorkingDir + ".gitmodules", true);
+            => new(WorkingDir + ".gitmodules", true);
 
         public string? GetCurrentSubmoduleLocalPath()
         {
@@ -4171,7 +4171,7 @@ namespace GitCommands
             }
         }
 
-        internal TestAccessor GetTestAccessor() => new TestAccessor(this);
+        internal TestAccessor GetTestAccessor() => new(this);
 
         internal readonly struct TestAccessor
         {

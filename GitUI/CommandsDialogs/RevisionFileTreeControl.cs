@@ -47,7 +47,7 @@ See the changes in the commit form.");
         private readonly TranslationString _success = new("Success");
 
         // store strings to not keep references to nodes
-        private readonly Stack<string> _lastSelectedNodes = new Stack<string>();
+        private readonly Stack<string> _lastSelectedNodes = new();
         private readonly IRevisionFileTreeController _revisionFileTreeController;
         private readonly IFullPathResolver _fullPathResolver;
         private readonly IFindFilePredicateProvider _findFilePredicateProvider;

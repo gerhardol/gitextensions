@@ -18,7 +18,7 @@ namespace GitUI.BranchTreePanel
     {
         private GitRefsSortOrderContextMenuItem _sortOrderContextMenuItem;
         private GitRefsSortByContextMenuItem _sortByContextMenuItem;
-        private ToolStripSeparator _tsmiSortMenuSpacer = new ToolStripSeparator { Name = "tsmiSortMenuSpacer" };
+        private ToolStripSeparator _tsmiSortMenuSpacer = new() { Name = "tsmiSortMenuSpacer" };
         private ToolStripItem[] _menuBranchCopyContextMenuItems = Array.Empty<ToolStripItem>();
         private ToolStripItem[] _menuRemoteCopyContextMenuItems = Array.Empty<ToolStripItem>();
 

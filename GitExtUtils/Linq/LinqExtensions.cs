@@ -8,7 +8,7 @@ namespace System.Linq
     public static class LinqExtensions
     {
         [MustUseReturnValue]
-        public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source, IEqualityComparer<T>? comparer = null) => new HashSet<T>(source, comparer ?? EqualityComparer<T>.Default);
+        public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source, IEqualityComparer<T>? comparer = null) => new(source, comparer ?? EqualityComparer<T>.Default);
 
         [MustUseReturnValue]
         public static HashSet<TKey> ToHashSet<TSource, TKey>(

@@ -21,7 +21,7 @@ namespace GitUI.HelperDialogs
         public string? ProcessInput { get; }
         public readonly string WorkingDirectory;
         public HandleOnExit? HandleOnExitCallback { get; set; }
-        public readonly Dictionary<string, string> ProcessEnvVariables = new Dictionary<string, string>();
+        public readonly Dictionary<string, string> ProcessEnvVariables = new();
 
         [Obsolete("For VS designer and translation test only. Do not remove.")]
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.

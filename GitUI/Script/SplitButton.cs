@@ -316,7 +316,7 @@ namespace GitUI.Script
 
             int internalBorder = BorderSize;
             Rectangle focusRect =
-                new Rectangle(internalBorder - 1,
+                new(internalBorder - 1,
                               internalBorder - 1,
                               bounds.Width - _dropDownRectangle.Width - internalBorder,
                               bounds.Height - (internalBorder * 2) + 2);

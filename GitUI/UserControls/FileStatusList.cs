@@ -64,7 +64,7 @@ namespace GitUI
         [DefaultValue(false)]
         public bool DisableSubmoduleMenuItemBold { get; set; }
 
-        private readonly Dictionary<string, int> _stateImageIndexDict = new Dictionary<string, int>();
+        private readonly Dictionary<string, int> _stateImageIndexDict = new();
 
         public FileStatusList()
         {
@@ -1552,7 +1552,7 @@ namespace GitUI
         #region Filtering
 
         private string _toolTipText = "";
-        private readonly Subject<string> _filterSubject = new Subject<string>();
+        private readonly Subject<string> _filterSubject = new();
         private Regex? _filter;
         private bool _filterVisible = false;
 
@@ -1785,7 +1785,7 @@ namespace GitUI
         private readonly Color _invalidInputColor = Color.FromArgb(0xFF, 0xC8, 0xC8).AdaptBackColor();
         #endregion
 
-        internal TestAccessor GetTestAccessor() => new TestAccessor(this);
+        internal TestAccessor GetTestAccessor() => new(this);
 
         internal readonly struct TestAccessor
         {

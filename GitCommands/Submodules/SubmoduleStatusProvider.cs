@@ -44,7 +44,7 @@ namespace GitCommands.Submodules
         private readonly CancellationTokenSequence _submodulesStatusSequence = new();
         private DateTime _previousSubmoduleUpdateTime;
         private SubmoduleInfoResult? _submoduleInfoResult;
-        private readonly Dictionary<string, SubmoduleInfo> _submoduleInfos = new Dictionary<string, SubmoduleInfo>();
+        private readonly Dictionary<string, SubmoduleInfo> _submoduleInfos = new();
 
         // Singleton accessor
         public static SubmoduleStatusProvider Default { get; } = new();

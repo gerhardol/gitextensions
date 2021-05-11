@@ -545,7 +545,7 @@ namespace GitCommands
         #endregion
 
         internal TestAccessor GetTestAccessor()
-            => new TestAccessor(this);
+            => new(this);
 
         internal readonly struct TestAccessor
         {
@@ -563,7 +563,7 @@ namespace GitCommands
             internal static (string? body, string? additionalData) ParseCommitBody(StringLineReader reader, string subject) =>
                 RevisionReader.ParseCommitBody(reader, subject);
 
-            internal static StringLineReader MakeReader(string s) => new StringLineReader(s);
+            internal static StringLineReader MakeReader(string s) => new(s);
 
             internal static string EndOfBody => RevisionReader.EndOfBody;
         }

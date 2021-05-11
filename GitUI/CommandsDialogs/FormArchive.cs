@@ -12,16 +12,16 @@ namespace GitUI.CommandsDialogs
     public partial class FormArchive : GitModuleForm
     {
         private readonly TranslationString _saveFileDialogFilterZip =
-            new TranslationString("Zip file (*.zip)");
+            new("Zip file (*.zip)");
 
         private readonly TranslationString _saveFileDialogFilterTar =
-            new TranslationString("Tar file (*.tar)");
+            new("Tar file (*.tar)");
 
         private readonly TranslationString _saveFileDialogCaption =
-            new TranslationString("Save archive as");
+            new("Save archive as");
 
         private readonly TranslationString _noRevisionSelected =
-            new TranslationString("You need to choose a target revision.");
+            new("You need to choose a target revision.");
 
         private GitRevision? _selectedRevision;
         public GitRevision? SelectedRevision

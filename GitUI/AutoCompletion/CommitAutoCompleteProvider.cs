@@ -18,7 +18,7 @@ namespace GitUI.AutoCompletion
 {
     public class CommitAutoCompleteProvider : IAutoCompleteProvider
     {
-        private static readonly Lazy<Dictionary<string, Regex>> _regexes = new Lazy<Dictionary<string, Regex>>(ParseRegexes);
+        private static readonly Lazy<Dictionary<string, Regex>> _regexes = new(ParseRegexes);
         private readonly Func<IGitModule> _getModule;
         private readonly GetAllChangedFilesOutputParser _getAllChangedFilesOutputParser;
 

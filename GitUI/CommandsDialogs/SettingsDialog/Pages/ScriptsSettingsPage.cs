@@ -78,11 +78,11 @@ Current Branch:
             nameof(ScriptInfoProxy.Command),
             nameof(ScriptInfoProxy.Arguments),
         };
-        private static readonly ImageList EmbeddedIcons = new ImageList
+        private static readonly ImageList EmbeddedIcons = new()
         {
             ColorDepth = ColorDepth.Depth32Bit
         };
-        private readonly BindingList<ScriptInfoProxy> _scripts = new BindingList<ScriptInfoProxy>();
+        private readonly BindingList<ScriptInfoProxy> _scripts = new();
         private SimpleHelpDisplayDialog? _argumentsCheatSheet;
         private bool _handlingCheck;
 

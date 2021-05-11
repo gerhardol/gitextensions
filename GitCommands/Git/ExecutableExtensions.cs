@@ -18,7 +18,7 @@ namespace GitCommands
     public static class ExecutableExtensions
     {
         private static readonly Regex _ansiCodePattern = new(@"\u001B[\u0040-\u005F].*?[\u0040-\u007E]", RegexOptions.Compiled);
-        private static readonly Lazy<Encoding> _defaultOutputEncoding = new Lazy<Encoding>(() => GitModule.SystemEncoding, false);
+        private static readonly Lazy<Encoding> _defaultOutputEncoding = new(() => GitModule.SystemEncoding, false);
 
         /// <summary>
         /// Launches a process for the executable and returns its output.
@@ -364,8 +364,8 @@ namespace GitCommands
             if (writeInput is not null)
             {
 #if DEBUG
-                using MemoryStream mem = new MemoryStream();
-                using StreamWriter sw = new StreamWriter(mem);
+                using MemoryStream mem = new();
+                using StreamWriter sw = new(mem);
                 writeInput(sw);
 
                 System.Diagnostics.Debug.WriteLine($"git {arguments} {Encoding.UTF8.GetString(mem.ToArray(), 0, (int)mem.Length)}");

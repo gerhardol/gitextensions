@@ -20,7 +20,7 @@ namespace GitUI.Avatars
          * RaMMicHaeL
          * SamuelLongchamps
          */
-        private static readonly Regex _gitHubEmailRegex = new Regex(@"^(\d+\+)?(?<username>[^@]+)@users\.noreply\.github\.com$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex _gitHubEmailRegex = new(@"^(\d+\+)?(?<username>[^@]+)@users\.noreply\.github\.com$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private readonly IAvatarDownloader _downloader;
         private readonly bool _onlySupplyNoReply;

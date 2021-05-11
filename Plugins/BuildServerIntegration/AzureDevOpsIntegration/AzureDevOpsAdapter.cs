@@ -322,7 +322,7 @@ Detail of the error:");
         }
 
         #region TestAccessor
-        internal TestAccessor GetTestAccessor() => new TestAccessor(this);
+        internal TestAccessor GetTestAccessor() => new(this);
 
         internal readonly struct TestAccessor
         {

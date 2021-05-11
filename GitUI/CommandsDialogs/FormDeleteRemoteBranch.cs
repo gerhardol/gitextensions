@@ -17,9 +17,9 @@ namespace GitUI.CommandsDialogs
     {
         private readonly TranslationString _deleteRemoteBranchesCaption = new("Delete remote branches");
         private readonly TranslationString _confirmDeleteUnmergedRemoteBranchMessage =
-            new TranslationString("At least one remote branch is unmerged. Are you sure you want to delete it?" + Environment.NewLine + "Deleting a branch can cause commits to be deleted too!");
+            new("At least one remote branch is unmerged. Are you sure you want to delete it?" + Environment.NewLine + "Deleting a branch can cause commits to be deleted too!");
 
-        private readonly HashSet<string> _mergedBranches = new HashSet<string>();
+        private readonly HashSet<string> _mergedBranches = new();
         private readonly string _defaultRemoteBranch;
 
         [Obsolete("For VS designer and translation test only. Do not remove.")]

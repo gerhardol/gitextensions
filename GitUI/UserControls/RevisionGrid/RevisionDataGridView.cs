@@ -34,10 +34,10 @@ namespace GitUI.UserControls.RevisionGrid
 
         internal RevisionGraph _revisionGraph = new();
 
-        private readonly List<ColumnProvider> _columnProviders = new List<ColumnProvider>();
+        private readonly List<ColumnProvider> _columnProviders = new();
         private readonly CancellationTokenSequence _backgroundCancellationSequence;
         private readonly AsyncQueue<(Func<CancellationToken, Task> backgroundOperation, CancellationToken cancellationToken)> _backgroundQueue =
-            new AsyncQueue<(Func<CancellationToken, Task> backgroundOperation, CancellationToken cancellationToken)>();
+            new();
         private CancellationToken _backgroundCancellationToken;
         private JoinableTask? _backgroundProcessingTask;
         private int _backgroundScrollTo;

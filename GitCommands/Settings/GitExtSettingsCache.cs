@@ -6,7 +6,7 @@ namespace GitCommands.Settings
 {
     public class GitExtSettingsCache : FileSettingsCache
     {
-        private readonly XmlSerializableDictionary<string, string> _encodedNameMap = new XmlSerializableDictionary<string, string>();
+        private readonly XmlSerializableDictionary<string, string> _encodedNameMap = new();
 
         public GitExtSettingsCache(string settingsFilePath, bool autoSave = true)
             : base(settingsFilePath, autoSave)

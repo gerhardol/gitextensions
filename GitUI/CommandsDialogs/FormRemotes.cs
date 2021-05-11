@@ -25,70 +25,70 @@ namespace GitUI.CommandsDialogs
 
         #region Translation
         private readonly TranslationString _remoteBranchDataError =
-            new TranslationString("Invalid ´{1}´ found for branch ´{0}´." + Environment.NewLine +
+            new("Invalid ´{1}´ found for branch ´{0}´." + Environment.NewLine +
                                   "Value has been reset to empty value.");
 
         private readonly TranslationString _questionAutoPullBehaviour =
-            new TranslationString("You have added a new remote repository." + Environment.NewLine +
+            new("You have added a new remote repository." + Environment.NewLine +
                                   "Do you want to automatically configure the default push and pull behavior for this remote?");
 
         private readonly TranslationString _questionAutoPullBehaviourCaption =
-            new TranslationString("New remote");
+            new("New remote");
 
         private readonly TranslationString _gitMessage =
-          new TranslationString("Message");
+          new("Message");
 
         private readonly TranslationString _questionDeleteRemote =
-            new TranslationString("Are you sure you want to delete this remote?");
+            new("Are you sure you want to delete this remote?");
 
         private readonly TranslationString _questionDeleteRemoteCaption =
-            new TranslationString("Delete");
+            new("Delete");
 
         private readonly TranslationString _sshKeyOpenFilter =
-            new TranslationString("Private key (*.ppk)");
+            new("Private key (*.ppk)");
 
         private readonly TranslationString _sshKeyOpenCaption =
-            new TranslationString("Select ssh key file");
+            new("Select ssh key file");
 
         private readonly TranslationString _errorNoKeyEntered =
-            new TranslationString("No SSH key file entered");
+            new("No SSH key file entered");
 
         private readonly TranslationString _labelUrlAsFetch =
-            new TranslationString("Fetch Url");
+            new("Fetch Url");
 
         private readonly TranslationString _labelUrlAsFetchPush =
-            new TranslationString("Url");
+            new("Url");
 
         private readonly TranslationString _gbMgtPanelHeaderNew =
-            new TranslationString("Create New Remote");
+            new("Create New Remote");
 
         private readonly TranslationString _gbMgtPanelHeaderEdit =
-            new TranslationString("Edit Remote Details");
+            new("Edit Remote Details");
 
         private readonly TranslationString _btnDeleteTooltip =
-            new TranslationString("Delete the selected remote");
+            new("Delete the selected remote");
 
         private readonly TranslationString _btnNewTooltip =
-            new TranslationString("Add a new remote");
+            new("Add a new remote");
 
         private readonly TranslationString _btnToggleStateTooltip_Activate =
-            new TranslationString("Activate the selected remote");
+            new("Activate the selected remote");
 
         private readonly TranslationString _btnToggleStateTooltip_Deactivate =
-            new TranslationString(@"Deactivate the selected remote.
+            new(@"Deactivate the selected remote.
 Inactive remote is completely invisible to git.");
 
         private readonly TranslationString _lvgEnabledHeader =
-            new TranslationString("Active");
+            new("Active");
 
         private readonly TranslationString _lvgDisabledHeader =
-            new TranslationString("Inactive");
+            new("Inactive");
 
         private readonly TranslationString _enabledRemoteAlreadyExists =
-            new TranslationString("An active remote named \"{0}\" already exists.");
+            new("An active remote named \"{0}\" already exists.");
 
         private readonly TranslationString _disabledRemoteAlreadyExists =
-            new TranslationString("An inactive remote named \"{0}\" already exists.");
+            new("An inactive remote named \"{0}\" already exists.");
         #endregion
 
         [Obsolete("For VS designer and translation test only. Do not remove.")]

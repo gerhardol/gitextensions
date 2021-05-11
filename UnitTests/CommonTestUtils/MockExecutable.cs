@@ -15,9 +15,9 @@ namespace CommonTestUtils
 {
     public sealed class MockExecutable : IExecutable
     {
-        private readonly ConcurrentDictionary<string, ConcurrentStack<(string output, int? exitCode)>> _outputStackByArguments = new ConcurrentDictionary<string, ConcurrentStack<(string output, int? exitCode)>>();
-        private readonly ConcurrentDictionary<string, int> _commandArgumentsSet = new ConcurrentDictionary<string, int>();
-        private readonly List<MockProcess> _processes = new List<MockProcess>();
+        private readonly ConcurrentDictionary<string, ConcurrentStack<(string output, int? exitCode)>> _outputStackByArguments = new();
+        private readonly ConcurrentDictionary<string, int> _commandArgumentsSet = new();
+        private readonly List<MockProcess> _processes = new();
         private int _nextCommandId;
 
         [MustUseReturnValue]

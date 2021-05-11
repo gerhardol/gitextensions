@@ -469,7 +469,7 @@ namespace GitUI.Script
                     break;
 
                 case "UserFiles":
-                    using (FormFilePrompt prompt = new FormFilePrompt())
+                    using (FormFilePrompt prompt = new())
                     {
                         if (prompt.ShowDialog(owner) != DialogResult.OK)
                         {
@@ -546,7 +546,7 @@ namespace GitUI.Script
             return remoteBranchName;
         }
 
-        internal static TestAccessor GetTestAccessor() => new TestAccessor();
+        internal static TestAccessor GetTestAccessor() => new();
 
         internal readonly struct TestAccessor
         {

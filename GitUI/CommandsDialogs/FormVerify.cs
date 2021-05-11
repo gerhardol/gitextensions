@@ -22,14 +22,14 @@ namespace GitUI.CommandsDialogs
         private readonly TranslationString _selectLostObjectsToRestoreMessage = new("Select objects to restore.");
         private readonly TranslationString _selectLostObjectsToRestoreCaption = new("Restore lost objects");
 
-        private readonly List<LostObject> _lostObjects = new List<LostObject>();
+        private readonly List<LostObject> _lostObjects = new();
         private readonly SortableLostObjectsList _filteredLostObjects = new();
         private readonly DataGridViewCheckBoxHeaderCell _selectedItemsHeader = new();
         private readonly IGitTagController _gitTagController;
 
         private LostObject? _previewedItem;
 
-        private static readonly Dictionary<string, string> LanguagesStartOfFile = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> LanguagesStartOfFile = new()
         {
             { "{", "recovery.json" },
             { "#include", "recovery.cpp" },

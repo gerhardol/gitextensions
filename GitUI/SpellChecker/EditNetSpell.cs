@@ -43,12 +43,12 @@ namespace GitUI.SpellChecker
         private static WordDictionary? _wordDictionary;
 
         private CancellationTokenSource _autoCompleteCancellationTokenSource = new();
-        private readonly List<IAutoCompleteProvider> _autoCompleteProviders = new List<IAutoCompleteProvider>();
+        private readonly List<IAutoCompleteProvider> _autoCompleteProviders = new();
         private AsyncLazy<IEnumerable<AutoCompleteWord>?>? _autoCompleteListTask;
         private bool _autoCompleteWasUserActivated;
         private bool _disableAutoCompleteTriggerOnTextUpdate = true; // only popup on key press
-        private readonly Dictionary<Keys, string> _keysToSendToAutoComplete = new Dictionary<Keys, string>
-                                                                     {
+        private readonly Dictionary<Keys, string> _keysToSendToAutoComplete = new()
+        {
                                                                              { Keys.Down, "{DOWN}" },
                                                                              { Keys.Up, "{UP}" },
                                                                              { Keys.PageUp, "{PGUP}" },

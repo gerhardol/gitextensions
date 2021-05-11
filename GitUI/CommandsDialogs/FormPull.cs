@@ -27,43 +27,43 @@ namespace GitUI.CommandsDialogs
     {
         #region Translation
         private readonly TranslationString _areYouSureYouWantToRebaseMerge =
-            new TranslationString("The current commit is a merge." + Environment.NewLine +
+            new("The current commit is a merge." + Environment.NewLine +
                                   "Are you sure you want to rebase this merge?");
 
         private readonly TranslationString _areYouSureYouWantToRebaseMergeCaption =
-            new TranslationString("Rebase merge commit?");
+            new("Rebase merge commit?");
 
         private readonly TranslationString _allMergeConflictSolvedQuestion =
-            new TranslationString("Are all merge conflicts solved? Do you want to commit?");
+            new("Are all merge conflicts solved? Do you want to commit?");
 
         private readonly TranslationString _allMergeConflictSolvedQuestionCaption =
-            new TranslationString("Conflicts solved");
+            new("Conflicts solved");
 
         private readonly TranslationString _applyStashedItemsAgain =
-            new TranslationString("Apply stashed items to working directory again?");
+            new("Apply stashed items to working directory again?");
 
         private readonly TranslationString _applyStashedItemsAgainCaption =
-            new TranslationString("Auto stash");
+            new("Auto stash");
 
         private readonly TranslationString _fetchAllBranchesCanOnlyWithFetch =
-            new TranslationString("You can only fetch all remote branches (*) without merge or rebase." +
+            new("You can only fetch all remote branches (*) without merge or rebase." +
                                   Environment.NewLine + "If you want to fetch all remote branches, choose fetch." +
                                   Environment.NewLine +
                                   "If you want to fetch and merge a branch, choose a specific branch.");
 
         private readonly TranslationString _selectRemoteRepository =
-            new TranslationString("Please select a remote repository");
+            new("Please select a remote repository");
 
         private readonly TranslationString _selectSourceDirectory =
-            new TranslationString("Please select a source directory");
+            new("Please select a source directory");
 
         private readonly TranslationString _questionInitSubmodules =
-            new TranslationString("The pulled has submodules configured." + Environment.NewLine +
+            new("The pulled has submodules configured." + Environment.NewLine +
                                    "Do you want to initialize the submodules?" + Environment.NewLine +
                                    "This will initialize and update all submodules recursive.");
 
         private readonly TranslationString _questionInitSubmodulesCaption =
-            new TranslationString("Submodules");
+            new("Submodules");
 
         private readonly TranslationString _notOnBranch = new("You cannot \"pull\" when git head detached." +
                                   Environment.NewLine + Environment.NewLine + "Do you want to continue?");
@@ -87,7 +87,7 @@ namespace GitUI.CommandsDialogs
         private readonly TranslationString _pruneBranchesCaption = new("Pull was rejected");
         private readonly TranslationString _pruneBranchesMainInstruction = new("Remote branch no longer exist");
         private readonly TranslationString _pruneBranchesBranch =
-            new TranslationString("Do you want to delete all stale remote-tracking branches?");
+            new("Do you want to delete all stale remote-tracking branches?");
 
         private readonly TranslationString _pruneFromCaption = new("Prune remote branches from {0}");
 
@@ -1166,7 +1166,7 @@ namespace GitUI.CommandsDialogs
             AllTags.Checked = AllTags.Checked || PruneTags.Checked;
         }
 
-        internal TestAccessor GetTestAccessor() => new TestAccessor(this);
+        internal TestAccessor GetTestAccessor() => new(this);
 
         internal readonly struct TestAccessor
         {

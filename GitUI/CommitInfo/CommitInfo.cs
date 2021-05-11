@@ -842,7 +842,7 @@ namespace GitUI.CommitInfo
         }
 
         internal TestAccessor GetTestAccessor()
-            => new TestAccessor(this);
+            => new(this);
 
         internal readonly struct TestAccessor
         {
