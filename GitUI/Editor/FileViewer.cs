@@ -465,7 +465,7 @@ namespace GitUI.Editor
                     {
                         try
                         {
-                            StringBuilder summary = new StringBuilder()
+                            var summary = new StringBuilder()
                                 .AppendLine("Binary file:")
                                 .AppendLine()
                                 .AppendLine(fileName)
