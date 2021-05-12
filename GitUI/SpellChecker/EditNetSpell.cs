@@ -49,13 +49,13 @@ namespace GitUI.SpellChecker
         private bool _disableAutoCompleteTriggerOnTextUpdate = true; // only popup on key press
         private readonly Dictionary<Keys, string> _keysToSendToAutoComplete = new()
         {
-                                                                             { Keys.Down, "{DOWN}" },
-                                                                             { Keys.Up, "{UP}" },
-                                                                             { Keys.PageUp, "{PGUP}" },
-                                                                             { Keys.PageDown, "{PGDN}" },
-                                                                             { Keys.End, "{END}" },
-                                                                             { Keys.Home, "{HOME}" }
-                                                                     };
+            { Keys.Down, "{DOWN}" },
+            { Keys.Up, "{UP}" },
+            { Keys.PageUp, "{PGUP}" },
+            { Keys.PageDown, "{PGDN}" },
+            { Keys.End, "{END}" },
+            { Keys.Home, "{HOME}" }
+        };
 
         private readonly IWordAtCursorExtractor _wordAtCursorExtractor;
 
