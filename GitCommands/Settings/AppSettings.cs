@@ -1863,6 +1863,12 @@ namespace GitCommands
             set => SetInt("DiffViewer.AutomaticContinuousScrollDelay", value);
         }
 
+        public static bool LogCaptureCallStacks
+        {
+            get => GetBool("logcapturecallstacks", false);
+            set => SetBool("logcapturecallstacks", value);
+        }
+
         public static bool IsPortable()
         {
             return Properties.Settings.Default.IsPortable;
