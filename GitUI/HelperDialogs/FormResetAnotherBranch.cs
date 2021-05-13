@@ -66,7 +66,7 @@ namespace GitUI.HelperDialogs
 
             var selectedRevisionRemotes = _revision.Refs.Where(r => r.IsRemote).ToList();
 
-            return Module.GetRefs(false)
+            return Module.GetRefs(GetRefsEnum.Branches)
                 .Where(r => r.IsHead)
                 .Where(r => isDetachedHead || r.LocalName != currentBranch)
                 .OrderByDescending(r => selectedRevisionRemotes.Any(r.IsTrackingRemote)) // Put local branches that track these remotes first

@@ -6,6 +6,7 @@ using GitCommands.Git.Commands;
 using GitExtUtils.GitUI.Theming;
 using GitUI.HelperDialogs;
 using GitUI.Script;
+using GitUIPluginInterfaces;
 using ResourceManager;
 
 namespace GitUI.CommandsDialogs
@@ -60,7 +61,7 @@ namespace GitUI.CommandsDialogs
             var selectedHead = Module.GetSelectedBranch();
             currentBranchLabel.Text = selectedHead;
 
-            Branches.BranchesToSelect = Module.GetRefs(true, true);
+            Branches.BranchesToSelect = Module.GetRefs(GetRefsEnum.All);
 
             if (_defaultBranch is not null)
             {

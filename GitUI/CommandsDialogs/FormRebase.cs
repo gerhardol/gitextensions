@@ -9,6 +9,7 @@ using GitCommands.Patches;
 using GitExtUtils.GitUI.Theming;
 using GitUI.HelperDialogs;
 using GitUI.Theming;
+using GitUIPluginInterfaces;
 using ResourceManager;
 
 namespace GitUI.CommandsDialogs
@@ -80,7 +81,7 @@ namespace GitUI.CommandsDialogs
             var selectedHead = Module.GetSelectedBranch();
             Currentbranch.Text = selectedHead;
 
-            var refs = Module.GetRefs(true, true).OfType<GitRef>().ToList();
+            var refs = Module.GetRefs(GetRefsEnum.All).OfType<GitRef>().ToList();
             Branches.DataSource = refs;
             Branches.DisplayMember = nameof(GitRef.Name);
 
@@ -91,7 +92,7 @@ namespace GitUI.CommandsDialogs
 
             Branches.Select();
 
-            refs = Module.GetRefs(false, true).OfType<GitRef>().ToList();
+            refs = Module.GetRefs(GetRefsEnum.Branches).OfType<GitRef>().ToList();
             cboTo.DataSource = refs;
             cboTo.DisplayMember = nameof(GitRef.Name);
 

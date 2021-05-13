@@ -105,7 +105,7 @@ namespace GitCommands.Remotes
         {
             var module = GetModule();
             var localConfig = module.LocalConfigFile;
-            var moduleRefs = module.GetRefs(tags: false, branches: true);
+            var moduleRefs = module.GetRefs(GetRefsEnum.Branches);
 
             foreach (var remoteHead in moduleRefs)
             {
@@ -205,8 +205,7 @@ namespace GitCommands.Remotes
         /// </summary>
         public IReadOnlyList<string> GetEnabledRemoteNamesWithoutBranches()
         {
-            HashSet<string> remotesWithBranches = GetModule().GetRefs()
-                .Where(branch => branch.IsRemote && !branch.IsTag)
+            HashSet<string> remotesWithBranches = GetModule().GetRefs(GetRefsEnum.Remotes)
                 .Select(branch => branch.Name.SubstringUntil('/'))
                 .ToHashSet();
 

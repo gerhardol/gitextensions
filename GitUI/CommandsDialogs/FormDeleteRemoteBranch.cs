@@ -40,7 +40,7 @@ namespace GitUI.CommandsDialogs
 
         private void FormDeleteRemoteBranchLoad(object sender, EventArgs e)
         {
-            Branches.BranchesToSelect = Module.GetRefs(tags: true, branches: true).Where(h => h.IsRemote).ToList();
+            Branches.BranchesToSelect = Module.GetRefs(GetRefsEnum.Remotes).ToList();
             foreach (var branch in Module.GetMergedRemoteBranches())
             {
                 _mergedBranches.Add(branch);

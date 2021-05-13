@@ -959,7 +959,7 @@ namespace GitCommands
 
             if (loadRefs)
             {
-                revision.Refs = GetRefs()
+                revision.Refs = GetRefs(GetRefsEnum.All)
                     .Where(r => r.ObjectId == revision.ObjectId)
                     .ToList();
             }
@@ -2874,7 +2874,7 @@ namespace GitCommands
 
         public IEnumerable<IGitRef> GetRemoteBranches()
         {
-            return GetRefs().Where(r => r.IsRemote);
+            return GetRefs(GetRefsEnum.Remotes);
         }
 
         public RemoteActionResult<IReadOnlyList<IGitRef>> GetRemoteServerRefs(string remote, bool tags, bool branches)
@@ -2913,20 +2913,6 @@ namespace GitCommands
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// Get the Git refs.
-        /// </summary>
-        /// <param name="tags">Include tags.</param>
-        /// <param name="branches">Include local branches, also remote branches if <see paramref="tags"/> is set.</param>
-        /// <returns>All Git refs.</returns>
-        public IReadOnlyList<IGitRef> GetRefs(bool tags = true, bool branches = true)
-        {
-            return GetRefs(
-                (tags ? GetRefsEnum.Tags : GetRefsEnum.None)
-                | (branches ? GetRefsEnum.Branches : GetRefsEnum.None)
-                | (tags && branches ? GetRefsEnum.Remotes : GetRefsEnum.None));
         }
 
         /// <summary>

@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using GitCommands.Git;
 using GitCommands.Git.Commands;
 using GitExtUtils.GitUI;
+using GitUIPluginInterfaces;
 using ResourceManager;
 
 namespace GitUI.CommandsDialogs
@@ -47,7 +48,7 @@ namespace GitUI.CommandsDialogs
         {
             base.OnRuntimeLoad(e);
 
-            Branches.BranchesToSelect = Module.GetRefs(tags: true, branches: true).Where(h => h.IsHead && !h.IsRemote).ToList();
+            Branches.BranchesToSelect = Module.GetRefs(GetRefsEnum.Branches | GetRefsEnum.Tags).Where(h => h.IsHead).ToList();
             foreach (var branch in Module.GetMergedBranches())
             {
                 if (!branch.StartsWith("* "))
