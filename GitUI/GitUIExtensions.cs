@@ -29,6 +29,7 @@ namespace GitUI
         /// <returns>Task to view.</returns>
         public static async Task ViewChangesAsync(this FileViewer fileViewer,
             FileStatusItem? item,
+            CancellationToken cancellationToken,
             string defaultText = "",
             Action? openWithDiffTool = null)
         {
@@ -83,12 +84,16 @@ namespace GitUI
                 Match match = new Regex(@"\n\s*(@@|##)\s+(?<file>[^#:\n]+)").Match(output ?? "");
                 var filename = match.Groups["file"].Success ? match.Groups["file"].Value : item.Item.Name;
 
+                cancellationToken.ThrowIfCancellationRequested();
+
                 await fileViewer.ViewRangeDiffAsync(filename, output ?? defaultText);
                 return;
             }
 
             string selectedPatch = (await GetSelectedPatchAsync(fileViewer, firstId, item.SecondRevision.ObjectId, item.Item))
                 ?? defaultText;
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             if (item.Item.IsSubmodule)
             {

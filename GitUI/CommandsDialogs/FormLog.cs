@@ -4,6 +4,8 @@ namespace GitUI.CommandsDialogs
 {
     public partial class FormLog : GitModuleForm
     {
+        private readonly CancellationTokenSequence _viewChangesSequence = new();
+
         [Obsolete("For VS designer and translation test only. Do not remove.")]
         private FormLog()
         {
@@ -34,7 +36,8 @@ namespace GitUI.CommandsDialogs
         {
             using (WaitCursorScope.Enter())
             {
-                _ = diffViewer.ViewChangesAsync(DiffFiles.SelectedItem);
+                _ = diffViewer.ViewChangesAsync(DiffFiles.SelectedItem,
+                    cancellationToken: _viewChangesSequence.Next());
             }
         }
 

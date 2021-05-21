@@ -43,6 +43,7 @@ namespace GitUI.CommandsDialogs
         private readonly IFullPathResolver _fullPathResolver;
         private readonly IFindFilePredicateProvider _findFilePredicateProvider;
         private readonly IGitRevisionTester _gitRevisionTester;
+        private readonly CancellationTokenSequence _viewChangesSequence = new();
         private readonly RememberFileContextMenuController _rememberFileContextMenuController
             = RememberFileContextMenuController.Default;
         private Action? _refreshGitStatus;
@@ -436,7 +437,8 @@ namespace GitUI.CommandsDialogs
         private async Task ShowSelectedFileDiffAsync()
         {
             await DiffText.ViewChangesAsync(DiffFiles.SelectedItem,
-                openWithDiffTool: () => firstToSelectedToolStripMenuItem.PerformClick());
+                openWithDiffTool: () => firstToSelectedToolStripMenuItem.PerformClick(),
+                cancellationToken: _viewChangesSequence.Next());
         }
 
         private void DiffFiles_SelectedIndexChanged(object sender, EventArgs e)

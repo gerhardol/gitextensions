@@ -8,6 +8,8 @@ namespace GitUI.UserControls
 {
     public partial class CommitDiff : GitModuleControl
     {
+        private readonly CancellationTokenSequence _viewChangesSequence = new();
+
         /// <summary>
         /// Raised when the Escape key is pressed (and only when no selection exists, as the default behaviour of escape is to clear the selection).
         /// </summary>
@@ -84,7 +86,8 @@ namespace GitUI.UserControls
 
         private async Task ViewSelectedDiffAsync()
         {
-            await DiffText.ViewChangesAsync(DiffFiles.SelectedItem);
+            await DiffText.ViewChangesAsync(DiffFiles.SelectedItem,
+                cancellationToken: _viewChangesSequence.Next());
         }
     }
 }

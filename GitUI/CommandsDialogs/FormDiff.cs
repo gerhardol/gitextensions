@@ -26,6 +26,7 @@ namespace GitUI.CommandsDialogs
         private readonly IFileStatusListContextMenuController _revisionDiffContextMenuController;
         private readonly IFullPathResolver _fullPathResolver;
         private readonly IFindFilePredicateProvider _findFilePredicateProvider;
+        private readonly CancellationTokenSequence _viewChangesSequence = new();
 
         private readonly ToolTip _toolTipControl = new();
 
@@ -137,7 +138,8 @@ namespace GitUI.CommandsDialogs
 
         private void ShowSelectedFileDiff()
         {
-            _ = DiffText.ViewChangesAsync(DiffFiles.SelectedItem);
+            _ = DiffText.ViewChangesAsync(DiffFiles.SelectedItem,
+                cancellationToken: _viewChangesSequence.Next());
         }
 
         private void btnSwap_Click(object sender, EventArgs e)
