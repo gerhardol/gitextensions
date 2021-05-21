@@ -71,7 +71,7 @@ namespace GitUI
                 ? $"{firstId}...{item.SecondRevision.ObjectId}"
                 : $"{item.BaseA}..{firstId} {item.BaseB}..{item.SecondRevision.ObjectId}";
 
-                fileViewer.ViewText("range-diff.sh", $"git range-diff {range}");
+                await fileViewer.ViewTextAsync("range-diff.sh", $"git range-diff {range}");
 
                 string output = fileViewer.Module.GetRangeDiff(
                         firstId,
