@@ -1881,6 +1881,12 @@ namespace GitCommands
             set => SetBool("Log.CaptureCallStacks", value);
         }
 
+        public static bool WriteErrorLog
+        {
+            get => GetBool("WriteErrorLog", false);
+            set => SetBool("WriteErrorLog", value);
+        }
+
         public static bool IsPortable()
         {
             return Properties.Settings.Default.IsPortable;
