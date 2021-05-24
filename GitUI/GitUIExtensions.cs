@@ -67,9 +67,9 @@ namespace GitUI
             {
                 // Git range-diff has cubic runtime complexity and can be slow and memory consuming,
                 // give an indication of what is going on
-                var range = item.BaseA is null || item.BaseB is null
-                ? $"{firstId}...{item.SecondRevision.ObjectId}"
-                : $"{item.BaseA}..{firstId} {item.BaseB}..{item.SecondRevision.ObjectId}";
+                string range = item.BaseA is null || item.BaseB is null
+                    ? $"{firstId}...{item.SecondRevision.ObjectId}"
+                    : $"{item.BaseA}..{firstId} {item.BaseB}..{item.SecondRevision.ObjectId}";
 
                 await fileViewer.ViewTextAsync("range-diff.sh", $"git range-diff {range}");
 
@@ -82,7 +82,7 @@ namespace GitUI
 
                 // Try set highlighting from first found filename
                 Match match = new Regex(@"\n\s*(@@|##)\s+(?<file>[^#:\n]+)").Match(output ?? "");
-                var filename = match.Groups["file"].Success ? match.Groups["file"].Value : item.Item.Name;
+                string filename = match.Groups["file"].Success ? match.Groups["file"].Value : item.Item.Name;
 
                 cancellationToken.ThrowIfCancellationRequested();
 
