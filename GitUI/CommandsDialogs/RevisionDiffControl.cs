@@ -244,6 +244,21 @@ namespace GitUI.CommandsDialogs
             base.OnRuntimeLoad();
         }
 
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _viewChangesSequence.Dispose();
+                components?.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
+
         private string DescribeRevision(ObjectId? objectId, int maxLength = 0)
         {
             if (objectId is null)

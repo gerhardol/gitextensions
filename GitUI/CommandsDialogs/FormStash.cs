@@ -94,6 +94,22 @@ namespace GitUI.CommandsDialogs
             base.OnKeyUp(e);
         }
 
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            _asyncLoader.Dispose();
+            if (disposing)
+            {
+                _viewChangesSequence.Dispose();
+                components?.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
+
         private void FormStashFormClosing(object sender, FormClosingEventArgs e)
         {
             AppSettings.StashKeepIndex = StashKeepIndex.Checked;

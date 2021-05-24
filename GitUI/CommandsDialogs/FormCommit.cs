@@ -418,6 +418,7 @@ namespace GitUI.CommandsDialogs
             {
                 _unstagedLoader.Dispose();
                 _interactiveAddSequence.Dispose();
+                _viewChangesSequence.Dispose();
                 components?.Dispose();
             }
 
