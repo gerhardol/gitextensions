@@ -75,6 +75,9 @@ namespace GitExtensions.UITests
                 form?.Dispose();
                 Assert.IsEmpty(Application.OpenForms.OfType<T>(), $"{Application.OpenForms.OfType<T>().Count()} open form(s) after test");
             }
+
+            // Await updated async, for instance FileViewer
+            ThreadHelper.JoinPendingOperations();
         }
 
         public static void RunControl<T>(

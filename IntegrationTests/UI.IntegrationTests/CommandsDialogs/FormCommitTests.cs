@@ -214,9 +214,6 @@ namespace GitExtensions.UITests.CommandsDialogs
             _referenceRepository.CreateCommit("Too long commit message that should be shorten because first line of a commit message is only 50 chars long");
             RunFormTest(form =>
             {
-                // Await updated FileViewer
-                ThreadHelper.JoinPendingOperations();
-
                 var commitMessageToolStripMenuItem = form.GetTestAccessor().CommitMessageToolStripMenuItem;
 
                 // Verify the message appears correctly
