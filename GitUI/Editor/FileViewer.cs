@@ -415,7 +415,7 @@ namespace GitUI.Editor
         /// <param name="text">The patch text.</param>
         /// <param name="openWithDifftool">The action to open the difftool.</param>
         public Task ViewFixedPatchAsync(string fileName, string text, Action? openWithDifftool = null)
-            => ViewPrivateAsync(null, fileName, text, openWithDifftool, ViewMode.FixedDiff);
+            => ViewPrivateAsync(item: null, fileName, text, openWithDifftool, ViewMode.FixedDiff);
 
         public void ViewFixedPatch(string? fileName,
             string text,
@@ -426,7 +426,7 @@ namespace GitUI.Editor
         }
 
         public Task ViewRangeDiffAsync(string fileName, string text)
-            => ViewPrivateAsync(null, fileName, text, openWithDifftool: null, ViewMode.RangeDiff);
+            => ViewPrivateAsync(item: null, fileName, text, openWithDifftool: null, ViewMode.RangeDiff);
 
         public void ViewText(string? fileName,
             string text,
