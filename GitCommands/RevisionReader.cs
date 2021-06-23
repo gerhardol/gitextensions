@@ -114,10 +114,9 @@ namespace GitCommands
             int parseErrors = 0;
 #endif
 
-            // This property is relatively expensive to call for every revision, so
-            // cache it for the duration of the loop.
             var logOutputEncoding = module.LogOutputEncoding;
             long sixMonths = new DateTimeOffset(DateTime.Now.ToUniversalTime() - TimeSpan.FromDays(30 * 6)).ToUnixTimeSeconds();
+            Func<string?, Encoding> getEncodingByGitName = (name) => module.GetEncodingByGitName(name);
 
             using (var process = module.GitCommandRunner.RunDetached(arguments, redirectOutput: true, outputEncoding: GitModule.LosslessEncoding))
             {
@@ -129,7 +128,7 @@ namespace GitCommands
                 {
                     token.ThrowIfCancellationRequested();
 
-                    if (TryParseRevision(module, chunk, logOutputEncoding, sixMonths, out var revision)
+                    if (TryParseRevision(chunk, getEncodingByGitName, logOutputEncoding, sixMonths, out var revision)
                         && (revisionPredicate is null || revisionPredicate(revision)))
                     {
                         // Look up any refs associated with this revision
@@ -227,7 +226,7 @@ namespace GitCommands
             }
         }
 
-        private static bool TryParseRevision(GitModule module, ArraySegment<byte> chunk, Encoding logOutputEncoding, long sixMonths, [NotNullWhen(returnValue: true)] out GitRevision? revision)
+        private static bool TryParseRevision(ArraySegment<byte> chunk, Func<string?, Encoding?> getEncodingByGitName, Encoding logOutputEncoding, long sixMonths, [NotNullWhen(returnValue: true)] out GitRevision? revision)
         {
             // The 'chunk' of data contains a complete git log item, encoded.
             // This method decodes that chunk and produces a revision object.
@@ -257,68 +256,53 @@ namespace GitCommands
             var offset = ObjectId.Sha1CharCount * 2;
 
             // Next we have zero or more parent IDs separated by ' ' and terminated by '\n'
-            var parentIds = new ObjectId[CountParents(ref array, offset)];
-            var parentIndex = 0;
+            int noParents = CountParents(ref array, offset);
+            if (noParents < 0)
+            {
+                // Parse issue
+                revision = default;
+                return false;
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            static int CountParents(ref ReadOnlySpan<byte> array, int baseOffset)
+            int CountParents(ref ReadOnlySpan<byte> array, int baseOffset)
             {
-                if (array[baseOffset] == '\n')
-                {
-                    return 0;
-                }
+                int count = 0;
 
-                var count = 1;
-
-                while (true)
+                while (baseOffset < array.Length && array[baseOffset] != '\n')
                 {
+                    Debug.Assert(count == 0 || array[baseOffset] == ' ', $"Unexpected contents in the parent array: {array[baseOffset]}/{count}");
                     baseOffset += ObjectId.Sha1CharCount;
-                    var c = array[baseOffset];
-
-                    if (c != ' ')
+                    if (count > 0)
                     {
-                        break;
+                        // Except for the first parent, advance after the space
+                        baseOffset++;
                     }
 
                     count++;
-                    baseOffset++;
+                }
+
+                if (baseOffset >= array.Length || array[baseOffset] != '\n')
+                {
+                    return -1;
                 }
 
                 return count;
             }
 
-            while (true)
+            var parentIds = new ObjectId[noParents];
+
+            for (int parentIndex = 0; parentIndex < noParents; parentIndex++)
             {
-                if (offset >= array.Length - ObjectId.Sha1CharCount - 1)
-                {
-                    revision = default;
-                    return false;
-                }
-
-                var b = array[offset];
-
-                if (b == '\n')
-                {
-                    // There are no more parent IDs
-                    offset++;
-                    break;
-                }
-
-                if (b == ' ')
-                {
-                    // We are starting a new parent ID
-                    offset++;
-                }
-
-                if (!ObjectId.TryParseAsciiHexReadOnlySpan(array.Slice(offset, ObjectId.Sha1CharCount), out var parentId))
+                if (!ObjectId.TryParseAsciiHexReadOnlySpan(array.Slice(offset, ObjectId.Sha1CharCount), out ObjectId parentId))
                 {
                     // TODO log this parse problem
                     revision = default;
                     return false;
                 }
 
-                parentIds[parentIndex++] = parentId;
-                offset += ObjectId.Sha1CharCount;
+                parentIds[parentIndex] = parentId;
+                offset += ObjectId.Sha1CharCount + 1;
             }
 
             #endregion
@@ -373,7 +357,7 @@ namespace GitCommands
             else
             {
                 encodingName = logOutputEncoding.GetString(array.Slice(offset, encodingNameEndLength));
-                encoding = module.GetEncodingByGitName(encodingName) ?? Encoding.UTF8;
+                encoding = getEncodingByGitName(encodingName) ?? Encoding.UTF8;
             }
 
             offset += encodingNameEndLength + 1;
@@ -517,7 +501,8 @@ namespace GitCommands
                 string branchFilter, string revisionFilter, string pathFilter) =>
                 _revisionReader.BuildArguments(refFilterOptions, branchFilter, revisionFilter, pathFilter);
 
-            internal static StringLineReader MakeReader(string s) => new(s);
+            internal static bool TryParseRevision(ArraySegment<byte> chunk, Func<string?, Encoding?> getEncodingByGitName, Encoding logOutputEncoding, long sixMonths, [NotNullWhen(returnValue: true)] out GitRevision? revision) =>
+                RevisionReader.TryParseRevision(chunk, getEncodingByGitName, logOutputEncoding, sixMonths, out revision);
         }
     }
 }
