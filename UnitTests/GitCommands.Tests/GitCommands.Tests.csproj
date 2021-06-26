@@ -30,6 +30,9 @@
     <None Include="Patches\testdata\rebase.diff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="TestData\RevisionReader\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="TestData\README.blame">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -1,0 +1,35 @@
+﻿{
+    "ObjectId": {
+        "IsArtificial": false
+    },
+    "Guid": "0c350e248500e4e893e6d17dcc61591cc1cd64e7",
+    "Refs": [],
+    "ParentIds": [
+        {
+            "IsArtificial": false
+        }
+    ],
+    "TreeGuid": {
+        "IsArtificial": false
+    },
+    "Author": "Gerhard Olsson",
+    "AuthorEmail": "gerhardol@users.noreply.github.com",
+    "AuthorUnixTime": 1624479586,
+    "AuthorDate": "2021-06-23T22:19:46+02:00",
+    "Committer": "Gerhard Olsson",
+    "CommitterEmail": "gerhardol@users.noreply.github.com",
+    "CommitUnixTime": 1624479586,
+    "CommitDate": "2021-06-23T22:19:46+02:00",
+    "BuildStatus": null,
+    "Subject": "wip tests",
+    "Body": "wip tests",
+    "HasMultiLineMessage": false,
+    "HasNotes": false,
+    "MessageEncoding": null,
+    "Name": "GitCommands/RevisionReader.cs\n",
+    "IsArtificial": false,
+    "HasParent": true,
+    "FirstParentId": {
+        "IsArtificial": false
+    }
+}
