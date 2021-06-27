@@ -110,8 +110,11 @@ namespace GitCommands
             var arguments = BuildArguments(refFilterOptions, branchFilter, revisionFilter, pathFilter);
 
 #if TRACE
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
             var sw = Stopwatch.StartNew();
             int parseErrors = 0;
+            var sw2 = new Stopwatch();
 #endif
 
             var logOutputEncoding = module.LogOutputEncoding;
@@ -128,8 +131,11 @@ namespace GitCommands
                 {
                     token.ThrowIfCancellationRequested();
 
-                    if (TryParseRevision(chunk, getEncodingByGitName, logOutputEncoding, sixMonths, out var revision)
-                        && (revisionPredicate is null || revisionPredicate(revision)))
+                    sw2.Start();
+                    var b = TryParseRevision(chunk, getEncodingByGitName, logOutputEncoding, sixMonths, out var revision)
+                        && (revisionPredicate is null || revisionPredicate(revision));
+                    sw2.Stop();
+                    if (b)
                     {
                         // Look up any refs associated with this revision
                         revision.Refs = refsByObjectId[revision.ObjectId].AsReadOnlyList();
@@ -147,7 +153,7 @@ namespace GitCommands
                 }
 
 #if TRACE
-                Trace.WriteLine($"**** [{nameof(RevisionReader)}] Emitted {revisionCount} revisions in {sw.Elapsed.TotalMilliseconds:#,##0.#} ms. bufferSize={buffer.Length} parseErrors={parseErrors}");
+                Trace.WriteLine($"**** [{nameof(RevisionReader)}] Emitted {revisionCount} revisions in {sw.Elapsed.TotalMilliseconds:#,##0.#} ms{sw2.Elapsed.TotalMilliseconds:#,##0.#}. bufferSize={buffer.Length} parseErrors={parseErrors}");
 #endif
             }
 
@@ -438,7 +444,7 @@ namespace GitCommands
 
             public string? ReadLine()
             {
-                if (_index >= _s.Length)
+                if (_index == _s.Length)
                 {
                     return null;
                 }
