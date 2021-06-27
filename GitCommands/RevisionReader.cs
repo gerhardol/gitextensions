@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using GitExtUtils;
@@ -254,12 +255,12 @@ namespace GitCommands
             }
 
             var offset = ObjectId.Sha1CharCount * 2;
-            var endOffset = chunk.Count;
 
             // Next we have zero or more parent IDs separated by ' ' and terminated by '\n'
             var parentIds = new ObjectId[CountParents(ref array, offset)];
             var parentIndex = 0;
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             static int CountParents(ref ReadOnlySpan<byte> array, int baseOffset)
             {
                 if (array[baseOffset] == '\n')
@@ -288,7 +289,7 @@ namespace GitCommands
 
             while (true)
             {
-                if (offset >= endOffset - ObjectId.Sha1CharCount - 1)
+                if (offset >= array.Length - ObjectId.Sha1CharCount - 1)
                 {
                     revision = default;
                     return false;
@@ -328,6 +329,7 @@ namespace GitCommands
             var authorUnixTime = ParseUnixDateTime(ref array);
             var commitUnixTime = ParseUnixDateTime(ref array);
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             long ParseUnixDateTime(ref ReadOnlySpan<byte> array)
             {
                 long unixTime = 0;
@@ -353,7 +355,7 @@ namespace GitCommands
             string? encodingName;
             Encoding encoding;
 
-            var encodingNameEndLength = array[offset..endOffset].IndexOf((byte)'\n');
+            var encodingNameEndLength = array[offset..].IndexOf((byte)'\n');
 
             if (encodingNameEndLength == -1)
             {
@@ -381,7 +383,7 @@ namespace GitCommands
             #region Encoded string values (names, emails, subject, body, [file]name)
 
             // Finally, decode the names, email, subject and body strings using the required text encoding
-            var s = encoding.GetString(array[offset..endOffset]).AsSpan();
+            var s = encoding.GetString(array[offset..]).AsSpan();
 
             StringLineReader reader = new(s);
 
@@ -452,7 +454,7 @@ namespace GitCommands
 
             public string? ReadLine()
             {
-                if (_index == _s.Length)
+                if (_index >= _s.Length)
                 {
                     return null;
                 }
