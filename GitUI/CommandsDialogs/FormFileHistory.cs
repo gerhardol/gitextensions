@@ -34,6 +34,7 @@ namespace GitUI.CommandsDialogs
         private readonly CancellationTokenSequence _viewChangesSequence = new();
 
         private BuildReportTabPageExtension? _buildReportTabPageExtension;
+        private readonly Dictionary<ObjectId, string> _revisionFilePath = new();
 
         private string FileName { get; set; }
 
@@ -242,6 +243,7 @@ namespace GitUI.CommandsDialogs
 
                 var res = (revision: (string?)null, path: $" \"{fileName}\"");
                 var fullFilePath = _fullPathResolver.Resolve(fileName);
+                _revisionFilePath.Clear();
 
                 if (AppSettings.FollowRenamesInFileHistory && !Directory.Exists(fullFilePath))
                 {
@@ -254,9 +256,12 @@ namespace GitUI.CommandsDialogs
                     // note: This implementation is quite a quick hack (by someone who does not speak C# fluently).
                     //
 
+                    const string startOfObjectId = "\x03\x03\x03\x03";
                     GitArgumentBuilder args = new("log")
                     {
-                        "--format=\"%n\"",
+                        // --name-only will list each filename on a separate line, ending with a an empty line
+                        // Find start of a new commit with a sequence impossible in a filename
+                        $"--format=\"{startOfObjectId}%H\"",
                         "--name-only",
                         "--follow",
                         FindRenamesAndCopiesOpts(),
@@ -271,8 +276,33 @@ namespace GitUI.CommandsDialogs
 
                     var lines = Module.GitExecutable.GetOutputLines(args, outputEncoding: GitModule.LosslessEncoding);
 
+                    ObjectId currentObjectId = null;
                     foreach (var line in lines.Select(GitModule.ReEncodeFileNameFromLossless))
                     {
+                        if (line.Length == 0)
+                        {
+                            // end of filenames
+                            currentObjectId = null;
+                            continue;
+                        }
+
+                        if (line.StartsWith(startOfObjectId))
+                        {
+                            currentObjectId = null;
+                            if (line.Length < ObjectId.Sha1CharCount + startOfObjectId.Length
+                                || !ObjectId.TryParse(line.Substring(startOfObjectId.Length, ObjectId.Sha1CharCount), 0, out currentObjectId))
+                            {
+                                // Parese error
+                                continue;
+                            }
+                        }
+
+                        if (!_revisionFilePath.ContainsKey(currentObjectId))
+                        {
+                            // Add only the first file to the dictionary
+                            _revisionFilePath[currentObjectId] = line;
+                        }
+
                         if (!string.IsNullOrEmpty(line) && setOfFileNames.Add(line))
                         {
                             listOfFileNames.Append(" \"");
@@ -281,9 +311,8 @@ namespace GitUI.CommandsDialogs
                         }
                     }
 
-                    // here we need --name-only to get the previous filenames in the revision graph
                     res.path = listOfFileNames.ToString();
-                    res.revision += $" --name-only --parents{FindRenamesAndCopiesOpts()}";
+                    res.revision += $" --parents{FindRenamesAndCopiesOpts()}";
                 }
                 else if (AppSettings.FollowRenamesInFileHistory)
                 {
@@ -305,6 +334,11 @@ namespace GitUI.CommandsDialogs
                 return res;
             }
         }
+
+        private string? GetFileNameForRevision(GitRevision rev)
+            => _revisionFilePath.ContainsKey(rev.ObjectId)
+                ? _revisionFilePath[rev.ObjectId]
+                : null;
 
         // returns " --find-renames=..." according to app settings
         private static ArgumentString FindRenamesOpt()
@@ -355,13 +389,7 @@ namespace GitUI.CommandsDialogs
 
             GitRevision revision = selectedRevisions[0];
             var children = FileChanges.GetRevisionChildren(revision.ObjectId);
-
-            var fileName = revision.Name;
-
-            if (string.IsNullOrEmpty(fileName))
-            {
-                fileName = FileName;
-            }
+            string fileName = GetFileNameForRevision(revision) ?? FileName;
 
             SetTitle(fileName);
 
@@ -461,7 +489,7 @@ namespace GitUI.CommandsDialogs
             var toolName = item?.Tag as string;
             var selectedRevisions = FileChanges.GetSelectedRevisions();
             var orgFileName = selectedRevisions.Count != 0
-                ? selectedRevisions[0].Name
+                ? GetFileNameForRevision(selectedRevisions[0])
                 : null;
 
             UICommands.OpenWithDifftool(this, selectedRevisions, FileName, orgFileName, diffKind, true, customTool: toolName);
@@ -473,12 +501,7 @@ namespace GitUI.CommandsDialogs
 
             if (selectedRows.Count > 0)
             {
-                string? orgFileName = selectedRows[0].Name;
-
-                if (string.IsNullOrEmpty(orgFileName))
-                {
-                    orgFileName = FileName;
-                }
+                string? orgFileName = GetFileNameForRevision(selectedRows[0]) ?? FileName;
 
                 string? fullName = _fullPathResolver.Resolve(orgFileName);
                 if (string.IsNullOrWhiteSpace(fullName))
