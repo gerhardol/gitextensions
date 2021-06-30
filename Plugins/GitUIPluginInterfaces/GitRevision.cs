@@ -54,11 +54,14 @@ namespace GitUIPluginInterfaces
 
         // Git native datetime format
         public long AuthorUnixTime { get; set; }
-        public DateTime AuthorDate => DateTimeOffset.FromUnixTimeSeconds(AuthorUnixTime).LocalDateTime;
+        public DateTime AuthorDate => FromUnixTimeSeconds(AuthorUnixTime);
         public string? Committer { get; set; }
         public string? CommitterEmail { get; set; }
         public long CommitUnixTime { get; set; }
-        public DateTime CommitDate => DateTimeOffset.FromUnixTimeSeconds(CommitUnixTime).LocalDateTime;
+        public DateTime CommitDate => FromUnixTimeSeconds(CommitUnixTime);
+
+        private static DateTime FromUnixTimeSeconds(long unixTime)
+            => unixTime == 0 ? DateTime.MaxValue : DateTimeOffset.FromUnixTimeSeconds(unixTime).LocalDateTime;
 
         public BuildInfo? BuildStatus
         {
