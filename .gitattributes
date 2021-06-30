@@ -10,4 +10,5 @@
 *.py text eol=lf
 *.bin binary
 
+*RevisionReaderTests.*.approved.* binary diff=text
 *DoAutoCRLF*.approved.* binary diff=text
