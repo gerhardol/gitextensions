@@ -405,7 +405,7 @@ namespace GitCommands
             var committer = reader.ReadLine(stringPool);
             var committerEmail = reader.ReadLine(stringPool);
 
-            var subject = reader.ReadLine(advance: false);
+            var subject = reader.ReadLine(advance: false).Trim();
 
             if (author is null || authorEmail is null || committer is null || committerEmail is null || subject is null)
             {
@@ -418,7 +418,7 @@ namespace GitCommands
             // NOTE the convention is that the Subject string is duplicated at the start of the Body string
             // Therefore we read the subject twice.
             // If there are not enough characters remaining for a body, then just assign the subject string directly.
-            var body = reader.ReadToEnd();
+            var body = reader.ReadToEnd().Trim();
             if (body is null)
             {
                 // TODO log this parse error
@@ -442,7 +442,7 @@ namespace GitCommands
                 MessageEncoding = encodingName,
                 Subject = subject,
                 Body = body,
-                HasMultiLineMessage = !ReferenceEquals(subject, body),
+                HasMultiLineMessage = subject != body,
                 HasNotes = false
             };
 

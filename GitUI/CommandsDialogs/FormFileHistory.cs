@@ -34,7 +34,7 @@ namespace GitUI.CommandsDialogs
         private readonly CancellationTokenSequence _viewChangesSequence = new();
 
         private BuildReportTabPageExtension? _buildReportTabPageExtension;
-        private readonly Dictionary<ObjectId, string> _revisionFilePath = new();
+        private readonly Dictionary<ObjectId, string> _filePathByObjectId = new();
 
         private string FileName { get; set; }
 
@@ -243,7 +243,7 @@ namespace GitUI.CommandsDialogs
 
                 var res = (revision: (string?)null, path: $" \"{fileName}\"");
                 var fullFilePath = _fullPathResolver.Resolve(fileName);
-                _revisionFilePath.Clear();
+                _filePathByObjectId.Clear();
 
                 if (AppSettings.FollowRenamesInFileHistory && !Directory.Exists(fullFilePath))
                 {
@@ -256,7 +256,7 @@ namespace GitUI.CommandsDialogs
                     // note: This implementation is quite a quick hack (by someone who does not speak C# fluently).
                     //
 
-                    const string startOfObjectId = "\x03\x03\x03\x03";
+                    const string startOfObjectId = "????";
                     GitArgumentBuilder args = new("log")
                     {
                         // --name-only will list each filename on a separate line, ending with a an empty line
@@ -269,49 +269,42 @@ namespace GitUI.CommandsDialogs
                         fileName.Quote()
                     };
 
-                    StringBuilder listOfFileNames = new(fileName.Quote());
-
-                    // keep a set of the file names already seen
-                    HashSet<string?> setOfFileNames = new() { fileName };
-
+                    HashSet<string?> setOfFileNames = new();
                     var lines = Module.GitExecutable.GetOutputLines(args, outputEncoding: GitModule.LosslessEncoding);
 
                     ObjectId currentObjectId = null;
                     foreach (var line in lines.Select(GitModule.ReEncodeFileNameFromLossless))
                     {
-                        if (line.Length == 0)
+                        if (string.IsNullOrEmpty(line))
                         {
-                            // end of filenames
-                            currentObjectId = null;
+                            // empty filename after sha
                             continue;
                         }
 
                         if (line.StartsWith(startOfObjectId))
                         {
-                            currentObjectId = null;
                             if (line.Length < ObjectId.Sha1CharCount + startOfObjectId.Length
-                                || !ObjectId.TryParse(line.Substring(startOfObjectId.Length, ObjectId.Sha1CharCount), 0, out currentObjectId))
+                                || !ObjectId.TryParse(line, offset: startOfObjectId.Length, out currentObjectId))
                             {
-                                // Parese error
-                                continue;
+                                // Parse error, ignore
+                                currentObjectId = null;
                             }
+
+                            continue;
                         }
 
-                        if (!_revisionFilePath.ContainsKey(currentObjectId))
+                        if (currentObjectId == null)
                         {
-                            // Add only the first file to the dictionary
-                            _revisionFilePath[currentObjectId] = line;
+                            // Parsing has failed, ignore
+                            continue;
                         }
 
-                        if (!string.IsNullOrEmpty(line) && setOfFileNames.Add(line))
-                        {
-                            listOfFileNames.Append(" \"");
-                            listOfFileNames.Append(line);
-                            listOfFileNames.Append('\"');
-                        }
+                        // Add only the first file to the dictionary
+                        _filePathByObjectId.TryAdd(currentObjectId, line);
+                        setOfFileNames.Add(line);
                     }
 
-                    res.path = listOfFileNames.ToString();
+                    res.path = string.Join("", setOfFileNames.Select(s => @$" ""{s}"""));
                     res.revision += $" --parents{FindRenamesAndCopiesOpts()}";
                 }
                 else if (AppSettings.FollowRenamesInFileHistory)
@@ -336,9 +329,7 @@ namespace GitUI.CommandsDialogs
         }
 
         private string? GetFileNameForRevision(GitRevision rev)
-            => _revisionFilePath.ContainsKey(rev.ObjectId)
-                ? _revisionFilePath[rev.ObjectId]
-                : null;
+            => _filePathByObjectId.ContainsKey(rev.ObjectId) ? _filePathByObjectId[rev.ObjectId] : null;
 
         // returns " --find-renames=..." according to app settings
         private static ArgumentString FindRenamesOpt()
