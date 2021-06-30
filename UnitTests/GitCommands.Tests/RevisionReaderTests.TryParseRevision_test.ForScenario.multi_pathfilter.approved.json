@@ -26,7 +26,6 @@
     "HasMultiLineMessage": true,
     "HasNotes": false,
     "MessageEncoding": null,
-    "Name": "GitCommands/Git/GitModule.cs\nGitCommands/RevisionReader.cs\nGitCommands/StringPool.cs\nGitUI/CommandsDialogs/FormVerify.LostObject.cs\nPlugins/GitUIPluginInterfaces/GitRevision.cs\nPlugins/GitUIPluginInterfaces/ObjectId.cs\nUnitTests/GitCommands.Tests/RevisionReaderTests.cs\nUnitTests/GitCommands.Tests/StringPoolTests.cs\nUnitTests/GitUI.Tests/UserControls/RevisionGrid/Graph/LaneInfoProviderTests.cs\n\n",
     "IsArtificial": false,
     "HasParent": true,
     "FirstParentId": {

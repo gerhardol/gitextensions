@@ -37,14 +37,4 @@ if the commit is selected
 Reduce string allocations
 
 * Use HighPerformance StringBuffer
-
-GitCommands/Git/GitModule.cs
-GitCommands/RevisionReader.cs
-GitCommands/StringPool.cs
-GitUI/CommandsDialogs/FormVerify.LostObject.cs
-Plugins/GitUIPluginInterfaces/GitRevision.cs
-Plugins/GitUIPluginInterfaces/ObjectId.cs
-UnitTests/GitCommands.Tests/RevisionReaderTests.cs
-UnitTests/GitCommands.Tests/StringPoolTests.cs
-UnitTests/GitUI.Tests/UserControls/RevisionGrid/Graph/LaneInfoProviderTests.cs
 
