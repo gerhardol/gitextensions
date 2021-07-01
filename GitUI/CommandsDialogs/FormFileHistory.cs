@@ -329,7 +329,7 @@ namespace GitUI.CommandsDialogs
         }
 
         private string? GetFileNameForRevision(GitRevision rev)
-            => _filePathByObjectId.ContainsKey(rev.ObjectId) ? _filePathByObjectId[rev.ObjectId] : null;
+            => _filePathByObjectId.TryGetValue(rev.ObjectId, out string? path) ? path : null;
 
         // returns " --find-renames=..." according to app settings
         private static ArgumentString FindRenamesOpt()
