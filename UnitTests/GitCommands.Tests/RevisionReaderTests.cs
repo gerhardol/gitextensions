@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using ApprovalTests;
 using ApprovalTests.Namers;
+using ApprovalTests.Reporters;
+using ApprovalTests.Reporters.ContinuousIntegration;
 using FluentAssertions;
 using GitCommands;
 using GitUIPluginInterfaces;
@@ -101,6 +103,11 @@ namespace GitCommandsTests
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+
+        // Avoid launching the difftool at differences
+        // APPVEYOR should be detected automatically, this forces the setting (also in local tests)
+        // The popup will hang the tests without failure information
+        [UseReporter(typeof(AppVeyorReporter))]
         [Test]
         [TestCase("bad_parentid", false)]
         [TestCase("bad_parentid_length", false)]
@@ -118,11 +125,17 @@ namespace GitCommandsTests
         {
             using (ApprovalResults.ForScenario(testName.Replace(' ', '_')))
             {
-                var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "TestData/RevisionReader", testName + ".bin");
+                string path = Path.Combine(TestContext.CurrentContext.TestDirectory, "TestData/RevisionReader", testName + ".bin");
                 ArraySegment<byte> chunk = File.ReadAllBytes(path);
 
                 RevisionReader.TestAccessor.TryParseRevision(chunk, _getEncodingByGitName, _logOutputEncoding, _sixMonths, out GitRevision rev)
                     .Should().Be(expectedReturn);
+
+                // No LocalTime for the time stamps
+                JsonSerializerSettings timeZoneSettings = new()
+                {
+                    DateTimeZoneHandling = DateTimeZoneHandling.Utc
+                };
 
                 if (serialThrows)
                 {
@@ -131,7 +144,7 @@ namespace GitCommandsTests
                 }
                 else if (expectedReturn)
                 {
-                    Approvals.VerifyJson(JsonConvert.SerializeObject(rev).Replace("\r\n", "\n"));
+                    Approvals.VerifyJson(JsonConvert.SerializeObject(rev, timeZoneSettings));
                 }
             }
         }
