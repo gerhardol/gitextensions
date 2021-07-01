@@ -8,7 +8,7 @@
 *.cmd text eol=crlf
 *.sh text eol=lf
 *.py text eol=lf
-*.bin binary
+*.bin binary diff=text
 
 *RevisionReaderTests.*.approved.* binary diff=text
 *DoAutoCRLF*.approved.* binary diff=text
