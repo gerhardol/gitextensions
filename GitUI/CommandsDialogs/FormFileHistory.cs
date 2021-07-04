@@ -308,11 +308,6 @@ namespace GitUI.CommandsDialogs
                     res.revision += $" --parents{FindRenamesAndCopiesOpts()}";
                 }
 
-                if (AppSettings.FullHistoryInFileHistory)
-                {
-                    res.revision = string.Concat(" --full-history ", AppSettings.SimplifyMergesInFileHistory ? "--simplify-merges " : string.Empty, res.revision);
-                }
-
                 return res;
             }
         }
