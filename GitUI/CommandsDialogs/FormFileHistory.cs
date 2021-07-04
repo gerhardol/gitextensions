@@ -305,7 +305,7 @@ namespace GitUI.CommandsDialogs
                     }
 
                     res.path = string.Join("", setOfFileNames.Select(s => @$" ""{s}"""));
-                    res.revision += $" --parents{FindRenamesAndCopiesOpts()}";
+                    res.revision += $" {FindRenamesAndCopiesOpts()}";
                 }
 
                 return res;
