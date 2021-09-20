@@ -70,6 +70,14 @@ namespace GitUIPluginInterfaces
         /// <summary>Indicates HEAD is not pointing to a branch (i.e. it is detached).</summary>
         bool IsDetachedHead();
 
+        /// <summary>
+        /// Convert native (Windows) path to the path for the Git executable
+        /// (this could be for instance WSL)
+        /// </summary>
+        /// <param name="path">ge.exe path to repo.</param>
+        /// <returns>WSL2 path or unchanged.</returns>
+        public string GetRepoPath(string path);
+
         bool TryResolvePartialCommitId(string objectIdPrefix, [NotNullWhen(returnValue: true)] out ObjectId? objectId);
 
         string GetSubmoduleFullPath(string localPath);

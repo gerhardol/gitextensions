@@ -247,7 +247,7 @@ namespace GitUI.CommandsDialogs
 
                 string sourceRepo = _NO_TRANSLATE_From.Text;
                 var cloneCmd = GitCommandHelpers.CloneCmd(sourceRepo,
-                    dirTo,
+                    UICommands.Module.GetRepoPath(dirTo),
                     CentralRepository.Checked,
                     cbIntializeAllSubmodules.Checked,
                     branch, depth, isSingleBranch);

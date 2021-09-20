@@ -47,8 +47,18 @@ namespace GitCommands
         private readonly IGitTreeParser _gitTreeParser = new GitTreeParser();
         private readonly IRevisionDiffProvider _revisionDiffProvider = new RevisionDiffProvider();
         private readonly GetAllChangedFilesOutputParser _getAllChangedFilesOutputParser;
+
+        // executable may use "native" Git (required for UI as well as FormProcess) or Git in WSL
         private readonly IGitCommandRunner _gitCommandRunner;
+        private readonly IGitCommandRunner _gitNativeCommandRunner;
         private readonly IExecutable _gitExecutable;
+        private readonly IExecutable _gitNativeExecutable;
+
+        /// <summary>
+        /// Name of the WSL distro for the GitExecutable, empty string for the default (Windows) distro.
+        /// This can be seen as the Git "instance" identifier.
+        /// </summary>
+        private readonly string _wslDistro;
 
         public GitModule(string? workingDir)
         {
@@ -56,9 +66,21 @@ namespace GitCommands
             WorkingDirGitDir = GitDirectoryResolverInstance.Resolve(WorkingDir);
             _indexLockManager = new IndexLockManager(this);
             _commitDataManager = new CommitDataManager(() => this);
-            _gitExecutable = new Executable(() => AppSettings.GitCommand, WorkingDir);
-            _gitCommandRunner = new GitCommandRunner(_gitExecutable, () => SystemEncoding);
             _getAllChangedFilesOutputParser = new GetAllChangedFilesOutputParser(() => this);
+            _gitNativeExecutable = new Executable(() => AppSettings.GitCommand, WorkingDir);
+            _gitNativeCommandRunner = new GitCommandRunner(_gitNativeExecutable, () => SystemEncoding);
+
+            _wslDistro = AppSettings.WslGitEnabled ? PathUtil.GetWslDistro(WorkingDir) : "";
+            if (!string.IsNullOrEmpty(_wslDistro))
+            {
+                _gitExecutable = new Executable(() => AppSettings.WslGitCommand, WorkingDir, $"-d {_wslDistro} git ");
+                _gitCommandRunner = new GitCommandRunner(_gitExecutable, () => SystemEncoding);
+            }
+            else
+            {
+                _gitExecutable = _gitNativeExecutable;
+                _gitCommandRunner = _gitNativeCommandRunner;
+            }
 
             // If this is a submodule, populate relevant properties.
             // If this is not a submodule, these will all be null.
@@ -136,12 +158,26 @@ namespace GitCommands
         public string WorkingDir { get; }
 
         /// <summary>
-        /// Gets the access to the current git executable associated with this module.
+        /// Convert path to the Git executable internal, for instance for WSL.
+        /// </summary>
+        /// <param name="path">Git Extensions native (Windows) path to repo.</param>
+        /// <returns>WSL path or unchanged.</returns>
+        public string GetRepoPath(string path) => PathUtil.GetRepoPath(path, _wslDistro);
+
+        /// <summary>
+        /// GitVersion for the default GitExecutable.
+        /// </summary>
+        public GitVersion GitVersion => GitVersion.CurrentVersion(_wslDistro);
+
+        /// <summary>
+        /// Gets the default Git executable associated with this module.
+        /// This executable can be non-native (i.e. WSL).
         /// </summary>
         public IExecutable GitExecutable => _gitExecutable;
 
         /// <summary>
         /// Gets the access to the current git executable associated with this module.
+        /// This commandrunner can be non-native (i.e. WSL).
         /// </summary>
         public IGitCommandRunner GitCommandRunner => _gitCommandRunner;
 
@@ -884,7 +920,9 @@ namespace GitCommands
                 { !string.IsNullOrWhiteSpace(fileName), "--" },
                 fileName.ToPosixPath().QuoteNE()
             };
-            using var process = _gitExecutable.Start(args, createWindow: true);
+
+            // Use native (Windows) Git if custom tool is selected as the list is native
+            using var process = (string.IsNullOrWhiteSpace(customTool) ? _gitExecutable : _gitNativeExecutable).Start(args, createWindow: true);
             process.WaitForExit();
         }
 
@@ -1338,7 +1376,7 @@ namespace GitCommands
                     "--break-rewrites",
                     { start is not null, $"--start-number {start}" },
                     { !string.IsNullOrEmpty(from), $"{from.Quote()}..{to.Quote()}", $"--root {to.Quote()}" },
-                    $"-o {output.ToPosixPath().Quote()}"
+                    $"-o {GetRepoPath(output).ToPosixPath().Quote()}"
                 });
         }
 
@@ -2102,7 +2140,7 @@ namespace GitCommands
                 { !string.IsNullOrEmpty(author), $"--author=\"{author?.Trim().Trim('"')}\"" },
                 { gpgSign && string.IsNullOrWhiteSpace(gpgKeyId), "-S" },
                 { gpgSign && !string.IsNullOrWhiteSpace(gpgKeyId), $"-S{gpgKeyId}" },
-                { useExplicitCommitMessage, $"-F \"{Path.Combine(GetGitDirectory(), "COMMITMESSAGE")}\"" },
+                { useExplicitCommitMessage, $"-F \"{GetRepoPath(Path.Combine(GetGitDirectory(), "COMMITMESSAGE"))}\"" },
                 { allowEmpty, "--allow-empty" }
             };
         }
@@ -3580,9 +3618,10 @@ namespace GitCommands
         /// <returns>the Git output.</returns>
         public string GetCustomDiffMergeTools(bool isDiff, CancellationToken cancellationToken)
         {
+            // Use a global list of custom tools, always use native (Windows) tools
             // Note that --gui has no effect here
             GitArgumentBuilder args = new(isDiff ? "difftool" : "mergetool") { "--tool-help" };
-            ExecutionResult result = _gitExecutable.Execute(args, cancellationToken: cancellationToken);
+            ExecutionResult result = _gitNativeExecutable.Execute(args, cancellationToken: cancellationToken);
             return result.StandardOutput;
         }
 
@@ -3593,7 +3632,9 @@ namespace GitCommands
 
         public string OpenWithDifftool(string? filename, string? oldFileName = "", string? firstRevision = GitRevision.IndexGuid, string? secondRevision = GitRevision.WorkTreeGuid, string? extraDiffArguments = null, bool isTracked = true, string? customTool = null)
         {
-            _gitCommandRunner.RunDetached(new GitArgumentBuilder("difftool")
+            // Use native (Windows) Git if custom tool is selected as the list is native
+            (string.IsNullOrWhiteSpace(customTool) ? _gitCommandRunner : _gitNativeCommandRunner)
+                .RunDetached(new GitArgumentBuilder("difftool")
             {
                 { string.IsNullOrWhiteSpace(customTool), "--gui", $"--tool={customTool}" },
                 "--find-renames",
@@ -3621,7 +3662,9 @@ namespace GitCommands
                 return null;
             }
 
-            _gitCommandRunner.RunDetached(new GitArgumentBuilder("difftool")
+            // Use native (Windows) Git if custom tool is selected as the list is native
+            (string.IsNullOrWhiteSpace(customTool) ? _gitCommandRunner : _gitNativeCommandRunner)
+                .RunDetached(new GitArgumentBuilder("difftool")
             {
                 { string.IsNullOrWhiteSpace(customTool), "--gui", $"--tool={customTool}" },
                 "--find-renames",

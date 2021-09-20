@@ -8277,6 +8277,10 @@ Check if file is accessible.</source>
         <source>HOME is set to:</source>
         <target />
       </trans-unit>
+      <trans-unit id="checkBoxUseWslGit.Text">
+        <source>Use Git in WSL</source>
+        <target />
+      </trans-unit>
       <trans-unit id="downloadGitForWindows.Text">
         <source>Download Git</source>
         <target />
