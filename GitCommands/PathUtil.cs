@@ -12,6 +12,7 @@ namespace GitCommands
     {
         private static readonly IEnvironmentAbstraction EnvironmentAbstraction = new EnvironmentAbstraction();
         private static readonly IEnvironmentPathsProvider EnvironmentPathsProvider = new EnvironmentPathsProvider(EnvironmentAbstraction);
+        private const string _wslPrefix = @"\\wsl$\";
 
         public static readonly char PosixDirectorySeparatorChar = '/';
         public static readonly char NativeDirectorySeparatorChar = Path.DirectorySeparatorChar;
@@ -159,7 +160,61 @@ namespace GitCommands
 
         internal static bool IsWslPath(string path)
         {
-            return path.ToLower().StartsWith(@"\\wsl$\");
+            return path.ToLower().StartsWith(_wslPrefix);
+        }
+
+        /// <summary>
+        /// Get the name of the distribution (like "Ubuntu-20.04") for WSL2 paths.
+        /// </summary>
+        /// <param name="path">Directory path.</param>
+        /// <returns>Name of the distro or empty for non WSL2 paths</returns>
+        public static string GetWslDistro(string path)
+        {
+            int distroLen = GetWslDistroLength(path);
+            return distroLen <= 0 ? "" : path.Substring(_wslPrefix.Length, distroLen);
+
+            static int GetWslDistroLength(string path)
+            {
+                if (string.IsNullOrWhiteSpace(path) || !IsWslPath(path))
+                {
+                    return -1;
+                }
+
+                return path.IndexOfAny(new[] { '\\', '/' }, _wslPrefix.Length) - _wslPrefix.Length;
+            }
+        }
+
+        /// <summary>
+        /// Convert path to the Git executable internal, for instance for WSL2
+        /// </summary>
+        /// <param name="path">ge.exe path to repo.</param>
+        /// <param name="wslDistro">Name of the distro or empty for non WSL2 paths</param>
+        /// <returns>WSL2 path or unchanged.</returns>
+        public static string GetRepoPath(string path, string wslDistro)
+        {
+            if (string.IsNullOrEmpty(wslDistro))
+            {
+                return path;
+            }
+
+            string pathDistro = GetWslDistro(path);
+            if (!string.IsNullOrEmpty(pathDistro))
+            {
+                // Unexpected but not handled as an error
+                if (pathDistro != wslDistro)
+                {
+                    return path;
+                }
+
+                return path[(_wslPrefix.Length + pathDistro.Length)..].ToPosixPath();
+            }
+
+            if (path.Length > 2 && char.IsLetter(path[0]) && path[1] == ':')
+            {
+                return $"/mnt/{char.ToLower(path[0])}{path[2..].ToPosixPath()}";
+            }
+
+            return path.ToPosixPath();
         }
 
         public static string GetRepositoryName(string? repositoryUrl)

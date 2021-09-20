@@ -385,6 +385,18 @@ namespace GitCommands
             }
         }
 
+        public static bool WslGitEnabled
+        {
+            get => GetBool("WslGitEnabled", true);
+            set => SetBool("WslGitEnabled", value);
+        }
+
+        // Currently not configurable
+        public static string WslGitCommand
+        {
+            get => GetString("WslGitCommand", "wsl");
+        }
+
         public static bool StashKeepIndex
         {
             get => GetBool("stashkeepindex", false);

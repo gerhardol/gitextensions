@@ -521,7 +521,9 @@ namespace GitCommands.Git.Commands
                 { squash, "--squash" },
                 { noCommit, "--no-commit" },
                 { allowUnrelatedHistories, "--allow-unrelated-histories" },
-                { !string.IsNullOrWhiteSpace(mergeCommitFilePath), $"-F \"{mergeCommitFilePath}\"" }, // let git fail, if the file doesn't exist
+
+                 // let git fail, if the file doesn't exist
+                { !string.IsNullOrWhiteSpace(mergeCommitFilePath), $"-F \"{mergeCommitFilePath}\"" },
                 { log is not null && log.Value > 0, $"--log={log}" },
                 branch
             };

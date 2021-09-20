@@ -43,6 +43,7 @@
             this.GitBinPath = new System.Windows.Forms.TextBox();
             this.GitPath = new System.Windows.Forms.TextBox();
             this.BrowseGitPath = new System.Windows.Forms.Button();
+            this.checkBoxUseWslGit = new System.Windows.Forms.CheckBox();
             this.gbEnvironment = new System.Windows.Forms.GroupBox();
             this.gbPaths = new System.Windows.Forms.GroupBox();
             tlpnlEnvironment = new System.Windows.Forms.TableLayoutPanel();
@@ -73,7 +74,7 @@
             tlpnlEnvironment.RowStyles.Add(new System.Windows.Forms.RowStyle());
             tlpnlEnvironment.RowStyles.Add(new System.Windows.Forms.RowStyle());
             tlpnlEnvironment.Size = new System.Drawing.Size(609, 98);
-            tlpnlEnvironment.TabIndex = 0;
+            tlpnlEnvironment.TabIndex = 9;
             // 
             // ChangeHomeButton
             // 
@@ -81,7 +82,7 @@
             this.ChangeHomeButton.Location = new System.Drawing.Point(3, 70);
             this.ChangeHomeButton.Name = "ChangeHomeButton";
             this.ChangeHomeButton.Size = new System.Drawing.Size(90, 25);
-            this.ChangeHomeButton.TabIndex = 2;
+            this.ChangeHomeButton.TabIndex = 10;
             this.ChangeHomeButton.Text = "Change HOME";
             this.ChangeHomeButton.UseVisualStyleBackColor = true;
             this.ChangeHomeButton.Click += new System.EventHandler(this.ChangeHomeButton_Click);
@@ -115,17 +116,19 @@
             tlpnlGitPaths.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             tlpnlGitPaths.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             tlpnlGitPaths.Controls.Add(this.label50, 0, 0);
-            tlpnlGitPaths.Controls.Add(this.downloadGitForWindows, 0, 3);
+            tlpnlGitPaths.Controls.Add(this.downloadGitForWindows, 0, 4);
             tlpnlGitPaths.Controls.Add(this.lblGitCommand, 0, 1);
             tlpnlGitPaths.Controls.Add(this.lblShPath, 0, 2);
             tlpnlGitPaths.Controls.Add(this.BrowseGitBinPath, 2, 2);
             tlpnlGitPaths.Controls.Add(this.GitBinPath, 1, 2);
             tlpnlGitPaths.Controls.Add(this.GitPath, 1, 1);
             tlpnlGitPaths.Controls.Add(this.BrowseGitPath, 2, 1);
+            tlpnlGitPaths.Controls.Add(this.checkBoxUseWslGit, 0, 3);
             tlpnlGitPaths.Dock = System.Windows.Forms.DockStyle.Fill;
             tlpnlGitPaths.Location = new System.Drawing.Point(8, 22);
             tlpnlGitPaths.Name = "tlpnlGitPaths";
-            tlpnlGitPaths.RowCount = 4;
+            tlpnlGitPaths.RowCount = 5;
+            tlpnlGitPaths.RowStyles.Add(new System.Windows.Forms.RowStyle());
             tlpnlGitPaths.RowStyles.Add(new System.Windows.Forms.RowStyle());
             tlpnlGitPaths.RowStyles.Add(new System.Windows.Forms.RowStyle());
             tlpnlGitPaths.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -146,6 +149,16 @@
     "the correct paths below.";
             this.label50.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
+            // checkBoxUseWslGit
+            // 
+            this.checkBoxUseWslGit.AutoSize = true;
+            this.checkBoxUseWslGit.Location = new System.Drawing.Point(19, 80);
+            this.checkBoxUseWslGit.Name = "checkBoxUseWslGit";
+            this.checkBoxUseWslGit.Size = new System.Drawing.Size(228, 17);
+            this.checkBoxUseWslGit.TabIndex = 7;
+            this.checkBoxUseWslGit.Text = "Use Git in WSL";
+            this.checkBoxUseWslGit.UseVisualStyleBackColor = true;
+            // 
             // downloadGitForWindows
             // 
             this.downloadGitForWindows.AutoSize = true;
@@ -153,7 +166,7 @@
             this.downloadGitForWindows.Location = new System.Drawing.Point(3, 71);
             this.downloadGitForWindows.Name = "downloadGitForWindows";
             this.downloadGitForWindows.Size = new System.Drawing.Size(291, 13);
-            this.downloadGitForWindows.TabIndex = 7;
+            this.downloadGitForWindows.TabIndex = 8;
             this.downloadGitForWindows.TabStop = true;
             this.downloadGitForWindows.Text = "Download Git";
             this.downloadGitForWindows.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -304,6 +317,7 @@
         private System.Windows.Forms.TextBox GitPath;
         private System.Windows.Forms.Button BrowseGitPath;
         private System.Windows.Forms.TextBox GitBinPath;
+        private System.Windows.Forms.CheckBox checkBoxUseWslGit;
         private System.Windows.Forms.Label lblGlobalConfigPath;
         private System.Windows.Forms.Label lblGitCommand;
         private System.Windows.Forms.Label label50;
