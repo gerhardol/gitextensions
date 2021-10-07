@@ -559,7 +559,8 @@ namespace GitUI.CommandsDialogs
 
         private void diffFilterFileInGridToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            (FindForm() as FormBrowse)?.SetPathFilter(DiffFiles.SelectedItems.First().Item.Name.ToPosixPath());
+            // If no file selected, use null to clear the filter
+            (FindForm() as FormBrowse)?.SetPathFilter(DiffFiles.SelectedItems.FirstOrDefault()?.Item.Name.ToPosixPath());
         }
 
         private void UpdateStatusOfMenuItems()
@@ -621,6 +622,15 @@ namespace GitUI.CommandsDialogs
             diffShowInFileTreeToolStripMenuItem.Visible = _revisionDiffController.ShouldShowMenuShowInFileTree(selectionInfo);
             fileHistoryDiffToolstripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuFileHistory(selectionInfo);
             blameToolStripMenuItem.Enabled = _revisionDiffController.ShouldShowMenuBlame(selectionInfo);
+
+            if (DiffFiles.SelectedItem is null)
+            {
+                diffFilterFileInGridToolStripMenuItem.Text = TranslatedStrings.ClearFileFilterInGrid;
+            }
+            else
+            {
+                diffFilterFileInGridToolStripMenuItem.Text = TranslatedStrings.FilterFileInGrid;
+            }
         }
 
         private void DiffContextMenu_Opening(object sender, CancelEventArgs e)

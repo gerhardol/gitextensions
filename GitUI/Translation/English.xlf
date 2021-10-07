@@ -10532,6 +10532,10 @@ Select this commit to populate the full message.</source>
         <source>{0:Child|Children}</source>
         <target />
       </trans-unit>
+      <trans-unit id="_clearFileFilterInGrid.Text">
+        <source>Clear file filter in &amp;grid</source>
+        <target />
+      </trans-unit>
       <trans-unit id="_closeText.Text">
         <source>Close</source>
         <target />
