@@ -252,9 +252,9 @@ namespace GitCommandsTests.Helpers
             PathUtil.GetWslDistro(path).Should().Be(expected);
         }
 
-        [TestCase(@"\\wsl$\Ubuntu\work\..\GitExtensions\", "", @"\\wsl$\Ubuntu\work\..\GitExtensions\")]
-        [TestCase(@"C:\work\..\GitExtensions\", "", @"C:\work\..\GitExtensions\")]
-        [TestCase(@"work\..\GitExtensions\", "", @"work\..\GitExtensions\")]
+        [TestCase(@"\\wsl$\Ubuntu\work\..\GitExtensions\", "", @"//wsl$/Ubuntu/work/../GitExtensions/")]
+        [TestCase(@"C:\work\..\GitExtensions\", "", @"C:/work/../GitExtensions/")]
+        [TestCase(@"work\..\GitExtensions\", "", @"work/../GitExtensions/")]
         public void GetRepoPath_default(string path, string wslDistro, string expected)
         {
             PathUtil.GetRepoPath(path, wslDistro).Should().Be(expected);
@@ -271,7 +271,7 @@ namespace GitCommandsTests.Helpers
         }
 
         [TestCase(@"\\wsl$/Ubuntu/work/../GitExtensions", "Ubuntu", @"//wsl$/Ubuntu/work/../GitExtensions")]
-        [TestCase(@"\\wsl$\Ubuntu-20.04\work\..\GitExtensions\", "Ubuntu", @"\\wsl$\Ubuntu-20.04\work\..\GitExtensions\")]
+        [TestCase(@"\\wsl$\Ubuntu-20.04\work\..\GitExtensions\", "Ubuntu", @"//wsl$/Ubuntu-20.04/work/../GitExtensions/")]
         public void GetRepoPath_unexpected_usage(string path, string wslDistro, string expected)
         {
             PathUtil.GetRepoPath(path, wslDistro).Should().Be(expected);

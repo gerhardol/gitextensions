@@ -194,14 +194,14 @@ namespace GitCommands.Git.Commands
         /// </summary>
         /// <param name="gitRef">The branch to move.</param>
         /// <param name="targetId">The commit to move to.</param>
-        /// <param name="repoDir">Directory to the current repo.</param>
+        /// <param name="repoDir">Directory to the current repo in Posix format.</param>
         /// <param name="force">Push the reference also if commits are lost.</param>
         /// <returns>The Git command to execute.</returns>
         public static ArgumentString PushLocalCmd(string gitRef, ObjectId targetId, string repoDir, bool force = false)
         {
             return new GitArgumentBuilder("push")
             {
-                $@"""file://{repoDir.ToPosixPath()}""",
+                $@"""file://{repoDir}""",
                 $"{targetId}:{gitRef}".QuoteNE(),
                 { force, "--force" }
             };
@@ -210,6 +210,8 @@ namespace GitCommands.Git.Commands
         /// <summary>
         /// Git Clone.
         /// </summary>
+        /// <param name="fromPath">URL or file system path in Posix format.</param>
+        /// <param name="toPath">Directory to the destination path in Posix format.</param>
         /// <param name="central">Makes a bare repo.</param>
         /// <param name="branch">
         /// <para><c>NULL</c>: do not checkout working copy (--no-checkout).</para>
@@ -224,8 +226,6 @@ namespace GitCommands.Git.Commands
         /// </param>
         public static ArgumentString CloneCmd(string fromPath, string toPath, bool central = false, bool initSubmodules = false, string? branch = "", int? depth = null, bool? isSingleBranch = null)
         {
-            var from = PathUtil.IsLocalFile(fromPath) ? fromPath.ToPosixPath() : fromPath;
-
             return new GitArgumentBuilder("clone")
             {
                 "-v",
@@ -237,8 +237,8 @@ namespace GitCommands.Git.Commands
                 "--progress",
                 { branch is null, "--no-checkout" },
                 { !string.IsNullOrEmpty(branch), $"--branch {branch}" },
-                from.Trim().Quote(),
-                toPath.ToPosixPath().Trim().Quote()
+                fromPath.Trim().Quote(),
+                toPath.Trim().Quote()
             };
         }
 
