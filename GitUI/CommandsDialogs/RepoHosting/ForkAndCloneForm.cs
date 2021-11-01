@@ -391,11 +391,13 @@ namespace GitUI.CommandsDialogs.RepoHosting
                 return;
             }
 
-            string repoSrc = repo.CloneReadWriteUrl;
-
             GitUICommands uiCommands = new(new GitModule(null));
 
-            var cmd = GitCommandHelpers.CloneCmd(repoSrc, uiCommands.Module.GetRepoPath(targetDir), depth: GetDepth());
+            string repoSrc = PathUtil.IsLocalFile(repo.CloneReadWriteUrl)
+                ? uiCommands.Module.GetPathForGitExec(repo.CloneReadWriteUrl)
+                : repo.CloneReadWriteUrl;
+
+            var cmd = GitCommandHelpers.CloneCmd(repoSrc, uiCommands.Module.GetPathForGitExec(targetDir), depth: GetDepth());
 
             FormRemoteProcess formRemoteProcess = new(uiCommands, cmd)
             {

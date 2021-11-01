@@ -385,10 +385,10 @@ namespace GitCommands
             }
         }
 
+        // Currently not configurable
         public static bool WslGitEnabled
         {
             get => GetBool("WslGitEnabled", true);
-            set => SetBool("WslGitEnabled", value);
         }
 
         // Currently not configurable

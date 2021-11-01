@@ -38,16 +38,20 @@ namespace GitUIPluginInterfaces
         void SetSetting(string setting, string value);
         void UnsetSetting(string setting);
 
-        /// <summary>Gets the directory which contains the git repository.</summary>
+        /// <summary>
+        /// Gets the directory which contains the git repository.
+        /// </summary>
         string WorkingDir { get; }
 
         /// <summary>
-        /// Gets the access to the current git executable associated with this module.
+        /// Gets the default Git executable associated with this module.
+        /// This executable can be non-native (i.e. WSL).
         /// </summary>
         IExecutable GitExecutable { get; }
 
         /// <summary>
         /// Gets the access to the current git executable associated with this module.
+        /// This commandrunner can be non-native (i.e. WSL).
         /// </summary>
         IGitCommandRunner GitCommandRunner { get; }
 
@@ -71,12 +75,12 @@ namespace GitUIPluginInterfaces
         bool IsDetachedHead();
 
         /// <summary>
-        /// Convert native (Windows) path to the path for the Git executable
-        /// (this could be for instance WSL)
+        /// Convert the path for the Git executable.
+        /// For WSL Git, the path will be adjusted.
         /// </summary>
-        /// <param name="path">ge.exe path to repo.</param>
-        /// <returns>WSL2 path or unchanged.</returns>
-        public string GetRepoPath(string path);
+        /// <param name="path">Path as seen by the Git Extensions native (Windows) executable.</param>
+        /// <returns>Posix path if Windows Git, WSL path for WSL Git.</returns>
+        public string GetPathForGitExec(string path);
 
         bool TryResolvePartialCommitId(string objectIdPrefix, [NotNullWhen(returnValue: true)] out ObjectId? objectId);
 

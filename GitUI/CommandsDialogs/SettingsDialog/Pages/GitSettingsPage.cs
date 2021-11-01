@@ -34,14 +34,12 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
 
             GitPath.Text = AppSettings.GitCommandValue;
             GitBinPath.Text = AppSettings.GitBinDir;
-            checkBoxUseWslGit.Checked = AppSettings.WslGitEnabled;
         }
 
         protected override void PageToSettings()
         {
             AppSettings.GitCommandValue = GitPath.Text;
             AppSettings.GitBinDir = GitBinPath.Text;
-            AppSettings.WslGitEnabled = checkBoxUseWslGit.Checked;
         }
 
         private void BrowseGitPath_Click(object sender, EventArgs e)

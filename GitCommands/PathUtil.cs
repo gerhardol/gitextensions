@@ -12,7 +12,7 @@ namespace GitCommands
     {
         private static readonly IEnvironmentAbstraction EnvironmentAbstraction = new EnvironmentAbstraction();
         private static readonly IEnvironmentPathsProvider EnvironmentPathsProvider = new EnvironmentPathsProvider(EnvironmentAbstraction);
-        private const string _wslPrefix = @"\\wsl$\";
+        private const string WslPrefix = @"\\wsl$\";
 
         public static readonly char PosixDirectorySeparatorChar = '/';
         public static readonly char NativeDirectorySeparatorChar = Path.DirectorySeparatorChar;
@@ -160,7 +160,7 @@ namespace GitCommands
 
         internal static bool IsWslPath(string path)
         {
-            return path.ToLower().StartsWith(_wslPrefix);
+            return path.ToLower().StartsWith(WslPrefix);
         }
 
         /// <summary>
@@ -171,7 +171,7 @@ namespace GitCommands
         public static string GetWslDistro(string path)
         {
             int distroLen = GetWslDistroLength(path);
-            return distroLen <= 0 ? "" : path.Substring(_wslPrefix.Length, distroLen);
+            return distroLen <= 0 ? "" : path.Substring(WslPrefix.Length, distroLen);
 
             static int GetWslDistroLength(string path)
             {
@@ -180,21 +180,22 @@ namespace GitCommands
                     return -1;
                 }
 
-                return path.IndexOfAny(new[] { '\\', '/' }, _wslPrefix.Length) - _wslPrefix.Length;
+                return path.IndexOfAny(new[] { '\\', '/' }, WslPrefix.Length) - WslPrefix.Length;
             }
         }
 
         /// <summary>
-        /// Convert path to the Git executable internal, for instance for WSL2
+        /// Convert a path for the Git executable.
+        /// For native (Windows) the path is the same, for WSL Git the path may be transformed.
         /// </summary>
-        /// <param name="path">ge.exe path to repo.</param>
-        /// <param name="wslDistro">Name of the distro or empty for non WSL2 paths</param>
-        /// <returns>WSL2 path or unchanged.</returns>
+        /// <param name="path">Path as seen by the Git Extensions native (Windows) executable.</param>
+        /// <param name="wslDistro">Name of the distro or empty for non WSL paths</param>
+        /// <returns>Posix path if not a WSL distro (Windows Git), WSL path for WSL Git.</returns>
         public static string GetRepoPath(string path, string wslDistro)
         {
             if (string.IsNullOrEmpty(wslDistro))
             {
-                return path;
+                return path.ToPosixPath();
             }
 
             string pathDistro = GetWslDistro(path);
@@ -203,10 +204,10 @@ namespace GitCommands
                 // Unexpected but not handled as an error
                 if (pathDistro != wslDistro)
                 {
-                    return path;
+                    return path.ToPosixPath();
                 }
 
-                return path[(_wslPrefix.Length + pathDistro.Length)..].ToPosixPath();
+                return path[(WslPrefix.Length + pathDistro.Length)..].ToPosixPath();
             }
 
             if (path.Length > 2 && char.IsLetter(path[0]) && path[1] == ':')

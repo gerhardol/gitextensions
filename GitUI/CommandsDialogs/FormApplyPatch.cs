@@ -196,7 +196,7 @@ namespace GitUI.CommandsDialogs
 
                 if (PatchFileMode.Checked)
                 {
-                    string gitPatch = Module.GetRepoPath(patchFile);
+                    string gitPatch = Module.GetPathForGitExec(patchFile);
                     var arguments = IsDiffFile(patchFile)
                         ? GitCommandHelpers.ApplyDiffPatchCmd(ignoreWhiteSpace, gitPatch)
                         : GitCommandHelpers.ApplyMailboxPatchCmd(signOff, ignoreWhiteSpace, gitPatch);

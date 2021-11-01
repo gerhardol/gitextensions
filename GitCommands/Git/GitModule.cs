@@ -152,39 +152,27 @@ namespace GitCommands
             }
         }
 
-        /// <summary>
-        /// Gets the directory which contains the git repository.
-        /// </summary>
+        /// <inherit/>
         public string WorkingDir { get; }
-
-        /// <summary>
-        /// Convert path to the Git executable internal, for instance for WSL.
-        /// </summary>
-        /// <param name="path">Git Extensions native (Windows) path to repo.</param>
-        /// <returns>WSL path or unchanged.</returns>
-        public string GetRepoPath(string path) => PathUtil.GetRepoPath(path, _wslDistro);
 
         /// <summary>
         /// GitVersion for the default GitExecutable.
         /// </summary>
         public GitVersion GitVersion => GitVersion.CurrentVersion(_wslDistro);
 
-        /// <summary>
-        /// Gets the default Git executable associated with this module.
-        /// This executable can be non-native (i.e. WSL).
-        /// </summary>
+        /// <inherit/>
         public IExecutable GitExecutable => _gitExecutable;
 
-        /// <summary>
-        /// Gets the access to the current git executable associated with this module.
-        /// This commandrunner can be non-native (i.e. WSL).
-        /// </summary>
+        /// <inherit/>
         public IGitCommandRunner GitCommandRunner => _gitCommandRunner;
 
         /// <summary>
         /// Gets the location of .git directory for the current working folder.
         /// </summary>
         public string WorkingDirGitDir { get; private set; }
+
+        /// <inherit/>
+        public string GetPathForGitExec(string path) => PathUtil.GetRepoPath(path, _wslDistro);
 
         /// <summary>
         /// If this module is a submodule, returns its name, otherwise <c>null</c>.
@@ -1377,7 +1365,7 @@ namespace GitCommands
                     "--break-rewrites",
                     { start is not null, $"--start-number {start}" },
                     { !string.IsNullOrEmpty(from), $"{from.Quote()}..{to.Quote()}", $"--root {to.Quote()}" },
-                    $"-o {GetRepoPath(output).ToPosixPath().Quote()}"
+                    $"-o {GetPathForGitExec(output).Quote()}"
                 });
         }
 
@@ -2141,7 +2129,7 @@ namespace GitCommands
                 { !string.IsNullOrEmpty(author), $"--author=\"{author?.Trim().Trim('"')}\"" },
                 { gpgSign && string.IsNullOrWhiteSpace(gpgKeyId), "-S" },
                 { gpgSign && !string.IsNullOrWhiteSpace(gpgKeyId), $"-S{gpgKeyId}" },
-                { useExplicitCommitMessage, $"-F \"{GetRepoPath(Path.Combine(GetGitDirectory(), "COMMITMESSAGE"))}\"" },
+                { useExplicitCommitMessage, $"-F \"{GetPathForGitExec(Path.Combine(GetGitDirectory(), "COMMITMESSAGE"))}\"" },
                 { allowEmpty, "--allow-empty" }
             };
         }
