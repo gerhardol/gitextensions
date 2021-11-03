@@ -524,7 +524,15 @@ namespace GitUI.CommandsDialogs
             // Note that the Git output contains color codes etc too
             Regex isRejected = new($"! \\[rejected\\] .* ((?<currBranch>{Regex.Escape(_currentBranchName)})|.*) -> ");
             Match match = isRejected.Match(form.GetOutputString());
-            if (match.Success && !Module.IsBareRepository())
+            if (!match.Success || Module.IsBareRepository() || string.IsNullOrEmpty(form.GetOutputString()) || !form.ProcessArguments.Contains("push "))
+            {
+                // xxx test behavior
+                form.AppendOutput(Environment.NewLine +
+                $"xxx Debug: push failed {match.Success} {form.GetOutputString()} {form.ProcessArguments}" +
+                Environment.NewLine + Environment.NewLine);
+            }
+
+            if (match.Success && !Module.IsBareRepository() && form.ProcessArguments.StartsWith("push "))
             {
                 IWin32Window owner = form.Owner;
                 (var onRejectedPullAction, var forcePush) = AskForAutoPullOnPushRejectedAction(owner, match.Groups["currBranch"].Success);

@@ -737,6 +737,13 @@ namespace GitUI.CommandsDialogs
                         formPrune.ShowDialog(form);
                     }
                 }
+                else if (string.IsNullOrEmpty(form.GetOutputString()))
+                {
+                    // xxx test behavior
+                    form.AppendOutput(Environment.NewLine +
+                    $"xxx Debug: pull failed {form.GetOutputString()} {form.ProcessArguments}" +
+                    Environment.NewLine + Environment.NewLine);
+                }
 
                 return false;
             }
