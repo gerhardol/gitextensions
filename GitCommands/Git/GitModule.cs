@@ -175,6 +175,13 @@ namespace GitCommands
         public string GetPathForGitExec(string path) => PathUtil.GetRepoPath(path, _wslDistro);
 
         /// <summary>
+        /// Convert a path to native (Windows) format.
+        /// </summary>
+        /// <param name="path">Path as seen by the Git executable, possibly WSL Git.</param>
+        /// <returns>Path in in Windows format with native file separators.</returns>
+        public string GetPathForNative(string path) => PathUtil.GetNativePath(path, _wslDistro);
+
+        /// <summary>
         /// If this module is a submodule, returns its name, otherwise <c>null</c>.
         /// </summary>
         public string? SubmoduleName { get; }
@@ -335,7 +342,7 @@ namespace GitCommands
             };
             var gitPath = _gitExecutable.GetOutput(args);
 
-            var systemPath = gitPath.Trim().ToNativePath();
+            var systemPath = GetPathForNative(gitPath).Trim();
 
             if (systemPath.StartsWith(".git\\"))
             {
@@ -370,7 +377,7 @@ namespace GitCommands
                         GitArgumentBuilder args = new("rev-parse") { "--git-common-dir" };
                         ExecutionResult result = _gitExecutable.Execute(args, throwOnErrorExit: false);
 
-                        string dir = result.StandardOutput.Trim().ToNativePath();
+                        string dir = GetPathForNative(result.StandardOutput).Trim();
 
                         if (!result.ExitedSuccessfully || dir == ".git" || dir == "." || !Directory.Exists(dir))
                         {
@@ -922,6 +929,9 @@ namespace GitCommands
                 { bare, "--bare" },
                 { shared, "--shared=all" }
             };
+
+            // Note that the output contains the path to the repo for the Git executable.
+            // This means that the WSL path is presented in WSL repos, not the native (Windows) path.
             var output = _gitExecutable.GetOutput(args);
 
             WorkingDirGitDir = GitDirectoryResolverInstance.Resolve(WorkingDir);
@@ -2195,13 +2205,13 @@ namespace GitCommands
 
         public async Task<IReadOnlyList<Remote>> GetRemotesAsync()
         {
-            ExecutionResult result = await _gitExecutable.ExecuteAsync("remote -v", throwOnErrorExit: false);
+            ExecutionResult result = await _gitExecutable.ExecuteAsync(new GitArgumentBuilder("remote") { "-v" }, throwOnErrorExit: false);
             ////TODO: Handle non-empty result.StandardError if not result.ExitedSuccessfully
             return result.ExitedSuccessfully
                 ? ParseRemotes(result)
                 : Array.Empty<Remote>();
 
-            static IReadOnlyList<Remote> ParseRemotes(ExecutionResult result)
+            IReadOnlyList<Remote> ParseRemotes(ExecutionResult result)
             {
                 IEnumerable<string> lines = result.StandardOutput.LazySplit('\n', StringSplitOptions.RemoveEmptyEntries);
                 List<Remote> remotes = new();
@@ -2223,6 +2233,11 @@ namespace GitCommands
 
                     var name = remoteMatch.Groups["name"].Value;
                     var remoteUrl = remoteMatch.Groups["url"].Value;
+                    if (PathUtil.IsLocalFile(remoteUrl))
+                    {
+                        remoteUrl = GetPathForNative(remoteUrl).ToPosixPath();
+                    }
+
                     if (remoteMatch.Groups["direction"].Value == "push")
                     {
                         if (remotes.Count <= 0 || name != remotes[remotes.Count - 1].Name)
@@ -2247,6 +2262,11 @@ namespace GitCommands
                     }
 
                     var pushUrl = pushMatch.Groups["url"].Value;
+                    if (PathUtil.IsLocalFile(pushUrl))
+                    {
+                        pushUrl = GetPathForNative(pushUrl).ToPosixPath();
+                    }
+
                     if (name != pushMatch.Groups["name"].Value)
                     {
                         throw new Exception("Fetch and push remote names must match: " +

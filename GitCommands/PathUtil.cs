@@ -218,6 +218,32 @@ namespace GitCommands
             return path.ToPosixPath();
         }
 
+        /// <summary>
+        /// Convert a path to native (Windows) format.
+        /// </summary>
+        /// <param name="path">Path as seen by the Git executable, possibly WSL Git.</param>
+        /// <param name="wslDistro">Name of the distro or empty for non WSL paths.</param>
+        /// <returns>Path in in Windows format with native file separators.</returns>
+        public static string GetNativePath(string path, string wslDistro)
+        {
+            if (string.IsNullOrEmpty(wslDistro))
+            {
+                return path.ToNativePath();
+            }
+
+            if (path.StartsWith("/mnt/") && path.Length > 7)
+            {
+                return $"{char.ToUpper(path[5])}:{path[6..]}".ToNativePath();
+            }
+
+            if (path[0] is '\\' or '/')
+            {
+                return $@"{WslPrefix}{wslDistro}{path}".ToNativePath();
+            }
+
+            return $@"{WslPrefix}{wslDistro}\{path}".ToNativePath();
+        }
+
         public static string GetRepositoryName(string? repositoryUrl)
         {
             string name = "";
