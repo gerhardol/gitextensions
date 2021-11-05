@@ -2178,7 +2178,7 @@ namespace GitCommands
                 {
                     "add",
                     name.Quote(),
-                    path.ToPosixPath().QuoteNE()
+                    GetPathForGitExec(path).QuoteNE()
                 });
         }
 
