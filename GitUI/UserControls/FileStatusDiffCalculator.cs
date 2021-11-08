@@ -112,9 +112,6 @@ namespace GitUI
                 return fileStatusDescs;
             }
 
-            // Extra information with limited selection
-            var allAToB = fileStatusDescs[0].Statuses;
-
             // Get base commit, add as parent if unique
             var firstRevHead = GetRevisionOrHead(firstRev, headId);
             var selectedRevHead = GetRevisionOrHead(selectedRev, headId);
@@ -158,38 +155,45 @@ namespace GitUI
                 return fileStatusDescs;
             }
 
-            // Present common files in BASE->B, BASE->A separately
-            // For the following diff:  A->B a,c,d; BASE->B a,b,c; BASE->A a,b,d
-            // (the file a has unique changes, b has the same change and c,d is changed in one of the branches)
-            // The following groups will be shown: A->B a,c,d; BASE->B a,c; BASE->A a,d; Common BASE b
+            var allAToB = fileStatusDescs[0].Statuses;
             var allBaseToB = module.GetDiffFilesWithSubmodulesStatus(baseRevGuid, selectedRev.ObjectId, selectedRev.FirstParentId);
             var allBaseToA = module.GetDiffFilesWithSubmodulesStatus(baseRevGuid, firstRev.ObjectId, firstRev.FirstParentId);
 
             GitItemStatusNameEqualityComparer comparer = new();
-            var commonBaseToAandB = allBaseToB.Intersect(allBaseToA, comparer).Except(allAToB, comparer).ToList();
-            var bothChangedAandB = allAToB.Intersect(allBaseToB, comparer).Intersect(allBaseToA, comparer).ToList();
+            var sameBaseToAandB = allBaseToB.Intersect(allBaseToA, comparer).Except(allAToB, comparer).ToList();
+            var onlyA = allBaseToA.Except(allBaseToB, comparer).ToList();
+            var onlyB = allBaseToB.Except(allBaseToA, comparer).ToList();
+
+            foreach (var l in new[] { allAToB, allBaseToB, allBaseToA })
+            {
+                foreach (var f in l)
+                {
+                    f.DiffStatus = GetDiffStatus(f, l == allAToB);
+                }
+            }
+
+            DiffBranchStatus GetDiffStatus(GitItemStatus f, bool atoBDiff)
+            {
+                return sameBaseToAandB.Any(i => i.Name == f.Name) ? DiffBranchStatus.SameChange
+
+                    // Special handling for files added in A but not B as the icon is Removed
+                    : (atoBDiff && f.IsDeleted && onlyA.Any(i => i.Name == f.Name))
+                        || onlyB.Any(i => i.Name == f.Name) ? DiffBranchStatus.OnlyBChange
+                    : onlyA.Any(i => i.Name == f.Name) ? DiffBranchStatus.OnlyAChange
+                    : DiffBranchStatus.UniqueChange;
+            }
 
             GitRevision revBase = new(baseRevGuid);
-            fileStatusDescs.Add(new FileStatusWithDescription(
-                firstRev: firstRev,
-                secondRev: selectedRev,
-                summary: TranslatedStrings.DiffBothChanged,
-                statuses: bothChangedAandB));
             fileStatusDescs.Add(new FileStatusWithDescription(
                 firstRev: revBase,
                 secondRev: selectedRev,
                 summary: TranslatedStrings.DiffBaseToB + GetDescriptionForRevision(selectedRev.ObjectId),
-                statuses: allBaseToB.Except(commonBaseToAandB, comparer).ToList()));
+                statuses: allBaseToB));
             fileStatusDescs.Add(new FileStatusWithDescription(
                 firstRev: revBase,
                 secondRev: firstRev,
-                summary: TranslatedStrings.DiffBaseToB + GetDescriptionForRevision(firstRev.ObjectId),
-                statuses: allBaseToA.Except(commonBaseToAandB, comparer).ToList()));
-            fileStatusDescs.Add(new FileStatusWithDescription(
-                firstRev: revBase,
-                secondRev: selectedRev,
-                summary: TranslatedStrings.DiffCommonBase + GetDescriptionForRevision(baseRevGuid),
-                statuses: commonBaseToAandB));
+                summary: TranslatedStrings.DiffBaseToA + GetDescriptionForRevision(firstRev.ObjectId),
+                statuses: allBaseToA));
 
             if (!module.GitVersion.SupportRangeDiffTool)
             {

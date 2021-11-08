@@ -122,8 +122,20 @@ namespace GitUI
                 {
                     (nameof(Images.FileStatusUnknown), ScaleHeight(Images.FileStatusUnknown)),
                     (nameof(Images.FileStatusModified), ScaleHeight(Images.FileStatusModified)),
+                    (nameof(Images.FileStatusModifiedOnlyA), ScaleHeight(Images.FileStatusModifiedOnlyA)),
+                    (nameof(Images.FileStatusModifiedOnlyB), ScaleHeight(Images.FileStatusModifiedOnlyB)),
+                    (nameof(Images.FileStatusModifiedSame), ScaleHeight(Images.FileStatusModifiedSame)),
+                    (nameof(Images.FileStatusModifiedUnique), ScaleHeight(Images.FileStatusModifiedUnique)),
                     (nameof(Images.FileStatusAdded), ScaleHeight(Images.FileStatusAdded)),
+                    (nameof(Images.FileStatusAddedOnlyA), ScaleHeight(Images.FileStatusAddedOnlyA)),
+                    (nameof(Images.FileStatusAddedOnlyB), ScaleHeight(Images.FileStatusAddedOnlyB)),
+                    (nameof(Images.FileStatusAddedSame), ScaleHeight(Images.FileStatusAddedSame)),
+                    (nameof(Images.FileStatusAddedUnique), ScaleHeight(Images.FileStatusAddedUnique)),
                     (nameof(Images.FileStatusRemoved), ScaleHeight(Images.FileStatusRemoved)),
+                    (nameof(Images.FileStatusRemovedOnlyA), ScaleHeight(Images.FileStatusRemovedOnlyA)),
+                    (nameof(Images.FileStatusRemovedOnlyB), ScaleHeight(Images.FileStatusRemovedOnlyB)),
+                    (nameof(Images.FileStatusRemovedSame), ScaleHeight(Images.FileStatusRemovedSame)),
+                    (nameof(Images.FileStatusRemovedUnique), ScaleHeight(Images.FileStatusRemovedUnique)),
                     (nameof(Images.Conflict), ScaleHeight(Images.Conflict)),
                     (nameof(Images.FileStatusRenamed), ScaleHeight(Images.FileStatusRenamed.AdaptLightness())),
                     (nameof(Images.FileStatusCopied), ScaleHeight(Images.FileStatusCopied)),
@@ -911,9 +923,14 @@ namespace GitUI
                 ListViewGroup? group = null;
                 if (i.FirstRev is not null)
                 {
-                    group = new ListViewGroup(i.Summary)
+                    string name = i.Statuses.Count == 1 && i.Statuses[0].IsRangeDiff
+                        ? i.Summary
+                        : $"[{i.Statuses.Count}] {i.Summary}";
+                    group = new ListViewGroup(name)
                     {
-                        CollapsedState = ListViewGroupCollapsedState.Expanded,
+                        CollapsedState = i.Statuses.Count <= 5 || GitItemStatusesWithDescription.Count < 3 || i == GitItemStatusesWithDescription[0]
+                            ? ListViewGroupCollapsedState.Expanded
+                            : ListViewGroupCollapsedState.Collapsed,
                         Tag = i.FirstRev
                     };
 
@@ -1021,7 +1038,14 @@ namespace GitUI
 
                 if (gitItemStatus.IsDeleted)
                 {
-                    return nameof(Images.FileStatusRemoved);
+                    return gitItemStatus.DiffStatus switch
+                    {
+                        DiffBranchStatus.OnlyAChange => nameof(Images.FileStatusRemovedOnlyA),
+                        DiffBranchStatus.OnlyBChange => nameof(Images.FileStatusRemovedOnlyB),
+                        DiffBranchStatus.SameChange => nameof(Images.FileStatusRemovedSame),
+                        DiffBranchStatus.UniqueChange => nameof(Images.FileStatusRemovedUnique),
+                        _ => nameof(Images.FileStatusRemoved)
+                    };
                 }
 
                 if (gitItemStatus.IsRangeDiff)
@@ -1031,7 +1055,14 @@ namespace GitUI
 
                 if (gitItemStatus.IsNew || (!gitItemStatus.IsTracked && !gitItemStatus.IsSubmodule))
                 {
-                    return nameof(Images.FileStatusAdded);
+                    return gitItemStatus.DiffStatus switch
+                    {
+                        DiffBranchStatus.OnlyAChange => nameof(Images.FileStatusAddedOnlyA),
+                        DiffBranchStatus.OnlyBChange => nameof(Images.FileStatusAddedOnlyB),
+                        DiffBranchStatus.SameChange => nameof(Images.FileStatusAddedSame),
+                        DiffBranchStatus.UniqueChange => nameof(Images.FileStatusAddedUnique),
+                        _ => nameof(Images.FileStatusAdded)
+                    };
                 }
 
                 if (gitItemStatus.IsConflict)
@@ -1072,14 +1103,28 @@ namespace GitUI
 
                 if (gitItemStatus.IsChanged)
                 {
-                    return nameof(Images.FileStatusModified);
+                    return gitItemStatus.DiffStatus switch
+                    {
+                        DiffBranchStatus.OnlyAChange => nameof(Images.FileStatusModifiedOnlyA),
+                        DiffBranchStatus.OnlyBChange => nameof(Images.FileStatusModifiedOnlyB),
+                        DiffBranchStatus.SameChange => nameof(Images.FileStatusModifiedSame),
+                        DiffBranchStatus.UniqueChange => nameof(Images.FileStatusModifiedUnique),
+                        _ => nameof(Images.FileStatusModified)
+                    };
                 }
 
                 if (gitItemStatus.IsRenamed)
                 {
                     return gitItemStatus.RenameCopyPercentage == "100"
                         ? nameof(Images.FileStatusRenamed)
-                        : nameof(Images.FileStatusModified);
+                        : gitItemStatus.DiffStatus switch
+                        {
+                            DiffBranchStatus.OnlyAChange => nameof(Images.FileStatusModifiedOnlyA),
+                            DiffBranchStatus.OnlyBChange => nameof(Images.FileStatusModifiedOnlyB),
+                            DiffBranchStatus.SameChange => nameof(Images.FileStatusModifiedSame),
+                            DiffBranchStatus.UniqueChange => nameof(Images.FileStatusModifiedUnique),
+                            _ => nameof(Images.FileStatusModified)
+                        };
                 }
 
                 if (gitItemStatus.IsCopied)
@@ -1780,11 +1825,15 @@ namespace GitUI
                     return 1;
                 }
 
-                var statusResult = x.ImageIndex.CompareTo(y.ImageIndex);
-
+                var statusResult = -((FileStatusItem)x.Tag).Item.DiffStatus.CompareTo(((FileStatusItem)y.Tag).Item.DiffStatus);
                 if (statusResult == 0)
                 {
-                    return ThenBy.Compare(x, y);
+                    statusResult = x.ImageIndex.CompareTo(y.ImageIndex);
+
+                    if (statusResult == 0)
+                    {
+                        return ThenBy.Compare(x, y);
+                    }
                 }
 
                 return statusResult;

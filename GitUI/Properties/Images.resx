@@ -553,11 +553,47 @@
   <data name="FileStatusAdded" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icons\FileStatusAdded.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="FileStatusAddedOnlyA" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\FileStatusAddedOnlyA.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="FileStatusAddedOnlyB" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\FileStatusAddedOnlyB.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="FileStatusAddedSame" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\FileStatusAddedSame.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="FileStatusAddedUnique" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\FileStatusAddedUnique.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="FileStatusModified" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icons\FileStatusModified.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="FileStatusModifiedOnlyA" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\FileStatusModifiedOnlyA.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="FileStatusModifiedOnlyB" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\FileStatusModifiedOnlyB.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="FileStatusModifiedSame" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\FileStatusModifiedSame.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="FileStatusModifiedUnique" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\FileStatusModifiedUnique.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="FileStatusRemoved" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icons\FileStatusRemoved.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="FileStatusRemovedOnlyA" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\FileStatusRemovedOnlyA.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="FileStatusRemovedOnlyB" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\FileStatusRemovedOnlyB.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="FileStatusRemovedSame" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\FileStatusRemovedSame.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="FileStatusRemovedUnique" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\FileStatusRemovedUnique.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="FileStatusCopied" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icons\FileStatusCopied.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
