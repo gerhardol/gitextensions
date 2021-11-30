@@ -17,6 +17,7 @@ namespace GitUI.BranchTreePanel
                 IsActive = isCurrent;
             }
 
+            // TODO rename to IsCurrent to match git lingo? I find (in)active obfuscates the meaning.
             public bool IsActive { get; }
 
             protected override void ApplyStyle()

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using GitUI.BranchTreePanel.Interfaces;
+﻿using GitUI.BranchTreePanel.Interfaces;
 using ResourceManager;
 
 namespace GitUI.BranchTreePanel.ContextMenu
@@ -8,11 +6,14 @@ namespace GitUI.BranchTreePanel.ContextMenu
     internal class LocalBranchMenuItems<TNode> : MenuItemsGenerator<TNode>
         where TNode : class, INode
     {
-        private static MenuItemKey[] _inactiveBranchFilterKeys =
+        /* TODO refactor this to a positive list CurrentBranchItemKeys { GitRefCreateBranch, Rename } ?
+         * I feel that could make the code and tests easier to read by getting rid of some negativity. */
+
+        /// <summary> Keys of menu items only applying to inactive (i.e. not the current) branches.</summary>
+        internal static MenuItemKey[] InactiveBranchFilterKeys =
                 new[]
                 {
                     MenuItemKey.GitRefCheckout,
-                    MenuItemKey.GitRefMerge,
                     MenuItemKey.GitRefMerge,
                     MenuItemKey.GitRefRebase,
                     MenuItemKey.GitRefReset,
@@ -23,14 +24,6 @@ namespace GitUI.BranchTreePanel.ContextMenu
         public LocalBranchMenuItems(IMenuItemFactory menuItemFactory) : base(menuItemFactory)
         {
             new LocalBranchMenuItemsStrings().ApplyTo(Strings);
-        }
-
-        /// <summary>
-        /// Filter menu entries that depend on the branch being active or not.
-        /// </summary>
-        public IEnumerable<ToolStripItemWithKey> GetInactiveBranchItems()
-        {
-            return this.Where(t => _inactiveBranchFilterKeys.Contains(t.Key));
         }
     }
 

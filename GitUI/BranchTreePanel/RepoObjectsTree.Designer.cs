@@ -204,8 +204,8 @@ namespace GitUI.BranchTreePanel
             // 
             this.mnubtnFilterLocalBranchInRevisionGrid.Image = global::GitUI.Properties.Images.ShowThisBranchOnly;
             this.mnubtnFilterLocalBranchInRevisionGrid.Name = "mnubtnFilterLocalBranchInRevisionGrid";
-            this.mnubtnFilterLocalBranchInRevisionGrid.Size = new System.Drawing.Size(191, 22);
-            this.mnubtnFilterLocalBranchInRevisionGrid.Text = "Show this branch only";
+            this.mnubtnFilterLocalBranchInRevisionGrid.Size = new System.Drawing.Size(272, 26);
+            this.mnubtnFilterLocalBranchInRevisionGrid.Text = "Show selected branches only";
             // 
             // runScriptToolStripMenuItem
             // 
@@ -218,8 +218,8 @@ namespace GitUI.BranchTreePanel
             // 
             this.mnubtnFilterRemoteBranchInRevisionGrid.Image = global::GitUI.Properties.Images.ShowThisBranchOnly;
             this.mnubtnFilterRemoteBranchInRevisionGrid.Name = "mnubtnFilterRemoteBranchInRevisionGrid";
-            this.mnubtnFilterRemoteBranchInRevisionGrid.Size = new System.Drawing.Size(193, 22);
-            this.mnubtnFilterRemoteBranchInRevisionGrid.Text = "Show this branch only";
+            this.mnubtnFilterRemoteBranchInRevisionGrid.Size = new System.Drawing.Size(272, 26);
+            this.mnubtnFilterRemoteBranchInRevisionGrid.Text = "Show selected branches only";
             // 
             // menuTags
             // 

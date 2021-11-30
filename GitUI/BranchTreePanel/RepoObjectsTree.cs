@@ -23,10 +23,9 @@ namespace GitUI.BranchTreePanel
     public partial class RepoObjectsTree : GitModuleControl
     {
         private readonly CancellationTokenSequence _selectionCancellationTokenSequence = new();
-        private readonly TranslationString _showBranchOnly =
-            new("Filter the revision grid to show this branch only\nTo show all branches, right click the revision grid, select 'view' and then the 'show all branches'");
+        private readonly TranslationString _showSelectedBranchesOnly =
+            new("Filter the revision grid to show selected branches only.\nTo reset the filter, right click the revision grid, select 'View' and then 'Show all branches'.");
         private readonly TranslationString _searchTooltip = new("Search");
-        private readonly TranslationString _showHideRefsTooltip = new("Show/hide branches/remotes/tags");
 
         private NativeTreeViewDoubleClickDecorator _doubleClickDecorator;
         private NativeTreeViewExplorerNavigationDecorator _explorerNavigationDecorator;
@@ -44,9 +43,7 @@ namespace GitUI.BranchTreePanel
         private IScriptHostControl _scriptHost;
         private IRunScript _scriptRunner;
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public RepoObjectsTree()
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
             Disposed += (s, e) => _selectionCancellationTokenSequence.Dispose();
 
@@ -91,8 +88,8 @@ namespace GitUI.BranchTreePanel
             treeMain.NodeMouseClick += OnNodeClick;
             treeMain.NodeMouseDoubleClick += OnNodeDoubleClick;
 
-            mnubtnFilterRemoteBranchInRevisionGrid.ToolTipText = _showBranchOnly.Text;
-            mnubtnFilterLocalBranchInRevisionGrid.ToolTipText = _showBranchOnly.Text;
+            mnubtnFilterRemoteBranchInRevisionGrid.ToolTipText =
+            mnubtnFilterLocalBranchInRevisionGrid.ToolTipText = _showSelectedBranchesOnly.Text;
 
             return;
 
@@ -359,6 +356,13 @@ namespace GitUI.BranchTreePanel
             };
         }
 
+        private IEnumerable<BaseBranchLeafNode> GetSelectedBranches()
+        {
+            var locals = _branchesTree.DepthEnumerator<BaseBranchLeafNode>();
+            var remotes = _remotesTree.DepthEnumerator<BaseBranchLeafNode>();
+            return locals.Concat(remotes).Where(b => b.TreeViewNode.Checked);
+        }
+
         private void CreateTags()
         {
             TreeNode rootNode = new(TranslatedStrings.Tags)
@@ -544,9 +548,40 @@ namespace GitUI.BranchTreePanel
             Node.OnNode<Node>(e.Node, node => node.OnSelected());
         }
 
+        private static void CheckNode(TreeNode node, bool check, bool includingDescendants = false)
+        {
+            node.Checked = check;
+            node.BackColor = check ? SystemColors.GradientInactiveCaption : node.TreeView.BackColor;
+
+            // recursively process descendants if required
+            if (includingDescendants && node.Nodes.Count > 0)
+            {
+                foreach (TreeNode child in node.Nodes)
+                {
+                    CheckNode(child, check, includingDescendants);
+                }
+            }
+        }
+
         private void OnNodeClick(object sender, TreeNodeMouseClickEventArgs e)
         {
             Node.OnNode<Node>(e.Node, node => node.OnClick());
+
+            if (e.Button == MouseButtons.Right)
+            {
+                return; // don't change selection on opening context menu
+            }
+
+            if (ModifierKeys == Keys.Control)
+            {
+                // toggle clicked node checked, including descendants
+                CheckNode(e.Node, !e.Node.Checked, includingDescendants: true);
+            }
+            else
+            {
+                treeMain.AllNodes().Where(n => n.Checked).ForEach(node => CheckNode(node, false)); // uncheck all checked nodes
+                CheckNode(e.Node, true); // and only check the clicked one
+            }
         }
 
         private void OnNodeDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
