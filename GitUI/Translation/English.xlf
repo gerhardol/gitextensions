@@ -3191,6 +3191,10 @@ Do you want to continue?</source>
         <source>&amp;Diff contains (SLOW)</source>
         <target />
       </trans-unit>
+      <trans-unit id="tsmiDisableFilters.Text">
+        <source>Disable filters</source>
+        <target />
+      </trans-unit>
       <trans-unit id="tsmiFavouriteRepositories.Text">
         <source>&amp;Favourite Repositories</source>
         <target />
