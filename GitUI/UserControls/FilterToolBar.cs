@@ -299,6 +299,7 @@ namespace GitUI.UserControls
             InitBranchSelectionFilter(e);
             tsbtnAdvancedFilter.AutoToolTip = e.HasFilter;
             tsbtnAdvancedFilter.ToolTipText = e.FilterSummary;
+            tsbtnAdvancedFilter.Image = e.HasFilter ? Properties.Images.FunnelExclamation : Properties.Images.FunnelPencil;
             tsmiDisableFilters.Enabled = e.HasFilter;
         }
 
