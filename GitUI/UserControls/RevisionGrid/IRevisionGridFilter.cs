@@ -27,6 +27,12 @@ namespace GitUI.UserControls.RevisionGrid
         void SetAndApplyRevisionFilter(RevisionFilter filter);
 
         /// <summary>
+        ///  Applies a path filter.
+        /// </summary>
+        /// <param name="filter">The filter to apply.</param>
+        void SetAndApplyPathFilter(string filter);
+
+        /// <summary>
         /// Disables all filters.
         /// </summary>
         void DisableRevisionFilter();

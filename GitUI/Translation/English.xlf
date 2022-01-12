@@ -3163,6 +3163,10 @@ Do you want to continue?</source>
         <source>Text filter</source>
         <target />
       </trans-unit>
+      <trans-unit id="tsmiAdvancedFilter.Text">
+        <source>Advanced filter</source>
+        <target />
+      </trans-unit>
       <trans-unit id="tsmiAuthorFilter.Text">
         <source>&amp;Author</source>
         <target />
@@ -3191,8 +3195,12 @@ Do you want to continue?</source>
         <source>&amp;Diff contains (SLOW)</source>
         <target />
       </trans-unit>
-      <trans-unit id="tsmiDisableFilters.Text">
+      <trans-unit id="tsmiDisableAllFilters.Text">
         <source>Disable filters</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="tsmiDisablePathFilters.Text">
+        <source>Disable path filter</source>
         <target />
       </trans-unit>
       <trans-unit id="tsmiFavouriteRepositories.Text">

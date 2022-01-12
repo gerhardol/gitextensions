@@ -300,7 +300,8 @@ namespace GitUI.UserControls
             tsbtnAdvancedFilter.AutoToolTip = e.HasFilter;
             tsbtnAdvancedFilter.ToolTipText = e.FilterSummary;
             tsbtnAdvancedFilter.Image = e.HasFilter ? Properties.Images.FunnelExclamation : Properties.Images.FunnelPencil;
-            tsmiDisableFilters.Enabled = e.HasFilter;
+            tsmiDisablePathFilters.Enabled = !string.IsNullOrEmpty(e.PathFilter);
+            tsmiDisableAllFilters.Enabled = e.HasFilter;
         }
 
         private static void ToolStripSplitButtonDropDownClosed(object sender, EventArgs e)
@@ -319,10 +320,10 @@ namespace GitUI.UserControls
 
         private void tsbtnAdvancedFilter_ButtonClick(object sender, EventArgs e)
         {
-            if (!tsmiDisableFilters.Enabled)
+            if (!tsmiDisableAllFilters.Enabled)
             {
                 RevisionGridFilter.ShowRevisionFilterDialog();
-           }
+            }
             else
             {
                 tsbtnAdvancedFilter.ShowDropDown();
@@ -368,7 +369,9 @@ namespace GitUI.UserControls
             PreventToolStripSplitButtonClosing(sender as ToolStripSplitButton);
         }
 
-        private void tsmiDisableFilters_Click(object sender, EventArgs e) => RevisionGridFilter.DisableRevisionFilter();
+        private void tsmiDisablePathFilters_Click(object sender, EventArgs e) => RevisionGridFilter.SetAndApplyPathFilter("");
+        private void tsmiDisableAllFilters_Click(object sender, EventArgs e) => RevisionGridFilter.DisableRevisionFilter();
+        private void tsmiAdvancedFilter_Click(object sender, EventArgs e) => RevisionGridFilter.ShowRevisionFilterDialog();
 
         private void tsmiShowBranchesAll_Click(object sender, EventArgs e) => ApplyPresetBranchesFilter(RevisionGridFilter.ShowAllBranches);
 
