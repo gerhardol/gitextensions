@@ -405,7 +405,7 @@ namespace GitUI.CommandsDialogs
                 DiffFiles.SetSelectedIndex(fileIndex, notify: false);
             }
 
-            loadFileContent = ShowSelectedFileDiffAsync();
+            loadFileContent = ShowSelectedFileDiffAsync(ensureNoSwitchToFilter: false, line: 0);
             return true;
         }
 
@@ -542,7 +542,7 @@ namespace GitUI.CommandsDialogs
         {
             if (DiffFiles.SelectedItem is null)
             {
-                await ShowSelectedFileDiffAsync(ensureNoSwitchToFilter);
+                await ShowSelectedFileDiffAsync(ensureNoSwitchToFilter, line);
                 return;
             }
 
@@ -567,7 +567,7 @@ namespace GitUI.CommandsDialogs
         /// Activate diffviewer if Blame is visible
         /// </summary>
         /// <returns>a task</returns>
-        private async Task ShowSelectedFileDiffAsync(bool ensureNoSwitchToFilter = false)
+        private async Task ShowSelectedFileDiffAsync(bool ensureNoSwitchToFilter, int? line)
         {
             BlameControl.Visible = false;
             DiffText.Visible = true;
@@ -579,6 +579,7 @@ namespace GitUI.CommandsDialogs
             }
 
             await DiffText.ViewChangesAsync(DiffFiles.SelectedItem,
+                line: line,
                 openWithDiffTool: () => firstToSelectedToolStripMenuItem.PerformClick(),
                 cancellationToken: _viewChangesSequence.Next());
         }
@@ -589,7 +590,7 @@ namespace GitUI.CommandsDialogs
         private void ShowSelectedFile(bool ensureNoSwitchToFilter = false, int? line = null) =>
             ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
                 await (!blameToolStripMenuItem.Checked
-                    ? ShowSelectedFileDiffAsync(ensureNoSwitchToFilter)
+                    ? ShowSelectedFileDiffAsync(ensureNoSwitchToFilter, line)
                     : ShowSelectedFileBlameAsync(ensureNoSwitchToFilter, line)))
             .FileAndForget();
 
@@ -743,7 +744,7 @@ namespace GitUI.CommandsDialogs
 
             if (AppSettings.UseDiffViewerForBlame.Value)
             {
-                int? line = DiffText.Visible ? DiffText.CurrentFileLine : null;
+                int? line = DiffText.Visible ? DiffText.CurrentFileLine : BlameControl.CurrentFileLine;
                 blameToolStripMenuItem.Checked = !blameToolStripMenuItem.Checked;
                 _selectedBlameItem = blameToolStripMenuItem.Checked ? DiffFiles.SelectedItem : null;
                 ShowSelectedFile(ensureNoSwitchToFilter: true, line);
@@ -764,7 +765,7 @@ namespace GitUI.CommandsDialogs
 
             // switch to view (and fills the first level of file tree data model if not already done)
             string name = DiffFiles.SelectedItems.First().Item.Name;
-            int? line = DiffText.Visible ? DiffText.CurrentFileLine : null;
+            int? line = DiffText.Visible ? DiffText.CurrentFileLine : BlameControl.CurrentFileLine;
             (FindForm() as FormBrowse)?.ExecuteCommand(FormBrowse.Command.FocusFileTree);
             _revisionFileTree.ExpandToFile(name, line, requestBlame);
         }
