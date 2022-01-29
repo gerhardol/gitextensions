@@ -432,7 +432,7 @@ See the changes in the commit form.");
                     {
                         if (!blameToolStripMenuItem1.Checked)
                         {
-                            return ViewGitItemAsync(gitItem);
+                            return ViewGitItemAsync(gitItem, line);
                         }
 
                         FileText.Visible = false;
@@ -442,14 +442,14 @@ See the changes in the commit form.");
 
                 case GitObjectType.Commit:
                     {
-                        return ViewGitItemAsync(gitItem);
+                        return ViewGitItemAsync(gitItem, line: null);
                     }
 
                 default:
                     return ClearOutputAsync();
             }
 
-            Task ViewGitItemAsync(GitItem gitItem)
+            Task ViewGitItemAsync(GitItem gitItem, int? line)
             {
                 GitItemStatus file = new(name: gitItem.FileName)
                 {
@@ -460,7 +460,7 @@ See the changes in the commit form.");
 
                 BlameControl.Visible = false;
                 FileText.Visible = true;
-                return FileText.ViewGitItemAsync(file, gitItem.ObjectId);
+                return FileText.ViewGitItemAsync(file, gitItem.ObjectId, line: line);
             }
         }
 
@@ -524,9 +524,9 @@ See the changes in the commit form.");
                 return;
             }
 
+            int? line = FileText.Visible ? FileText.CurrentFileLine : BlameControl.CurrentFileLine;
             blameToolStripMenuItem1.Checked = !blameToolStripMenuItem1.Checked;
             AppSettings.RevisionFileTreeShowBlame = blameToolStripMenuItem1.Checked;
-            int? line = FileText.Visible ? FileText.CurrentFileLine : null;
 
             ThreadHelper.JoinableTaskFactory.RunAsync(() => ShowGitItemAsync(gitItem, line));
         }

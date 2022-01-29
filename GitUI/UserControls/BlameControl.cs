@@ -89,6 +89,8 @@ namespace GitUI.Blame
             BlameAuthor.ShowLineNumbers = AppSettings.BlameShowLineNumbers;
         }
 
+        public int CurrentFileLine => BlameFile.CurrentFileLine;
+
         public void HideCommitInfo()
         {
             splitContainer1.Panel1Collapsed = true;

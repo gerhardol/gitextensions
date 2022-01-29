@@ -24,12 +24,14 @@ namespace GitUI
         /// </summary>
         /// <param name="fileViewer">Current FileViewer.</param>
         /// <param name="item">The FileStatusItem to present changes for.</param>
+        /// <param name="line">The line to display.</param>
         /// <param name="defaultText">default text if no diff is possible.</param>
         /// <param name="openWithDiffTool">The difftool command to open with.</param>
         /// <returns>Task to view.</returns>
         public static async Task ViewChangesAsync(this FileViewer fileViewer,
             FileStatusItem? item,
             CancellationToken cancellationToken,
+            int? line = null,
             string defaultText = "",
             Action? openWithDiffTool = null)
         {
@@ -59,7 +61,7 @@ namespace GitUI
             if (item.Item.IsNew || firstId is null || (!item.Item.IsDeleted && FileHelper.IsImage(item.Item.Name)))
             {
                 // View blob guid from revision, or file for worktree
-                await fileViewer.ViewGitItemAsync(item, openWithDiffTool);
+                await fileViewer.ViewGitItemAsync(item, line, openWithDiffTool);
                 return;
             }
 
@@ -102,7 +104,7 @@ namespace GitUI
             }
             else
             {
-                await fileViewer.ViewPatchAsync(item, text: selectedPatch, openWithDifftool: openWithDiffTool);
+                await fileViewer.ViewPatchAsync(item, text: selectedPatch, line: line, openWithDifftool: openWithDiffTool);
             }
 
             return;
