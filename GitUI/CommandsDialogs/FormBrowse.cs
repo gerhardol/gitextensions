@@ -556,6 +556,13 @@ namespace GitUI.CommandsDialogs
             ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
                 await this.SwitchToMainThreadAsync();
+
+                repoObjectsTree.Reset();
+
+                // If we're refreshing the current repo, the commit info control must be reset until revisions are loaded
+                RevisionInfo.SetRevisionWithChildren(revision: null, children: Array.Empty<ObjectId>());
+
+                // Reload the revisions
                 RefreshRevisions(e.GetRefs);
             }).FileAndForget();
 
