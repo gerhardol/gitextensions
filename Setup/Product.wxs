@@ -190,9 +190,6 @@
       <Component Id="SpellChecker.dll" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\SpellChecker.dll" />
       </Component>
-      <Component Id="stdole.dll" Guid="*">
-        <File Source="$(var.ArtifactsPublishPath)\stdole.dll" />
-      </Component>
       <Component Id="System.ComponentModel.Composition.dll" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\System.ComponentModel.Composition.dll" />
       </Component>
@@ -657,7 +654,6 @@
       <ComponentRef Id="RestSharp.dll" />
       <ComponentRef Id="SmartFormat.dll" />
       <ComponentRef Id="SpellChecker.dll" />
-      <ComponentRef Id="stdole.dll" />
       <ComponentRef Id="System.ComponentModel.Composition.dll" />
       <ComponentRef Id="System.Composition.AttributedModel.dll" />
       <ComponentRef Id="System.Composition.Convention.dll" />
