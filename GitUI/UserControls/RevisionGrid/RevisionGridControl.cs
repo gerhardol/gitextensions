@@ -898,6 +898,8 @@ namespace GitUI
 
                 System.Threading.CancellationToken cancellationToken = _cancellationTokenSequence.Next();
 
+                _selectionTimer.Enabled = false;
+                _selectionTimer.Stop();
                 _gridView.SuspendLayout();
                 _gridView.SelectionChanged -= OnGridViewSelectionChanged;
                 _gridView.ClearSelection();
@@ -926,7 +928,7 @@ namespace GitUI
                     _ = refsByObjectId.Value;
                     ObjectId? newCurrentCheckout = string.IsNullOrEmpty(branchName)
                         ? null
-                        : getUnfilteredRefs().FirstOrDefault(i => i.CompleteName == $"{GitRefName.RefsHeadsPrefix}{branchName}").ObjectId;
+                        : getUnfilteredRefs().FirstOrDefault(i => i.CompleteName == $"{GitRefName.RefsHeadsPrefix}{branchName}")?.ObjectId;
 
                     if (newCurrentCheckout is null)
                     {
@@ -960,8 +962,6 @@ namespace GitUI
                         Refresh();
                     }
 
-                    _selectionTimer.Enabled = false;
-                    _selectionTimer.Stop();
                     _selectionTimer.Enabled = true;
                     _selectionTimer.Start();
                 }).FileAndForget();
