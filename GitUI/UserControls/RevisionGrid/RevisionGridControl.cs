@@ -888,8 +888,6 @@ namespace GitUI
 
                 base.Refresh();
 
-                IndexWatcher.Reset();
-
                 _isReadingRevisions = true;
                 _superprojectCurrentCheckout = null;
                 Subject<GitRevision> observeRevisions = new();
@@ -907,12 +905,20 @@ namespace GitUI
                 _gridView.Enabled = true;
                 _gridView.Focus();
                 _gridView.SelectionChanged += OnGridViewSelectionChanged;
-                _gridView.ResumeLayout();
 
                 // Add the spinner controls, removed by SetPage()
                 Controls.Add(_loadingControlSpinner);
                 Controls.Add(_loadingControlText);
                 ShowLoading();
+                _gridView.ResumeLayout();
+
+                IndexWatcher.Reset();
+
+                // Selected is null: Reset the tabs etc.
+                _selectionTimer.Enabled = false;
+                _selectionTimer.Stop();
+                _selectionTimer.Enabled = true;
+                _selectionTimer.Start();
 
                 cancellationToken.ThrowIfCancellationRequested();
 

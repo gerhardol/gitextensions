@@ -559,9 +559,6 @@ namespace GitUI.CommandsDialogs
 
                 repoObjectsTree.Reset();
 
-                // If we're refreshing the current repo, the commit info control must be reset until revisions are loaded
-                RevisionInfo.SetRevisionWithChildren(revision: null, children: Array.Empty<ObjectId>());
-
                 // Reload the revisions
                 RefreshRevisions(e.GetRefs);
             }).FileAndForget();
@@ -2958,7 +2955,9 @@ namespace GitUI.CommandsDialogs
             var commitInfoPosition = AppSettings.CommitInfoPosition;
             if (commitInfoPosition == CommitInfoPosition.BelowList)
             {
+                CommitInfoTabControl.SelectedIndexChanged -= CommitInfoTabControl_SelectedIndexChanged;
                 CommitInfoTabControl.InsertIfNotExists(0, CommitInfoTabPage);
+                CommitInfoTabControl.SelectedIndexChanged += CommitInfoTabControl_SelectedIndexChanged;
                 CommitInfoTabControl.SelectedTab = CommitInfoTabPage;
 
                 RevisionsSplitContainer.FixedPanel = FixedPanel.Panel2;
@@ -2970,7 +2969,9 @@ namespace GitUI.CommandsDialogs
             {
                 // enough to fit CommitInfoHeader in most cases, when the width is (avatar + commit hash)
                 int width = DpiUtil.Scale(490) + SystemInformation.VerticalScrollBarWidth;
+                CommitInfoTabControl.SelectedIndexChanged -= CommitInfoTabControl_SelectedIndexChanged;
                 CommitInfoTabControl.RemoveIfExists(CommitInfoTabPage);
+                CommitInfoTabControl.SelectedIndexChanged += CommitInfoTabControl_SelectedIndexChanged;
 
                 if (commitInfoPosition == CommitInfoPosition.RightwardFromList)
                 {
