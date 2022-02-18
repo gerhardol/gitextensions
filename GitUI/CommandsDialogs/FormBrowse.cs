@@ -553,13 +553,12 @@ namespace GitUI.CommandsDialogs
 
         private void UICommands_PostRepositoryChanged(object sender, GitUIEventArgs e)
         {
+            // Note that this called in most FormBrowse context to "be sure"
+            // that the repo has not been updated externally.
             ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
                 await this.SwitchToMainThreadAsync();
 
-                repoObjectsTree.Reset();
-
-                // Reload the revisions
                 RefreshRevisions(e.GetRefs);
             }).FileAndForget();
 
@@ -1019,8 +1018,8 @@ namespace GitUI.CommandsDialogs
                 ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
                 {
                     // Add a delay to not interfere with GUI updates when switching repository
-                    await Task.Delay(500);
                     await TaskScheduler.Default;
+                    await Task.Delay(500);
 
                     var result = Module.GetStashes(noLocks: true).Count;
 
