@@ -184,7 +184,6 @@ namespace GitUI
             _selectionTimer = new Timer(components) { Interval = 75 };
             _selectionTimer.Tick += (_, e) =>
             {
-                _selectionTimer.Enabled = false;
                 _selectionTimer.Stop();
                 SelectionChanged?.Invoke(this, e);
             };
@@ -914,10 +913,8 @@ namespace GitUI
 
                 IndexWatcher.Reset();
 
-                // Selected is null: Reset the tabs etc.
-                _selectionTimer.Enabled = false;
+                // Selected is null: Update to trigger reset the tabs etc.
                 _selectionTimer.Stop();
-                _selectionTimer.Enabled = true;
                 _selectionTimer.Start();
 
                 cancellationToken.ThrowIfCancellationRequested();
@@ -1433,9 +1430,7 @@ namespace GitUI
                 }
             }
 
-            _selectionTimer.Enabled = false;
             _selectionTimer.Stop();
-            _selectionTimer.Enabled = true;
             _selectionTimer.Start();
 
             var (first, selected) = getFirstAndSelected();
