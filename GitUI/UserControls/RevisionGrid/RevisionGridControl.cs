@@ -1303,9 +1303,9 @@ namespace GitUI
 
                     await this.SwitchToMainThreadAsync();
 
+                    _isRefreshingRevisions = false;
                     _gridView.LoadingCompleted();
                     SetPage(_gridView);
-                    _isRefreshingRevisions = false;
                     RevisionsLoaded?.Invoke(this, new RevisionLoadEventArgs(this, UICommands, getUnfilteredRefs, forceRefresh));
                     HighlightRevisionsByAuthor(GetSelectedRevisions());
 
