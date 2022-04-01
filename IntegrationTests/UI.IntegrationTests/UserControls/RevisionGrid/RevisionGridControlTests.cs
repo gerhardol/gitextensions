@@ -109,6 +109,8 @@ namespace GitExtensions.UITests.UserControls.RevisionGrid
                 "",
                 revisionGridControl =>
                 {
+                    WaitForRevisionsToBeLoaded(revisionGridControl);
+
                     var ta = revisionGridControl.GetTestAccessor();
                     Assert.False(revisionGridControl.CurrentFilter.IsShowFilteredBranchesChecked);
                     ta.VisibleRevisionCount.Should().Be(4);
