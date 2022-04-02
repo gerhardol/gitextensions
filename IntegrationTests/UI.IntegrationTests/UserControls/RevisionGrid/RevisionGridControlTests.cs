@@ -96,9 +96,6 @@ namespace GitExtensions.UITests.UserControls.RevisionGrid
                 });
         }
 
-#if !DEBUG
-        [Ignore("This test is unstable in AppVeyor")]
-#endif
         [Test]
         public void View_reflects_applied_branch_filter()
         {
