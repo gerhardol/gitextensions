@@ -67,12 +67,12 @@ namespace GitUI
         /// <summary>
         ///  Occurs whenever the revision graph has started loading the data.
         /// </summary>
-        public event EventHandler<GridLoadEventArgs>? GridLoading;
+        public event EventHandler<RevisionLoadEventArgs>? RevisionsLoading;
 
         /// <summary>
         ///  Occurs whenever the revision graph has been populated with the data.
         /// </summary>
-        public event EventHandler<GridLoadEventArgs>? GridLoaded;
+        public event EventHandler<RevisionLoadEventArgs>? RevisionsLoaded;
 
         /// <summary>
         ///  Occurs whenever a user toggles between the artificial and the HEAD commits
@@ -615,7 +615,7 @@ namespace GitUI
 
                 if (wasSelected && shallSelect)
                 {
-                    EnsureRowVisible(_gridView, index);
+                    _gridView.EnsureRowVisible(index);
                     return;
                 }
 
@@ -631,7 +631,7 @@ namespace GitUI
                     _gridView.CurrentCell = firstSelectedRow.Cells[1];
                 }
 
-                EnsureRowVisible(_gridView, firstSelectedRow.Index);
+                _gridView.EnsureRowVisible(firstSelectedRow.Index);
             }
             catch (ArgumentException)
             {
@@ -639,16 +639,6 @@ namespace GitUI
             }
 
             return;
-
-            static void EnsureRowVisible(DataGridView gridView, int row)
-            {
-                int countVisible = gridView.DisplayedRowCount(includePartialRow: false);
-                int firstVisible = gridView.FirstDisplayedScrollingRowIndex;
-                if (row < firstVisible || firstVisible + countVisible <= row)
-                {
-                    gridView.FirstDisplayedScrollingRowIndex = row;
-                }
-            }
         }
 
         /// <summary>
@@ -670,6 +660,7 @@ namespace GitUI
         /// <returns><c>true</c> if the required revision was found and selected, otherwise <c>false</c>.</returns>
         public bool SetSelectedRevision(ObjectId? objectId, bool toggleSelection = false, bool updateNavigationHistory = true)
         {
+            _gridView.EndSelectionAtLoad();
             var index = FindRevisionIndex(objectId);
 
             if (index < 0 || index >= _gridView.RowCount)
@@ -927,7 +918,7 @@ namespace GitUI
 
                 System.Threading.CancellationToken cancellationToken = _refreshRevisionsSequence.Next();
 
-                IReadOnlyList<ObjectId>? selectedObjectIds = _gridView.SelectedObjectIds;
+                IReadOnlyList<ObjectId>? currentlySelectedObjectIds = _gridView.SelectedObjectIds;
                 _gridView.SuspendLayout();
                 _gridView.SelectionChanged -= OnGridViewSelectionChanged;
                 _gridView.ClearSelection();
@@ -935,6 +926,7 @@ namespace GitUI
                 _gridView.Enabled = true;
                 _gridView.Focus();
                 _gridView.SelectionChanged += OnGridViewSelectionChanged;
+                _gridView.IsLoadingGrid = true;
 
                 // Add the spinner controls, removed by SetPage()
                 Controls.Add(_loadingControlSpinner);
@@ -961,18 +953,18 @@ namespace GitUI
                         : null;
                     ObjectId? newCurrentCheckout = headRef?.ObjectId ?? capturedModule.GetCurrentCheckout();
 
-                    // If the current checkout changed, don't get the currently selected rows, select the
-                    // new current checkout instead.
+                    // If the current checkout (HEAD) is changed, don't get the currently selected rows,
+                    // select the new current checkout instead.
                     if (newCurrentCheckout != CurrentCheckout)
                     {
-                        selectedObjectIds = null;
+                        currentlySelectedObjectIds = null;
                         CurrentCheckout = newCurrentCheckout;
                     }
 
                     refsByObjectId = getUnfilteredRefs.Value.ToLookup(gitRef => gitRef.ObjectId);
                     ResetNavigationHistory();
                     UpdateSelectedRef(capturedModule, getUnfilteredRefs.Value, headRef);
-                    SelectInitialRevision(newCurrentCheckout, selectedObjectIds);
+                    _gridView.ToBeSelectedObjectIds = GetToBeSelectedRevisions(newCurrentCheckout, currentlySelectedObjectIds);
 
                     semaphoreCurrentCommit.Release();
 
@@ -1013,7 +1005,7 @@ namespace GitUI
                     });
 
                 // Initiate update side panel
-                GridLoading?.Invoke(this, new GridLoadEventArgs(this, UICommands, getUnfilteredRefs, forceRefresh));
+                RevisionsLoading?.Invoke(this, new RevisionLoadEventArgs(this, UICommands, getUnfilteredRefs, forceRefresh));
             }
             catch
             {
@@ -1276,7 +1268,7 @@ namespace GitUI
                             {
                                 SetPage(new EmptyRepoControl(Module.IsBareRepository()));
                                 _isRefreshingRevisions = false;
-                                GridLoaded?.Invoke(this, new GridLoadEventArgs(this, UICommands, getUnfilteredRefs, forceRefresh));
+                                RevisionsLoaded?.Invoke(this, new RevisionLoadEventArgs(this, UICommands, getUnfilteredRefs, forceRefresh));
                             })
                         .FileAndForget();
                     return;
@@ -1290,8 +1282,7 @@ namespace GitUI
                     _gridView.LoadingCompleted();
                     SetPage(_gridView);
                     _isRefreshingRevisions = false;
-                    GridLoaded?.Invoke(this, new GridLoadEventArgs(this, UICommands, getUnfilteredRefs, forceRefresh));
-                    CheckAndRepairInitialRevision();
+                    RevisionsLoaded?.Invoke(this, new RevisionLoadEventArgs(this, UICommands, getUnfilteredRefs, forceRefresh));
                     HighlightRevisionsByAuthor(GetSelectedRevisions());
 
                     if (ShowBuildServerInfo)
@@ -1340,95 +1331,37 @@ namespace GitUI
 #pragma warning disable CS1587 // XML comment is not placed on a valid language element
             /// <summary>
             /// Select initial revision(s) in the grid.
+            /// Get the revision(s) currently selected in the grid, to be selected at next refresh.
+            /// If SelectedId is set, select that revision instead.
             /// The SelectedId is the last selected commit in the grid (with related CommitInfo in Browse).
             /// The FirstId is first selected, the first commit in a diff.
             /// </summary>
-            void SelectInitialRevision(ObjectId? currentCheckout, IReadOnlyList<ObjectId>? toBeSelectedObjectIds)
+            IReadOnlyList<ObjectId>? GetToBeSelectedRevisions(ObjectId? currentCheckout, IReadOnlyList<ObjectId>? currentlySelectedObjectIds)
 #pragma warning restore CS1587 // XML comment is not placed on a valid language element
             {
-                if (toBeSelectedObjectIds is null || toBeSelectedObjectIds.Count == 0)
+                if (SelectedId is not null)
                 {
-                    if (SelectedId is not null)
+                    IReadOnlyList<ObjectId>? toBeSelectedObjectIds;
+                    if (FirstId is not null)
                     {
-                        if (FirstId is not null)
-                        {
-                            toBeSelectedObjectIds = new ObjectId[] { FirstId, SelectedId };
-                            FirstId = null;
-                        }
-                        else
-                        {
-                            toBeSelectedObjectIds = new ObjectId[] { SelectedId };
-                        }
-
-                        SelectedId = null;
+                        toBeSelectedObjectIds = new ObjectId[] { FirstId, SelectedId };
+                        FirstId = null;
                     }
                     else
                     {
-                        toBeSelectedObjectIds = currentCheckout is null ? Array.Empty<ObjectId>() : new ObjectId[] { currentCheckout };
-                    }
-                }
-
-                _gridView.ToBeSelectedObjectIds = toBeSelectedObjectIds;
-            }
-
-            void CheckAndRepairInitialRevision()
-            {
-                // Check if there is any commit that couldn't be selected.
-                if (!_gridView.ToBeSelectedObjectIds.Any())
-                {
-                    return;
-                }
-
-                // Search for the commitid that was not selected in the grid. If not found, select the first parent.
-                int index = SearchRevision(_gridView.ToBeSelectedObjectIds.First());
-                if (index >= 0)
-                {
-                    SetSelectedIndex(index);
-                }
-
-                return;
-
-                int SearchRevision(ObjectId objectId)
-                {
-                    // Attempt to look up an item by its ID
-                    if (_gridView.TryGetRevisionIndex(objectId) is int exactIndex)
-                    {
-                        return exactIndex;
+                        toBeSelectedObjectIds = new ObjectId[] { SelectedId };
                     }
 
-                    if (objectId is not null && !objectId.IsArtificial)
-                    {
-                        // Not found, so search for its parents
-                        foreach (var parentId in TryGetParents(objectId))
-                        {
-                            if (_gridView.TryGetRevisionIndex(parentId) is int parentIndex)
-                            {
-                                return parentIndex;
-                            }
-                        }
-                    }
-
-                    // Not found...
-                    return -1;
+                    SelectedId = null;
+                    return toBeSelectedObjectIds;
                 }
-            }
 
-            IEnumerable<ObjectId> TryGetParents(ObjectId objectId)
-            {
-                GitArgumentBuilder args = new("rev-list")
+                if (currentlySelectedObjectIds is null || currentlySelectedObjectIds.Count == 0)
                 {
-                    { _filterInfo.HasCommitsLimit, $"--max-count={_filterInfo.CommitsLimit}" },
-                    objectId
-                };
-
-                ExecutionResult result = Module.GitExecutable.Execute(args, throwOnErrorExit: false);
-                foreach (var line in result.StandardOutput.LazySplit('\n'))
-                {
-                    if (ObjectId.TryParse(line, out var parentId))
-                    {
-                        yield return parentId;
-                    }
+                    return currentCheckout is null ? Array.Empty<ObjectId>() : new ObjectId[] { currentCheckout };
                 }
+
+                return currentlySelectedObjectIds;
             }
         }
 
@@ -2934,8 +2867,7 @@ namespace GitUI
             public int VisibleRevisionCount => _revisionGridControl._gridView.RowCount;
 
             public bool IsUiStable =>
-                !_revisionGridControl._isRefreshingRevisions &&
-                !_revisionGridControl._gridView.IsBackgroundUpdaterActive;
+                !_revisionGridControl._gridView.IsGridUpdating;
 
             public void ClearSelection()
             {
