@@ -110,7 +110,7 @@ namespace GitUI
                 summary: TranslatedStrings.DiffWithParent + GetDescriptionForRevision(firstRev.ObjectId),
                 statuses: module.GetDiffFilesWithSubmodulesStatus(firstRev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId)));
 
-            if (!AppSettings.ShowDiffForAllParents || revisions.Count > maxMultiCompare || headId is null)
+            if (!AppSettings.ShowDiffForAllParents || revisions.Count > maxMultiCompare)
             {
                 return fileStatusDescs;
             }
@@ -133,7 +133,7 @@ namespace GitUI
             }
 
             // Check for separate branches (note that artificial commits both have HEAD as BASE)
-            if (baseRevGuid is null
+            if (baseRevGuid is null || headId is null
 
                 // For two check that the selections are in separate branches
                 || (revisions.Count == 2 && (baseRevGuid == firstRevHead
@@ -225,7 +225,7 @@ namespace GitUI
             return fileStatusDescs;
 
             static ObjectId GetRevisionOrHead(GitRevision rev, ObjectId headId)
-                => rev.IsArtificial ? headId : rev.ObjectId;
+                => headId is null ? null : rev.IsArtificial ? headId : rev.ObjectId;
 
             string GetDescriptionForRevision(ObjectId objectId)
                 => DescribeRevision is not null ? DescribeRevision(objectId) : objectId.ToShortString();
