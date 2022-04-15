@@ -24,8 +24,6 @@ namespace GitUI.UserControls.RevisionGrid
                 _cooldownMilliseconds = cooldownMilliseconds;
             }
 
-            public bool IsExecuting => _executing;
-
             public void ScheduleExcecution()
             {
                 lock (_sync)
@@ -65,6 +63,20 @@ namespace GitUI.UserControls.RevisionGrid
                         _executing = false;
                     }
                 }
+            }
+
+            internal TestAccessor GetTestAccessor() => new(this);
+
+            internal readonly struct TestAccessor
+            {
+                private readonly BackgroundUpdater _backgroundUpdater;
+
+                public TestAccessor(BackgroundUpdater backgroundUpdater)
+                {
+                    _backgroundUpdater = backgroundUpdater;
+                }
+
+                public bool IsExecuting => _backgroundUpdater._executing;
             }
         }
     }

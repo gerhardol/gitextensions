@@ -51,7 +51,8 @@ namespace GitUI.UserControls.RevisionGrid
         private Font _monospaceFont;
 
         public bool UpdatingVisibleRows { get; private set; }
-        public bool IsGridUpdating => _backgroundUpdater.IsExecuting || IsLoadingGrid;
+
+        // Used in tests
         public bool IsLoadingGrid { get; set; } = false;
 
         public RevisionDataGridView()
@@ -397,7 +398,7 @@ namespace GitUI.UserControls.RevisionGrid
 
                     IsLoadingGrid = false;
                 })
-                    .FileAndForget();
+                .FileAndForget();
             }
             else
             {
@@ -793,5 +794,20 @@ namespace GitUI.UserControls.RevisionGrid
 
         private static Color getGrayTextColor(float degreeOfGrayness = 1f) =>
             ColorHelper.GetGrayTextColor(textColorName: KnownColor.ControlText, degreeOfGrayness);
+
+        internal TestAccessor GetTestAccessor() => new(this);
+
+        internal readonly struct TestAccessor
+        {
+            private readonly RevisionDataGridView _gridView;
+
+            public TestAccessor(RevisionDataGridView gridView)
+            {
+                _gridView = gridView;
+            }
+
+            public bool IsGridUpdating =>
+                _gridView.IsLoadingGrid || _gridView._backgroundUpdater.GetTestAccessor().IsExecuting;
+        }
     }
 }

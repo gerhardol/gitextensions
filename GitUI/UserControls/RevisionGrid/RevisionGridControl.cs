@@ -2867,7 +2867,7 @@ namespace GitUI
             public int VisibleRevisionCount => _revisionGridControl._gridView.RowCount;
 
             public bool IsUiStable =>
-                !_revisionGridControl._gridView.IsGridUpdating;
+                !_revisionGridControl._gridView.GetTestAccessor().IsGridUpdating;
 
             public void ClearSelection()
             {
