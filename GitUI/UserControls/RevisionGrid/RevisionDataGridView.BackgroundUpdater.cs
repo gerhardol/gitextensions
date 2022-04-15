@@ -64,20 +64,6 @@ namespace GitUI.UserControls.RevisionGrid
                     }
                 }
             }
-
-            internal TestAccessor GetTestAccessor() => new(this);
-
-            internal readonly struct TestAccessor
-            {
-                private readonly BackgroundUpdater _backgroundUpdater;
-
-                public TestAccessor(BackgroundUpdater backgroundUpdater)
-                {
-                    _backgroundUpdater = backgroundUpdater;
-                }
-
-                public bool IsExecuting => _backgroundUpdater._executing;
-            }
         }
     }
 }

@@ -855,8 +855,7 @@ namespace GitUI.UserControls.RevisionGrid
                 _gridView = gridView;
             }
 
-            public bool IsGridUpdating =>
-                _gridView.IsLoadingGrid || _gridView._backgroundUpdater.GetTestAccessor().IsExecuting;
+            public bool IsGridUpdating => _gridView.IsLoadingGrid;
         }
     }
 }
