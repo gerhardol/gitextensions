@@ -2152,7 +2152,7 @@ namespace GitUI
         #region Artificial commit change counters
 
         /// <summary>
-        /// Get the counter for artificial changes.
+        /// Gets the counter for artificial changes.
         /// </summary>
         /// <param name="objectId">The commit for which to get the count.</param>
         /// <returns>The count object if the commit is official and count is enabled.</returns>
@@ -2287,7 +2287,7 @@ namespace GitUI
 
             ObjectId? GetIdToSelect()
             {
-                // Try the up to 3 next possibilities in the circle: WorkTree -> Index -> Head -> (WorkTree).
+                // Try up to 3 possibilities in the circle: WorkTree -> Index -> Head -> (WorkTree).
                 ObjectId? idToSelect = LatestSelectedRevision?.ObjectId;
                 for (int i = 0; i < 3; ++i)
                 {
