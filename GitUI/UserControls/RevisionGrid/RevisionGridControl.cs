@@ -583,74 +583,6 @@ namespace GitUI
             _customDiffToolsSequence.CancelCurrent();
         }
 
-        private void SetSelectedIndex(int index, bool toggleSelection = false)
-        {
-            try
-            {
-                _gridView.Select();
-
-                // Prevent exception when changing of reporsitory because the grid still contains no rows.
-                if (index >= _gridView.Rows.Count)
-                {
-                    return;
-                }
-
-                bool shallSelect;
-                bool wasSelected = _gridView.Rows[index].Selected;
-                if (toggleSelection)
-                {
-                    // Toggle the selection, but do not deselect if it is the last one.
-                    shallSelect = !wasSelected || _gridView.SelectedRows.Count == 1;
-                }
-                else
-                {
-                    // Single select this line.
-                    shallSelect = true;
-                    if (!wasSelected || _gridView.SelectedRows.Count > 1)
-                    {
-                        _gridView.ClearSelection();
-                        wasSelected = false;
-                    }
-                }
-
-                if (wasSelected && shallSelect)
-                {
-                    _gridView.EnsureRowVisible(index);
-                    return;
-                }
-
-                _gridView.Rows[index].Selected = shallSelect;
-
-                // Set the first selected row as current.
-                // Assigning _gridView.CurrentCell results in a single selection of that row.
-                // So do not set row as current but make it visible at least.
-                var selectedRows = _gridView.SelectedRows;
-                var firstSelectedRow = selectedRows[0];
-                if (selectedRows.Count == 1)
-                {
-                    _gridView.CurrentCell = firstSelectedRow.Cells[1];
-                }
-
-                _gridView.EnsureRowVisible(firstSelectedRow.Index);
-            }
-            catch (ArgumentException)
-            {
-                // Ignore if selection failed. Datagridview is not threadsafe
-            }
-
-            return;
-        }
-
-        /// <summary>
-        /// Gets the index of the revision identified by <paramref name="objectId"/>.
-        /// </summary>
-        /// <param name="objectId">Id of the revision to find.</param>
-        /// <returns>Index of the found revision, or <c>-1</c> if not found.</returns>
-        private int FindRevisionIndex(ObjectId? objectId)
-        {
-            return _gridView.TryGetRevisionIndex(objectId) ?? -1;
-        }
-
         /// <summary>
         /// Selects row containing revision matching <paramref name="objectId"/>.
         /// Returns whether the required revision was found and selected.
@@ -661,21 +593,77 @@ namespace GitUI
         public bool SetSelectedRevision(ObjectId? objectId, bool toggleSelection = false, bool updateNavigationHistory = true)
         {
             _gridView.EndSelectionAtLoad();
-            var index = FindRevisionIndex(objectId);
-
-            if (index < 0 || index >= _gridView.RowCount)
+            if (_gridView.TryGetRevisionIndex(objectId) is not int index || index < 0 || index >= _gridView.RowCount)
             {
                 return false;
             }
 
             Validates.NotNull(objectId);
-            SetSelectedIndex(index, toggleSelection);
+            SetSelectedIndex(_gridView, index, toggleSelection);
             if (updateNavigationHistory)
             {
                 _navigationHistory.Push(objectId);
             }
 
             return true;
+
+            static void SetSelectedIndex(RevisionDataGridView gridView, int index, bool toggleSelection = false)
+            {
+                try
+                {
+                    gridView.Select();
+
+                    // Prevent exception when changing of reporsitory because the grid still contains no rows.
+                    if (index >= gridView.Rows.Count)
+                    {
+                        return;
+                    }
+
+                    bool shallSelect;
+                    bool wasSelected = gridView.Rows[index].Selected;
+                    if (toggleSelection)
+                    {
+                        // Toggle the selection, but do not deselect if it is the last one.
+                        shallSelect = !wasSelected || gridView.SelectedRows.Count == 1;
+                    }
+                    else
+                    {
+                        // Single select this line.
+                        shallSelect = true;
+                        if (!wasSelected || gridView.SelectedRows.Count > 1)
+                        {
+                            gridView.ClearSelection();
+                            wasSelected = false;
+                        }
+                    }
+
+                    if (wasSelected && shallSelect)
+                    {
+                        gridView.EnsureRowVisible(index);
+                        return;
+                    }
+
+                    gridView.Rows[index].Selected = shallSelect;
+
+                    // Set the first selected row as current.
+                    // Assigning _gridView.CurrentCell results in a single selection of that row.
+                    // So do not set row as current but make it visible at least.
+                    var selectedRows = gridView.SelectedRows;
+                    var firstSelectedRow = selectedRows[0];
+                    if (selectedRows.Count == 1)
+                    {
+                        gridView.CurrentCell = firstSelectedRow.Cells[1];
+                    }
+
+                    gridView.EnsureRowVisible(firstSelectedRow.Index);
+                }
+                catch (ArgumentException)
+                {
+                    // Ignore if selection failed. Datagridview is not threadsafe
+                }
+
+                return;
+            }
         }
 
         public GitRevision? GetRevision(ObjectId objectId)
@@ -955,12 +943,15 @@ namespace GitUI
 
                     // If the current checkout (HEAD) is changed, don't get the currently selected rows,
                     // select the new current checkout instead.
-                    if (newCurrentCheckout != CurrentCheckout)
+                    if (newCurrentCheckout != CurrentCheckout
+                        && currentlySelectedObjectIds is not null
+                        && currentlySelectedObjectIds.Count == 1
+                        && currentlySelectedObjectIds[0] == CurrentCheckout)
                     {
-                        currentlySelectedObjectIds = null;
-                        CurrentCheckout = newCurrentCheckout;
+                        currentlySelectedObjectIds = new List<ObjectId> { newCurrentCheckout };
                     }
 
+                    CurrentCheckout = newCurrentCheckout;
                     refsByObjectId = getUnfilteredRefs.Value.ToLookup(gitRef => gitRef.ObjectId);
                     ResetNavigationHistory();
                     UpdateSelectedRef(capturedModule, getUnfilteredRefs.Value, headRef);
@@ -1163,7 +1154,7 @@ namespace GitUI
                         // Insert worktree/index before HEAD (CurrentCheckout)
                         // If grid is filtered and HEAD not visible, insert artificial as first after all are updated
                         headIsHandled = true;
-                        AddArtificialRevisions(insertAsFirst: false);
+                        AddArtificialRevisions();
                         flags = RevisionNodeFlags.CheckedOut;
                     }
 
@@ -1193,7 +1184,7 @@ namespace GitUI
                 return;
             }
 
-            void AddArtificialRevisions(bool insertAsFirst)
+            void AddArtificialRevisions(bool insertWithMatch = false, IEnumerable<ObjectId> headParents = null)
             {
                 if (!ShowUncommittedChangesIfPossible
                     || !AppSettings.RevisionGraphShowArtificialCommits
@@ -1218,7 +1209,7 @@ namespace GitUI
                     ParentIds = new[] { ObjectId.IndexId },
                     HasNotes = true
                 };
-                _gridView.Add(workTreeRev, insertAsFirst: insertAsFirst);
+                _gridView.Add(workTreeRev, insertWithMatch: insertWithMatch, insertRange: 2, parents: headParents);
 
                 // Add index as an artificial commit
                 GitRevision indexRev = new(ObjectId.IndexId)
@@ -1234,7 +1225,8 @@ namespace GitUI
                     HasNotes = true
                 };
 
-                _gridView.Add(indexRev, insertAsFirst: insertAsFirst);
+                // headParents is not needed for Index, already handled by WorkTree insertion
+                _gridView.Add(indexRev, insertWithMatch: insertWithMatch, insertRange: 0, parents: null);
             }
 
             void OnRevisionReaderError(Exception exception)
@@ -1252,14 +1244,6 @@ namespace GitUI
 
             void OnRevisionReadCompleted()
             {
-                if (firstRevisionReceived && !headIsHandled)
-                {
-                    // If parents are rewritten HEAD may not be included
-                    // Insert the artificial commits first as unrelated commits so they always appear
-                    // (finding the most relevant commit is tricky)
-                    AddArtificialRevisions(insertAsFirst: true);
-                }
-
                 if (!firstRevisionReceived && !FilterIsApplied(inclBranchFilter: true))
                 {
                     // This has to happen on the UI thread
@@ -1277,6 +1261,41 @@ namespace GitUI
                 // This has to happen on the UI thread
                 ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
                 {
+                    IEnumerable<ObjectId> headParents = null;
+                    if (firstRevisionReceived && !headIsHandled)
+                    {
+                        if (CurrentCheckout is not null)
+                        {
+                            // Not found, so search for its parents
+                            headParents = TryGetParents(Module, _filterInfo, CurrentCheckout);
+                        }
+
+                        // If parents are rewritten HEAD may not be included
+                        // Insert the artificial commits where relevant if possible, otherwise first
+                        AddArtificialRevisions(insertWithMatch: true, headParents);
+                    }
+
+                    // All revisions are loaded (but maybe not yet the grid)
+                    if (_gridView.GetFirstNotSelectedObjectId() is ObjectId notSelectedId)
+                    {
+                        IEnumerable<ObjectId> parents = null;
+                        if (headParents is not null && notSelectedId == CurrentCheckout)
+                        {
+                            parents = headParents;
+                        }
+                        else if (headParents is not null && headParents.ToList().IndexOf(notSelectedId) is int index && index >= 0)
+                        {
+                            parents = headParents.Skip(index + 1).ToList();
+                        }
+                        else
+                        {
+                            parents = TryGetParents(Module, _filterInfo, notSelectedId);
+                        }
+
+                        // Try to select the first of the parents
+                        _gridView.ToBeSelectFirstFoundParent(parents);
+                    }
+
                     await this.SwitchToMainThreadAsync();
 
                     _gridView.LoadingCompleted();
@@ -1362,6 +1381,24 @@ namespace GitUI
                 }
 
                 return currentlySelectedObjectIds;
+            }
+
+            static IEnumerable<ObjectId> TryGetParents(GitModule module, FilterInfo filterInfo, ObjectId objectId)
+            {
+                GitArgumentBuilder args = new("rev-list")
+                {
+                    { filterInfo.HasCommitsLimit, $"--max-count={filterInfo.CommitsLimit}" },
+                    objectId
+                };
+
+                ExecutionResult result = module.GitExecutable.Execute(args, throwOnErrorExit: false);
+                foreach (var line in result.StandardOutput.LazySplit('\n'))
+                {
+                    if (ObjectId.TryParse(line, out var parentId))
+                    {
+                        yield return parentId;
+                    }
+                }
             }
         }
 

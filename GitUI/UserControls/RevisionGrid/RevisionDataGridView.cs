@@ -298,21 +298,43 @@ namespace GitUI.UserControls.RevisionGrid
         /// </summary>
         /// <param name="revision">The revision to add.</param>
         /// <param name="types">The graph node flags.</param>
-        /// <param name="insertAsFirst">Insert the (artificial) revision first in the graph.</param>
-        public void Add(GitRevision revision, RevisionNodeFlags types = RevisionNodeFlags.None, bool insertAsFirst = false)
+        /// <param name="insertWithMatch">Insert the (artificial) revision with the first match in headParents or first if no match found (or headParents is null).</param>
+        /// <param name="insertRange">Number of scores "reserved" in the list when inserting.</param>
+        /// <param name="parents">Parent ids for the revision to find (and insert before).</param>
+        public void Add(GitRevision revision, RevisionNodeFlags types = RevisionNodeFlags.None, bool insertWithMatch = false, int insertRange = 0, IEnumerable<ObjectId> parents = null)
         {
-            if (insertAsFirst
-                && _loadedToBeSelectedRevisionsCount == 0
-                && ToBeSelectedObjectIds.Count == 0
-                && (SelectedRows?.Count ?? 0) > 0)
+            // Where to insert the revision, null is last
+            int? insertScore = null;
+            if (insertWithMatch)
             {
-                // Selection in grid was 'premature'
-                ToBeSelectedObjectIds = SelectedObjectIds ?? Array.Empty<ObjectId>();
-                _loadedToBeSelectedRevisionsCount = ToBeSelectedObjectIds.Count;
-                _toBeSelectedGraphIndexes = null;
+                if (_loadedToBeSelectedRevisionsCount == 0
+                    && ToBeSelectedObjectIds.Count == 0
+                    && (SelectedRows?.Count ?? 0) > 0)
+                {
+                    // (Index) selection in grid was 'premature'
+                    ToBeSelectedObjectIds = SelectedObjectIds ?? Array.Empty<ObjectId>();
+                    _loadedToBeSelectedRevisionsCount = ToBeSelectedObjectIds.Count;
+                    _toBeSelectedGraphIndexes = null;
+                }
+
+                // Insert first by default (if HEAD not found)
+                // Actual value is ignored if insertRange is 0
+                // (Used when child (like WorkTree) is already inserted when adding parent (like Index))
+                insertScore = -1;
+                if (insertRange > 0 && parents is not null)
+                {
+                    foreach (var parentId in parents)
+                    {
+                        if (_revisionGraph.TryGetNode(parentId, out RevisionGraphRevision parentRev))
+                        {
+                            insertScore = parentRev.Score;
+                            break;
+                        }
+                    }
+                }
             }
 
-            _revisionGraph.Add(revision, types, insertAsFirst);
+            _revisionGraph.Add(revision, types, insertScore, insertRange);
             if (ToBeSelectedObjectIds.Contains(revision.ObjectId))
             {
                 ++_loadedToBeSelectedRevisionsCount;
@@ -355,6 +377,33 @@ namespace GitUI.UserControls.RevisionGrid
             if (row >= 0 && (row < firstVisible || firstVisible + countVisible <= row))
             {
                 FirstDisplayedScrollingRowIndex = row;
+            }
+        }
+
+        public ObjectId? GetFirstNotSelectedObjectId()
+        {
+            if (_loadedToBeSelectedRevisionsCount > 0 || ToBeSelectedObjectIds.Count == 0)
+            {
+                // At least one of the revisions was selected
+                return null;
+            }
+
+            return ToBeSelectedObjectIds[0];
+        }
+
+        public void ToBeSelectFirstFoundParent(IEnumerable<ObjectId> headParents)
+        {
+            if (headParents is not null)
+            {
+                foreach (var parentId in headParents)
+                {
+                    if (_revisionGraph.TryGetRowIndex(parentId, out int _))
+                    {
+                        ToBeSelectedObjectIds = new ObjectId[] { parentId };
+                        _loadedToBeSelectedRevisionsCount = ToBeSelectedObjectIds.Count;
+                        break;
+                    }
+                }
             }
         }
 
