@@ -914,7 +914,7 @@ namespace GitUI
                 _gridView.Enabled = true;
                 _gridView.Focus();
                 _gridView.SelectionChanged += OnGridViewSelectionChanged;
-                _gridView.IsLoadingGrid = true;
+                _gridView.MarkAsDataLoading();
 
                 // Add the spinner controls, removed by SetPage()
                 Controls.Add(_loadingControlSpinner);
@@ -2903,8 +2903,8 @@ namespace GitUI
 
             public int VisibleRevisionCount => _revisionGridControl._gridView.RowCount;
 
-            public bool IsUiStable =>
-                !_revisionGridControl._gridView.GetTestAccessor().IsGridUpdating;
+            public bool IsDataLoadComplete =>
+                !_revisionGridControl._gridView.IsDataLoadComplete;
 
             public void ClearSelection()
             {

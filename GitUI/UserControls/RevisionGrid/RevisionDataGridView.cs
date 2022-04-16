@@ -40,6 +40,10 @@ namespace GitUI.UserControls.RevisionGrid
 
         private readonly List<ColumnProvider> _columnProviders = new();
 
+        private IList<int> _toBeSelectedGraphIndexes = null;
+
+        private int _loadedToBeSelectedRevisionsCount = 0;
+
         private int _backgroundScrollTo;
         private int _consecutiveScrollMessageCnt = 0; // Is used to detect if a forced repaint is needed.
         private int _rowHeight; // Height of elements in the cache. Is equal to the control's row height.
@@ -50,10 +54,13 @@ namespace GitUI.UserControls.RevisionGrid
         private Font _boldFont;
         private Font _monospaceFont;
 
-        public bool UpdatingVisibleRows { get; private set; }
+        /// <summary>
+        ///  Indicates whether the data is currently being loaded, and whether it is safe to interact with the content of the grid,
+        ///  e.g., to read the selection.
+        /// </summary>
+        public bool IsDataLoadComplete { get; private set; } = true;
 
-        // Used in tests
-        public bool IsLoadingGrid { get; set; } = false;
+        public bool UpdatingVisibleRows { get; private set; }
 
         public RevisionDataGridView()
         {
@@ -168,10 +175,6 @@ namespace GitUI.UserControls.RevisionGrid
         // Contains the object Id's that will be selected as soon as all of them have been loaded.
         // The object Id's are in the order in which they were originally selected.
         public IReadOnlyList<ObjectId> ToBeSelectedObjectIds { get; set; } = Array.Empty<ObjectId>();
-        private IList<int> _toBeSelectedGraphIndexes = null;
-
-        private int _loadedToBeSelectedRevisionsCount = 0;
-
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [Browsable(false)]
         public IReadOnlyList<ObjectId>? SelectedObjectIds
@@ -443,21 +446,35 @@ namespace GitUI.UserControls.RevisionGrid
                         {
                             EnsureRowVisible(GetGraphIndexes()[0]);
                         }
-                   }
+                    }
 
-                    IsLoadingGrid = false;
+                    MarkAsDataLoadingComplete();
                 })
                 .FileAndForget();
             }
             else
             {
-                IsLoadingGrid = false;
+                MarkAsDataLoadingComplete();
             }
 
             foreach (ColumnProvider columnProvider in _columnProviders)
             {
                 columnProvider.LoadingCompleted();
             }
+
+            return;
+
+            void MarkAsDataLoadingComplete()
+            {
+                Debug.Assert(IsDataLoadComplete, "The grid is already marked as 'data load complete'.");
+                IsDataLoadComplete = true;
+            }
+        }
+
+        public void MarkAsDataLoading()
+        {
+            Debug.Assert(!IsDataLoadComplete, "The grid is already marked as 'data load in process'.");
+            IsDataLoadComplete = false;
         }
 
         /// <summary>
@@ -854,8 +871,6 @@ namespace GitUI.UserControls.RevisionGrid
             {
                 _gridView = gridView;
             }
-
-            public bool IsGridUpdating => _gridView.IsLoadingGrid;
         }
     }
 }

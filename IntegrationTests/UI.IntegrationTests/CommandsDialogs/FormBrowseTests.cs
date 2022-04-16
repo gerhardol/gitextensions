@@ -306,7 +306,7 @@ namespace GitExtensions.UITests.CommandsDialogs
 
         private static void WaitForRevisionsToBeLoaded(FormBrowse form)
         {
-            UITest.ProcessUntil("Loading Revisions", () => form.GetTestAccessor().RevisionGrid.GetTestAccessor().IsUiStable);
+            UITest.ProcessUntil("Loading Revisions", () => form.GetTestAccessor().RevisionGrid.GetTestAccessor().IsDataLoadComplete);
         }
     }
 }
