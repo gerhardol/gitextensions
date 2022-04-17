@@ -397,7 +397,7 @@ namespace GitUI.UserControls.RevisionGrid
         /// as the to-be-selected objectid in the grid.
         /// </summary>
         /// <param name="parents">List with parents to the objectid initially intended to be selected.</param>
-        public void SetToBeSelectedFromParents(IEnumerable<ObjectId> parents)
+        public void SetToBeSelectedFromParents(IEnumerable<ObjectId>? parents)
         {
             if (parents is null)
             {
@@ -428,13 +428,10 @@ namespace GitUI.UserControls.RevisionGrid
                 // Rows have not been selected yet
                 ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
                 {
-                    int graphIndicesCount;
-                    int firstGraphIndex;
-
                     CalculateGraphIndices();
                     int scrollTo = _toBeSelectedGraphIndexes.Max();
-                    graphIndicesCount = _toBeSelectedGraphIndexes.Count;
-                    firstGraphIndex = graphIndicesCount > 0 ? _toBeSelectedGraphIndexes[0] : 0;
+                    int graphIndicesCount = _toBeSelectedGraphIndexes.Count;
+                    int firstGraphIndex = graphIndicesCount > 0 ? _toBeSelectedGraphIndexes[0] : 0;
 
                     await this.SwitchToMainThreadAsync();
 
