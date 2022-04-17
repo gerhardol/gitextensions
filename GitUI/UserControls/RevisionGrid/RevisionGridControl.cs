@@ -592,7 +592,7 @@ namespace GitUI
         /// <returns><c>true</c> if the required revision was found and selected, otherwise <c>false</c>.</returns>
         public bool SetSelectedRevision(ObjectId? objectId, bool toggleSelection = false, bool updateNavigationHistory = true)
         {
-            _gridView.EndSelectionAtLoad();
+            _gridView.ClearToBeSelected();
             if (_gridView.TryGetRevisionIndex(objectId) is not int index || index < 0 || index >= _gridView.RowCount)
             {
                 return false;
@@ -1276,8 +1276,9 @@ namespace GitUI
                     }
 
                     // All revisions are loaded (but maybe not yet the grid)
-                    if (_gridView.GetFirstNotSelectedObjectId() is ObjectId notSelectedId)
+                    if (!_gridView.FoundAnyToBeSelected && _gridView.ToBeSelectedObjectIds.Count > 0)
                     {
+                        ObjectId notSelectedId = _gridView.ToBeSelectedObjectIds[0];
                         IEnumerable<ObjectId> parents = null;
                         if (headParents is not null && notSelectedId == CurrentCheckout)
                         {
@@ -1293,7 +1294,7 @@ namespace GitUI
                         }
 
                         // Try to select the first of the parents
-                        _gridView.ToBeSelectFirstFoundParent(parents);
+                        _gridView.SetToBeSelectedFromParents(parents);
                     }
 
                     await this.SwitchToMainThreadAsync();

@@ -200,12 +200,12 @@ namespace GitUI.UserControls.RevisionGrid.Graph
                 if (insertScore is not null && _nodeByObjectId is not null)
                 {
                     // This revision is to be inserted before a certain node
-                    foreach (var kvp in _nodeByObjectId)
+                    foreach (var (_, graphRevision) in _nodeByObjectId)
                     {
-                        if (kvp.Value.Score < insertScore)
+                        if (graphRevision.Score < insertScore)
                         {
-                            // Insert reserved scores
-                            kvp.Value.OffsetScore(-insertRange);
+                            // Lower existing scores to reserve the inserted range
+                            graphRevision.OffsetScore(-insertRange);
                         }
                     }
 

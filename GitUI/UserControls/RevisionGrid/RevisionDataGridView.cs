@@ -28,6 +28,7 @@ namespace GitUI.UserControls.RevisionGrid
 
     public sealed partial class RevisionDataGridView : DataGridView
     {
+        private const int backgroundPeriod = 25;
         private static readonly AccessibleDataGridViewTextBoxCell _accessibleDataGridViewTextBoxCell = new();
 
         private readonly SolidBrush _alternatingRowBackgroundBrush;
@@ -40,8 +41,8 @@ namespace GitUI.UserControls.RevisionGrid
 
         private readonly List<ColumnProvider> _columnProviders = new();
 
+        // Set while loading the revisions and data grid, see also ToBeSelectedObjectIds.
         private IList<int> _toBeSelectedGraphIndexes = null;
-
         private int _loadedToBeSelectedRevisionsCount = 0;
 
         private int _backgroundScrollTo;
@@ -55,8 +56,9 @@ namespace GitUI.UserControls.RevisionGrid
         private Font _monospaceFont;
 
         /// <summary>
-        ///  Indicates whether the data is currently being loaded, and whether it is safe to interact with the content of the grid,
-        ///  e.g., to read the selection.
+        ///  Indicates whether the data grid is currently being loaded.
+        ///  Set to false when the selected revisions are loaded in the grid
+        ///  (or all rows loaded if not all revisions were found).
         /// </summary>
         public bool IsDataLoadComplete { get; private set; } = true;
 
@@ -66,7 +68,7 @@ namespace GitUI.UserControls.RevisionGrid
         {
             InitFonts();
 
-            _backgroundUpdater = new BackgroundUpdater(UpdateVisibleRowRangeInternalAsync, 25);
+            _backgroundUpdater = new BackgroundUpdater(UpdateVisibleRowRangeInternalAsync, backgroundPeriod);
 
             InitializeComponent();
             DoubleBuffered = true;
@@ -314,7 +316,7 @@ namespace GitUI.UserControls.RevisionGrid
                     && ToBeSelectedObjectIds.Count == 0
                     && (SelectedRows?.Count ?? 0) > 0)
                 {
-                    // (Index) selection in grid was 'premature'
+                    // (GraphIndex) selection in grid was 'premature'
                     ToBeSelectedObjectIds = SelectedObjectIds ?? Array.Empty<ObjectId>();
                     _loadedToBeSelectedRevisionsCount = ToBeSelectedObjectIds.Count;
                     _toBeSelectedGraphIndexes = null;
@@ -353,7 +355,7 @@ namespace GitUI.UserControls.RevisionGrid
             // Set rowcount to 0 first, to ensure it is not possible to select or redraw, since we are about to delete the data
             SetRowCount(0);
             _revisionGraph.Clear();
-            EndSelectionAtLoad();
+            ClearToBeSelected();
 
             // The graphdata is stored in one of the columnproviders, clear this last
             foreach (var columnProvider in _columnProviders)
@@ -366,7 +368,7 @@ namespace GitUI.UserControls.RevisionGrid
             Invalidate(invalidateChildren: true);
         }
 
-        public void EndSelectionAtLoad()
+        public void ClearToBeSelected()
         {
             _loadedToBeSelectedRevisionsCount = 0;
             ToBeSelectedObjectIds = Array.Empty<ObjectId>();
@@ -383,29 +385,30 @@ namespace GitUI.UserControls.RevisionGrid
             }
         }
 
-        public ObjectId? GetFirstNotSelectedObjectId()
+        /// <summary>
+        /// Returns if any of the to-be-selected was found in the loaded revisions.
+        /// </summary>
+        public bool FoundAnyToBeSelected => _loadedToBeSelectedRevisionsCount > 0 || _toBeSelectedGraphIndexes is not null;
+
+        /// <summary>
+        /// Set the first objectid in the parent list that is found in loaded revisions
+        /// as the to-be-selected objectid in the grid.
+        /// </summary>
+        /// <param name="parents">List with parents to the objectid initially intended to be selected.</param>
+        public void SetToBeSelectedFromParents(IEnumerable<ObjectId> parents)
         {
-            if (_loadedToBeSelectedRevisionsCount > 0 || ToBeSelectedObjectIds.Count == 0)
+            if (parents is null)
             {
-                // At least one of the revisions was selected
-                return null;
+                return;
             }
 
-            return ToBeSelectedObjectIds[0];
-        }
-
-        public void ToBeSelectFirstFoundParent(IEnumerable<ObjectId> headParents)
-        {
-            if (headParents is not null)
+            foreach (ObjectId parentId in parents)
             {
-                foreach (var parentId in headParents)
+                if (_revisionGraph.TryGetRowIndex(parentId, out int _))
                 {
-                    if (_revisionGraph.TryGetRowIndex(parentId, out int _))
-                    {
-                        ToBeSelectedObjectIds = new ObjectId[] { parentId };
-                        _loadedToBeSelectedRevisionsCount = ToBeSelectedObjectIds.Count;
-                        break;
-                    }
+                    ToBeSelectedObjectIds = new ObjectId[] { parentId };
+                    _loadedToBeSelectedRevisionsCount = ToBeSelectedObjectIds.Count;
+                    break;
                 }
             }
         }
@@ -427,14 +430,14 @@ namespace GitUI.UserControls.RevisionGrid
                     await this.SwitchToMainThreadAsync();
                     if (RowCount - 1 < scrollTo)
                     {
-                        // Wait for the background thread to load all rows in the grid
+                        // Wait for the periodic background thread to load all rows in the grid
                         while (RowCount - 1 < scrollTo)
                         {
                             int maxScroll = Math.Min(RowCount - 1, scrollTo);
                             EnsureRowVisible(maxScroll);
 
                             UpdateVisibleRowRange();
-                            await Task.Delay(25);
+                            await Task.Delay(backgroundPeriod);
                         }
                     }
                     else
@@ -466,14 +469,14 @@ namespace GitUI.UserControls.RevisionGrid
 
             void MarkAsDataLoadingComplete()
             {
-                Debug.Assert(IsDataLoadComplete, "The grid is already marked as 'data load complete'.");
+                Debug.Assert(!IsDataLoadComplete, "The grid is already marked as 'data load complete'.");
                 IsDataLoadComplete = true;
             }
         }
 
         public void MarkAsDataLoading()
         {
-            Debug.Assert(!IsDataLoadComplete, "The grid is already marked as 'data load in process'.");
+            Debug.Assert(IsDataLoadComplete, "The grid is already marked as 'data load in process'.");
             IsDataLoadComplete = false;
         }
 
@@ -540,6 +543,8 @@ namespace GitUI.UserControls.RevisionGrid
         {
             if (_toBeSelectedGraphIndexes == null)
             {
+                Debug.Assert(_loadedToBeSelectedRevisionsCount == ToBeSelectedObjectIds.Count,
+                    "GetGraphIndexes() was called before all expected revisions were loaded.");
                 _toBeSelectedGraphIndexes = new List<int>();
                 foreach (ObjectId objectId in ToBeSelectedObjectIds)
                 {
@@ -583,7 +588,7 @@ namespace GitUI.UserControls.RevisionGrid
             }
 
             // The rows to be selected have just been selected. Prevent from selecting them again.
-            EndSelectionAtLoad();
+            ClearToBeSelected();
         }
 
         private void SetRowCountAndSelectRowsIfReady(int rowCount)
@@ -821,7 +826,7 @@ namespace GitUI.UserControls.RevisionGrid
             base.OnMouseDown(e);
 
             // If clicking while loading, cancel load-select
-            EndSelectionAtLoad();
+            ClearToBeSelected();
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)
@@ -860,17 +865,5 @@ namespace GitUI.UserControls.RevisionGrid
 
         private static Color getGrayTextColor(float degreeOfGrayness = 1f) =>
             ColorHelper.GetGrayTextColor(textColorName: KnownColor.ControlText, degreeOfGrayness);
-
-        internal TestAccessor GetTestAccessor() => new(this);
-
-        internal readonly struct TestAccessor
-        {
-            private readonly RevisionDataGridView _gridView;
-
-            public TestAccessor(RevisionDataGridView gridView)
-            {
-                _gridView = gridView;
-            }
-        }
     }
 }
