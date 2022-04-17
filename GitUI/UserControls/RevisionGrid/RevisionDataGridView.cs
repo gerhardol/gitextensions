@@ -1,7 +1,10 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
@@ -36,13 +39,12 @@ namespace GitUI.UserControls.RevisionGrid
 
         private readonly BackgroundUpdater _backgroundUpdater;
         private readonly Stopwatch _lastRepaint = Stopwatch.StartNew();
+        private readonly List<ColumnProvider> _columnProviders = new();
 
         internal RevisionGraph _revisionGraph = new();
 
-        private readonly List<ColumnProvider> _columnProviders = new();
-
         // Set while loading the revisions and data grid, see also ToBeSelectedObjectIds.
-        private IList<int> _toBeSelectedGraphIndexes = null;
+        private List<int> _toBeSelectedGraphIndexes = new();
         private int _loadedToBeSelectedRevisionsCount = 0;
 
         private int _backgroundScrollTo;
@@ -266,7 +268,7 @@ namespace GitUI.UserControls.RevisionGrid
             return SystemBrushes.Window;
         }
 
-        private void OnCellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        private void OnCellPainting(object? sender, DataGridViewCellPaintingEventArgs e)
         {
             _lastRepaint.Restart();
 
@@ -306,7 +308,7 @@ namespace GitUI.UserControls.RevisionGrid
         /// <param name="insertWithMatch">Insert the (artificial) revision with the first match in headParents or first if no match found (or headParents is null).</param>
         /// <param name="insertRange">Number of scores "reserved" in the list when inserting.</param>
         /// <param name="parents">Parent ids for the revision to find (and insert before).</param>
-        public void Add(GitRevision revision, RevisionNodeFlags types = RevisionNodeFlags.None, bool insertWithMatch = false, int insertRange = 0, IEnumerable<ObjectId> parents = null)
+        public void Add(GitRevision revision, RevisionNodeFlags types = RevisionNodeFlags.None, bool insertWithMatch = false, int insertRange = 0, IEnumerable<ObjectId>? parents = null)
         {
             // Where to insert the revision, null is last
             int? insertScore = null;
@@ -319,7 +321,7 @@ namespace GitUI.UserControls.RevisionGrid
                     // (GraphIndex) selection in grid was 'premature'
                     ToBeSelectedObjectIds = SelectedObjectIds ?? Array.Empty<ObjectId>();
                     _loadedToBeSelectedRevisionsCount = ToBeSelectedObjectIds.Count;
-                    _toBeSelectedGraphIndexes = null;
+                    _toBeSelectedGraphIndexes.Clear();
                 }
 
                 // Insert first by default (if HEAD not found)
@@ -372,7 +374,7 @@ namespace GitUI.UserControls.RevisionGrid
         {
             _loadedToBeSelectedRevisionsCount = 0;
             ToBeSelectedObjectIds = Array.Empty<ObjectId>();
-            _toBeSelectedGraphIndexes = null;
+            _toBeSelectedGraphIndexes.Clear();
         }
 
         public void EnsureRowVisible(int row)
@@ -388,7 +390,7 @@ namespace GitUI.UserControls.RevisionGrid
         /// <summary>
         /// Returns if any of the to-be-selected was found in the loaded revisions.
         /// </summary>
-        public bool FoundAnyToBeSelected => _loadedToBeSelectedRevisionsCount > 0 || _toBeSelectedGraphIndexes is not null;
+        public bool FoundAnyToBeSelected => _loadedToBeSelectedRevisionsCount > 0 || _toBeSelectedGraphIndexes.Count > 0;
 
         /// <summary>
         /// Set the first objectid in the parent list that is found in loaded revisions
@@ -426,8 +428,16 @@ namespace GitUI.UserControls.RevisionGrid
                 // Rows have not been selected yet
                 ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
                 {
-                    int scrollTo = GetGraphIndexes().Count > 0 ? GetGraphIndexes().Max() : 0;
+                    int graphIndicesCount;
+                    int firstGraphIndex;
+
+                    CalculateGraphIndices();
+                    int scrollTo = _toBeSelectedGraphIndexes.Max();
+                    graphIndicesCount = _toBeSelectedGraphIndexes.Count;
+                    firstGraphIndex = graphIndicesCount > 0 ? _toBeSelectedGraphIndexes[0] : 0;
+
                     await this.SwitchToMainThreadAsync();
+
                     if (RowCount - 1 < scrollTo)
                     {
                         // Wait for the periodic background thread to load all rows in the grid
@@ -445,9 +455,9 @@ namespace GitUI.UserControls.RevisionGrid
                         // Rows already selected once, reselect and refresh
                         SelectRowsIfReady(RowCount);
 
-                        if (GetGraphIndexes().Count > 0)
+                        if (graphIndicesCount > 0)
                         {
-                            EnsureRowVisible(GetGraphIndexes()[0]);
+                            EnsureRowVisible(firstGraphIndex);
                         }
                     }
 
@@ -538,24 +548,19 @@ namespace GitUI.UserControls.RevisionGrid
         /// Get the revision graph row indexes for the ToBeSelectedObjectIds.
         /// (In filtering situations, all may no longer be in the grid).
         /// </summary>
-        /// <returns>List of row idexes, in order.</returns>
-        private IList<int> GetGraphIndexes()
+        private void CalculateGraphIndices()
         {
-            if (_toBeSelectedGraphIndexes == null)
+            Debug.Assert(_loadedToBeSelectedRevisionsCount == ToBeSelectedObjectIds.Count,
+                "GetGraphIndexes() was called before all expected revisions were loaded.");
+
+            _toBeSelectedGraphIndexes.Clear();
+            foreach (ObjectId objectId in ToBeSelectedObjectIds)
             {
-                Debug.Assert(_loadedToBeSelectedRevisionsCount == ToBeSelectedObjectIds.Count,
-                    "GetGraphIndexes() was called before all expected revisions were loaded.");
-                _toBeSelectedGraphIndexes = new List<int>();
-                foreach (ObjectId objectId in ToBeSelectedObjectIds)
+                if (_revisionGraph.TryGetRowIndex(objectId, out int rowIndexToBeSelected))
                 {
-                    if (_revisionGraph.TryGetRowIndex(objectId, out int rowIndexToBeSelected))
-                    {
-                        _toBeSelectedGraphIndexes.Add(rowIndexToBeSelected);
-                    }
+                    _toBeSelectedGraphIndexes.Add(rowIndexToBeSelected);
                 }
             }
-
-            return _toBeSelectedGraphIndexes;
         }
 
         private void SelectRowsIfReady(int rowCount)
@@ -567,8 +572,10 @@ namespace GitUI.UserControls.RevisionGrid
                 return;
             }
 
+            CalculateGraphIndices();
+
             // All grid rows must be loaded before they are shown
-            if (GetGraphIndexes().Any(i => i > rowCount - 1))
+            if (_toBeSelectedGraphIndexes.Any(i => i > rowCount - 1))
             {
                 return;
             }
@@ -576,7 +583,7 @@ namespace GitUI.UserControls.RevisionGrid
             // If updating selection, clear is required first
             ClearSelection();
             bool first = true;
-            foreach (int index in GetGraphIndexes())
+            foreach (int index in _toBeSelectedGraphIndexes)
             {
                 Rows[index].Selected = true;
 
@@ -849,6 +856,9 @@ namespace GitUI.UserControls.RevisionGrid
             }
         }
 
+        [MemberNotNull(nameof(_normalFont))]
+        [MemberNotNull(nameof(_boldFont))]
+        [MemberNotNull(nameof(_monospaceFont))]
         private void InitFonts()
         {
             _normalFont = AppSettings.Font;
