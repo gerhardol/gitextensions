@@ -1276,7 +1276,10 @@ namespace GitUI
                     }
 
                     // All revisions are loaded (but maybe not yet the grid)
-                    if (!_gridView.FoundAnyToBeSelected && _gridView.ToBeSelectedObjectIds.Count > 0)
+                    if (!_gridView.PendingToBeSelected &&
+
+                        // objectIds that were not selected after revisions were loaded
+                        _gridView.ToBeSelectedObjectIds.Count > 0)
                     {
                         ObjectId notSelectedId = _gridView.ToBeSelectedObjectIds[0];
                         IEnumerable<ObjectId> parents = null;

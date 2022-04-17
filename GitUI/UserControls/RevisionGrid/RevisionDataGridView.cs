@@ -44,7 +44,7 @@ namespace GitUI.UserControls.RevisionGrid
         internal RevisionGraph _revisionGraph = new();
 
         // Set while loading the revisions and data grid, see also ToBeSelectedObjectIds.
-        private List<int> _toBeSelectedGraphIndexes = new();
+        private Lazy<IList<int>> _toBeSelectedGraphIndexesCache;
         private int _loadedToBeSelectedRevisionsCount = 0;
 
         private int _backgroundScrollTo;
@@ -129,6 +129,9 @@ namespace GitUI.UserControls.RevisionGrid
 
             VirtualMode = true;
             Clear();
+
+            // Explicit init is required, calling ResetGraphIndices() is not enough
+            _toBeSelectedGraphIndexesCache = new(() => CalculateGraphIndices());
 
             return;
 
@@ -321,7 +324,7 @@ namespace GitUI.UserControls.RevisionGrid
                     // (GraphIndex) selection in grid was 'premature'
                     ToBeSelectedObjectIds = SelectedObjectIds ?? Array.Empty<ObjectId>();
                     _loadedToBeSelectedRevisionsCount = ToBeSelectedObjectIds.Count;
-                    _toBeSelectedGraphIndexes.Clear();
+                    ResetGraphIndices();
                 }
 
                 // Insert first by default (if HEAD not found)
@@ -374,7 +377,7 @@ namespace GitUI.UserControls.RevisionGrid
         {
             _loadedToBeSelectedRevisionsCount = 0;
             ToBeSelectedObjectIds = Array.Empty<ObjectId>();
-            _toBeSelectedGraphIndexes.Clear();
+            ResetGraphIndices();
         }
 
         public void EnsureRowVisible(int row)
@@ -388,9 +391,9 @@ namespace GitUI.UserControls.RevisionGrid
         }
 
         /// <summary>
-        /// Returns if any of the to-be-selected was found in the loaded revisions.
+        /// Returns if any of the to-be-selected was found in the loaded revisions but are not yet selected.
         /// </summary>
-        public bool FoundAnyToBeSelected => _loadedToBeSelectedRevisionsCount > 0 || _toBeSelectedGraphIndexes.Count > 0;
+        public bool PendingToBeSelected => _loadedToBeSelectedRevisionsCount > 0;
 
         /// <summary>
         /// Set the first objectid in the parent list that is found in loaded revisions
@@ -428,21 +431,17 @@ namespace GitUI.UserControls.RevisionGrid
                 // Rows have not been selected yet
                 ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
                 {
-                    CalculateGraphIndices();
-                    int scrollTo = _toBeSelectedGraphIndexes.Max();
-                    int graphIndicesCount = _toBeSelectedGraphIndexes.Count;
-                    int firstGraphIndex = graphIndicesCount > 0 ? _toBeSelectedGraphIndexes[0] : 0;
-
                     await this.SwitchToMainThreadAsync();
 
-                    if (RowCount - 1 < scrollTo)
+                    if (RowCount - 1 < ScrollTo())
                     {
                         // Wait for the periodic background thread to load all rows in the grid
-                        while (RowCount - 1 < scrollTo)
+                        while (RowCount - 1 < ScrollTo())
                         {
-                            int maxScroll = Math.Min(RowCount - 1, scrollTo);
+                            int maxScroll = Math.Min(RowCount - 1, ScrollTo());
                             EnsureRowVisible(maxScroll);
 
+                            // Wait for background thread to update grid rows
                             UpdateVisibleRowRange();
                             await Task.Delay(backgroundPeriod);
                         }
@@ -452,8 +451,10 @@ namespace GitUI.UserControls.RevisionGrid
                         // Rows already selected once, reselect and refresh
                         SelectRowsIfReady(RowCount);
 
+                        int graphIndicesCount = _toBeSelectedGraphIndexesCache.Value.Count;
                         if (graphIndicesCount > 0)
                         {
+                            int firstGraphIndex = _toBeSelectedGraphIndexesCache.Value[0];
                             EnsureRowVisible(firstGraphIndex);
                         }
                     }
@@ -473,6 +474,8 @@ namespace GitUI.UserControls.RevisionGrid
             }
 
             return;
+
+            int ScrollTo() => _toBeSelectedGraphIndexesCache.Value.Count == 0 ? 0 : _toBeSelectedGraphIndexesCache.Value.Max();
 
             void MarkAsDataLoadingComplete()
             {
@@ -542,22 +545,32 @@ namespace GitUI.UserControls.RevisionGrid
         }
 
         /// <summary>
+        /// Reset the calculated indices.
+        /// </summary>
+        private void ResetGraphIndices()
+        {
+            _toBeSelectedGraphIndexesCache = new(() => CalculateGraphIndices());
+        }
+
+        /// <summary>
         /// Get the revision graph row indexes for the ToBeSelectedObjectIds.
         /// (In filtering situations, all may no longer be in the grid).
         /// </summary>
-        private void CalculateGraphIndices()
+        private IList<int> CalculateGraphIndices()
         {
             Debug.Assert(_loadedToBeSelectedRevisionsCount == ToBeSelectedObjectIds.Count,
                 "GetGraphIndexes() was called before all expected revisions were loaded.");
 
-            _toBeSelectedGraphIndexes.Clear();
+            List<int> toBeSelectedGraphIndexes = new();
             foreach (ObjectId objectId in ToBeSelectedObjectIds)
             {
                 if (_revisionGraph.TryGetRowIndex(objectId, out int rowIndexToBeSelected))
                 {
-                    _toBeSelectedGraphIndexes.Add(rowIndexToBeSelected);
+                    toBeSelectedGraphIndexes.Add(rowIndexToBeSelected);
                 }
             }
+
+            return toBeSelectedGraphIndexes;
         }
 
         private void SelectRowsIfReady(int rowCount)
@@ -569,10 +582,8 @@ namespace GitUI.UserControls.RevisionGrid
                 return;
             }
 
-            CalculateGraphIndices();
-
             // All grid rows must be loaded before they are shown
-            if (_toBeSelectedGraphIndexes.Any(i => i > rowCount - 1))
+            if (_toBeSelectedGraphIndexesCache.Value.Any(i => i > rowCount - 1))
             {
                 return;
             }
@@ -580,7 +591,7 @@ namespace GitUI.UserControls.RevisionGrid
             // If updating selection, clear is required first
             ClearSelection();
             bool first = true;
-            foreach (int index in _toBeSelectedGraphIndexes)
+            foreach (int index in _toBeSelectedGraphIndexesCache.Value)
             {
                 Rows[index].Selected = true;
 
