@@ -944,6 +944,7 @@ namespace GitUI
                     // If the current checkout (HEAD) is changed, don't get the currently selected rows,
                     // select the new current checkout instead.
                     if (newCurrentCheckout != CurrentCheckout
+                        && newCurrentCheckout is not null
                         && currentlySelectedObjectIds is not null
                         && currentlySelectedObjectIds.Count == 1
                         && currentlySelectedObjectIds[0] == CurrentCheckout)
@@ -2908,7 +2909,7 @@ namespace GitUI
             public int VisibleRevisionCount => _revisionGridControl._gridView.RowCount;
 
             public bool IsDataLoadComplete =>
-                !_revisionGridControl._gridView.IsDataLoadComplete;
+                _revisionGridControl._gridView.IsDataLoadComplete;
 
             public void ClearSelection()
             {

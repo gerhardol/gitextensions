@@ -127,11 +127,11 @@ namespace GitUI.UserControls.RevisionGrid
                     .FileAndForget();
             };
 
+            // Suppress CS8618, init in Clear().
+            _toBeSelectedGraphIndexesCache = new(() => CalculateGraphIndices());
+
             VirtualMode = true;
             Clear();
-
-            // Explicit init is required, calling ResetGraphIndices() is not enough
-            _toBeSelectedGraphIndexesCache = new(() => CalculateGraphIndices());
 
             return;
 
@@ -433,12 +433,22 @@ namespace GitUI.UserControls.RevisionGrid
                 {
                     await this.SwitchToMainThreadAsync();
 
-                    if (RowCount - 1 < ScrollTo())
+                    if (_toBeSelectedGraphIndexesCache.Value.Count == 0)
+                    {
+                        // Nothing to select or interrupted
+                        MarkAsDataLoadingComplete();
+                        return;
+                    }
+
+                    int scrollTo = _toBeSelectedGraphIndexesCache.Value.Max();
+                    int firstGraphIndex = _toBeSelectedGraphIndexesCache.Value[0];
+                    if (RowCount - 1 < scrollTo)
                     {
                         // Wait for the periodic background thread to load all rows in the grid
-                        while (RowCount - 1 < ScrollTo())
+                        while (_toBeSelectedGraphIndexesCache.IsValueCreated && RowCount - 1 < scrollTo)
                         {
-                            int maxScroll = Math.Min(RowCount - 1, ScrollTo());
+                            // Force loading of rows
+                            int maxScroll = Math.Min(RowCount - 1, scrollTo);
                             EnsureRowVisible(maxScroll);
 
                             // Wait for background thread to update grid rows
@@ -450,13 +460,12 @@ namespace GitUI.UserControls.RevisionGrid
                     {
                         // Rows already selected once, reselect and refresh
                         SelectRowsIfReady(RowCount);
+                    }
 
-                        int graphIndicesCount = _toBeSelectedGraphIndexesCache.Value.Count;
-                        if (graphIndicesCount > 0)
-                        {
-                            int firstGraphIndex = _toBeSelectedGraphIndexesCache.Value[0];
-                            EnsureRowVisible(firstGraphIndex);
-                        }
+                    // Scroll to first selected only if selection is not changed
+                    if (firstGraphIndex >= 0 && Rows[firstGraphIndex].Selected)
+                    {
+                        EnsureRowVisible(firstGraphIndex);
                     }
 
                     MarkAsDataLoadingComplete();
@@ -474,8 +483,6 @@ namespace GitUI.UserControls.RevisionGrid
             }
 
             return;
-
-            int ScrollTo() => _toBeSelectedGraphIndexesCache.Value.Count == 0 ? 0 : _toBeSelectedGraphIndexesCache.Value.Max();
 
             void MarkAsDataLoadingComplete()
             {
@@ -602,7 +609,7 @@ namespace GitUI.UserControls.RevisionGrid
                 }
             }
 
-            // The rows to be selected have just been selected. Prevent from selecting them again.
+            // The to-be-selected are handled. Prevent from selecting them again.
             ClearToBeSelected();
         }
 
