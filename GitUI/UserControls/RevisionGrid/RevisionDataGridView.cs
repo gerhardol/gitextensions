@@ -463,7 +463,7 @@ namespace GitUI.UserControls.RevisionGrid
                     }
 
                     // Scroll to first selected only if selection is not changed
-                    if (firstGraphIndex >= 0 && Rows[firstGraphIndex].Selected)
+                    if (firstGraphIndex >= 0 && firstGraphIndex < Rows.Count && Rows[firstGraphIndex].Selected)
                     {
                         EnsureRowVisible(firstGraphIndex);
                     }
