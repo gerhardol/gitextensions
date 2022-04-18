@@ -31,7 +31,7 @@ namespace GitUI.UserControls.RevisionGrid
 
     public sealed partial class RevisionDataGridView : DataGridView
     {
-        private const int backgroundPeriod = 25;
+        private const int BackgroundUpdateThreadPeriod = 25;
         private static readonly AccessibleDataGridViewTextBoxCell _accessibleDataGridViewTextBoxCell = new();
 
         private readonly SolidBrush _alternatingRowBackgroundBrush;
@@ -70,7 +70,7 @@ namespace GitUI.UserControls.RevisionGrid
         {
             InitFonts();
 
-            _backgroundUpdater = new BackgroundUpdater(UpdateVisibleRowRangeInternalAsync, backgroundPeriod);
+            _backgroundUpdater = new BackgroundUpdater(UpdateVisibleRowRangeInternalAsync, BackgroundUpdateThreadPeriod);
 
             InitializeComponent();
             DoubleBuffered = true;
@@ -453,7 +453,7 @@ namespace GitUI.UserControls.RevisionGrid
 
                             // Wait for background thread to update grid rows
                             UpdateVisibleRowRange();
-                            await Task.Delay(backgroundPeriod);
+                            await Task.Delay(BackgroundUpdateThreadPeriod);
                         }
                     }
                     else
