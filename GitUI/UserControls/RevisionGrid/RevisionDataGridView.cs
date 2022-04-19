@@ -445,7 +445,7 @@ namespace GitUI.UserControls.RevisionGrid
                     if (RowCount - 1 < scrollTo)
                     {
                         // Wait for the periodic background thread to load all rows in the grid
-                        while (_toBeSelectedGraphIndexesCache.IsValueCreated && RowCount - 1 < scrollTo)
+                        while (RowCount - 1 < scrollTo)
                         {
                             // Force loading of rows
                             int maxScroll = Math.Min(RowCount - 1, scrollTo);
@@ -454,6 +454,11 @@ namespace GitUI.UserControls.RevisionGrid
                             // Wait for background thread to update grid rows
                             UpdateVisibleRowRange();
                             await Task.Delay(BackgroundUpdateThreadPeriod);
+                            if (_loadedToBeSelectedRevisionsCount == 0)
+                            {
+                                // Selection done or aborted
+                                break;
+                            }
                         }
                     }
                     else
