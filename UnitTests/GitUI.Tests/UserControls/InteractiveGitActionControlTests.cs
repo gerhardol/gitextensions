@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using GitUI;
 using GitUI.UserControls;
 using NUnit.Framework;
 
@@ -26,7 +27,7 @@ namespace GitUITests.UserControls
         [TestCase(InteractiveGitActionControl.GitAction.None, true)]
         public void SetState(InteractiveGitActionControl.GitAction action, bool conflicts)
         {
-            _accessor.SetGitAction(action, conflicts);
+            ThreadHelper.JoinableTaskFactory.Run(async () => await _accessor.SetGitActionAsync(action, conflicts));
 
             Assert.AreEqual(action, _accessor.Action);
             Assert.AreEqual(conflicts, _accessor.HasConflicts);

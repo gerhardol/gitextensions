@@ -477,7 +477,7 @@ namespace GitUI.CommandsDialogs
                         new WindowsThumbnailToolbarButton(toolStripButtonPull.Text, toolStripButtonPull.Image, PullToolStripMenuItemClick)));
             }
 
-            this.InvokeAsync(OnActivate).FileAndForget();
+            OnActivateAsync().FileAndForget();
             base.OnActivated(e);
         }
 
@@ -901,7 +901,7 @@ namespace GitUI.CommandsDialogs
 
                 RefreshWorkingDirComboText();
 
-                OnActivate();
+                ThreadHelper.JoinableTaskFactory.RunAsync(OnActivateAsync);
 
                 LoadUserMenu();
 
@@ -1008,13 +1008,13 @@ namespace GitUI.CommandsDialogs
             // TODO: add more
         }
 
-        private void OnActivate()
+        private async Task OnActivateAsync()
         {
             // check if we are in the middle of bisect
-            notificationBarBisectInProgress.RefreshBisect();
+            await notificationBarBisectInProgress.RefreshBisectAsync();
 
             // check if we are in the middle of an action (merge/rebase/etc.)
-            notificationBarGitActionInProgress.RefreshGitAction();
+            await notificationBarGitActionInProgress.RefreshGitActionAsync();
         }
 
         private void UpdateStashCount()
