@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitCommands;
 using GitCommands.Git;
 using GitExtUtils.GitUI.Theming;
 using GitUI.Properties;
+using Microsoft.VisualStudio.Threading;
 using ResourceManager;
 
 namespace GitUI.CommandsDialogs
@@ -35,7 +38,12 @@ namespace GitUI.CommandsDialogs
                 return;
             }
 
-            var aheadBehindData = _aheadBehindDataProvider?.GetData(branchName);
+            IDictionary<string, AheadBehindData>? aheadBehindData = null;
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
+            {
+                await TaskScheduler.Default;
+                aheadBehindData = _aheadBehindDataProvider?.GetData(branchName);
+            });
             if (aheadBehindData is null || aheadBehindData.Count < 1 || !aheadBehindData.ContainsKey(branchName))
             {
                 return;
