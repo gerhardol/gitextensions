@@ -20,6 +20,7 @@ namespace GitExtensions.UITests.CommandsDialogs
 
         // Track the original setting value
         private bool _originalShowAuthorAvatarColumn;
+        private bool _showAuthorAvatarInCommitInfo;
         private bool _showAvailableDiffTools;
 
         // Created once for each test
@@ -32,6 +33,7 @@ namespace GitExtensions.UITests.CommandsDialogs
         {
             // Remember the current settings...
             _originalShowAuthorAvatarColumn = AppSettings.ShowAuthorAvatarColumn;
+            _showAuthorAvatarInCommitInfo = AppSettings.ShowAuthorAvatarInCommitInfo;
             _showAvailableDiffTools = AppSettings.ShowAvailableDiffTools;
 
             // Stop loading custom diff tools
@@ -39,12 +41,14 @@ namespace GitExtensions.UITests.CommandsDialogs
 
             // We don't want avatars during tests, otherwise we will be attempting to download them from gravatar....
             AppSettings.ShowAuthorAvatarColumn = false;
+            AppSettings.ShowAuthorAvatarInCommitInfo = false;
         }
 
         [OneTimeTearDown]
         public void OneTimeTearDown()
         {
             AppSettings.ShowAuthorAvatarColumn = _originalShowAuthorAvatarColumn;
+            AppSettings.ShowAuthorAvatarInCommitInfo = _showAuthorAvatarInCommitInfo;
             AppSettings.ShowAvailableDiffTools = _showAvailableDiffTools;
         }
 
