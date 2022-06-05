@@ -873,9 +873,15 @@ namespace GitUI
             // The information from step 1. is therefore protected with a semaphore.
             // This local semaphore instance is bound in closures below.
             System.Threading.SemaphoreSlim semaphoreCurrentCommit = new(initialCount: 0, maxCount: 1);
-            _isRefreshingRevisions = true;
 
             // Protected by semaphoreCurrentCommit
+
+            _isRefreshingRevisions = true;
+            //// TODO: What if we do not reach the end of OnRevisionReadCompleted(), where _isRefreshingRevisions is reset?!?
+
+            System.Threading.CancellationToken cancellationToken = _refreshRevisionsSequence.Next();
+            //// TODO: Wait for cancelled tasks! They could mix things up.
+
             ILookup<ObjectId, IGitRef> refsByObjectId = null;
             bool headIsHandled = false;
 
@@ -907,8 +913,6 @@ namespace GitUI
                     .ObserveOn(ThreadPoolScheduler.Instance)
                     .Subscribe(OnRevisionRead, OnRevisionReaderError, OnRevisionReadCompleted);
 
-                System.Threading.CancellationToken cancellationToken = _refreshRevisionsSequence.Next();
-
                 IReadOnlyList<ObjectId>? currentlySelectedObjectIds = _gridView.SelectedObjectIds;
                 _gridView.SuspendLayout();
                 _gridView.SelectionChanged -= OnGridViewSelectionChanged;
@@ -931,7 +935,7 @@ namespace GitUI
                 _selectionTimer.Stop();
                 _selectionTimer.Start();
 
-                cancellationToken.ThrowIfCancellationRequested();
+                // TODO: can never have an effect in combination with _isRefreshingRevisions: cancellationToken.ThrowIfCancellationRequested();
 
                 // Evaluate GitRefs and current commit
                 ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
@@ -968,7 +972,7 @@ namespace GitUI
                     }
                 }).FileAndForget();
 
-                cancellationToken.ThrowIfCancellationRequested();
+                // TODO: can never have an effect in combination with _isRefreshingRevisions: cancellationToken.ThrowIfCancellationRequested();
 
                 string pathFilter = BuildPathFilter(_filterInfo.PathFilter);
                 ArgumentBuilder args = RevisionReader.BuildArguments(_filterInfo.CommitsLimit,
@@ -1006,7 +1010,7 @@ namespace GitUI
 
             return;
 
-            static void UpdateSelectedRef(GitModule module, IReadOnlyList<IGitRef> getRefs, IGitRef? selectedRef)
+            static void UpdateSelectedRef(GitModule module, IReadOnlyList<IGitRef> gitRefs, IGitRef? selectedRef)
             {
                 if (selectedRef is null)
                 {
@@ -1018,7 +1022,7 @@ namespace GitUI
                 var localConfigFile = module.LocalConfigFile;
                 var selectedRemote = selectedRef.GetTrackingRemote(localConfigFile);
                 var selectedMerge = selectedRef.GetMergeWith(localConfigFile);
-                var selectedHeadMergeSource = getRefs.FirstOrDefault(
+                var selectedHeadMergeSource = gitRefs.FirstOrDefault(
                     gitRef => gitRef.IsRemote
                          && selectedRemote == gitRef.Remote
                          && selectedMerge == gitRef.LocalName);
@@ -1148,20 +1152,25 @@ namespace GitUI
                 // To proceed from here refs etc must be available (protected by semaphoreCurrentCommit).
                 if (!headIsHandled)
                 {
-                    semaphoreCurrentCommit.Wait();
-                    if (revision.ObjectId.Equals(CurrentCheckout) || CurrentCheckout is null)
+                    semaphoreCurrentCommit.Wait(cancellationToken);
+                    try
                     {
-                        // Insert worktree/index before HEAD (CurrentCheckout)
-                        // If grid is filtered and HEAD not visible, insert artificial in OnRevisionReadCompleted()
-                        headIsHandled = true;
-                        AddArtificialRevisions();
-                        if (CurrentCheckout is not null)
+                        if (revision.ObjectId.Equals(CurrentCheckout) || CurrentCheckout is null)
                         {
-                            flags = RevisionNodeFlags.CheckedOut;
+                            // Insert worktree/index before HEAD (CurrentCheckout)
+                            // If grid is filtered and HEAD not visible, insert artificial in OnRevisionReadCompleted()
+                            headIsHandled = true;
+                            AddArtificialRevisions();
+                            if (CurrentCheckout is not null)
+                            {
+                                flags = RevisionNodeFlags.CheckedOut;
+                            }
                         }
                     }
-
-                    semaphoreCurrentCommit.Release();
+                    finally
+                    {
+                        semaphoreCurrentCommit.Release();
+                    }
                 }
 
                 // Look up any refs associated with this revision
@@ -1250,7 +1259,7 @@ namespace GitUI
             {
                 if (!firstRevisionReceived && !FilterIsApplied(inclBranchFilter: true))
                 {
-                    semaphoreCurrentCommit.Wait();
+                    semaphoreCurrentCommit.Wait(cancellationToken);
 
                     // This has to happen on the UI thread
                     this.InvokeAsync(
