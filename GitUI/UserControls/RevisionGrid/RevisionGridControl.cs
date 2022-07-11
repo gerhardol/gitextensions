@@ -873,15 +873,10 @@ namespace GitUI
             // The information from step 1. is therefore protected with a semaphore.
             // This local semaphore instance is bound in closures below.
             System.Threading.SemaphoreSlim semaphoreCurrentCommit = new(initialCount: 0, maxCount: 1);
+            System.Threading.CancellationToken cancellationToken = _refreshRevisionsSequence.Next();
+            _isRefreshingRevisions = true;
 
             // Protected by semaphoreCurrentCommit
-
-            _isRefreshingRevisions = true;
-            //// TODO: What if we do not reach the end of OnRevisionReadCompleted(), where _isRefreshingRevisions is reset?!?
-
-            System.Threading.CancellationToken cancellationToken = _refreshRevisionsSequence.Next();
-            //// TODO: Wait for cancelled tasks! They could mix things up.
-
             ILookup<ObjectId, IGitRef> refsByObjectId = null;
             bool headIsHandled = false;
 
@@ -935,7 +930,7 @@ namespace GitUI
                 _selectionTimer.Stop();
                 _selectionTimer.Start();
 
-                // TODO: can never have an effect in combination with _isRefreshingRevisions: cancellationToken.ThrowIfCancellationRequested();
+                cancellationToken.ThrowIfCancellationRequested();
 
                 // Evaluate GitRefs and current commit
                 ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
@@ -972,7 +967,7 @@ namespace GitUI
                     }
                 }).FileAndForget();
 
-                // TODO: can never have an effect in combination with _isRefreshingRevisions: cancellationToken.ThrowIfCancellationRequested();
+                cancellationToken.ThrowIfCancellationRequested();
 
                 string pathFilter = BuildPathFilter(_filterInfo.PathFilter);
                 ArgumentBuilder args = RevisionReader.BuildArguments(_filterInfo.CommitsLimit,
@@ -1143,6 +1138,7 @@ namespace GitUI
             {
                 if (!firstRevisionReceived)
                 {
+                    semaphoreCurrentCommit.Wait(cancellationToken);
                     firstRevisionReceived = true;
                     this.InvokeAsync(() => { ShowLoading(showSpinner: false); }).FileAndForget();
                 }
@@ -1152,24 +1148,16 @@ namespace GitUI
                 // To proceed from here refs etc must be available (protected by semaphoreCurrentCommit).
                 if (!headIsHandled)
                 {
-                    semaphoreCurrentCommit.Wait(cancellationToken);
-                    try
+                    if (revision.ObjectId.Equals(CurrentCheckout) || CurrentCheckout is null)
                     {
-                        if (revision.ObjectId.Equals(CurrentCheckout) || CurrentCheckout is null)
+                        // Insert worktree/index before HEAD (CurrentCheckout)
+                        // If grid is filtered and HEAD not visible, insert artificial in OnRevisionReadCompleted()
+                        headIsHandled = true;
+                        AddArtificialRevisions();
+                        if (CurrentCheckout is not null)
                         {
-                            // Insert worktree/index before HEAD (CurrentCheckout)
-                            // If grid is filtered and HEAD not visible, insert artificial in OnRevisionReadCompleted()
-                            headIsHandled = true;
-                            AddArtificialRevisions();
-                            if (CurrentCheckout is not null)
-                            {
-                                flags = RevisionNodeFlags.CheckedOut;
-                            }
+                            flags = RevisionNodeFlags.CheckedOut;
                         }
-                    }
-                    finally
-                    {
-                        semaphoreCurrentCommit.Release();
                     }
                 }
 
@@ -1196,11 +1184,16 @@ namespace GitUI
                 return;
             }
 
+            bool ShowArtificialRevisions()
+            {
+                return ShowUncommittedChangesIfPossible
+                    && AppSettings.RevisionGraphShowArtificialCommits
+                    && !Module.IsBareRepository();
+            }
+
             bool AddArtificialRevisions(bool insertWithMatch = false, IEnumerable<ObjectId> headParents = null)
             {
-                if (!ShowUncommittedChangesIfPossible
-                    || !AppSettings.RevisionGraphShowArtificialCommits
-                    || Module.IsBareRepository())
+                if (!ShowArtificialRevisions())
                 {
                     return false;
                 }
@@ -1244,9 +1237,10 @@ namespace GitUI
 
             void OnRevisionReaderError(Exception exception)
             {
-                // This has to happen on the UI thread
+                _gridView.MarkAsDataLoadingComplete();
                 this.InvokeAsync(() => SetPage(new ErrorControl()))
                     .FileAndForget();
+                _isRefreshingRevisions = false;
 
                 _refreshRevisionsSequence.CancelCurrent();
 
@@ -1259,15 +1253,17 @@ namespace GitUI
             {
                 if (!firstRevisionReceived && !FilterIsApplied(inclBranchFilter: true))
                 {
-                    semaphoreCurrentCommit.Wait(cancellationToken);
-
-                    // This has to happen on the UI thread
+                    // No revisions at all received
                     this.InvokeAsync(
                             () =>
                             {
+                                if (!firstRevisionReceived)
+                                {
+                                    semaphoreCurrentCommit.Wait(cancellationToken);
+                                }
+
                                 _gridView.LoadingCompleted();
                                 bool showArtificial = AddArtificialRevisions();
-                                _gridView.LoadingCompleted();
                                 if (showArtificial)
                                 {
                                     // There is a context to show something
@@ -1287,8 +1283,13 @@ namespace GitUI
 
                 ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
                 {
+                    if (!firstRevisionReceived)
+                    {
+                        await semaphoreCurrentCommit.WaitAsync(cancellationToken);
+                    }
+
                     IEnumerable<ObjectId> headParents = null;
-                    if (firstRevisionReceived && !headIsHandled)
+                    if (firstRevisionReceived && !headIsHandled && ShowArtificialRevisions())
                     {
                         if (CurrentCheckout is not null)
                         {
@@ -1312,6 +1313,8 @@ namespace GitUI
                     {
                         ObjectId notSelectedId = _gridView.ToBeSelectedObjectIds[0];
                         IEnumerable<ObjectId> parents = null;
+
+                        // Try to reuse headParents for parents to the commit to be selected
                         if (headParents is not null && notSelectedId == CurrentCheckout)
                         {
                             parents = headParents;
