@@ -867,17 +867,16 @@ namespace GitUI
             // Revision info is read in two parallel steps:
             // 1. Read current commit, refs, prepare grid etc.
             // 2. Read all revisions with git-log.
+            //    Git will provide log information when available (so slower to first revision if sorting).
             // Both these operations can take a long time and is done async in parallel.
-            // Step 2. requires that most of the information in 1. is prepared when updating the grid.
-            // Git will provide log information when available (so slower to first revision if sorting).
-            // The information from step 1. is therefore protected with a semaphore.
-            // This local semaphore instance is bound in closures below.
-            System.Threading.SemaphoreSlim semaphoreCurrentCommit = new(initialCount: 0, maxCount: 1);
+            // Step 2. requires that the information in 1. is available when adding revisions,
+            // and is therefore protected with a semaphore.
+            System.Threading.SemaphoreSlim semaphoreUpdateGrid = new(initialCount: 0, maxCount: 1);
             System.Threading.CancellationToken cancellationToken = _refreshRevisionsSequence.Next();
             _isRefreshingRevisions = true;
 
-            // Protected by semaphoreCurrentCommit
             ILookup<ObjectId, IGitRef> refsByObjectId = null;
+            bool firstRevisionReceived = false;
             bool headIsHandled = false;
 
             // getRefs (refreshing from Browse) is Lazy already, but not from RevGrid (updating filters etc)
@@ -886,7 +885,6 @@ namespace GitUI
 
             // optimize for no notes at all
             Lazy<bool> hasAnyNotes = new(() => AppSettings.ShowGitNotes && getUnfilteredRefs.Value.Any(i => i.CompleteName == GitRefName.RefsNotesPrefix));
-            bool firstRevisionReceived = false;
 
             try
             {
@@ -956,7 +954,8 @@ namespace GitUI
                     UpdateSelectedRef(capturedModule, getUnfilteredRefs.Value, headRef);
                     _gridView.ToBeSelectedObjectIds = GetToBeSelectedRevisions(newCurrentCheckout, currentlySelectedObjectIds);
 
-                    semaphoreCurrentCommit.Release();
+                    // Allow add revisions to the grid
+                    semaphoreUpdateGrid.Release();
 
                     _superprojectCurrentCheckout = await GetSuperprojectCheckoutAsync(capturedModule, noLocks: true);
                     if (firstRevisionReceived && _superprojectCurrentCheckout is not null)
@@ -1138,14 +1137,14 @@ namespace GitUI
             {
                 if (!firstRevisionReceived)
                 {
-                    semaphoreCurrentCommit.Wait(cancellationToken);
+                    // Wait for refs,CurrentCheckout to be available
+                    semaphoreUpdateGrid.Wait(cancellationToken);
                     firstRevisionReceived = true;
                     this.InvokeAsync(() => { ShowLoading(showSpinner: false); }).FileAndForget();
                 }
 
                 RevisionNodeFlags flags = RevisionNodeFlags.None;
 
-                // To proceed from here refs etc must be available (protected by semaphoreCurrentCommit).
                 if (!headIsHandled)
                 {
                     if (revision.ObjectId.Equals(CurrentCheckout) || CurrentCheckout is null)
@@ -1237,12 +1236,12 @@ namespace GitUI
 
             void OnRevisionReaderError(Exception exception)
             {
+                _refreshRevisionsSequence.CancelCurrent();
+
                 _gridView.MarkAsDataLoadingComplete();
                 this.InvokeAsync(() => SetPage(new ErrorControl()))
                     .FileAndForget();
                 _isRefreshingRevisions = false;
-
-                _refreshRevisionsSequence.CancelCurrent();
 
                 // Rethrow the exception on the UI thread
                 this.InvokeAsync(() => throw new AggregateException(exception))
@@ -1259,7 +1258,7 @@ namespace GitUI
                             {
                                 if (!firstRevisionReceived)
                                 {
-                                    semaphoreCurrentCommit.Wait(cancellationToken);
+                                    semaphoreUpdateGrid.Wait(cancellationToken);
                                 }
 
                                 _gridView.LoadingCompleted();
@@ -1285,7 +1284,7 @@ namespace GitUI
                 {
                     if (!firstRevisionReceived)
                     {
-                        await semaphoreCurrentCommit.WaitAsync(cancellationToken);
+                        await semaphoreUpdateGrid.WaitAsync(cancellationToken);
                     }
 
                     IEnumerable<ObjectId> headParents = null;
