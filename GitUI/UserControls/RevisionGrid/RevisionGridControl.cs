@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitCommands;
@@ -104,7 +105,7 @@ namespace GitUI
         private readonly AuthorRevisionHighlighting _authorHighlighting;
         private readonly Lazy<IndexWatcher> _indexWatcher;
         private readonly BuildServerWatcher _buildServerWatcher;
-        private readonly Timer _selectionTimer;
+        private readonly System.Windows.Forms.Timer _selectionTimer;
         private readonly RevisionGraphColumnProvider _revisionGraphColumnProvider;
         private readonly DataGridViewColumn _maximizedColumn;
         private DataGridViewColumn? _lastVisibleResizableColumn;
@@ -188,7 +189,7 @@ namespace GitUI
             // Delay raising the SelectionChanged event for a barely noticeable period to throttle
             // rapid changes, for example by holding the down arrow key in the revision grid.
             // 75ms is longer than the default keyboard repeat rate of 15 keypresses per second.
-            _selectionTimer = new Timer(components) { Interval = 75 };
+            _selectionTimer = new System.Windows.Forms.Timer(components) { Interval = 75 };
             _selectionTimer.Tick += (_, e) =>
             {
                 _selectionTimer.Stop();
@@ -839,7 +840,7 @@ namespace GitUI
         ///  or it is not in a middle of reconfiguration process guarded by <see cref="SuspendRefreshRevisions"/>
         ///  and <see cref="ResumeRefreshRevisions"/>.
         /// </summary>
-        public bool CanRefresh => !_isRefreshingRevisions && _updatingFilters == 0;
+        private bool CanRefresh => !_isRefreshingRevisions && _updatingFilters == 0;
 
         #region PerformRefreshRevisions
 
@@ -854,6 +855,7 @@ namespace GitUI
 
             if (!CanRefresh)
             {
+                Trace.WriteLine("Ignoring refresh as RefreshRevisions() is already running.");
                 return;
             }
 
@@ -871,8 +873,8 @@ namespace GitUI
             // Both these operations can take a long time and is done async in parallel.
             // Step 2. requires that the information in 1. is available when adding revisions,
             // and is therefore protected with a semaphore.
-            System.Threading.SemaphoreSlim semaphoreUpdateGrid = new(initialCount: 0, maxCount: 1);
-            System.Threading.CancellationToken cancellationToken = _refreshRevisionsSequence.Next();
+            SemaphoreSlim semaphoreUpdateGrid = new(initialCount: 0, maxCount: 1);
+            CancellationToken cancellationToken = _refreshRevisionsSequence.Next();
             _isRefreshingRevisions = true;
 
             ILookup<ObjectId, IGitRef> refsByObjectId = null;
