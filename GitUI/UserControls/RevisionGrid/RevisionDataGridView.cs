@@ -488,8 +488,7 @@ namespace GitUI.UserControls.RevisionGrid
                     }
 
                     MarkAsDataLoadingComplete();
-                })
-                .FileAndForget();
+                });
             }
             else
             {

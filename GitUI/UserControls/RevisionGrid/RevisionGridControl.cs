@@ -880,13 +880,11 @@ namespace GitUI
             ILookup<ObjectId, IGitRef> refsByObjectId = null;
             bool firstRevisionReceived = false;
             bool headIsHandled = false;
+            bool hasAnyNotes = false;
 
             // getRefs (refreshing from Browse) is Lazy already, but not from RevGrid (updating filters etc)
             Lazy<IReadOnlyList<IGitRef>> getUnfilteredRefs = new(() => (getRefs ?? capturedModule.GetRefs)(RefsFilter.NoFilter));
             _ambiguousRefs = new(() => GitRef.GetAmbiguousRefNames(getUnfilteredRefs.Value));
-
-            // optimize for no notes at all
-            Lazy<bool> hasAnyNotes = new(() => AppSettings.ShowGitNotes && getUnfilteredRefs.Value.Any(i => i.CompleteName == GitRefName.RefsNotesPrefix));
 
             try
             {
@@ -956,6 +954,9 @@ namespace GitUI
                     UpdateSelectedRef(capturedModule, getUnfilteredRefs.Value, headRef);
                     _gridView.ToBeSelectedObjectIds = GetToBeSelectedRevisions(newCurrentCheckout, currentlySelectedObjectIds);
 
+                    // optimize for no notes at all
+                    hasAnyNotes = AppSettings.ShowGitNotes && getUnfilteredRefs.Value.Any(i => i.CompleteName == GitRefName.RefsNotesPrefix);
+
                     // Allow add revisions to the grid
                     semaphoreUpdateGrid.Release();
 
@@ -970,19 +971,19 @@ namespace GitUI
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                string pathFilter = BuildPathFilter(_filterInfo.PathFilter);
-                ArgumentBuilder args = RevisionReader.BuildArguments(_filterInfo.CommitsLimit,
-                    _filterInfo.RefFilterOptions,
-                    _filterInfo.IsShowFilteredBranchesChecked ? _filterInfo.BranchFilter : string.Empty,
-                    _filterInfo.GetRevisionFilter(),
-                    pathFilter,
-                    out bool parentsAreRewritten);
-                ParentsAreRewritten = parentsAreRewritten;
-
                 // Get info about all Git commits, update the grid
                 ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
                 {
                     await TaskScheduler.Default;
+                    string pathFilter = BuildPathFilter(_filterInfo.PathFilter);
+                    ArgumentBuilder args = RevisionReader.BuildArguments(_filterInfo.CommitsLimit,
+                        _filterInfo.RefFilterOptions,
+                        _filterInfo.IsShowFilteredBranchesChecked ? _filterInfo.BranchFilter : string.Empty,
+                        _filterInfo.GetRevisionFilter(),
+                        pathFilter,
+                        out bool parentsAreRewritten);
+                    ParentsAreRewritten = parentsAreRewritten;
+
                     await new RevisionReader().ExecuteAsync(
                         capturedModule,
                         observeRevisions,
@@ -1147,18 +1148,15 @@ namespace GitUI
 
                 RevisionNodeFlags flags = RevisionNodeFlags.None;
 
-                if (!headIsHandled)
+                if (!headIsHandled && (revision.ObjectId.Equals(CurrentCheckout) || CurrentCheckout is null))
                 {
-                    if (revision.ObjectId.Equals(CurrentCheckout) || CurrentCheckout is null)
+                    // Insert worktree/index before HEAD (CurrentCheckout)
+                    // If grid is filtered and HEAD not visible, insert artificial in OnRevisionReadCompleted()
+                    headIsHandled = true;
+                    AddArtificialRevisions();
+                    if (CurrentCheckout is not null)
                     {
-                        // Insert worktree/index before HEAD (CurrentCheckout)
-                        // If grid is filtered and HEAD not visible, insert artificial in OnRevisionReadCompleted()
-                        headIsHandled = true;
-                        AddArtificialRevisions();
-                        if (CurrentCheckout is not null)
-                        {
-                            flags = RevisionNodeFlags.CheckedOut;
-                        }
+                        flags = RevisionNodeFlags.CheckedOut;
                     }
                 }
 
@@ -1174,7 +1172,7 @@ namespace GitUI
                     flags |= RevisionNodeFlags.OnlyFirstParent;
                 }
 
-                if (!hasAnyNotes.Value)
+                if (!hasAnyNotes)
                 {
                     // No notes at all in this repo
                     revision.HasNotes = true;
@@ -1255,16 +1253,17 @@ namespace GitUI
                 if (!firstRevisionReceived && !FilterIsApplied(inclBranchFilter: true))
                 {
                     // No revisions at all received
-                    this.InvokeAsync(
-                            () =>
-                            {
-                                if (!firstRevisionReceived)
-                                {
-                                    semaphoreUpdateGrid.Wait(cancellationToken);
-                                }
+                    // Update on callers thresd
+                    if (!firstRevisionReceived)
+                    {
+                        semaphoreUpdateGrid.Wait(cancellationToken);
+                    }
 
-                                _gridView.LoadingCompleted();
-                                bool showArtificial = AddArtificialRevisions();
+                    bool showArtificial = AddArtificialRevisions();
+                    _gridView.LoadingCompleted();
+
+                    this.InvokeAsync(() =>
+                            {
                                 if (showArtificial)
                                 {
                                     // There is a context to show something
@@ -1284,12 +1283,14 @@ namespace GitUI
 
                 ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
                 {
+                    await TaskScheduler.Default;
                     if (!firstRevisionReceived)
                     {
                         await semaphoreUpdateGrid.WaitAsync(cancellationToken);
                     }
 
                     IEnumerable<ObjectId> headParents = null;
+                    bool refresh = false;
                     if (firstRevisionReceived && !headIsHandled && ShowArtificialRevisions())
                     {
                         if (CurrentCheckout is not null)
@@ -1300,10 +1301,7 @@ namespace GitUI
 
                         // If parents are rewritten HEAD may not be included
                         // Insert the artificial commits where relevant if possible, otherwise first
-                        AddArtificialRevisions(insertWithMatch: true, headParents);
-                        await this.SwitchToMainThreadAsync();
-                        _gridView.Refresh();
-                        await TaskScheduler.Default;
+                        refresh = AddArtificialRevisions(insertWithMatch: true, headParents);
                     }
 
                     // All revisions are loaded (but maybe not yet the grid)
@@ -1333,9 +1331,13 @@ namespace GitUI
                         _gridView.SetToBeSelectedFromParents(parents);
                     }
 
-                    await this.SwitchToMainThreadAsync();
-
                     _gridView.LoadingCompleted();
+                    await this.SwitchToMainThreadAsync(cancellationToken);
+                    if (refresh)
+                    {
+                        _gridView.Refresh();
+                    }
+
                     SetPage(_gridView);
                     _isRefreshingRevisions = false;
                     RevisionsLoaded?.Invoke(this, new RevisionLoadEventArgs(this, UICommands, getUnfilteredRefs, forceRefresh));
