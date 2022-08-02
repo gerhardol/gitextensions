@@ -15,6 +15,13 @@ namespace GitUITests.UserControls
     [TestFixture]
     public class FilterInfoTests
     {
+        [SetUp]
+        public void SetUp()
+        {
+            AppSettings.ShowGitNotes = false;
+            AppSettings.ShowLatestStash = true;
+        }
+
         [Test]
         public void FilterInfo_ctor_expected()
         {

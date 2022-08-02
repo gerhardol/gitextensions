@@ -116,7 +116,7 @@ namespace GitUI.UserControls.RevisionGrid
                 RefFilterOptions refFilterOptions;
                 if (!string.IsNullOrWhiteSpace(Message))
                 {
-                    refFilterOptions = RefFilterOptions.None;
+                    refFilterOptions = RefFilterOptions.All;
                 }
                 else if (!ByBranchFilter)
                 {
@@ -133,28 +133,30 @@ namespace GitUI.UserControls.RevisionGrid
                 }
                 else
                 {
+                    // Boundary may not be needed/desired
                     refFilterOptions = RefFilterOptions.All | RefFilterOptions.Boundary;
                 }
 
-                const RefFilterOptions gitNotesOptions = RefFilterOptions.All | RefFilterOptions.Boundary;
-                if (!AppSettings.ShowGitNotes && (refFilterOptions & gitNotesOptions) == gitNotesOptions)
+                // Note that some refs (like notes) requires --all or explicit inclusion (--glob)
+                // (None is evaluated as HEAD)
+                // These options are explicitly excluded when not desired
+                // "other refs" include Gerrit refs like refs/for/ and refs/changes/
+                if (refFilterOptions.HasFlag(RefFilterOptions.All))
                 {
-                    refFilterOptions |= RefFilterOptions.ShowGitNotes;
-                }
+                    if (!AppSettings.ShowLatestStash)
+                    {
+                        refFilterOptions |= RefFilterOptions.NoStash;
+                    }
 
-                if (AppSettings.ShowGitNotes)
-                {
-                    refFilterOptions &= ~RefFilterOptions.ShowGitNotes;
+                    if (!AppSettings.ShowGitNotes)
+                    {
+                        refFilterOptions |= RefFilterOptions.NoGitNotes;
+                    }
                 }
 
                 if (!AppSettings.ShowMergeCommits)
                 {
                     refFilterOptions |= RefFilterOptions.NoMerges;
-                }
-
-                if (!AppSettings.ShowLatestStash)
-                {
-                    refFilterOptions &= ~RefFilterOptions.Stashes;
                 }
 
                 if (ShowFirstParent)
