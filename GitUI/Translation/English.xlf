@@ -9691,16 +9691,16 @@ See the changes in the commit form.</source>
         <source>Show &amp;filtered branches</source>
         <target />
       </trans-unit>
-      <trans-unit id="ShowLatestStash.Text">
-        <source>Show &amp;latest stash</source>
-        <target />
-      </trans-unit>
       <trans-unit id="ShowReflogReferences.Text">
         <source>Show &amp;reflog references</source>
         <target />
       </trans-unit>
       <trans-unit id="ShowRemoteBranches.Text">
         <source>Show remote &amp;branches</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="ShowStashes.Text">
+        <source>Show stashes</source>
         <target />
       </trans-unit>
       <trans-unit id="ShowSuperprojectBranches.Text">
@@ -9919,6 +9919,10 @@ See the changes in the commit form.</source>
         <source>De&amp;lete tag...</source>
         <target />
       </trans-unit>
+      <trans-unit id="dropStashToolStripMenuItem.Text">
+        <source>&amp;Drop stash...</source>
+        <target />
+      </trans-unit>
       <trans-unit id="editCommitToolStripMenuItem.Text">
         <source>&amp;Edit commit</source>
         <target />
@@ -9961,6 +9965,10 @@ See the changes in the commit form.</source>
       </trans-unit>
       <trans-unit id="openPullRequestPageStripMenuItem.Text">
         <source>Vie&amp;w pull request in a browser</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="popStashToolStripMenuItem.Text">
+        <source>Pop &amp;stash...</source>
         <target />
       </trans-unit>
       <trans-unit id="rebaseInteractivelyToolStripMenuItem.Text">

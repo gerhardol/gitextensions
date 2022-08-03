@@ -29,6 +29,8 @@ namespace GitUI
             this.stopBisectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bisectSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.copyToClipboardToolStripMenuItem = new GitUI.UserControls.RevisionGrid.CopyContextMenuItem();
+            this.popStashToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.dropStashToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
             this.checkoutBranchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mergeBranchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -120,6 +122,8 @@ namespace GitUI
             this.stopBisectToolStripMenuItem,
             this.bisectSeparator,
             this.copyToClipboardToolStripMenuItem,
+            this.popStashToolStripMenuItem,
+            this.dropStashToolStripMenuItem,
             this.toolStripSeparator8,
             this.checkoutBranchToolStripMenuItem,
             this.mergeBranchToolStripMenuItem,
@@ -188,6 +192,22 @@ namespace GitUI
             // 
             this.bisectSeparator.Name = "bisectSeparator";
             this.bisectSeparator.Size = new System.Drawing.Size(261, 6);
+            // 
+            // popStashToolStripMenuItem
+            // 
+            this.popStashToolStripMenuItem.Image = global::GitUI.Properties.Images.Stash;
+            this.popStashToolStripMenuItem.Name = "popStashToolStripMenuItem";
+            this.popStashToolStripMenuItem.Size = new System.Drawing.Size(264, 24);
+            this.popStashToolStripMenuItem.Text = "Pop &stash...";
+            this.popStashToolStripMenuItem.Click += new System.EventHandler(this.PopStashToolStripMenuItemClick);
+            // 
+            // dropStashToolStripMenuItem
+            // 
+            this.dropStashToolStripMenuItem.Image = global::GitUI.Properties.Images.Stash;
+            this.dropStashToolStripMenuItem.Name = "dropStashToolStripMenuItem";
+            this.dropStashToolStripMenuItem.Size = new System.Drawing.Size(264, 24);
+            this.dropStashToolStripMenuItem.Text = "&Drop stash...";
+            this.dropStashToolStripMenuItem.Click += new System.EventHandler(this.DropStashToolStripMenuItemClick);
             // 
             // toolStripSeparator8
             // 
@@ -547,6 +567,8 @@ namespace GitUI
         private System.Windows.Forms.ToolStripMenuItem deleteBranchToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem checkoutRevisionToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem archiveRevisionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem popStashToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem dropStashToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem checkoutBranchToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem mergeBranchToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem cherryPickCommitToolStripMenuItem;
