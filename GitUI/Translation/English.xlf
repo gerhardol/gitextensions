@@ -4151,12 +4151,12 @@ You can unset the template:
         <source>Commit &amp;templates</source>
         <target />
       </trans-unit>
-      <trans-unit id="convertEndOfLinesToolStripMenuItem.Text">
-        <source>Convert End of lines</source>
-        <target />
-      </trans-unit>
       <trans-unit id="commitTemplatesToolStripMenuItem.ToolTipText">
         <source>Commit templates</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="convertEndOfLinesToolStripMenuItem.Text">
+        <source>Convert End of lines</source>
         <target />
       </trans-unit>
       <trans-unit id="copyFolderNameMenuItem.Text">
