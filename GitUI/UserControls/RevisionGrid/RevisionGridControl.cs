@@ -980,7 +980,8 @@ namespace GitUI
                     string pathFilter = BuildPathFilter(_filterInfo.PathFilter);
                     ArgumentBuilder args = RevisionReader.BuildArguments(_filterInfo.CommitsLimit,
                         _filterInfo.RefFilterOptions,
-                        _filterInfo.IsShowFilteredBranchesChecked ? _filterInfo.BranchFilter : string.Empty,
+                        _filterInfo.IsShowFilteredBranchesChecked && !string.IsNullOrWhiteSpace(_filterInfo.BranchFilter)
+                            ? _filterInfo.BranchFilter : string.Empty,
                         _filterInfo.GetRevisionFilter(),
                         pathFilter,
                         out bool parentsAreRewritten);
@@ -1451,6 +1452,7 @@ namespace GitUI
 
         internal bool FilterIsApplied(bool inclBranchFilter)
         {
+            // TBD ByBranchFilter should always be set when there is a filter
             return _filterInfo.HasFilter || (inclBranchFilter && _filterInfo.IsShowFilteredBranchesChecked && !string.IsNullOrEmpty(_filterInfo.BranchFilter));
         }
 
@@ -1726,7 +1728,7 @@ namespace GitUI
                 return;
             }
 
-            _filterInfo.ByBranchFilter = true;
+            _filterInfo.ByBranchFilter = string.IsNullOrWhiteSpace(_filterInfo.BranchFilter);
             _filterInfo.ShowCurrentBranchOnly = false;
             _filterInfo.ShowReflogReferences = false;
 
