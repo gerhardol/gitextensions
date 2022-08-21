@@ -94,6 +94,7 @@ namespace GitUI.UserControls.RevisionGrid
             set => _pathFilter = value ?? string.Empty;
         }
 
+        // TBD Remove dependency to both BranchFilter and ShowCurrentBranchOnly
         public bool ByBranchFilter
         {
             get => AppSettings.BranchFilterEnabled;
@@ -114,27 +115,29 @@ namespace GitUI.UserControls.RevisionGrid
             get
             {
                 RefFilterOptions refFilterOptions;
-                if (!string.IsNullOrWhiteSpace(Message))
+
+                // Branch filters
+                if (ShowCurrentBranchOnly)
                 {
-                    refFilterOptions = RefFilterOptions.All;
-                }
-                else if (!ByBranchFilter)
-                {
-                    // Include parents to matches
-                    refFilterOptions = RefFilterOptions.All | RefFilterOptions.Boundary;
-                }
-                else if (ShowCurrentBranchOnly)
-                {
+                    // Default git-log, only current branch
                     refFilterOptions = RefFilterOptions.None;
                 }
+
+                // This check should be ByBranchFilter, but BranchFilter is occasionally empty
+                // also for !ShowCurrentBranchOnly
                 else if (BranchFilter.Length > 0)
                 {
+                    // Show filtered branches only
                     refFilterOptions = RefFilterOptions.Branches;
                 }
                 else
                 {
-                    // Boundary may not be needed/desired
-                    refFilterOptions = RefFilterOptions.All | RefFilterOptions.Boundary;
+                    // All branches
+                    // The inclusion of boundary parents to matches is historical
+                    // (why Message etc is handled as a special case)
+                    refFilterOptions = string.IsNullOrWhiteSpace(Message) && string.IsNullOrWhiteSpace(DiffContent)
+                        ? RefFilterOptions.All | RefFilterOptions.Boundary
+                        : RefFilterOptions.All;
                 }
 
                 // Note that some refs (like notes) requires --all or explicit inclusion (--glob)
@@ -371,14 +374,14 @@ namespace GitUI.UserControls.RevisionGrid
         {
             StringBuilder filter = new();
 
+            // Presentation is basically a pretty print of RevisionReader.BuildArguments()
+            // and some RevisionGridControl and FilterInfo setup
+            // Ignore IgnoreCase, ShowMergeCommits, FullHistoryInFileHistory/SimplifyMergesInFileHistory (when history filtered)
+
+            // path and revision filters always applies
             if (ByPathFilter)
             {
                 filter.AppendLine($"{TranslatedStrings.PathFilter}: {PathFilter}");
-            }
-
-            if (ByBranchFilter)
-            {
-                filter.AppendLine($"{TranslatedStrings.Branches}: {BranchFilter}");
             }
 
             if (ByAuthor && !string.IsNullOrWhiteSpace(Author))
@@ -411,12 +414,31 @@ namespace GitUI.UserControls.RevisionGrid
                 filter.AppendLine($"{TranslatedStrings.Until}: {DateTo}");
             }
 
+            if (ShowFirstParent)
+            {
+                // first parents has prio over branch filters
+                filter.AppendLine(TranslatedStrings.ShowFirstParents);
+                return filter.ToString();
+            }
+
+            if (ShowReflogReferences)
+            {
+                // Resets branch filters
+                filter.AppendLine(TranslatedStrings.ShowReflog);
+            }
+            else if (ShowCurrentBranchOnly)
+            {
+                filter.AppendLine(TranslatedStrings.ShowCurrentBranchOnly);
+            }
+            else if (!string.IsNullOrWhiteSpace(BranchFilter))
+            {
+                filter.AppendLine($"{TranslatedStrings.Branches}: {BranchFilter}");
+            }
+
             if (ShowSimplifyByDecoration)
             {
                 filter.AppendLine($"{TranslatedStrings.SimplifyByDecoration}");
             }
-
-            // Ignore IgnoreCase, CurrentBranchOnlyCheck
 
             return filter.ToString();
         }
