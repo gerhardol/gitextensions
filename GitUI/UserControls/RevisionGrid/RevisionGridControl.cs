@@ -980,7 +980,7 @@ namespace GitUI
                     string pathFilter = BuildPathFilter(_filterInfo.PathFilter);
                     ArgumentBuilder args = RevisionReader.BuildArguments(_filterInfo.CommitsLimit,
                         _filterInfo.RefFilterOptions,
-                        _filterInfo.BranchFilter,
+                        _filterInfo.IsShowFilteredBranchesChecked ? _filterInfo.BranchFilter : string.Empty,
                         _filterInfo.GetRevisionFilter(),
                         pathFilter,
                         out bool parentsAreRewritten);
