@@ -93,9 +93,6 @@ namespace GitExtensions.UITests.CommandsDialogs
                 });
         }
 
-#if !DEBUG
-        [Ignore("This test is unstable in AppVeyor")]
-#endif
         [Test]
         public void Filters_should_behave_as_expected()
         {
@@ -153,9 +150,9 @@ namespace GitExtensions.UITests.CommandsDialogs
                         form.GetTestAccessor().ToolStripFilters.SetBranchFilter("Branch2");
                         WaitForRevisionsToBeLoaded(form);
                         // Assert
-                        //// TBD timing issue AppSettings.BranchFilterEnabled.Should().BeTrue();
+                        AppSettings.BranchFilterEnabled.Should().BeTrue();
                         AppSettings.ShowCurrentBranchOnly.Should().BeFalse();
-                        //// TBD timing issue form.GetTestAccessor().RevisionGrid.GetTestAccessor().VisibleRevisionCount.Should().Be(3);
+                        form.GetTestAccessor().RevisionGrid.GetTestAccessor().VisibleRevisionCount.Should().Be(3);
 
                         Console.WriteLine("Scenario 2: set 'Show current branch'");
                         form.GetTestAccessor().ToolStripFilters.GetTestAccessor().tsmiShowBranchesCurrent.PerformClick();
@@ -164,7 +161,7 @@ namespace GitExtensions.UITests.CommandsDialogs
                         AppSettings.BranchFilterEnabled.Should().BeTrue();
                         AppSettings.ShowCurrentBranchOnly.Should().BeTrue();
                         form.GetTestAccessor().RevisionGrid.GetTestAccessor().VisibleRevisionCount.Should().Be(2);
-                        // The filter text is still present
+                        // The filter text is still present (TBD should be grayed out)
                         form.GetTestAccessor().ToolStripFilters.GetTestAccessor().tscboBranchFilter.Text.Should().Be("Branch2");
 
                         // 3. Switch to another repo - "Show current branch" must remain, filter text must be erased
