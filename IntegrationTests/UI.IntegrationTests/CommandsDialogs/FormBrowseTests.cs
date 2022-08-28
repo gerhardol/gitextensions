@@ -232,6 +232,7 @@ namespace GitExtensions.UITests.CommandsDialogs
         }
 
         [Test]
+        [Repeat(25)]
         public void ShowLatestStash_starting_enabled_should_filter_as_expected()
         {
             using ReferenceRepository referenceRepository = new();

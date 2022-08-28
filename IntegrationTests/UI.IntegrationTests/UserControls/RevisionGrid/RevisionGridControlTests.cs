@@ -126,6 +126,7 @@ namespace GitExtensions.UITests.UserControls.RevisionGrid
                 });
         }
 
+        [Repeat(25)]
         [Test]
         public void View_reflects_applied_branch_filter()
         {
@@ -164,6 +165,7 @@ namespace GitExtensions.UITests.UserControls.RevisionGrid
         }
 
         [Test]
+        [Repeat(25)]
         public void View_reflects_reset_branch_filter()
         {
             AppSettings.BranchFilterEnabled = false;
