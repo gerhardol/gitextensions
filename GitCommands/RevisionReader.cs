@@ -63,9 +63,9 @@ namespace GitCommands
         /// <summary>
         /// Get the git-stash GitRevisions
         /// </summary>
-        /// <param name="token">Cancellation token</param>
+        /// <param name="cancellationToken">Cancellation cancellationToken</param>
         /// <returns>List with GitRevisions</returns>
-        public List<GitRevision> GetStashes(CancellationToken token)
+        public List<GitRevision> GetStashes(CancellationToken cancellationToken)
         {
             Debug.Assert(_hasReflogSelector, "_hasReflogSelector must be set to get the reflog selectors (to identify stashes)");
             GitArgumentBuilder arguments = new("stash")
@@ -82,7 +82,7 @@ namespace GitCommands
 
                 foreach (ArraySegment<byte> chunk in process.StandardOutput.BaseStream.ReadNullTerminatedChunks(ref buffer))
                 {
-                    token.ThrowIfCancellationRequested();
+                    cancellationToken.ThrowIfCancellationRequested();
 
                     if (TryParseRevision(chunk, out GitRevision? revision))
                     {
@@ -95,13 +95,12 @@ namespace GitCommands
         }
 
         /// <summary>
-        /// Get the GitRevisions for the listed files,
-        /// excluding commits without changes.
+        /// Get the GitRevisions for the listed files, excluding commits without changes.
         /// </summary>
         /// <param name="untracked">commit list</param>
-        /// <param name="token">Cancellation token</param>
+        /// <param name="cancellationToken">Cancellation cancellationToken</param>
         /// <returns>List with GitRevisions</returns>
-        public List<GitRevision> GetRevisionsFromList(IList<ObjectId> untracked, CancellationToken token)
+        public List<GitRevision> GetRevisionsFromList(IList<ObjectId> untracked, CancellationToken cancellationToken)
         {
             List<GitRevision> stashes = new();
             if (untracked.Count == 0)
@@ -124,7 +123,7 @@ namespace GitCommands
 
                 foreach (ArraySegment<byte> chunk in process.StandardOutput.BaseStream.ReadNullTerminatedChunks(ref buffer))
                 {
-                    token.ThrowIfCancellationRequested();
+                    cancellationToken.ThrowIfCancellationRequested();
 
                     if (TryParseRevision(chunk, out GitRevision? revision))
                     {
@@ -141,15 +140,15 @@ namespace GitCommands
         /// </summary>
         /// <param name="subject">Observer to update the revision grid when the revisions are available.</param>
         /// <param name="arguments">git-log arguments.</param>
-        /// <param name="token">Cancellation token.</param>
+        /// <param name="cancellationToken">Cancellation cancellationToken.</param>
         /// <returns>Task for execution.</returns>
         public async Task GetLogAsync(
             IObserver<GitRevision> subject,
             ArgumentBuilder arguments,
-            CancellationToken token)
+            CancellationToken cancellationToken)
         {
             await TaskScheduler.Default;
-            token.ThrowIfCancellationRequested();
+            cancellationToken.ThrowIfCancellationRequested();
 
 #if DEBUG
             int revisionCount = 0;
@@ -161,13 +160,13 @@ namespace GitCommands
 #if DEBUG
                 Debug.WriteLine($"git {arguments}");
 #endif
-                token.ThrowIfCancellationRequested();
+                cancellationToken.ThrowIfCancellationRequested();
 
                 var buffer = new byte[4096];
 
                 foreach (var chunk in process.StandardOutput.BaseStream.ReadNullTerminatedChunks(ref buffer))
                 {
-                    token.ThrowIfCancellationRequested();
+                    cancellationToken.ThrowIfCancellationRequested();
 
                     if (TryParseRevision(chunk, out GitRevision? revision))
                     {
@@ -184,7 +183,7 @@ namespace GitCommands
 #endif
             }
 
-            if (!token.IsCancellationRequested)
+            if (!cancellationToken.IsCancellationRequested)
             {
                 subject.OnCompleted();
             }
