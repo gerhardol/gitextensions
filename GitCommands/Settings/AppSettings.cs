@@ -1969,7 +1969,12 @@ namespace GitCommands
         public static bool WriteErrorLog
         {
             get => GetBool("WriteErrorLog", false);
-            set => SetBool("WriteErrorLog", value);
+        }
+
+        // Set manually in settings file
+        public static bool WorkaroundRestoreFromMinimize
+        {
+            get => GetBool("WorkaroundRestoreFromMinimize", false);
         }
 
         private static IEnumerable<(string name, string value)> GetSettingsFromRegistry()
