@@ -1223,7 +1223,7 @@ namespace GitUI
                         // Do not add this again (when the main commit is handled)
                         stashesById.Remove(revision.ObjectId);
                     }
-                    else if (stashesByParentId?.Contains(revision.ObjectId) ?? false)
+                    else if (stashesByParentId?.Contains(revision.ObjectId) is true)
                     {
                         foreach (GitRevision stash in stashesByParentId[revision.ObjectId])
                         {
@@ -1987,7 +1987,9 @@ namespace GitUI
             SetEnabled(createTagToolStripMenuItem, !revision.IsArtificial);
 
             SetEnabled(popStashToolStripMenuItem, !bareRepositoryOrArtificial && revision.IsStash);
-            SetEnabled(dropStashToolStripMenuItem, !bareRepositoryOrArtificial && revision.IsStash);
+
+            // TBD Option disabled as there is no confirmation dialog and the stash is hard to recover
+            SetEnabled(dropStashToolStripMenuItem, false);
 
             SetEnabled(openBuildReportToolStripMenuItem, !string.IsNullOrWhiteSpace(revision.BuildStatus?.Url));
 

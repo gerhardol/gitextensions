@@ -1091,11 +1091,10 @@ namespace GitCommands
             set => SetBool("showStashes", value);
         }
 
-        // No official setting
+        // Set manually in settings file
         public static int MaxStashesWithUntrackedFiles
         {
             get => GetInt("maxStashesWithUntrackedFiles", 10);
-            set => SetInt("maxStashesWithUntrackedFiles", value);
         }
 
         public static bool ShowSuperprojectTags
