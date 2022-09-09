@@ -234,6 +234,14 @@ namespace GitUI.UserControls.RevisionGrid
                 },
                 new MenuCommand
                 {
+                    Name = "ShowFilteredBranches",
+                    Text = "Show &filtered branches",
+                    ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ShowFilteredBranches),
+                    ExecuteAction = () => _revisionGrid.ShowFilteredBranches(),
+                    IsCheckedFunc = () => _revisionGrid.CurrentFilter.IsShowFilteredBranchesChecked
+                },
+                new MenuCommand
+                {
                     Name = "ShowCurrentBranchOnly",
                     Text = "Show &current branch only",
                     ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ShowCurrentBranchOnly),
@@ -242,11 +250,71 @@ namespace GitUI.UserControls.RevisionGrid
                 },
                 new MenuCommand
                 {
-                    Name = "ShowFilteredBranches",
-                    Text = "Show &filtered branches",
-                    ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ShowFilteredBranches),
-                    ExecuteAction = () => _revisionGrid.ShowFilteredBranches(),
-                    IsCheckedFunc = () => _revisionGrid.CurrentFilter.IsShowFilteredBranchesChecked
+                    Name = "ShowReflogReferences",
+                    Text = "Show &reflog references",
+                    ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ShowReflogReferences),
+                    ExecuteAction = () => _revisionGrid.ToggleShowReflogReferences(),
+                    IsCheckedFunc = () => _revisionGrid.CurrentFilter.ShowReflogReferences
+                },
+
+                MenuCommand.CreateSeparator(),
+
+                new MenuCommand
+                {
+                    Name = "showMergeCommitsToolStripMenuItem",
+                    Text = "Show &merge commits",
+                    ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ToggleShowMergeCommits),
+                    ExecuteAction = () => _revisionGrid.ToggleShowMergeCommits(),
+                    IsCheckedFunc = () => AppSettings.ShowMergeCommits
+                },
+                new MenuCommand
+                {
+                    Name = "simplifyMerges",
+                    Text = "Simplify merges",
+                    ExecuteAction = () => _revisionGrid.ToggleSimplifyMerges(),
+                    IsCheckedFunc = () => AppSettings.SimplifyMergesInFileHistory,
+                    IsEnabledFunc = () => AppSettings.FullHistoryInFileHistory
+                },
+                new MenuCommand
+                {
+                    Name = "fullHistory",
+                    Text = "Full history",
+                    ExecuteAction = () => _revisionGrid.ToggleFullHistory(),
+                    IsCheckedFunc = () => AppSettings.FullHistoryInFileHistory
+                },
+                new MenuCommand
+                {
+                    Name = "showFirstParent",
+                    Text = "Show first parents",
+                    Image = Images.ShowFirstParent,
+                    ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ShowFirstParent),
+                    ExecuteAction = () => _revisionGrid.ToggleShowFirstParent(),
+                    IsCheckedFunc = () => _revisionGrid.CurrentFilter.ShowFirstParent
+                },
+
+                MenuCommand.CreateSeparator(),
+
+                new MenuCommand
+                {
+                    Name = "ShowArtificialCommits",
+                    Text = "Show artificial commits",
+                    ExecuteAction = () => _revisionGrid.ToggleShowArtificialCommits(),
+                    IsCheckedFunc = () => AppSettings.RevisionGraphShowArtificialCommits
+                },
+                new MenuCommand
+                {
+                    Name = "ShowStashes",
+                    Text = "Show stashes",
+                    ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ShowStashes),
+                    ExecuteAction = () => _revisionGrid.ToggleShowStashes(),
+                    IsCheckedFunc = () => AppSettings.ShowStashes
+                },
+                new MenuCommand
+                {
+                    Name = "showGitNotesToolStripMenuItem",
+                    Text = "Show git &notes",
+                    ExecuteAction = () => _revisionGrid.ToggleShowGitNotes(),
+                    IsCheckedFunc = () => AppSettings.ShowGitNotes
                 },
 
                 MenuCommand.CreateSeparator(),
@@ -261,30 +329,12 @@ namespace GitUI.UserControls.RevisionGrid
                 },
                 new MenuCommand
                 {
-                    Name = "ShowArtificialCommits",
-                    Text = "Show artificial commits",
-                    ExecuteAction = () => _revisionGrid.ToggleShowArtificialCommits(),
-                    IsCheckedFunc = () => AppSettings.RevisionGraphShowArtificialCommits
+                    Name = "showTagsToolStripMenuItem",
+                    Text = "Show &tags",
+                    ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ToggleShowTags),
+                    ExecuteAction = () => _revisionGrid.ToggleShowTags(),
+                    IsCheckedFunc = () => AppSettings.ShowTags
                 },
-                new MenuCommand
-                {
-                    Name = "ShowReflogReferences",
-                    Text = "Show &reflog references",
-                    ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ShowReflogReferences),
-                    ExecuteAction = () => _revisionGrid.ToggleShowReflogReferences(),
-                    IsCheckedFunc = () => _revisionGrid.CurrentFilter.ShowReflogReferences
-                },
-                new MenuCommand
-                {
-                    Name = "ShowStashes",
-                    Text = "Show stashes",
-                    ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ShowStashes),
-                    ExecuteAction = () => _revisionGrid.ToggleShowStashes(),
-                    IsCheckedFunc = () => AppSettings.ShowStashes
-                },
-
-                MenuCommand.CreateSeparator(),
-
                 new MenuCommand
                 {
                     Name = "ShowSuperprojectTags",
@@ -294,17 +344,17 @@ namespace GitUI.UserControls.RevisionGrid
                 },
                 new MenuCommand
                 {
-                    Name = "ShowSuperprojectBranches",
-                    Text = "Show sup&erproject branches",
-                    ExecuteAction = () => _revisionGrid.ShowSuperprojectBranches_ToolStripMenuItemClick(),
-                    IsCheckedFunc = () => AppSettings.ShowSuperprojectBranches
-                },
-                new MenuCommand
-                {
                     Name = "ShowSuperprojectRemoteBranches",
                     Text = "Show superpro&ject remote branches",
                     ExecuteAction = () => _revisionGrid.ShowSuperprojectRemoteBranches_ToolStripMenuItemClick(),
                     IsCheckedFunc = () => AppSettings.ShowSuperprojectRemoteBranches
+                },
+                new MenuCommand
+                {
+                    Name = "ShowSuperprojectBranches",
+                    Text = "Show sup&erproject branches",
+                    ExecuteAction = () => _revisionGrid.ShowSuperprojectBranches_ToolStripMenuItemClick(),
+                    IsCheckedFunc = () => AppSettings.ShowSuperprojectBranches
                 },
 
                 MenuCommand.CreateSeparator(),
@@ -344,6 +394,9 @@ namespace GitUI.UserControls.RevisionGrid
                     ExecuteAction = () => _revisionGrid.ToggleObjectIdColumn(),
                     IsCheckedFunc = () => AppSettings.ShowObjectIdColumn
                 },
+
+                MenuCommand.CreateSeparator(),
+
                 new MenuCommand
                 {
                     Name = "showBuildStatusIconToolStripMenuItem",
@@ -358,9 +411,13 @@ namespace GitUI.UserControls.RevisionGrid
                     ExecuteAction = () => _revisionGrid.ToggleBuildStatusTextColumn(),
                     IsCheckedFunc = () => AppSettings.ShowBuildStatusTextColumn
                 },
-
-                MenuCommand.CreateSeparator(),
-
+                new MenuCommand
+                {
+                    Name = "showCommitMessageBodyToolStripMenuItem",
+                    Text = "Show commit message body",
+                    ExecuteAction = () => _revisionGrid.ToggleShowCommitBodyInRevisionGrid(),
+                    IsCheckedFunc = () => AppSettings.ShowCommitBodyInRevisionGrid
+                },
                 new MenuCommand
                 {
                     Name = "showAuthorDateToolStripMenuItem",
@@ -374,36 +431,6 @@ namespace GitUI.UserControls.RevisionGrid
                     Text = "Show relati&ve date",
                     ExecuteAction = () => _revisionGrid.ToggleShowRelativeDate(EventArgs.Empty),
                     IsCheckedFunc = () => AppSettings.RelativeDate
-                },
-                new MenuCommand
-                {
-                    Name = "showMergeCommitsToolStripMenuItem",
-                    Text = "Show &merge commits",
-                    ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ToggleShowMergeCommits),
-                    ExecuteAction = () => _revisionGrid.ToggleShowMergeCommits(),
-                    IsCheckedFunc = () => AppSettings.ShowMergeCommits
-                },
-                new MenuCommand
-                {
-                    Name = "showTagsToolStripMenuItem",
-                    Text = "Show &tags",
-                    ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ToggleShowTags),
-                    ExecuteAction = () => _revisionGrid.ToggleShowTags(),
-                    IsCheckedFunc = () => AppSettings.ShowTags
-                },
-                new MenuCommand
-                {
-                    Name = "showGitNotesToolStripMenuItem",
-                    Text = "Show git &notes",
-                    ExecuteAction = () => _revisionGrid.ToggleShowGitNotes(),
-                    IsCheckedFunc = () => AppSettings.ShowGitNotes
-                },
-                new MenuCommand
-                {
-                    Name = "showCommitMessageBodyToolStripMenuItem",
-                    Text = "Show commit message body",
-                    ExecuteAction = () => _revisionGrid.ToggleShowCommitBodyInRevisionGrid(),
-                    IsCheckedFunc = () => AppSettings.ShowCommitBodyInRevisionGrid
                 },
 
                 MenuCommand.CreateSeparator(),
@@ -440,30 +467,9 @@ namespace GitUI.UserControls.RevisionGrid
                     ExecuteAction = () => _revisionGrid.ToggleTopoOrder(),
                     IsCheckedFunc = () => AppSettings.RevisionSortOrder == RevisionSortOrder.Topology
                 },
-                new MenuCommand
-                {
-                    Name = "showFirstParent",
-                    Text = "Show first parents",
-                    Image = Images.ShowFirstParent,
-                    ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ShowFirstParent),
-                    ExecuteAction = () => _revisionGrid.ToggleShowFirstParent(),
-                    IsCheckedFunc = () => _revisionGrid.CurrentFilter.ShowFirstParent
-                },
-                new MenuCommand
-                {
-                    Name = "fullHistory",
-                    Text = "Full history",
-                    ExecuteAction = () => _revisionGrid.ToggleFullHistory(),
-                    IsCheckedFunc = () => AppSettings.FullHistoryInFileHistory
-                },
-                new MenuCommand
-                {
-                    Name = "simplifyMerges",
-                    Text = "Simplify merges",
-                    ExecuteAction = () => _revisionGrid.ToggleSimplifyMerges(),
-                    IsCheckedFunc = () => AppSettings.SimplifyMergesInFileHistory,
-                    IsEnabledFunc = () => AppSettings.FullHistoryInFileHistory
-                },
+
+                MenuCommand.CreateSeparator(),
+
                 new MenuCommand
                 {
                     Name = "filterToolStripMenuItem",
