@@ -261,20 +261,24 @@ namespace GitUI.UserControls.RevisionGrid
 
                 new MenuCommand
                 {
+                    Name = "showFirstParent",
+                    Text = "Show first parents",
+                    Image = Images.ShowFirstParent,
+                    ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ShowFirstParent),
+                    ExecuteAction = () => _revisionGrid.ToggleShowFirstParent(),
+                    IsCheckedFunc = () => _revisionGrid.CurrentFilter.ShowFirstParent
+                },
+                new MenuCommand
+                {
                     Name = "showMergeCommitsToolStripMenuItem",
                     Text = "Show &merge commits",
                     ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ToggleShowMergeCommits),
                     ExecuteAction = () => _revisionGrid.ToggleShowMergeCommits(),
                     IsCheckedFunc = () => AppSettings.ShowMergeCommits
                 },
-                new MenuCommand
-                {
-                    Name = "simplifyMerges",
-                    Text = "Simplify merges",
-                    ExecuteAction = () => _revisionGrid.ToggleSimplifyMerges(),
-                    IsCheckedFunc = () => AppSettings.SimplifyMergesInFileHistory,
-                    IsEnabledFunc = () => AppSettings.FullHistoryInFileHistory
-                },
+
+                MenuCommand.CreateSeparator(),
+
                 new MenuCommand
                 {
                     Name = "fullHistory",
@@ -284,12 +288,11 @@ namespace GitUI.UserControls.RevisionGrid
                 },
                 new MenuCommand
                 {
-                    Name = "showFirstParent",
-                    Text = "Show first parents",
-                    Image = Images.ShowFirstParent,
-                    ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ShowFirstParent),
-                    ExecuteAction = () => _revisionGrid.ToggleShowFirstParent(),
-                    IsCheckedFunc = () => _revisionGrid.CurrentFilter.ShowFirstParent
+                    Name = "simplifyMerges",
+                    Text = "Simplify merges",
+                    ExecuteAction = () => _revisionGrid.ToggleSimplifyMerges(),
+                    IsCheckedFunc = () => AppSettings.SimplifyMergesInFileHistory,
+                    IsEnabledFunc = () => AppSettings.FullHistoryInFileHistory
                 },
 
                 MenuCommand.CreateSeparator(),

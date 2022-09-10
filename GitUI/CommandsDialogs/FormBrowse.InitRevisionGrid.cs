@@ -60,6 +60,7 @@ namespace GitUI.CommandsDialogs
                 // 2. one of the following
                 //      a) show the current branch only, or
                 //      b) filter on specific branch
+                // (this check ignores other revision filters)
                 bool isFiltering = !AppSettings.ShowReflogReferences
                                 && (AppSettings.ShowCurrentBranchOnly || AppSettings.BranchFilterEnabled);
                 repoObjectsTree.Refresh(isFiltering, e.ForceRefresh, e.GetRefs);

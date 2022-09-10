@@ -196,12 +196,12 @@ namespace GitCommands
                 { maxCount > 0, $"--max-count={maxCount}" },
                 "-z",
                 $"--pretty=format:\"{LogFormat}\"",
+
+                // sorting
                 { AppSettings.RevisionSortOrder == RevisionSortOrder.AuthorDate, "--author-date-order" },
                 { AppSettings.RevisionSortOrder == RevisionSortOrder.Topology, "--topo-order" },
-                { refFilterOptions.HasFlag(RefFilterOptions.Boundary), "--boundary" },
-                { refFilterOptions.HasFlag(RefFilterOptions.NoMerges), "--no-merges" },
-                { refFilterOptions.HasFlag(RefFilterOptions.SimplifyByDecoration), "--simplify-by-decoration" },
-                { refFilterOptions.HasFlag(RefFilterOptions.FirstParent), "--first-parent" },
+
+                // revision branch filter
                 {
                     refFilterOptions.HasFlag(RefFilterOptions.Reflogs),
                     "--reflog",
@@ -232,11 +232,18 @@ namespace GitCommands
                         }
                     }.ToString()
                 },
+
+                // revision filters
+                { refFilterOptions.HasFlag(RefFilterOptions.Boundary), "--boundary" },
+                { refFilterOptions.HasFlag(RefFilterOptions.NoMerges), "--no-merges" },
+                { refFilterOptions.HasFlag(RefFilterOptions.FirstParent), "--first-parent" },
+                { refFilterOptions.HasFlag(RefFilterOptions.SimplifyByDecoration), "--simplify-by-decoration" },
                 revisionFilter,
                 {
                     parentsAreRewritten,
                     new ArgumentBuilder
                     {
+                        // History simplification
                         { AppSettings.FullHistoryInFileHistory, $"--full-history" },
                         {
                             AppSettings.FullHistoryInFileHistory && AppSettings.SimplifyMergesInFileHistory,

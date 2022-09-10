@@ -159,6 +159,7 @@ namespace GitUI.UserControls.RevisionGrid
                     }
                 }
 
+                // other revision filters (see also GetRevisionFilter())
                 if (!AppSettings.ShowMergeCommits)
                 {
                     refFilterOptions |= RefFilterOptions.NoMerges;
@@ -169,6 +170,7 @@ namespace GitUI.UserControls.RevisionGrid
                     refFilterOptions |= RefFilterOptions.FirstParent;
                 }
 
+                // Listed in Git help as history simplification, but is a revision filter
                 if (ShowSimplifyByDecoration)
                 {
                     refFilterOptions |= RefFilterOptions.SimplifyByDecoration;
@@ -208,7 +210,6 @@ namespace GitUI.UserControls.RevisionGrid
                     // If reflogs are shown, then we can't apply any filters
                     ByBranchFilter = false;
                     ShowCurrentBranchOnly = false;
-                    ShowSimplifyByDecoration = false;
                 }
             }
         }
