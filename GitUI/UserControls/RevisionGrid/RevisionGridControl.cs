@@ -2431,15 +2431,6 @@ namespace GitUI
         internal void ToggleShowMergeCommits()
         {
             AppSettings.ShowMergeCommits = !AppSettings.ShowMergeCommits;
-
-            // hide revision graph when hiding merge commits, reasons:
-            // 1, revision graph is no longer relevant, as we are not showing all commits
-            // 2, performance hit when both revision graph and no merge commits are enabled
-            if (AppSettings.ShowRevisionGridGraphColumn && !AppSettings.ShowMergeCommits)
-            {
-                AppSettings.ShowRevisionGridGraphColumn = !AppSettings.ShowRevisionGridGraphColumn;
-            }
-
             PerformRefreshRevisions();
         }
 
@@ -2512,19 +2503,8 @@ namespace GitUI
         internal void ToggleRevisionGraphColumn()
         {
             AppSettings.ShowRevisionGridGraphColumn = !AppSettings.ShowRevisionGridGraphColumn;
-
-            // must show MergeCommits when showing revision graph
-            if (!AppSettings.ShowMergeCommits && AppSettings.ShowRevisionGridGraphColumn)
-            {
-                AppSettings.ShowMergeCommits = true;
-                PerformRefreshRevisions();
-            }
-            else
-            {
-                Refresh();
-            }
-
             MenuCommands.TriggerMenuChanged();
+            Refresh();
         }
 
         internal void ToggleAuthorAvatarColumn()

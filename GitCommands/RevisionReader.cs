@@ -189,7 +189,9 @@ namespace GitCommands
             string pathFilter,
             out bool parentsAreRewritten)
         {
-            parentsAreRewritten = !string.IsNullOrWhiteSpace(pathFilter) || !string.IsNullOrWhiteSpace(revisionFilter);
+            parentsAreRewritten = !string.IsNullOrWhiteSpace(pathFilter)
+                || !string.IsNullOrWhiteSpace(revisionFilter)
+                || refFilterOptions.HasFlag(RefFilterOptions.NoMerges);
 
             return new GitArgumentBuilder("log")
             {
