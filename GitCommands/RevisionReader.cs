@@ -207,14 +207,14 @@ namespace GitCommands
                     "--reflog",
                     new ArgumentBuilder
                     {
+                        // refs to exclude
+                        { refFilterOptions.HasFlag(RefFilterOptions.NoGitNotes), "--not --glob=notes --not" },
+                        { refFilterOptions.HasFlag(RefFilterOptions.NoStash), "--exclude=refs/stash" },
+
+                        // all, filtered or current (none)
                         {
                             refFilterOptions.HasFlag(RefFilterOptions.All),
-                            new ArgumentBuilder
-                            {
-                                { refFilterOptions.HasFlag(RefFilterOptions.NoGitNotes), "--not --glob=notes --not" },
-                                { refFilterOptions.HasFlag(RefFilterOptions.NoStash), "--exclude=refs/stash" },
-                                "--all",
-                            }.ToString(),
+                            "--all",
                             new ArgumentBuilder
                             {
                                 {

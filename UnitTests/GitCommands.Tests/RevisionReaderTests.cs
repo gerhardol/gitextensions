@@ -93,10 +93,10 @@ namespace GitCommandsTests
         /* Disable special refs with --all */
         [TestCase(RefFilterOptions.All | RefFilterOptions.NoStash, " --all ", null)]
         [TestCase(RefFilterOptions.All | RefFilterOptions.NoStash, " --exclude=refs/stash ", null)]
-        [TestCase(RefFilterOptions.NoStash, null, " --exclude=refs/stash")]
+        [TestCase(RefFilterOptions.NoStash, " --exclude=refs/stash", null)]
         [TestCase(RefFilterOptions.All | RefFilterOptions.NoGitNotes, " --all ", null)]
         [TestCase(RefFilterOptions.All | RefFilterOptions.NoGitNotes, " --not --glob=notes --not ", null)]
-        [TestCase(RefFilterOptions.NoGitNotes, null, " --not --glob=notes --not ")]
+        [TestCase(RefFilterOptions.NoGitNotes, " --not --glob=notes --not ", null)]
         public void BuildArguments_check_parameters(RefFilterOptions refFilterOptions, string expectedToContain, string notExpectedToContain)
         {
             RevisionReader reader = RevisionReader.TestAccessor.RevisionReader(new GitModule(""), hasReflogSelector: false, _logOutputEncoding, _sixMonths);
