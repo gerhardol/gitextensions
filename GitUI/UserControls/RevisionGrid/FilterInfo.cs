@@ -180,12 +180,12 @@ namespace GitUI.UserControls.RevisionGrid
             }
         }
 
-        public bool IsShowAllBranchesChecked => !ByBranchFilter && !ShowCurrentBranchOnly;
+        public bool IsShowAllBranchesChecked => !ByBranchFilter && !ShowCurrentBranchOnly && !ShowReflogReferences;
 
-        public bool IsShowCurrentBranchOnlyChecked => ShowCurrentBranchOnly;
+        public bool IsShowCurrentBranchOnlyChecked => ShowCurrentBranchOnly && !ShowReflogReferences;
 
         // IsChecked is not the same as a filter is active, see ByBranchFilter
-        public bool IsShowFilteredBranchesChecked => ByBranchFilter && !ShowCurrentBranchOnly;
+        public bool IsShowFilteredBranchesChecked => ByBranchFilter && !ShowCurrentBranchOnly && !ShowReflogReferences;
 
         public bool ShowCurrentBranchOnly
         {

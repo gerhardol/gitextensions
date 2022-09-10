@@ -498,9 +498,14 @@ namespace GitUI
 
             _filterInfo.ShowCurrentBranchOnly = false;
 
+            // Set filtered branches if there is a filter, handled as all branches otherwise
             string newFilter = filter?.Trim() ?? string.Empty;
             _filterInfo.ByBranchFilter = !string.IsNullOrWhiteSpace(newFilter);
             _filterInfo.BranchFilter = newFilter;
+            if (_filterInfo.ByBranchFilter)
+            {
+                _filterInfo.ShowReflogReferences = false;
+            }
 
             PerformRefreshRevisions();
         }
@@ -1795,6 +1800,7 @@ namespace GitUI
 
             _filterInfo.ByBranchFilter = false;
             _filterInfo.ShowCurrentBranchOnly = false;
+            _filterInfo.ShowReflogReferences = false;
 
             PerformRefreshRevisions();
         }
