@@ -1777,16 +1777,16 @@ namespace GitUI
             });
         }
 
-        public void ShowCurrentBranchOnly()
+        public void ShowReflogs()
         {
-            if (_filterInfo.IsShowCurrentBranchOnlyChecked)
+            if (_filterInfo.ShowReflogReferences)
             {
                 return;
             }
 
             _filterInfo.ByBranchFilter = false;
-            _filterInfo.ShowCurrentBranchOnly = true;
-            _filterInfo.ShowReflogReferences = false;
+            _filterInfo.ShowCurrentBranchOnly = false;
+            _filterInfo.ShowReflogReferences = true;
 
             PerformRefreshRevisions();
         }
@@ -1815,6 +1815,20 @@ namespace GitUI
             // Must be able to set ByBranchFilter without a filter to edit it
             _filterInfo.ByBranchFilter = true;
             _filterInfo.ShowCurrentBranchOnly = false;
+            _filterInfo.ShowReflogReferences = false;
+
+            PerformRefreshRevisions();
+        }
+
+        public void ShowCurrentBranchOnly()
+        {
+            if (_filterInfo.IsShowCurrentBranchOnlyChecked)
+            {
+                return;
+            }
+
+            _filterInfo.ByBranchFilter = false;
+            _filterInfo.ShowCurrentBranchOnly = true;
             _filterInfo.ShowReflogReferences = false;
 
             PerformRefreshRevisions();

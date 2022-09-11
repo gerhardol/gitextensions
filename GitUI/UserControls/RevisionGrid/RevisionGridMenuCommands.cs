@@ -232,6 +232,14 @@ namespace GitUI.UserControls.RevisionGrid
                 },
                 new MenuCommand
                 {
+                    Name = "ShowReflogReferences",
+                    Text = "Show &reflog references",
+                    ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ShowReflogReferences),
+                    ExecuteAction = () => _revisionGrid.ToggleShowReflogReferences(),
+                    IsCheckedFunc = () => _revisionGrid.CurrentFilter.ShowReflogReferences
+                },
+                new MenuCommand
+                {
                     Name = "ShowAllBranches",
                     Text = "Show &all branches",
                     ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ShowAllBranches),
@@ -253,14 +261,6 @@ namespace GitUI.UserControls.RevisionGrid
                     ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ShowCurrentBranchOnly),
                     ExecuteAction = () => _revisionGrid.ShowCurrentBranchOnly(),
                     IsCheckedFunc = () => _revisionGrid.CurrentFilter.IsShowCurrentBranchOnlyChecked
-                },
-                new MenuCommand
-                {
-                    Name = "ShowReflogReferences",
-                    Text = "Show &reflog references",
-                    ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ShowReflogReferences),
-                    ExecuteAction = () => _revisionGrid.ToggleShowReflogReferences(),
-                    IsCheckedFunc = () => _revisionGrid.CurrentFilter.ShowReflogReferences
                 },
 
                 MenuCommand.CreateSeparator(),

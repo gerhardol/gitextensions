@@ -3215,6 +3215,10 @@ Do you want to continue?</source>
         <source>&amp;Translate</source>
         <target />
       </trans-unit>
+      <trans-unit id="tsbShowReflogs.ToolTipText">
+        <source>Show reflog</source>
+        <target />
+      </trans-unit>
       <trans-unit id="tsbtnAdvancedFilter.ToolTipText">
         <source>Advanced filter</source>
         <target />
@@ -3315,8 +3319,12 @@ Do you want to continue?</source>
         <source>Show first parents</source>
         <target />
       </trans-unit>
+      <trans-unit id="tsmiShowReflogs.Text">
+        <source>&amp;Reflog</source>
+        <target />
+      </trans-unit>
       <trans-unit id="tsmiShowReflogs.ToolTipText">
-        <source>Show reflogs</source>
+        <source>Show reflog</source>
         <target />
       </trans-unit>
       <trans-unit id="tsmiTelemetryEnabled.Text">
