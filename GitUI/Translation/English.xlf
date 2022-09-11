@@ -9611,6 +9611,18 @@ See the changes in the commit form.</source>
         <source>&amp;Sort commits by author date</source>
         <target />
       </trans-unit>
+      <trans-unit id="BranchesToolStripMenuItem.Text">
+        <source>Branches</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="ColumnsToolStripMenuItem.Text">
+        <source>Columns</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="CommitsToolStripMenuItem.Text">
+        <source>Commits</source>
+        <target />
+      </trans-unit>
       <trans-unit id="GotoChildCommit.Text">
         <source>Go to c&amp;hild commit</source>
         <target />
@@ -9635,8 +9647,16 @@ See the changes in the commit form.</source>
         <source>Go to &amp;parent commit</source>
         <target />
       </trans-unit>
+      <trans-unit id="GridInfoToolStripMenuItem.Text">
+        <source>Grid info</source>
+        <target />
+      </trans-unit>
       <trans-unit id="HighlightSelectedBranch.Text">
         <source>Highlight selected branch (until refresh)</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="LabelToolStripMenuItem.Text">
+        <source>Grid labels</source>
         <target />
       </trans-unit>
       <trans-unit id="NavigateBackward.Text">
@@ -9701,6 +9721,10 @@ See the changes in the commit form.</source>
       </trans-unit>
       <trans-unit id="ShowSuperprojectTags.Text">
         <source>Show su&amp;perproject tags</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="SortingLabel.Text">
+        <source>Sorting</source>
         <target />
       </trans-unit>
       <trans-unit id="ToggleBetweenArtificialAndHeadCommits.Text">
