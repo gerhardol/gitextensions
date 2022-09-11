@@ -204,6 +204,8 @@ namespace GitUI.UserControls.RevisionGrid
             get => AppSettings.ShowReflogReferences;
             set
             {
+                // If unselecting, ByBranchFilter and ShowCurrentBranchOnly is already unset,
+                // which activates the default AllBranches
                 AppSettings.ShowReflogReferences = value;
                 if (value)
                 {
