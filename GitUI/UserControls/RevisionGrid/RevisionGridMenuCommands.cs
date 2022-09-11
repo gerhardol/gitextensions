@@ -299,6 +299,24 @@ namespace GitUI.UserControls.RevisionGrid
 
                 new MenuCommand
                 {
+                    Name = "drawNonrelativesGrayToolStripMenuItem",
+                    Text = "Draw non relatives gra&y",
+                    ExecuteAction = () => _revisionGrid.ToggleDrawNonRelativesGray(),
+                    IsCheckedFunc = () => AppSettings.RevisionGraphDrawNonRelativesGray
+                },
+                new MenuCommand
+                {
+                    Name = "HighlightSelectedBranch",
+                    Text = "Highlight selected branch (until refresh)",
+                    ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ToggleHighlightSelectedBranch)
+                    + $", {Keys.Alt}+{Keys.LButton}",
+                    ExecuteAction = () => _revisionGrid.ExecuteCommand(RevisionGridControl.Command.ToggleHighlightSelectedBranch)
+                },
+
+                MenuCommand.CreateSeparator(),
+
+                new MenuCommand
+                {
                     Name = "ShowArtificialCommits",
                     Text = "Show artificial commits",
                     ExecuteAction = () => _revisionGrid.ToggleShowArtificialCommits(),
@@ -434,24 +452,6 @@ namespace GitUI.UserControls.RevisionGrid
                     Text = "Show relati&ve date",
                     ExecuteAction = () => _revisionGrid.ToggleShowRelativeDate(EventArgs.Empty),
                     IsCheckedFunc = () => AppSettings.RelativeDate
-                },
-
-                MenuCommand.CreateSeparator(),
-
-                new MenuCommand
-                {
-                    Name = "drawNonrelativesGrayToolStripMenuItem",
-                    Text = "Draw non relatives gra&y",
-                    ExecuteAction = () => _revisionGrid.ToggleDrawNonRelativesGray(),
-                    IsCheckedFunc = () => AppSettings.RevisionGraphDrawNonRelativesGray
-                },
-                new MenuCommand
-                {
-                    Name = "HighlightSelectedBranch",
-                    Text = "Highlight selected branch (until refresh)",
-                    ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ToggleHighlightSelectedBranch)
-                    + $", {Keys.Alt}+{Keys.LButton}",
-                    ExecuteAction = () => _revisionGrid.ExecuteCommand(RevisionGridControl.Command.ToggleHighlightSelectedBranch)
                 },
 
                 MenuCommand.CreateSeparator(),
