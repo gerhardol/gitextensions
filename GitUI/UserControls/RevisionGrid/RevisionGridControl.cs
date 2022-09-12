@@ -1784,8 +1784,8 @@ namespace GitUI
                 return;
             }
 
-            _filterInfo.ByBranchFilter = false;
-            _filterInfo.ShowCurrentBranchOnly = false;
+            // Do not unset ByBranchFilter or ShowCurrentBranchOnly,
+            // see FilterInfo.ShowReflogReferences.
             _filterInfo.ShowReflogReferences = true;
 
             PerformRefreshRevisions();
