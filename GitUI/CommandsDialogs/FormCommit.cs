@@ -452,6 +452,8 @@ namespace GitUI.CommandsDialogs
                 Screen screenOwner = Screen.FromHandle(owner.Handle);
                 if (!screenOwner.Bounds.IntersectsWith(Bounds))
                 {
+                    // Fix #10121 - Commit form appear out of screen in dual monitor setup
+                    //
                     // This form appear to be not in the same monitor as owner window
                     // thus may become invisible when owner is in secondary screen
                     // with negative left coordinates and last saved position of the
@@ -471,7 +473,7 @@ namespace GitUI.CommandsDialogs
 
                 // This should be always applied, but maybe it is better that each form
                 // may declare on the constructor if ShowInTaskbar is true or false
-                ShowInTaskbar = true;
+                // ShowInTaskbar = true;
             }
         }
 
