@@ -225,7 +225,7 @@ namespace GitUITests.UserControls
         public void ShowBranches_Reflogs_should_invoke_ToggleShowReflogReferences()
         {
             _filterToolBar.GetTestAccessor().tsmiShowReflogs.PerformClick();
-            _revisionGridFilter.Received(1).ToggleShowReflogReferences();
+            _revisionGridFilter.Received(1).ShowReflogs();
         }
 
         [Test]
