@@ -224,12 +224,7 @@ namespace GitUI.UserControls.RevisionGrid
                 //
                 // After refactoring the three items should be added to RevisionGrid
                 // as done with "ShowRemoteBranches" and not via RevisionGrid.Designer.cs
-                new MenuCommand
-                {
-                    Name = "BranchesToolStripMenuItem",
-                    Text = TranslatedStrings.Branches,
-                    IsEnabledFunc = () => false
-                },
+                MenuCommand.CreateGroupHeader(TranslatedStrings.Branches),
                 new MenuCommand
                 {
                     Name = "ShowReflogReferences",
@@ -321,12 +316,7 @@ namespace GitUI.UserControls.RevisionGrid
 
                 MenuCommand.CreateSeparator(),
 
-                new MenuCommand
-                {
-                    Name = "CommitsToolStripMenuItem",
-                    Text = "Commits",
-                    IsEnabledFunc = () => false
-                },
+                MenuCommand.CreateGroupHeader("Commits"),
                 new MenuCommand
                 {
                     Name = "ShowArtificialCommits",
@@ -352,12 +342,7 @@ namespace GitUI.UserControls.RevisionGrid
 
                 MenuCommand.CreateSeparator(),
 
-                new MenuCommand
-                {
-                    Name = "LabelToolStripMenuItem",
-                    Text = "Grid labels",
-                    IsEnabledFunc = () => false
-                },
+                MenuCommand.CreateGroupHeader("Grid labels"),
                 new MenuCommand
                 {
                     Name = "ShowRemoteBranches",
@@ -398,12 +383,7 @@ namespace GitUI.UserControls.RevisionGrid
 
                 MenuCommand.CreateSeparator(),
 
-                new MenuCommand
-                {
-                    Name = "GridInfoToolStripMenuItem",
-                    Text = "Grid info",
-                    IsEnabledFunc = () => false
-                },
+                MenuCommand.CreateGroupHeader("Grid info"),
                 new MenuCommand
                 {
                     Name = "showBuildStatusIconToolStripMenuItem",
@@ -442,12 +422,7 @@ namespace GitUI.UserControls.RevisionGrid
 
                 MenuCommand.CreateSeparator(),
 
-                new MenuCommand
-                {
-                    Name = "ColumnsToolStripMenuItem",
-                    Text = "Columns",
-                    IsEnabledFunc = () => false
-                },
+                MenuCommand.CreateGroupHeader("Columns"),
                 new MenuCommand
                 {
                     Name = "showRevisionGraphColumnToolStripMenuItem",
@@ -486,12 +461,7 @@ namespace GitUI.UserControls.RevisionGrid
 
                 MenuCommand.CreateSeparator(),
 
-                new MenuCommand
-                {
-                    Name = "SortingLabel",
-                    Text = "Sorting",
-                    IsEnabledFunc = () => false
-                },
+                MenuCommand.CreateGroupHeader("Sorting"),
                 new MenuCommand
                 {
                     Name = "AuthorDateSort",

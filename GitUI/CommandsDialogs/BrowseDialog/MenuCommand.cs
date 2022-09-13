@@ -21,11 +21,35 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             return new MenuCommand { IsSeparator = true };
         }
 
+        public static MenuCommand CreateGroupHeader(string text)
+        {
+            return new MenuCommand
+            {
+                IsGroupHeader = true,
+                Name = text,
+                Text = text,
+            };
+        }
+
         public static ToolStripItem CreateToolStripItem(MenuCommand menuCommand)
         {
             if (menuCommand.IsSeparator)
             {
                 return new ToolStripSeparator();
+            }
+
+            if (menuCommand.IsGroupHeader)
+            {
+                ToolStripMenuItem headerToolStripMenuItem = new()
+                {
+                    Name = menuCommand.Name,
+                    Text = menuCommand.Text,
+                    Enabled = false,
+                };
+                _disabledFont ??= new Font(headerToolStripMenuItem.Font, FontStyle.Italic);
+                headerToolStripMenuItem.Font = _disabledFont;
+
+                return headerToolStripMenuItem;
             }
 
             ToolStripMenuItem toolStripMenuItem = new()
@@ -54,11 +78,17 @@ namespace GitUI.CommandsDialogs.BrowseDialog
         }
 
         private readonly List<ToolStripMenuItem> _registeredMenuItems = new();
+        private static Font? _disabledFont;
 
         /// <summary>
         /// if true all other properties have no meaning.
         /// </summary>
         public bool IsSeparator { get; set; }
+
+        /// <summary>
+        /// if true just text property have a meaning.
+        /// </summary>
+        public bool IsGroupHeader { get; set; }
 
         /// <summary>
         /// used for ToolStripItem and translation identification.
