@@ -37,6 +37,8 @@ namespace GitUI.UserControls.RevisionGrid
         /// <param name="filter">The filter to apply.</param>
         void SetAndApplyPathFilter(string filter);
 
+        void ShowReflogs();
+
         void ShowAllBranches();
 
         void ShowCurrentBranchOnly();
