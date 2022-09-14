@@ -24,12 +24,19 @@ namespace GitUI.UserControls.RevisionGrid
             _NO_TRANSLATE_lblAuthor.Text = TranslatedStrings.Author;
             _NO_TRANSLATE_lblCommitter.Text = TranslatedStrings.Committer;
             _NO_TRANSLATE_lblMessage.Text = TranslatedStrings.Message;
+            _NO_TRANSLATE_lblDiffContent.Text = "DiffContentxxx";
+            _NO_TRANSLATE_lblRawLog.Text = "RawLogxxx";
             _NO_TRANSLATE_lblIgnoreCase.Text = TranslatedStrings.IgnoreCase;
             _NO_TRANSLATE_lblLimit.Text = TranslatedStrings.Limit;
             _NO_TRANSLATE_lblPathFilter.Text = TranslatedStrings.PathFilter;
             _NO_TRANSLATE_lblBranches.Text = TranslatedStrings.Branches;
             _NO_TRANSLATE_lblCurrentBranchOnlyCheck.Text = TranslatedStrings.ShowCurrentBranchOnly;
+            _NO_TRANSLATE_lblReflogCheck.Text = "Reflogxxx";
+            _NO_TRANSLATE_lblShowOnlyFirstParent.Text = "ShowOnlyFirstParentxxx";
+            _NO_TRANSLATE_lblShowMergeCommits.Text = "ShowMergeCommitsxxx";
             _NO_TRANSLATE_lblSimplifyByDecoration.Text = TranslatedStrings.SimplifyByDecoration;
+            _NO_TRANSLATE_lblFullHistory.Text = "FullHistoryxxx";
+            _NO_TRANSLATE_lblSimplifyMerges.Text = "SimplifyMergesxx";
 
             _filterInfo = filterInfo;
         }
@@ -50,8 +57,12 @@ namespace GitUI.UserControls.RevisionGrid
             Committer.Text = rawFilterInfo.Committer;
             MessageCheck.Checked = rawFilterInfo.ByMessage;
             Message.Text = rawFilterInfo.Message;
+            DiffContentCheck.Checked = rawFilterInfo.ByDiffContent;
+            DiffContent.Text = rawFilterInfo.DiffContent;
+            RawLogCheck.Checked = false; //// rawFilterInfo.ByMessage;
+            RawLog.Text = ""; //// rawFilterInfo.Message;
             IgnoreCase.Checked = rawFilterInfo.IgnoreCase;
-            IgnoreCase.Enabled = Author.Enabled || Committer.Enabled || MessageCheck.Checked;
+            IgnoreCase.Enabled = Author.Enabled || Committer.Enabled || MessageCheck.Checked || DiffContentCheck.Checked;
             CommitsLimitCheck.Checked = rawFilterInfo.ByCommitsLimit;
             _NO_TRANSLATE_CommitsLimit.Value = rawFilterInfo.CommitsLimit;
             PathFilterCheck.Checked = rawFilterInfo.ByPathFilter;
@@ -59,7 +70,12 @@ namespace GitUI.UserControls.RevisionGrid
             BranchFilterCheck.Checked = rawFilterInfo.IsShowFilteredBranchesChecked;
             BranchFilter.Text = rawFilterInfo.BranchFilter;
             CurrentBranchOnlyCheck.Checked = rawFilterInfo.ShowCurrentBranchOnly;
+            ReflogCheck.Checked = rawFilterInfo.ShowCurrentBranchOnly;
+            ShowOnlyFirstParentCheck.Checked = rawFilterInfo.ShowSimplifyByDecoration; //// xxx change below
+            ShowMergeCommitsCheck.Checked = rawFilterInfo.ShowSimplifyByDecoration;
             SimplifyByDecorationCheck.Checked = rawFilterInfo.ShowSimplifyByDecoration;
+            FullHistoryCheck.Checked = rawFilterInfo.ShowSimplifyByDecoration;
+            SimplifyMergesCheck.Checked = rawFilterInfo.ShowSimplifyByDecoration;
 
             UpdateFilters();
         }
@@ -82,11 +98,14 @@ namespace GitUI.UserControls.RevisionGrid
             Author.Enabled = AuthorCheck.Checked;
             Committer.Enabled = CommitterCheck.Checked;
             Message.Enabled = MessageCheck.Checked;
-            IgnoreCase.Enabled = Author.Enabled || Committer.Enabled || MessageCheck.Checked;
+            DiffContent.Enabled = DiffContentCheck.Checked;
+            RawLog.Enabled = RawLogCheck.Checked;
+            IgnoreCase.Enabled = Author.Enabled || Committer.Enabled || MessageCheck.Checked || DiffContentCheck.Checked;
             _NO_TRANSLATE_CommitsLimit.Enabled = CommitsLimitCheck.Checked;
             PathFilter.Enabled = PathFilterCheck.Checked;
 
-            BranchFilterCheck.Enabled = !CurrentBranchOnlyCheck.Checked;
+            CurrentBranchOnlyCheck.Enabled = !ReflogCheck.Checked;
+            BranchFilterCheck.Enabled = !CurrentBranchOnlyCheck.Checked && !ReflogCheck.Checked;
             BranchFilter.Enabled = BranchFilterCheck.Checked;
         }
 
@@ -102,6 +121,10 @@ namespace GitUI.UserControls.RevisionGrid
             _filterInfo.Committer = Committer.Text;
             _filterInfo.ByMessage = MessageCheck.Checked;
             _filterInfo.Message = Message.Text;
+            _filterInfo.ByDiffContent = DiffContentCheck.Checked;
+            _filterInfo.DiffContent = DiffContent.Text;
+            ////_filterInfo.ByMessage = RawLogCheck.Checked;
+            ////_filterInfo.Message = RawLog.Text;
             _filterInfo.IgnoreCase = IgnoreCase.Checked;
             _filterInfo.ByCommitsLimit = CommitsLimitCheck.Checked;
             _filterInfo.CommitsLimit = (int)_NO_TRANSLATE_CommitsLimit.Value;
@@ -109,8 +132,13 @@ namespace GitUI.UserControls.RevisionGrid
             _filterInfo.PathFilter = PathFilter.Text;
             _filterInfo.ByBranchFilter = BranchFilterCheck.Checked;
             _filterInfo.BranchFilter = BranchFilter.Text;
+            ////xxx_filterInfo.ShowCurrentBranchOnly = ReflogCheck.Checked;
             _filterInfo.ShowCurrentBranchOnly = CurrentBranchOnlyCheck.Checked;
+            ////xxx_filterInfo.ShowSimplifyByDecoration = ShowOnlyFirstParentCheck.Checked;
+            ////xxx_filterInfo.ShowSimplifyByDecoration = ShowMergeCommitsCheck.Checked;
             _filterInfo.ShowSimplifyByDecoration = SimplifyByDecorationCheck.Checked;
+            ////xxx_filterInfo.ShowSimplifyByDecoration = FullHistoryCheck.Checked;
+            ////xxx_filterInfo.ShowSimplifyByDecoration = SimplifyMergesCheck.Checked;
         }
     }
 }

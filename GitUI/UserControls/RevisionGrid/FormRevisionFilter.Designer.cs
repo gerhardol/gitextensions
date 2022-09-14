@@ -31,6 +31,8 @@
             this.Ok = new System.Windows.Forms.Button();
             this._NO_TRANSLATE_CommitsLimit = new System.Windows.Forms.NumericUpDown();
             this.Message = new System.Windows.Forms.TextBox();
+            this.DiffContent = new System.Windows.Forms.TextBox();
+            this.RawLog = new System.Windows.Forms.TextBox();
             this.Author = new System.Windows.Forms.TextBox();
             this.Since = new System.Windows.Forms.DateTimePicker();
             this._NO_TRANSLATE_lblSince = new System.Windows.Forms.Label();
@@ -40,6 +42,8 @@
             this._NO_TRANSLATE_lblCommitter = new System.Windows.Forms.Label();
             this.Committer = new System.Windows.Forms.TextBox();
             this._NO_TRANSLATE_lblMessage = new System.Windows.Forms.Label();
+            this._NO_TRANSLATE_lblDiffContent = new System.Windows.Forms.Label();
+            this._NO_TRANSLATE_lblRawLog = new System.Windows.Forms.Label();
             this._NO_TRANSLATE_lblLimit = new System.Windows.Forms.Label();
             this._NO_TRANSLATE_lblIgnoreCase = new System.Windows.Forms.Label();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
@@ -48,6 +52,8 @@
             this.AuthorCheck = new System.Windows.Forms.CheckBox();
             this.CommitterCheck = new System.Windows.Forms.CheckBox();
             this.MessageCheck = new System.Windows.Forms.CheckBox();
+            this.DiffContentCheck = new System.Windows.Forms.CheckBox();
+            this.RawLogCheck = new System.Windows.Forms.CheckBox();
             this.IgnoreCase = new System.Windows.Forms.CheckBox();
             this.CommitsLimitCheck = new System.Windows.Forms.CheckBox();
             this._NO_TRANSLATE_lblPathFilter = new System.Windows.Forms.Label();
@@ -56,10 +62,20 @@
             this._NO_TRANSLATE_lblBranches = new System.Windows.Forms.Label();
             this.BranchFilterCheck = new System.Windows.Forms.CheckBox();
             this.BranchFilter = new System.Windows.Forms.TextBox();
+            this.ReflogCheck = new System.Windows.Forms.CheckBox();
+            this._NO_TRANSLATE_lblReflogCheck = new System.Windows.Forms.Label();
             this.CurrentBranchOnlyCheck = new System.Windows.Forms.CheckBox();
             this._NO_TRANSLATE_lblCurrentBranchOnlyCheck = new System.Windows.Forms.Label();
+            this.ShowOnlyFirstParentCheck = new System.Windows.Forms.CheckBox();
+            this._NO_TRANSLATE_lblShowOnlyFirstParent = new System.Windows.Forms.Label();
+            this.ShowMergeCommitsCheck = new System.Windows.Forms.CheckBox();
+            this._NO_TRANSLATE_lblShowMergeCommits = new System.Windows.Forms.Label();
             this.SimplifyByDecorationCheck = new System.Windows.Forms.CheckBox();
             this._NO_TRANSLATE_lblSimplifyByDecoration = new System.Windows.Forms.Label();
+            this.FullHistoryCheck = new System.Windows.Forms.CheckBox();
+            this._NO_TRANSLATE_lblFullHistory = new System.Windows.Forms.Label();
+            this.SimplifyMergesCheck = new System.Windows.Forms.CheckBox();
+            this._NO_TRANSLATE_lblSimplifyMerges = new System.Windows.Forms.Label();
             this.MainPanel.SuspendLayout();
             this.ControlsPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this._NO_TRANSLATE_CommitsLimit)).BeginInit();
@@ -111,12 +127,26 @@
             this.Message.Name = "Message";
             this.Message.Size = new System.Drawing.Size(285, 23);
             // 
-            // Author
+            // Message
             // 
-            this.Author.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.Author.Location = new System.Drawing.Point(96, 61);
-            this.Author.Name = "Author";
-            this.Author.Size = new System.Drawing.Size(285, 23);
+            this.Message.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.Message.Location = new System.Drawing.Point(96, 119);
+            this.Message.Name = "Message";
+            this.Message.Size = new System.Drawing.Size(285, 23);
+            // 
+            // DiffContent
+            // 
+            this.DiffContent.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.DiffContent.Location = new System.Drawing.Point(96, 119);
+            this.DiffContent.Name = "DiffContent";
+            this.DiffContent.Size = new System.Drawing.Size(285, 23);
+            // 
+            // RawLog
+            // 
+            this.RawLog.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.RawLog.Location = new System.Drawing.Point(96, 61);
+            this.RawLog.Name = "RawLog";
+            this.RawLog.Size = new System.Drawing.Size(285, 23);
             // 
             // Since
             // 
@@ -189,6 +219,26 @@
             this._NO_TRANSLATE_lblMessage.Text = "Message";
             this._NO_TRANSLATE_lblMessage.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
+            // _NO_TRANSLATE_lblDiffContent
+            // 
+            this._NO_TRANSLATE_lblDiffContent.AutoSize = true;
+            this._NO_TRANSLATE_lblDiffContent.Dock = System.Windows.Forms.DockStyle.Fill;
+            this._NO_TRANSLATE_lblDiffContent.Location = new System.Drawing.Point(3, 116);
+            this._NO_TRANSLATE_lblDiffContent.Name = "_NO_TRANSLATE_lblDiffContent";
+            this._NO_TRANSLATE_lblDiffContent.Size = new System.Drawing.Size(67, 29);
+            this._NO_TRANSLATE_lblDiffContent.Text = "Message";
+            this._NO_TRANSLATE_lblDiffContent.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // _NO_TRANSLATE_lblRawLog
+            // 
+            this._NO_TRANSLATE_lblRawLog.AutoSize = true;
+            this._NO_TRANSLATE_lblRawLog.Dock = System.Windows.Forms.DockStyle.Fill;
+            this._NO_TRANSLATE_lblRawLog.Location = new System.Drawing.Point(3, 116);
+            this._NO_TRANSLATE_lblRawLog.Name = "_NO_TRANSLATE_lblRawLog";
+            this._NO_TRANSLATE_lblRawLog.Size = new System.Drawing.Size(67, 29);
+            this._NO_TRANSLATE_lblRawLog.Text = "Message";
+            this._NO_TRANSLATE_lblRawLog.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
             // _NO_TRANSLATE_lblLimit
             // 
             this._NO_TRANSLATE_lblLimit.AutoSize = true;
@@ -230,26 +280,47 @@
             this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_lblMessage, 0, 4);
             this.tableLayoutPanel1.Controls.Add(this.MessageCheck, 1, 4);
             this.tableLayoutPanel1.Controls.Add(this.Message, 2, 4);
-            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_lblIgnoreCase, 0, 5);
-            this.tableLayoutPanel1.Controls.Add(this.IgnoreCase, 1, 5);
-            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_lblLimit, 0, 6);
-            this.tableLayoutPanel1.Controls.Add(this.CommitsLimitCheck, 1, 6);
-            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_CommitsLimit, 2, 6);
-            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_lblPathFilter, 0, 7);
-            this.tableLayoutPanel1.Controls.Add(this.PathFilterCheck, 1, 7);
-            this.tableLayoutPanel1.Controls.Add(this.PathFilter, 2, 7);
-            this.tableLayoutPanel1.Controls.Add(this.CurrentBranchOnlyCheck, 1, 8);
-            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_lblCurrentBranchOnlyCheck, 2, 8);
-            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_lblBranches, 0, 9);
-            this.tableLayoutPanel1.Controls.Add(this.BranchFilterCheck, 1, 9);
-            this.tableLayoutPanel1.Controls.Add(this.BranchFilter, 2, 9);
-            this.tableLayoutPanel1.Controls.Add(this.SimplifyByDecorationCheck, 1, 10);
-            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_lblSimplifyByDecoration, 2, 10);
+            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_lblDiffContent, 0, 5);
+            this.tableLayoutPanel1.Controls.Add(this.DiffContentCheck, 1, 5);
+            this.tableLayoutPanel1.Controls.Add(this.DiffContent, 2, 5);
+            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_lblRawLog, 0, 6);
+            this.tableLayoutPanel1.Controls.Add(this.RawLogCheck, 1, 6);
+            this.tableLayoutPanel1.Controls.Add(this.RawLog, 2, 6);
+            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_lblIgnoreCase, 0, 7);
+            this.tableLayoutPanel1.Controls.Add(this.IgnoreCase, 1, 7);
+            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_lblLimit, 0, 8);
+            this.tableLayoutPanel1.Controls.Add(this.CommitsLimitCheck, 1, 8);
+            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_CommitsLimit, 2, 8);
+            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_lblPathFilter, 0, 9);
+            this.tableLayoutPanel1.Controls.Add(this.PathFilterCheck, 1, 9);
+            this.tableLayoutPanel1.Controls.Add(this.PathFilter, 2, 9);
+            this.tableLayoutPanel1.Controls.Add(this.ReflogCheck, 1, 10);
+            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_lblReflogCheck, 2, 10);
+            this.tableLayoutPanel1.Controls.Add(this.CurrentBranchOnlyCheck, 1, 11);
+            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_lblCurrentBranchOnlyCheck, 2, 11);
+            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_lblBranches, 0, 12);
+            this.tableLayoutPanel1.Controls.Add(this.BranchFilterCheck, 1, 12);
+            this.tableLayoutPanel1.Controls.Add(this.BranchFilter, 2, 12);
+            this.tableLayoutPanel1.Controls.Add(this.ShowOnlyFirstParentCheck, 1, 13);
+            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_lblShowOnlyFirstParent, 2, 13);
+            this.tableLayoutPanel1.Controls.Add(this.ShowMergeCommitsCheck, 1, 14);
+            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_lblShowMergeCommits, 2, 14);
+            this.tableLayoutPanel1.Controls.Add(this.SimplifyByDecorationCheck, 1, 15);
+            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_lblSimplifyByDecoration, 2, 15);
+            this.tableLayoutPanel1.Controls.Add(this.FullHistoryCheck, 1, 16);
+            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_lblFullHistory, 2, 16);
+            this.tableLayoutPanel1.Controls.Add(this.SimplifyMergesCheck, 1, 17);
+            this.tableLayoutPanel1.Controls.Add(this._NO_TRANSLATE_lblSimplifyMerges, 2, 17);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(12, 12);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 12;
+            this.tableLayoutPanel1.RowCount = 18;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -313,6 +384,26 @@
             this.MessageCheck.Size = new System.Drawing.Size(14, 14);
             this.MessageCheck.UseVisualStyleBackColor = true;
             this.MessageCheck.CheckedChanged += new System.EventHandler(this.option_CheckedChanged);
+            // 
+            // DiffContentCheck
+            // 
+            this.DiffContentCheck.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.DiffContentCheck.AutoSize = true;
+            this.DiffContentCheck.Location = new System.Drawing.Point(76, 123);
+            this.DiffContentCheck.Name = "DiffContentCheck";
+            this.DiffContentCheck.Size = new System.Drawing.Size(14, 14);
+            this.DiffContentCheck.UseVisualStyleBackColor = true;
+            this.DiffContentCheck.CheckedChanged += new System.EventHandler(this.option_CheckedChanged);
+            // 
+            // RawLogCheck
+            // 
+            this.RawLogCheck.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.RawLogCheck.AutoSize = true;
+            this.RawLogCheck.Location = new System.Drawing.Point(76, 123);
+            this.RawLogCheck.Name = "RawLogCheck";
+            this.RawLogCheck.Size = new System.Drawing.Size(14, 14);
+            this.RawLogCheck.UseVisualStyleBackColor = true;
+            this.RawLogCheck.CheckedChanged += new System.EventHandler(this.option_CheckedChanged);
             // 
             // IgnoreCase
             // 
@@ -410,6 +501,90 @@
             this._NO_TRANSLATE_lblCurrentBranchOnlyCheck.Text = "Show current branch only";
             this._NO_TRANSLATE_lblCurrentBranchOnlyCheck.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
+            // CurrentBranchOnlyCheck
+            // 
+            this.CurrentBranchOnlyCheck.AutoSize = true;
+            this.CurrentBranchOnlyCheck.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.CurrentBranchOnlyCheck.Location = new System.Drawing.Point(76, 255);
+            this.CurrentBranchOnlyCheck.Name = "CurrentBranchOnlyCheck";
+            this.CurrentBranchOnlyCheck.Size = new System.Drawing.Size(285, 19);
+            this.CurrentBranchOnlyCheck.UseVisualStyleBackColor = true;
+            this.CurrentBranchOnlyCheck.CheckedChanged += new System.EventHandler(this.option_CheckedChanged);
+            // 
+            // _NO_TRANSLATE_lblCurrentBranchOnlyCheck
+            // 
+            this._NO_TRANSLATE_lblCurrentBranchOnlyCheck.AutoSize = true;
+            this._NO_TRANSLATE_lblCurrentBranchOnlyCheck.Dock = System.Windows.Forms.DockStyle.Fill;
+            this._NO_TRANSLATE_lblCurrentBranchOnlyCheck.Location = new System.Drawing.Point(96, 277);
+            this._NO_TRANSLATE_lblCurrentBranchOnlyCheck.Name = "_NO_TRANSLATE_lblCurrentBranchOnlyCheck";
+            this._NO_TRANSLATE_lblCurrentBranchOnlyCheck.Size = new System.Drawing.Size(285, 20);
+            this._NO_TRANSLATE_lblCurrentBranchOnlyCheck.TabIndex = 28;
+            this._NO_TRANSLATE_lblCurrentBranchOnlyCheck.Text = "Show current branch only";
+            this._NO_TRANSLATE_lblCurrentBranchOnlyCheck.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // CurrentBranchOnlyCheck
+            // 
+            this.CurrentBranchOnlyCheck.AutoSize = true;
+            this.CurrentBranchOnlyCheck.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.CurrentBranchOnlyCheck.Location = new System.Drawing.Point(76, 255);
+            this.CurrentBranchOnlyCheck.Name = "CurrentBranchOnlyCheck";
+            this.CurrentBranchOnlyCheck.Size = new System.Drawing.Size(285, 19);
+            this.CurrentBranchOnlyCheck.UseVisualStyleBackColor = true;
+            this.CurrentBranchOnlyCheck.CheckedChanged += new System.EventHandler(this.option_CheckedChanged);
+            // 
+            // _NO_TRANSLATE_lblCurrentBranchOnlyCheck
+            // 
+            this._NO_TRANSLATE_lblCurrentBranchOnlyCheck.AutoSize = true;
+            this._NO_TRANSLATE_lblCurrentBranchOnlyCheck.Dock = System.Windows.Forms.DockStyle.Fill;
+            this._NO_TRANSLATE_lblCurrentBranchOnlyCheck.Location = new System.Drawing.Point(96, 277);
+            this._NO_TRANSLATE_lblCurrentBranchOnlyCheck.Name = "_NO_TRANSLATE_lblCurrentBranchOnlyCheck";
+            this._NO_TRANSLATE_lblCurrentBranchOnlyCheck.Size = new System.Drawing.Size(285, 20);
+            this._NO_TRANSLATE_lblCurrentBranchOnlyCheck.TabIndex = 28;
+            this._NO_TRANSLATE_lblCurrentBranchOnlyCheck.Text = "Show current branch only";
+            this._NO_TRANSLATE_lblCurrentBranchOnlyCheck.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // ShowOnlyFirstParentCheck
+            // 
+            this.ShowOnlyFirstParentCheck.AutoSize = true;
+            this.ShowOnlyFirstParentCheck.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ShowOnlyFirstParentCheck.Location = new System.Drawing.Point(76, 280);
+            this.ShowOnlyFirstParentCheck.Name = "ShowOnlyFirstParentCheck";
+            this.ShowOnlyFirstParentCheck.Size = new System.Drawing.Size(14, 14);
+            this.ShowOnlyFirstParentCheck.UseVisualStyleBackColor = true;
+            this.ShowOnlyFirstParentCheck.CheckedChanged += new System.EventHandler(this.option_CheckedChanged);
+            // 
+            // _NO_TRANSLATE_lblShowOnlyFirstParent
+            // 
+            this._NO_TRANSLATE_lblShowOnlyFirstParent.AutoSize = true;
+            this._NO_TRANSLATE_lblShowOnlyFirstParent.Dock = System.Windows.Forms.DockStyle.Fill;
+            this._NO_TRANSLATE_lblShowOnlyFirstParent.Location = new System.Drawing.Point(96, 277);
+            this._NO_TRANSLATE_lblShowOnlyFirstParent.Name = "_NO_TRANSLATE_lblShowOnlyFirstParent";
+            this._NO_TRANSLATE_lblShowOnlyFirstParent.Size = new System.Drawing.Size(285, 20);
+            this._NO_TRANSLATE_lblShowOnlyFirstParent.TabIndex = 29;
+            this._NO_TRANSLATE_lblShowOnlyFirstParent.Text = "ShowOnlyFirstParent";
+            this._NO_TRANSLATE_lblShowOnlyFirstParent.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // ShowMergeCommitsCheck
+            // 
+            this.ShowMergeCommitsCheck.AutoSize = true;
+            this.ShowMergeCommitsCheck.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ShowMergeCommitsCheck.Location = new System.Drawing.Point(76, 280);
+            this.ShowMergeCommitsCheck.Name = "ShowMergeCommitsCheck";
+            this.ShowMergeCommitsCheck.Size = new System.Drawing.Size(14, 14);
+            this.ShowMergeCommitsCheck.UseVisualStyleBackColor = true;
+            this.ShowMergeCommitsCheck.CheckedChanged += new System.EventHandler(this.option_CheckedChanged);
+            // 
+            // _NO_TRANSLATE_lblShowMergeCommits
+            // 
+            this._NO_TRANSLATE_lblShowMergeCommits.AutoSize = true;
+            this._NO_TRANSLATE_lblShowMergeCommits.Dock = System.Windows.Forms.DockStyle.Fill;
+            this._NO_TRANSLATE_lblShowMergeCommits.Location = new System.Drawing.Point(96, 277);
+            this._NO_TRANSLATE_lblShowMergeCommits.Name = "_NO_TRANSLATE_lblShowMergeCommits";
+            this._NO_TRANSLATE_lblShowMergeCommits.Size = new System.Drawing.Size(285, 20);
+            this._NO_TRANSLATE_lblShowMergeCommits.TabIndex = 29;
+            this._NO_TRANSLATE_lblShowMergeCommits.Text = "ShowMergeCommits";
+            this._NO_TRANSLATE_lblShowMergeCommits.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
             // SimplifyByDecorationCheck
             // 
             this.SimplifyByDecorationCheck.AutoSize = true;
@@ -431,11 +606,53 @@
             this._NO_TRANSLATE_lblSimplifyByDecoration.Text = "Simplify by decoration";
             this._NO_TRANSLATE_lblSimplifyByDecoration.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
+            // FullHistoryCheck
+            // 
+            this.FullHistoryCheck.AutoSize = true;
+            this.FullHistoryCheck.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.FullHistoryCheck.Location = new System.Drawing.Point(76, 280);
+            this.FullHistoryCheck.Name = "FullHistoryCheck";
+            this.FullHistoryCheck.Size = new System.Drawing.Size(14, 14);
+            this.FullHistoryCheck.UseVisualStyleBackColor = true;
+            this.FullHistoryCheck.CheckedChanged += new System.EventHandler(this.option_CheckedChanged);
+            // 
+            // _NO_TRANSLATE_lblFullHistory
+            // 
+            this._NO_TRANSLATE_lblFullHistory.AutoSize = true;
+            this._NO_TRANSLATE_lblFullHistory.Dock = System.Windows.Forms.DockStyle.Fill;
+            this._NO_TRANSLATE_lblFullHistory.Location = new System.Drawing.Point(96, 277);
+            this._NO_TRANSLATE_lblFullHistory.Name = "_NO_TRANSLATE_lblFullHistory";
+            this._NO_TRANSLATE_lblFullHistory.Size = new System.Drawing.Size(285, 20);
+            this._NO_TRANSLATE_lblFullHistory.TabIndex = 29;
+            this._NO_TRANSLATE_lblFullHistory.Text = "FullHistory";
+            this._NO_TRANSLATE_lblFullHistory.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // SimplifyMergesCheck
+            // 
+            this.SimplifyMergesCheck.AutoSize = true;
+            this.SimplifyMergesCheck.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.SimplifyMergesCheck.Location = new System.Drawing.Point(76, 280);
+            this.SimplifyMergesCheck.Name = "SimplifyMergesCheck";
+            this.SimplifyMergesCheck.Size = new System.Drawing.Size(14, 14);
+            this.SimplifyMergesCheck.UseVisualStyleBackColor = true;
+            this.SimplifyMergesCheck.CheckedChanged += new System.EventHandler(this.option_CheckedChanged);
+            // 
+            // _NO_TRANSLATE_lblSimplifyMerges
+            // 
+            this._NO_TRANSLATE_lblSimplifyMerges.AutoSize = true;
+            this._NO_TRANSLATE_lblSimplifyMerges.Dock = System.Windows.Forms.DockStyle.Fill;
+            this._NO_TRANSLATE_lblSimplifyMerges.Location = new System.Drawing.Point(96, 277);
+            this._NO_TRANSLATE_lblSimplifyMerges.Name = "_NO_TRANSLATE_lblSimplifyMerges";
+            this._NO_TRANSLATE_lblSimplifyMerges.Size = new System.Drawing.Size(285, 20);
+            this._NO_TRANSLATE_lblSimplifyMerges.TabIndex = 29;
+            this._NO_TRANSLATE_lblSimplifyMerges.Text = "SimplifyMerges";
+            this._NO_TRANSLATE_lblSimplifyMerges.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
             // FormRevisionFilter
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            this.ClientSize = new System.Drawing.Size(408, 375);
+            this.ClientSize = new System.Drawing.Size(408, 525);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -457,6 +674,8 @@
         private System.Windows.Forms.Button Ok;
         private System.Windows.Forms.NumericUpDown _NO_TRANSLATE_CommitsLimit;
         private System.Windows.Forms.TextBox Message;
+        private System.Windows.Forms.TextBox DiffContent;
+        private System.Windows.Forms.TextBox RawLog;
         private System.Windows.Forms.TextBox Author;
         private System.Windows.Forms.DateTimePicker Since;
         private System.Windows.Forms.Label _NO_TRANSLATE_lblSince;
@@ -466,12 +685,16 @@
         private System.Windows.Forms.Label _NO_TRANSLATE_lblCommitter;
         private System.Windows.Forms.TextBox Committer;
         private System.Windows.Forms.Label _NO_TRANSLATE_lblMessage;
+        private System.Windows.Forms.Label _NO_TRANSLATE_lblDiffContent;
+        private System.Windows.Forms.Label _NO_TRANSLATE_lblRawLog;
         private System.Windows.Forms.Label _NO_TRANSLATE_lblLimit;
         private System.Windows.Forms.Label _NO_TRANSLATE_lblIgnoreCase;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.CheckBox CommitsLimitCheck;
         private System.Windows.Forms.CheckBox IgnoreCase;
         private System.Windows.Forms.CheckBox MessageCheck;
+        private System.Windows.Forms.CheckBox DiffContentCheck;
+        private System.Windows.Forms.CheckBox RawLogCheck;
         private System.Windows.Forms.CheckBox CommitterCheck;
         private System.Windows.Forms.CheckBox AuthorCheck;
         private System.Windows.Forms.CheckBox CheckUntil;
@@ -481,10 +704,20 @@
         private System.Windows.Forms.TextBox PathFilter;
         private System.Windows.Forms.Label _NO_TRANSLATE_lblBranches;
         private System.Windows.Forms.TextBox BranchFilter;
+        private System.Windows.Forms.CheckBox ReflogCheck;
+        private System.Windows.Forms.Label _NO_TRANSLATE_lblReflogCheck;
         private System.Windows.Forms.CheckBox CurrentBranchOnlyCheck;
         private System.Windows.Forms.Label _NO_TRANSLATE_lblCurrentBranchOnlyCheck;
         private System.Windows.Forms.CheckBox BranchFilterCheck;
+        private System.Windows.Forms.CheckBox ShowOnlyFirstParentCheck;
+        private System.Windows.Forms.Label _NO_TRANSLATE_lblShowOnlyFirstParent;
+        private System.Windows.Forms.CheckBox ShowMergeCommitsCheck;
+        private System.Windows.Forms.Label _NO_TRANSLATE_lblShowMergeCommits;
         private System.Windows.Forms.CheckBox SimplifyByDecorationCheck;
         private System.Windows.Forms.Label _NO_TRANSLATE_lblSimplifyByDecoration;
+        private System.Windows.Forms.CheckBox FullHistoryCheck;
+        private System.Windows.Forms.Label _NO_TRANSLATE_lblFullHistory;
+        private System.Windows.Forms.CheckBox SimplifyMergesCheck;
+        private System.Windows.Forms.Label _NO_TRANSLATE_lblSimplifyMerges;
     }
 }
