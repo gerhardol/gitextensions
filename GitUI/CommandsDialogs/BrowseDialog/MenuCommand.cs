@@ -26,7 +26,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             return new MenuCommand
             {
                 IsGroupHeader = true,
-                Name = text.Replace(' ', '_'),
+                Name = text.Replace(' ', '_') + "ToolStripMenuItem",
                 Text = text,
             };
         }

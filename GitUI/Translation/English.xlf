@@ -9619,15 +9619,15 @@ See the changes in the commit form.</source>
         <source>&amp;Sort commits by author date</source>
         <target />
       </trans-unit>
-      <trans-unit id="Branches.Text">
+      <trans-unit id="BranchesToolStripMenuItem.Text">
         <source>Branches</source>
         <target />
       </trans-unit>
-      <trans-unit id="Columns.Text">
+      <trans-unit id="ColumnsToolStripMenuItem.Text">
         <source>Columns</source>
         <target />
       </trans-unit>
-      <trans-unit id="Commits.Text">
+      <trans-unit id="CommitsToolStripMenuItem.Text">
         <source>Commits</source>
         <target />
       </trans-unit>
@@ -9655,11 +9655,11 @@ See the changes in the commit form.</source>
         <source>Go to &amp;parent commit</source>
         <target />
       </trans-unit>
-      <trans-unit id="Grid_info.Text">
+      <trans-unit id="Grid_infoToolStripMenuItem.Text">
         <source>Grid info</source>
         <target />
       </trans-unit>
-      <trans-unit id="Grid_labels.Text">
+      <trans-unit id="Grid_labelsToolStripMenuItem.Text">
         <source>Grid labels</source>
         <target />
       </trans-unit>
@@ -9731,7 +9731,7 @@ See the changes in the commit form.</source>
         <source>Show su&amp;perproject tags</source>
         <target />
       </trans-unit>
-      <trans-unit id="Sorting.Text">
+      <trans-unit id="SortingToolStripMenuItem.Text">
         <source>Sorting</source>
         <target />
       </trans-unit>
