@@ -229,6 +229,7 @@ namespace GitUI.UserControls.RevisionGrid
                 {
                     Name = "ShowReflogReferences",
                     Text = "Show &reflog references",
+                    Image = Images.Book,
                     ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ShowReflogReferences),
                     ExecuteAction = () => _revisionGrid.ToggleShowReflogReferences(),
                     IsCheckedFunc = () => _revisionGrid.CurrentFilter.ShowReflogReferences
@@ -237,6 +238,7 @@ namespace GitUI.UserControls.RevisionGrid
                 {
                     Name = "ShowAllBranches",
                     Text = "Show &all branches",
+                    Image = Images.BranchLocal,
                     ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ShowAllBranches),
                     ExecuteAction = () => _revisionGrid.ShowAllBranches(),
                     IsCheckedFunc = () => _revisionGrid.CurrentFilter.IsShowAllBranchesChecked
@@ -245,6 +247,7 @@ namespace GitUI.UserControls.RevisionGrid
                 {
                     Name = "ShowFilteredBranches",
                     Text = "Show &filtered branches",
+                    Image = Images.BranchFilter,
                     ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ShowFilteredBranches),
                     ExecuteAction = () => _revisionGrid.ShowFilteredBranches(),
                     IsCheckedFunc = () => _revisionGrid.CurrentFilter.IsShowFilteredBranchesChecked
@@ -253,6 +256,7 @@ namespace GitUI.UserControls.RevisionGrid
                 {
                     Name = "ShowCurrentBranchOnly",
                     Text = "Show &current branch only",
+                    Image = Images.BranchFilter,
                     ShortcutKeyDisplayString = GetShortcutKeyDisplayStringFromRevisionGridIfAvailable(RevisionGridControl.Command.ShowCurrentBranchOnly),
                     ExecuteAction = () => _revisionGrid.ShowCurrentBranchOnly(),
                     IsCheckedFunc = () => _revisionGrid.CurrentFilter.IsShowCurrentBranchOnlyChecked
