@@ -9655,11 +9655,11 @@ See the changes in the commit form.</source>
         <source>Go to &amp;parent commit</source>
         <target />
       </trans-unit>
-      <trans-unit id="Grid info.Text">
+      <trans-unit id="Grid_info.Text">
         <source>Grid info</source>
         <target />
       </trans-unit>
-      <trans-unit id="Grid labels.Text">
+      <trans-unit id="Grid_labels.Text">
         <source>Grid labels</source>
         <target />
       </trans-unit>

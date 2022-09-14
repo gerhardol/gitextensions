@@ -26,7 +26,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             return new MenuCommand
             {
                 IsGroupHeader = true,
-                Name = text,
+                Name = text.Replace(' ', '_'),
                 Text = text,
             };
         }
@@ -46,8 +46,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                     Text = menuCommand.Text,
                     Enabled = false,
                 };
-                _disabledFont ??= new Font(headerToolStripMenuItem.Font, FontStyle.Italic);
-                headerToolStripMenuItem.Font = _disabledFont;
+                UserControls.RevisionGrid.MenuUtil.SetAsCaptionMenuItem(headerToolStripMenuItem);
 
                 return headerToolStripMenuItem;
             }
@@ -78,7 +77,6 @@ namespace GitUI.CommandsDialogs.BrowseDialog
         }
 
         private readonly List<ToolStripMenuItem> _registeredMenuItems = new();
-        private static Font? _disabledFont;
 
         /// <summary>
         /// if true all other properties have no meaning.
