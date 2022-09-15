@@ -205,7 +205,7 @@ namespace GitCommands
 
                 // revision branch filter
                 {
-                    refFilterOptions.HasFlag(RefFilterOptions.Reflogs),
+                    refFilterOptions.HasFlag(RefFilterOptions.Reflog),
                     "--reflog",
                     new ArgumentBuilder
                     {

@@ -13,9 +13,9 @@ namespace GitCommands
         // Remotes              = 0x002,    // --remotes
         // Tags                 = 0x004,    // --tags
         All                     = 0x007,    // --all (default is HEAD)
-        Reflogs                 = 0x200,    // --reflog
+        Reflog                  = 0x200,    // --reflog
 
-        // Exclude some refs from other than reflogs
+        // Exclude some refs from other than reflog
         NoStash                 = 0x008,    // --exclude=refs/stash
         NoGitNotes              = 0x010,    // --not --glob=notes --not
 

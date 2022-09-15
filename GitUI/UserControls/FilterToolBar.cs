@@ -24,8 +24,8 @@ namespace GitUI.UserControls
         public FilterToolBar()
         {
             InitializeComponent();
-            tsmiShowReflogs.ToolTipText = TranslatedStrings.ShowReflog;
-            tsbShowReflogs.ToolTipText = TranslatedStrings.ShowReflog;
+            tsmiShowReflog.ToolTipText = TranslatedStrings.ShowReflog;
+            tsbShowReflog.ToolTipText = TranslatedStrings.ShowReflog;
 
             // Select an option until we get a filter bound.
             SelectShowBranchesFilterOption(selectedIndex: 1);
@@ -137,7 +137,7 @@ namespace GitUI.UserControls
 
             if (e.ShowReflogReferences)
             {
-                // Show reflogs
+                // Show reflog
                 selectedIndex = 0;
             }
 
@@ -326,7 +326,7 @@ namespace GitUI.UserControls
         private void revisionGridFilter_FilterChanged(object? sender, FilterChangedEventArgs e)
         {
             tsmiShowFirstParent.Checked = e.ShowFirstParent;
-            tsbShowReflogs.Checked = e.ShowReflogReferences;
+            tsbShowReflog.Checked = e.ShowReflogReferences;
             InitBranchSelectionFilter(e);
             tsbtnAdvancedFilter.ToolTipText = e.FilterSummary;
             tsbtnAdvancedFilter.AutoToolTip = !string.IsNullOrEmpty(tsbtnAdvancedFilter.ToolTipText);
@@ -404,7 +404,7 @@ namespace GitUI.UserControls
 
         private void tsmiAdvancedFilter_Click(object sender, EventArgs e) => RevisionGridFilter.ShowRevisionFilterDialog();
 
-        private void tsmiShowReflogBranches_Click(object sender, EventArgs e) => ApplyPresetBranchesFilter(RevisionGridFilter.ShowReflogs);
+        private void tsmiShowReflogBranches_Click(object sender, EventArgs e) => ApplyPresetBranchesFilter(RevisionGridFilter.ShowReflog);
 
         private void tsmiShowBranchesAll_Click(object sender, EventArgs e) => ApplyPresetBranchesFilter(RevisionGridFilter.ShowAllBranches);
 
@@ -414,7 +414,7 @@ namespace GitUI.UserControls
 
         private void tsmiShowFirstParent_Click(object sender, EventArgs e) => RevisionGridFilter.ToggleShowFirstParent();
 
-        private void tsmiShowReflogs_Click(object sender, EventArgs e) => RevisionGridFilter.ToggleShowReflogReferences();
+        private void tsmiShowReflog_Click(object sender, EventArgs e) => RevisionGridFilter.ToggleShowReflogReferences();
 
         private void tssbtnShowBranches_Click(object sender, EventArgs e) => tssbtnShowBranches.ShowDropDown();
 
@@ -438,12 +438,12 @@ namespace GitUI.UserControls
             public ToolStripMenuItem tsmiAuthorFilter => _control.tsmiAuthorFilter;
             public ToolStripMenuItem tsmiDiffContainsFilter => _control.tsmiDiffContainsFilter;
             public ToolStripButton tsmiShowFirstParent => _control.tsmiShowFirstParent;
-            public ToolStripButton tsbShowReflogs => _control.tsbShowReflogs;
+            public ToolStripButton tsbShowReflog => _control.tsbShowReflog;
             public ToolStripTextBox tstxtRevisionFilter => _control.tstxtRevisionFilter;
             public ToolStripLabel tslblRevisionFilter => _control.tslblRevisionFilter;
             public ToolStripSplitButton tsbtnAdvancedFilter => _control.tsbtnAdvancedFilter;
             public ToolStripSplitButton tssbtnShowBranches => _control.tssbtnShowBranches;
-            public ToolStripMenuItem tsmiShowReflogs => _control.tsmiShowReflogs;
+            public ToolStripMenuItem tsmiShowReflog => _control.tsmiShowReflog;
             public ToolStripMenuItem tsmiShowBranchesAll => _control.tsmiShowBranchesAll;
             public ToolStripMenuItem tsmiShowBranchesCurrent => _control.tsmiShowBranchesCurrent;
             public ToolStripMenuItem tsmiShowBranchesFiltered => _control.tsmiShowBranchesFiltered;

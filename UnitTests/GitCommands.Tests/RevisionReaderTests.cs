@@ -56,11 +56,11 @@ namespace GitCommandsTests
         }
 
         [TestCase(RefFilterOptions.FirstParent, false)]
-        [TestCase(RefFilterOptions.FirstParent | RefFilterOptions.Reflogs, true)]
+        [TestCase(RefFilterOptions.FirstParent | RefFilterOptions.Reflog, true)]
         [TestCase(RefFilterOptions.Branches, false)]
-        [TestCase(RefFilterOptions.Branches | RefFilterOptions.Reflogs, true)]
+        [TestCase(RefFilterOptions.Branches | RefFilterOptions.Reflog, true)]
         [TestCase(RefFilterOptions.All, false)]
-        [TestCase(RefFilterOptions.All | RefFilterOptions.Reflogs, true)]
+        [TestCase(RefFilterOptions.All | RefFilterOptions.Reflog, true)]
         public void BuildArguments_should_add_reflog_if_requested(RefFilterOptions refFilterOptions, bool expected)
         {
             RevisionReader reader = RevisionReader.TestAccessor.RevisionReader(new GitModule(""), hasReflogSelector: false, _logOutputEncoding, _sixMonths);

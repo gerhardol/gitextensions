@@ -56,7 +56,7 @@ namespace GitUI.CommandsDialogs
                 }
 
                 // Apply filtering when:
-                // 1. don't show reflogs, and
+                // 1. don't show reflog, and
                 // 2. one of the following
                 //      a) show the current branch only, or
                 //      b) filter on specific branch

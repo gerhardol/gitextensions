@@ -120,7 +120,7 @@ namespace GitUI.UserControls.RevisionGrid
                 // Branch filters
                 if (ShowReflogReferences)
                 {
-                    refFilterOptions = RefFilterOptions.Reflogs;
+                    refFilterOptions = RefFilterOptions.Reflog;
                 }
                 else if (ShowCurrentBranchOnly)
                 {

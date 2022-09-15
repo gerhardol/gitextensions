@@ -1777,7 +1777,7 @@ namespace GitUI
             });
         }
 
-        public void ShowReflogs()
+        public void ShowReflog()
         {
             if (_filterInfo.ShowReflogReferences)
             {

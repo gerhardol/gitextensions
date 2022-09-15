@@ -26,7 +26,7 @@ namespace GitUI.UserControls
             this.toolStripSeparatorAdvancedFilter = new System.Windows.Forms.ToolStripSeparator();
             this.tsmiAdvancedFilter = new System.Windows.Forms.ToolStripMenuItem();
             this.tssbtnShowBranches = new System.Windows.Forms.ToolStripSplitButton();
-            this.tsmiShowReflogs = new System.Windows.Forms.ToolStripMenuItem();
+            this.tsmiShowReflog = new System.Windows.Forms.ToolStripMenuItem();
             this.tsmiShowBranchesAll = new System.Windows.Forms.ToolStripMenuItem();
             this.tsmiShowBranchesCurrent = new System.Windows.Forms.ToolStripMenuItem();
             this.tsmiShowBranchesFiltered = new System.Windows.Forms.ToolStripMenuItem();
@@ -36,7 +36,7 @@ namespace GitUI.UserControls
             this.tslblRevisionFilter = new System.Windows.Forms.ToolStripLabel();
             this.tstxtRevisionFilter = new System.Windows.Forms.ToolStripTextBox();
             this.tsddbtnRevisionFilter = new System.Windows.Forms.ToolStripDropDownButton();
-            this.tsbShowReflogs = new System.Windows.Forms.ToolStripButton();
+            this.tsbShowReflog = new System.Windows.Forms.ToolStripButton();
             this.tsmiShowFirstParent = new System.Windows.Forms.ToolStripButton();
             this.SuspendLayout();
             // 
@@ -118,7 +118,7 @@ namespace GitUI.UserControls
             // 
             this.tssbtnShowBranches.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.ImageAndText;
             this.tssbtnShowBranches.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.tsmiShowReflogs,
+            this.tsmiShowReflog,
             this.tsmiShowBranchesAll,
             this.tsmiShowBranchesFiltered,
             this.tsmiShowBranchesCurrent});
@@ -127,13 +127,13 @@ namespace GitUI.UserControls
             this.tssbtnShowBranches.Size = new System.Drawing.Size(32, 22);
             this.tssbtnShowBranches.Click += new System.EventHandler(this.tssbtnShowBranches_Click);
             // 
-            // tsmiShowReflogs
+            // tsmiShowReflog
             // 
-            this.tsmiShowReflogs.Image = global::GitUI.Properties.Images.Book;
-            this.tsmiShowReflogs.Name = "tsmiShowReflogs";
-            this.tsmiShowReflogs.Size = new System.Drawing.Size(259, 22);
-            this.tsmiShowReflogs.Text = "&Reflog";
-            this.tsmiShowReflogs.Click += new System.EventHandler(this.tsmiShowReflogBranches_Click);
+            this.tsmiShowReflog.Image = global::GitUI.Properties.Images.Book;
+            this.tsmiShowReflog.Name = "tsmiShowReflog";
+            this.tsmiShowReflog.Size = new System.Drawing.Size(259, 22);
+            this.tsmiShowReflog.Text = "&Reflog";
+            this.tsmiShowReflog.Click += new System.EventHandler(this.tsmiShowReflogBranches_Click);
             // 
             // tsmiShowBranchesAll
             // 
@@ -162,13 +162,13 @@ namespace GitUI.UserControls
             this.tsmiShowBranchesFiltered.ToolTipText = "Show filtered branches";
             this.tsmiShowBranchesFiltered.Click += new System.EventHandler(this.tsmiShowBranchesFiltered_Click);
             // 
-            // tsbShowReflogs
+            // tsbShowReflog
             // 
-            this.tsbShowReflogs.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.ImageAndText;
-            this.tsbShowReflogs.Image = global::GitUI.Properties.Images.Book;
-            this.tsbShowReflogs.Name = "tsbShowReflogs";
-            this.tsbShowReflogs.Size = new System.Drawing.Size(23, 22);
-            this.tsbShowReflogs.Click += new System.EventHandler(this.tsmiShowReflogs_Click);
+            this.tsbShowReflog.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.ImageAndText;
+            this.tsbShowReflog.Image = global::GitUI.Properties.Images.Book;
+            this.tsbShowReflog.Name = "tsbShowReflog";
+            this.tsbShowReflog.Size = new System.Drawing.Size(23, 22);
+            this.tsbShowReflog.Click += new System.EventHandler(this.tsmiShowReflog_Click);
             // 
             // tscboBranchFilter
             // 
@@ -276,7 +276,7 @@ namespace GitUI.UserControls
             this.toolStripLabel1,
             this.tscboBranchFilter,
             this.tsddbtnBranchFilter,
-            this.tsbShowReflogs,
+            this.tsbShowReflog,
             this.tsmiShowFirstParent,
             this.toolStripSeparator19,
             this.tslblRevisionFilter,
@@ -300,7 +300,7 @@ namespace GitUI.UserControls
         private ToolStripMenuItem tsmiCommitterFilter;
         private ToolStripMenuItem tsmiAuthorFilter;
         private ToolStripMenuItem tsmiDiffContainsFilter;
-        private ToolStripButton tsbShowReflogs;
+        private ToolStripButton tsbShowReflog;
         private ToolStripButton tsmiShowFirstParent;
         private ToolStripTextBox tstxtRevisionFilter;
         private ToolStripLabel tslblRevisionFilter;
@@ -311,7 +311,7 @@ namespace GitUI.UserControls
         private ToolStripSeparator toolStripSeparatorAdvancedFilter;
         private ToolStripMenuItem tsmiAdvancedFilter;
         private ToolStripSplitButton tssbtnShowBranches;
-        private ToolStripMenuItem tsmiShowReflogs;
+        private ToolStripMenuItem tsmiShowReflog;
         private ToolStripMenuItem tsmiShowBranchesAll;
         private ToolStripMenuItem tsmiShowBranchesCurrent;
         private ToolStripMenuItem tsmiShowBranchesFiltered;
