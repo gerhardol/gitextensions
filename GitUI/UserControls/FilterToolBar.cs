@@ -152,6 +152,9 @@ namespace GitUI.UserControls
             {
                 // Show filtered branches
                 selectedIndex = 2;
+
+                // Keep value if other filter
+                tscboBranchFilter.Text = e.BranchFilter;
             }
 
             if (e.ShowCurrentBranchOnly)
@@ -329,6 +332,38 @@ namespace GitUI.UserControls
             tsmiShowOnlyFirstParent.Checked = e.ShowOnlyFirstParent;
             tsbShowReflog.Checked = e.ShowReflogReferences;
             InitBranchSelectionFilter(e);
+
+            tstxtRevisionFilter.Text = "";
+            bool anyChecked = false;
+            List<(string filter, ToolStripMenuItem menuItem)> revFilters = new()
+            {
+                (e.MessageFilter, tsmiCommitFilter),
+                (e.CommitterFilter, tsmiCommitterFilter),
+                (e.AuthorFilter, tsmiAuthorFilter),
+                (e.DiffContentFilter, tsmiDiffContainsFilter),
+            };
+            foreach ((string filter, ToolStripMenuItem menuItem) item in revFilters)
+            {
+                // Check the first menutem that matches and the following identical filters
+                if (!string.IsNullOrWhiteSpace(item.filter)
+                    && (string.IsNullOrWhiteSpace(tstxtRevisionFilter.Text)
+                        || item.filter == tstxtRevisionFilter.Text))
+                {
+                    tstxtRevisionFilter.Text = item.filter;
+                    item.menuItem.Checked = true;
+                    anyChecked = true;
+                }
+                else
+                {
+                    item.menuItem.Checked = false;
+                }
+            }
+
+            if (!anyChecked)
+            {
+                tsmiCommitFilter.Checked = true;
+            }
+
             tsbtnAdvancedFilter.ToolTipText = e.FilterSummary;
             tsbtnAdvancedFilter.AutoToolTip = !string.IsNullOrEmpty(tsbtnAdvancedFilter.ToolTipText);
             tsbtnAdvancedFilter.Image = e.HasFilter ? Properties.Images.FunnelExclamation : Properties.Images.FunnelPencil;
