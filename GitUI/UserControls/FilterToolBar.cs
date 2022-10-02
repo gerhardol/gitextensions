@@ -361,7 +361,7 @@ namespace GitUI.UserControls
 
             if (!anyChecked)
             {
-                tsmiCommitFilter.Checked = true;
+                revFilters[0].menuItem.Checked = true;
             }
 
             tsbtnAdvancedFilter.ToolTipText = e.FilterSummary;
@@ -369,6 +369,14 @@ namespace GitUI.UserControls
             tsbtnAdvancedFilter.Image = e.HasFilter ? Properties.Images.FunnelExclamation : Properties.Images.FunnelPencil;
             tsmiResetPathFilters.Enabled = !string.IsNullOrEmpty(e.PathFilter);
             tsmiResetAllFilters.Enabled = e.HasFilter;
+        }
+
+        private void revisionFilterBox_CheckedChanged(object sender, System.EventArgs e)
+        {
+            if (!string.IsNullOrWhiteSpace(tstxtRevisionFilter.Text))
+            {
+                ApplyRevisionFilter();
+            }
         }
 
         private static void ToolStripSplitButtonDropDownClosed(object sender, EventArgs e)
