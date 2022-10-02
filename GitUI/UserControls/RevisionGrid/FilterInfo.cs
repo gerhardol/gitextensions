@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Text;
-using System.Windows.Forms.VisualStyles;
 using GitCommands;
 using GitExtUtils;
-using GitUI.UserControls.RevisionGrid.Graph;
 
 namespace GitUI.UserControls.RevisionGrid
 {
@@ -19,6 +17,12 @@ namespace GitUI.UserControls.RevisionGrid
         private string _pathFilter = string.Empty;
         private string _branchFilter = string.Empty;
         private int _commitsLimit = -1;
+
+        /// <summary>
+        /// Prefix to "Message" filters that forces the text to be interpreted as Git options.
+        /// This enables use of options not available in the GUI.
+        /// </summary>
+        private const string _messageAsGitOptions = "--not";
 
         /// <summary>
         ///  Gets whether all properties will unconditionally return the underlying data.
@@ -388,16 +392,6 @@ namespace GitUI.UserControls.RevisionGrid
                 filter.Add($"--committer=\"{Committer}\"");
             }
 
-            if (ByMessage && !string.IsNullOrEmpty(Message))
-            {
-                filter.Add($"--grep=\"{Message}\"");
-            }
-
-            if (ByDiffContent && !string.IsNullOrEmpty(DiffContent))
-            {
-                filter.Add($"-G\"{DiffContent}\"");
-            }
-
             if (IgnoreCase && (ByAuthor || ByCommitter || ByMessage || ByDiffContent))
             {
                 filter.Add("--regexp-ignore-case");
@@ -411,6 +405,23 @@ namespace GitUI.UserControls.RevisionGrid
             if (ByDateTo)
             {
                 filter.Add($"--until=\"{DateTo:yyyy-MM-dd hh:mm:ss}\"");
+            }
+
+            if (ByDiffContent && !string.IsNullOrWhiteSpace(DiffContent))
+            {
+                filter.Add($"-G\"{DiffContent}\"");
+            }
+
+            if (ByMessage && !string.IsNullOrWhiteSpace(Message))
+            {
+                if (Message.StartsWith(_messageAsGitOptions))
+                {
+                    filter.Add(Message);
+                }
+                else
+                {
+                    filter.Add($"--grep=\"{Message}\"");
+                }
             }
 
             return filter;
@@ -456,7 +467,14 @@ namespace GitUI.UserControls.RevisionGrid
 
             if (ByMessage && !string.IsNullOrEmpty(Message))
             {
-                filter.AppendLine($"{TranslatedStrings.Message}: {Message}");
+                if (Message.StartsWith(_messageAsGitOptions))
+                {
+                    filter.AppendLine(Message);
+                }
+                else
+                {
+                    filter.AppendLine($"{TranslatedStrings.Message}: {Message}");
+                }
             }
 
             if (ByDiffContent && !string.IsNullOrEmpty(DiffContent))
