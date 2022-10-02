@@ -31,14 +31,6 @@ namespace GitUI.UserControls
             // Select an option until we get a filter bound.
             SelectShowBranchesFilterOption(selectedIndex: 1);
 
-            tstxtRevisionFilter.KeyUp += (s, e) =>
-            {
-                if (e.KeyValue == (char)Keys.Enter)
-                {
-                    ApplyRevisionFilter();
-                }
-            };
-
             tscboBranchFilter.ComboBox.ResizeDropDownWidth(AppSettings.BranchDropDownMinWidth, AppSettings.BranchDropDownMaxWidth);
         }
 
@@ -80,6 +72,10 @@ namespace GitUI.UserControls
             RevisionGridFilter.SetAndApplyBranchFilter(filter);
 
             _isApplyingFilter = false;
+
+            // Read from settings
+            string[] branches = new string[] { "--not --branches=update --branches=progression --not" };
+            tstxtRevisionFilter.Items.AddRange(branches);
         }
 
         private void ApplyRevisionFilter()
@@ -362,6 +358,12 @@ namespace GitUI.UserControls
                 }
             }
 
+            if (!string.IsNullOrWhiteSpace(tstxtRevisionFilter.Text)
+                && !tstxtRevisionFilter.Items.Contains(tstxtRevisionFilter.Text))
+            {
+                tstxtRevisionFilter.Items.Insert(0, tstxtRevisionFilter.Text);
+            }
+
             tsbtnAdvancedFilter.ToolTipText = e.FilterSummary;
             tsbtnAdvancedFilter.AutoToolTip = !string.IsNullOrEmpty(tsbtnAdvancedFilter.ToolTipText);
             tsbtnAdvancedFilter.Image = e.HasFilter ? Properties.Images.FunnelExclamation : Properties.Images.FunnelPencil;
@@ -406,6 +408,14 @@ namespace GitUI.UserControls
         private void tsbtnAdvancedFilter_DropDownOpening(object sender, EventArgs e)
         {
             PreventToolStripSplitButtonClosing(sender as ToolStripSplitButton);
+        }
+
+        private void tstxtRevisionFilter_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyValue == (char)Keys.Enter)
+            {
+                ApplyRevisionFilter();
+            }
         }
 
         private void tscboBranchFilter_Click(object sender, EventArgs e)
@@ -481,7 +491,7 @@ namespace GitUI.UserControls
             public ToolStripMenuItem tsmiDiffContainsFilter => _control.tsmiDiffContainsFilter;
             public ToolStripButton tsmiShowOnlyFirstParent => _control.tsmiShowOnlyFirstParent;
             public ToolStripButton tsbShowReflog => _control.tsbShowReflog;
-            public ToolStripTextBox tstxtRevisionFilter => _control.tstxtRevisionFilter;
+            public ToolStripComboBox tstxtRevisionFilter => _control.tstxtRevisionFilter;
             public ToolStripLabel tslblRevisionFilter => _control.tslblRevisionFilter;
             public ToolStripSplitButton tsbtnAdvancedFilter => _control.tsbtnAdvancedFilter;
             public ToolStripSplitButton tssbtnShowBranches => _control.tssbtnShowBranches;
