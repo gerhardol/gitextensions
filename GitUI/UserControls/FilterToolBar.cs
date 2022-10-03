@@ -333,8 +333,6 @@ namespace GitUI.UserControls
             tsbShowReflog.Checked = e.ShowReflogReferences;
             InitBranchSelectionFilter(e);
 
-            tstxtRevisionFilter.Text = "";
-            bool anyChecked = false;
             List<(string filter, ToolStripMenuItem menuItem)> revFilters = new()
             {
                 (e.MessageFilter, tsmiCommitFilter),
@@ -342,26 +340,26 @@ namespace GitUI.UserControls
                 (e.AuthorFilter, tsmiAuthorFilter),
                 (e.DiffContentFilter, tsmiDiffContainsFilter),
             };
-            foreach ((string filter, ToolStripMenuItem menuItem) item in revFilters)
-            {
-                // Check the first menutem that matches and the following identical filters
-                if (!string.IsNullOrWhiteSpace(item.filter)
-                    && (string.IsNullOrWhiteSpace(tstxtRevisionFilter.Text)
-                        || item.filter == tstxtRevisionFilter.Text))
-                {
-                    tstxtRevisionFilter.Text = item.filter;
-                    item.menuItem.Checked = true;
-                    anyChecked = true;
-                }
-                else
-                {
-                    item.menuItem.Checked = false;
-                }
-            }
 
-            if (!anyChecked)
+            // If there are no changes in the filter keep also "uncommitted" changes
+            if (revFilters.Any(item => !string.IsNullOrWhiteSpace(item.filter)))
             {
-                revFilters[0].menuItem.Checked = true;
+                tstxtRevisionFilter.Text = "";
+                foreach ((string filter, ToolStripMenuItem menuItem) item in revFilters)
+                {
+                    // Check the first menutem that matches and the following identical filters
+                    if (!string.IsNullOrWhiteSpace(item.filter)
+                        && (string.IsNullOrWhiteSpace(tstxtRevisionFilter.Text)
+                            || item.filter == tstxtRevisionFilter.Text))
+                    {
+                        tstxtRevisionFilter.Text = item.filter;
+                        item.menuItem.Checked = true;
+                    }
+                    else
+                    {
+                        item.menuItem.Checked = false;
+                    }
+                }
             }
 
             tsbtnAdvancedFilter.ToolTipText = e.FilterSummary;
