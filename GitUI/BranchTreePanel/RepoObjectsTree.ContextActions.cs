@@ -92,6 +92,13 @@ namespace GitUI.BranchTreePanel
             _sortOrderContextMenuItem.Enable(isSingleRefSelected && showSortOrder);
         }
 
+        private void EnableStashContextMenu(bool hasSingleSelection, NodeBase selectedNode)
+        {
+            bool isSingleStashSelected = hasSingleSelection && selectedNode is StashNode;
+            bool isBareRepository = Module.IsBareRepository();
+            EnableMenuItems(isSingleStashSelected && !isBareRepository, mnubtnOpenStash, mnubtnApplyStash, mnubtnPopStash, mnubtnDropStash);
+        }
+
         private void EnableSubmoduleContextMenu(bool hasSingleSelection, NodeBase selectedNode)
         {
             bool isSingleSubmoduleSelected = hasSingleSelection && selectedNode is SubmoduleNode;
@@ -171,6 +178,11 @@ namespace GitUI.BranchTreePanel
             RegisterClick<BranchPathNode>(mnubtnDeleteAllBranches, branchPath => branchPath.DeleteAll());
             RegisterClick<BranchPathNode>(mnubtnCreateBranch, branchPath => branchPath.CreateBranch());
 
+            RegisterClick<StashNode>(mnubtnOpenStash, node => _stashTree.OpenStash(this, node));
+            RegisterClick<StashNode>(mnubtnApplyStash, node => _stashTree.ApplyStash(this, node));
+            RegisterClick<StashNode>(mnubtnPopStash, node => _stashTree.PopStash(this, node));
+            RegisterClick<StashNode>(mnubtnDropStash, node => _stashTree.DropStash(this, node));
+
             // Expand / Collapse
             RegisterClick(mnubtnCollapse, () => GetSelectedNodes().HavingChildren().Collapsible().ForEach(node => node.TreeViewNode.Collapse()));
             RegisterClick(mnubtnExpand, () => GetSelectedNodes().HavingChildren().Expandable().ForEach(node => node.TreeViewNode.ExpandAll()));
@@ -180,8 +192,8 @@ namespace GitUI.BranchTreePanel
             RegisterClick(mnubtnMoveDown, () => ReorderTreeNode(treeMain.SelectedNode, up: false));
 
             // Sort by / order
-            _sortByContextMenuItem = new GitRefsSortByContextMenuItem(() => Refresh(new FilteredGitRefsProvider(UICommands.GitModule).GetRefs));
-            _sortOrderContextMenuItem = new GitRefsSortOrderContextMenuItem(() => Refresh(new FilteredGitRefsProvider(UICommands.GitModule).GetRefs));
+            _sortByContextMenuItem = new GitRefsSortByContextMenuItem(() => ResortRefs(new FilteredGitRefsProvider(UICommands.GitModule).GetRefs));
+            _sortOrderContextMenuItem = new GitRefsSortOrderContextMenuItem(() => ResortRefs(new FilteredGitRefsProvider(UICommands.GitModule).GetRefs));
             menuMain.InsertItems(new ToolStripItem[] { new ToolStripSeparator(), _sortByContextMenuItem, _sortOrderContextMenuItem }, after: mnubtnMoveDown);
         }
 
@@ -196,7 +208,7 @@ namespace GitUI.BranchTreePanel
             bool hasSingleSelection = selectedNodes.Length <= 1;
             var selectedNode = treeMain.SelectedNode.Tag as NodeBase;
 
-            copyContextMenuItem.Enable(hasSingleSelection && selectedNode is BaseBranchLeafNode branch && branch.Visible);
+            copyContextMenuItem.Enable(hasSingleSelection && ((selectedNode is BaseBranchLeafNode branch && branch.Visible) || selectedNode is StashNode));
             filterForSelectedRefsMenuItem.Enable(selectedNodes.OfType<IGitRefActions>().Any()); // enable if selection contains refs
 
             var selectedLocalBranch = selectedNode as LocalBranchNode;
@@ -219,6 +231,7 @@ namespace GitUI.BranchTreePanel
             EnableMenuItems(_tagNodeMenuItems, _ => hasSingleSelection && selectedNode is TagNode);
             EnableMenuItems(hasSingleSelection && selectedNode is RemoteBranchTree, mnuBtnManageRemotesFromRootNode, mnuBtnFetchAllRemotes, mnuBtnPruneAllRemotes);
             EnableRemoteRepoContextMenu(hasSingleSelection, selectedNode);
+            EnableStashContextMenu(hasSingleSelection, selectedNode);
             EnableSubmoduleContextMenu(hasSingleSelection, selectedNode);
             EnableMenuItems(hasSingleSelection && selectedNode is BranchPathNode, mnubtnCreateBranch, mnubtnDeleteAllBranches);
             EnableExpandCollapseContextMenu(selectedNodes);

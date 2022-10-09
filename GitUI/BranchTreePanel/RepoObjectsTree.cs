@@ -30,6 +30,7 @@ namespace GitUI.BranchTreePanel
         private BranchTree _branchesTree;
         private RemoteBranchTree _remotesTree;
         private TagTree _tagTree;
+        private StashTree _stashTree;
         private SubmoduleTree _submoduleTree;
         private List<TreeNode>? _searchResult;
         private Action<string?> _filterRevisionGridBySpaceSeparatedRefs;
@@ -73,6 +74,7 @@ namespace GitUI.BranchTreePanel
             tsbShowRemotes.Checked = AppSettings.RepoObjectsTreeShowRemotes;
             tsbShowTags.Checked = AppSettings.RepoObjectsTreeShowTags;
             tsbShowSubmodules.Checked = AppSettings.RepoObjectsTreeShowSubmodules;
+            tsbShowStashes.Checked = AppSettings.RepoObjectsTreeShowStashes;
 
             _doubleClickDecorator = new NativeTreeViewDoubleClickDecorator(treeMain);
             _doubleClickDecorator.BeforeDoubleClickExpandCollapse += BeforeDoubleClickExpandCollapse;
@@ -116,6 +118,7 @@ namespace GitUI.BranchTreePanel
                         { nameof(Images.RemoteEnableAndFetch), Pad(Images.RemoteEnableAndFetch) },
                         { nameof(Images.FileStatusModified), Pad(Images.FileStatusModified) },
                         { nameof(Images.FolderSubmodule), Pad(Images.FolderSubmodule) },
+                        { nameof(Images.Stash), Pad(Images.Stash) },
                         { nameof(Images.SubmoduleDirty), Pad(Images.SubmoduleDirty) },
                         { nameof(Images.SubmoduleRevisionUp), Pad(Images.SubmoduleRevisionUp) },
                         { nameof(Images.SubmoduleRevisionDown), Pad(Images.SubmoduleRevisionDown) },
@@ -234,22 +237,39 @@ namespace GitUI.BranchTreePanel
         }
 
         /// <summary>
-        /// Toggles filtering mode on or off to the git refs present in the left panel depending on the app's global filtering rules .
-        /// These rules include: show all branches / show current branch / show filtered branches, etc.
+        /// FormBrowse refreshing the side panel when refreshing the grid.
+        /// The global filters include: show all branches / show current branch / show filtered branches, etc.
         /// </summary>
         /// <param name="isFiltering">
         ///  <see langword="true"/>, if the data is being filtered; otherwise <see langword="false"/>.
         /// </param>
-        /// <param name="getRefs">Function to get refs.</param>
         /// <param name="forceRefresh">Refresh may be required as references may have been changed.</param>
-        public void Refresh(bool isFiltering, bool forceRefresh, Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs)
+        /// <param name="getRefs">Function to get refs.</param>
+        public void RefreshWhenLoading(bool isFiltering, bool forceRefresh, Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs)
         {
             _branchesTree.Refresh(isFiltering, forceRefresh, getRefs);
             _remotesTree.Refresh(isFiltering, forceRefresh, getRefs);
             _tagTree.Refresh(isFiltering, forceRefresh, getRefs);
+
+            // Clear current stash
+            _stashTree.Refresh(new(() => new List<GitRevision>()));
         }
 
-        public void Refresh(Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs)
+        /// <summary>
+        /// FormBrowse refreshing the side panel when refreshing the grid.
+        /// The global filters include: show all branches / show current branch / show filtered branches, etc.
+        /// </summary>
+        /// <param name="getStashRevs">Lazy accessor for stash commits.</param>
+        public void RefreshAfterLoaded(Lazy<IReadOnlyCollection<GitRevision>> getStashRevs)
+        {
+            _stashTree.Refresh(getStashRevs);
+        }
+
+        /// <summary>
+        /// Refresh after resorting.
+        /// </summary>
+        /// <param name="getRefs">Git references</param>
+        public void ResortRefs(Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs)
         {
             _branchesTree.Refresh(getRefs);
             _remotesTree.Refresh(getRefs);
@@ -322,6 +342,7 @@ namespace GitUI.BranchTreePanel
             CreateRemotes();
             CreateTags();
             CreateSubmodules();
+            CreateStashes();
 
             FixInvalidTreeToPositionIndices();
             ShowEnabledTrees();
@@ -380,6 +401,18 @@ namespace GitUI.BranchTreePanel
             };
 
             _submoduleTree = new SubmoduleTree(rootNode, UICommandsSource);
+        }
+
+        private void CreateStashes()
+        {
+            TreeNode rootNode = new(TranslatedStrings.Stashes)
+            {
+                Name = TranslatedStrings.Stashes,
+                ImageKey = nameof(Images.Stash),
+                SelectedImageKey = nameof(Images.Stash)
+            };
+
+            _stashTree = new StashTree(rootNode, UICommandsSource, _refsSource);
         }
 
         private void AddTree(Tree tree)

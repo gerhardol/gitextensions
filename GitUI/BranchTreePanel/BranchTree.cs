@@ -6,10 +6,9 @@ using Microsoft.VisualStudio.Threading;
 
 namespace GitUI.BranchTreePanel
 {
-    internal sealed class BranchTree : Tree
+    internal sealed class BranchTree : BranchBaseTree
     {
         private readonly IAheadBehindDataProvider? _aheadBehindDataProvider;
-        private readonly ICheckRefs _refsSource;
 
         // Retains the list of currently loaded branches.
         // This is needed to apply filtering without reloading the data.
@@ -17,13 +16,10 @@ namespace GitUI.BranchTreePanel
         private IReadOnlyList<IGitRef>? _loadedBranches;
 
         public BranchTree(TreeNode treeNode, IGitUICommandsSource uiCommands, IAheadBehindDataProvider? aheadBehindDataProvider, ICheckRefs refsSource)
-            : base(treeNode, uiCommands)
+            : base(treeNode, uiCommands, refsSource)
         {
             _aheadBehindDataProvider = aheadBehindDataProvider;
-            _refsSource = refsSource;
         }
-
-        protected override bool SupportsFiltering => true;
 
         protected override async Task<Nodes> LoadNodesAsync(CancellationToken token, Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs)
         {

@@ -4,22 +4,17 @@ using Microsoft.VisualStudio.Threading;
 
 namespace GitUI.BranchTreePanel
 {
-    internal sealed class TagTree : Tree
+    internal sealed class TagTree : BranchBaseTree
     {
-        private readonly ICheckRefs _refsSource;
-
         // Retains the list of currently loaded tags.
         // This is needed to apply filtering without reloading the data.
         // Whether or not force the reload of data is controlled by <see cref="_isFiltering"/> flag.
         private IReadOnlyList<IGitRef>? _loadedTags;
 
         public TagTree(TreeNode treeNode, IGitUICommandsSource uiCommands, ICheckRefs refsSource)
-            : base(treeNode, uiCommands)
+            : base(treeNode, uiCommands, refsSource)
         {
-            _refsSource = refsSource;
         }
-
-        protected override bool SupportsFiltering => true;
 
         /// <inheritdoc/>
         protected internal override void Refresh(Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs)
