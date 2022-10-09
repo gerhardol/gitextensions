@@ -7,22 +7,17 @@ using Microsoft.VisualStudio.Threading;
 
 namespace GitUI.BranchTreePanel
 {
-    internal sealed class RemoteBranchTree : Tree
+    internal sealed class RemoteBranchTree : BranchBaseTree
     {
-        private readonly ICheckRefs _refsSource;
-
         // Retains the list of currently loaded branches.
         // This is needed to apply filtering without reloading the data.
         // Whether or not force the reload of data is controlled by <see cref="_isFiltering"/> flag.
         private IReadOnlyList<IGitRef>? _loadedBranches;
 
         public RemoteBranchTree(TreeNode treeNode, IGitUICommandsSource uiCommands, ICheckRefs refsSource)
-            : base(treeNode, uiCommands)
+            : base(treeNode, uiCommands, refsSource)
         {
-            _refsSource = refsSource;
         }
-
-        protected override bool SupportsFiltering => true;
 
         protected override async Task<Nodes> LoadNodesAsync(CancellationToken token, Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs)
         {

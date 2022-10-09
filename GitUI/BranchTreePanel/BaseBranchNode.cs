@@ -109,7 +109,7 @@ namespace GitUI.BranchTreePanel
             return string.IsNullOrEmpty(AheadBehind) ? Name : $"{Name} ({AheadBehind})";
         }
 
-        protected void SelectRevision()
+        protected virtual void SelectRevision()
         {
             TreeViewNode.TreeView?.BeginInvoke(new Action(() =>
             {

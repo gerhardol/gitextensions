@@ -62,7 +62,12 @@ namespace GitUI.CommandsDialogs
                 // (this check ignores other revision filters)
                 bool isFiltering = !AppSettings.ShowReflogReferences
                                 && (AppSettings.ShowCurrentBranchOnly || AppSettings.BranchFilterEnabled);
-                repoObjectsTree.Refresh(isFiltering, e.ForceRefresh, e.GetRefs);
+                repoObjectsTree.RefreshWhenLoading(isFiltering, e.ForceRefresh, e.GetRefs);
+            };
+            RevisionGrid.RevisionsLoaded += (sender, e) =>
+            {
+                // Stashes normally requires that the grid is loaded before determining if they are display
+                repoObjectsTree.RefreshAfterLoaded(e.GetStashRevs);
             };
             RevisionGrid.SelectionChanged += (sender, e) =>
             {
