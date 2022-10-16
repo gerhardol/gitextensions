@@ -427,7 +427,6 @@ namespace GitUI.BranchTreePanel
             // 
             // mnubtnOpenStash
             // 
-            this.mnubtnOpenStash.Image = global::GitUI.Properties.Images.Stash;
             this.mnubtnOpenStash.Name = "mnubtnOpenStash";
             this.mnubtnOpenStash.Size = new System.Drawing.Size(266, 26);
             this.mnubtnOpenStash.Text = "&Open stash";
@@ -435,7 +434,6 @@ namespace GitUI.BranchTreePanel
             // 
             // mnubtnApplyStash
             // 
-            this.mnubtnApplyStash.Image = global::GitUI.Properties.Images.Stash;
             this.mnubtnApplyStash.Name = "mnubtnApplyStash";
             this.mnubtnApplyStash.Size = new System.Drawing.Size(266, 26);
             this.mnubtnApplyStash.Text = "&Apply stash";
@@ -443,7 +441,6 @@ namespace GitUI.BranchTreePanel
             // 
             // mnubtnPopStash
             // 
-            this.mnubtnPopStash.Image = global::GitUI.Properties.Images.Stash;
             this.mnubtnPopStash.Name = "mnubtnPopStash";
             this.mnubtnPopStash.Size = new System.Drawing.Size(266, 26);
             this.mnubtnPopStash.Text = "&Pop stash";
@@ -451,7 +448,6 @@ namespace GitUI.BranchTreePanel
             // 
             // mnubtnDropStash
             // 
-            this.mnubtnDropStash.Image = global::GitUI.Properties.Images.Stash;
             this.mnubtnDropStash.Name = "mnubtnDropStash";
             this.mnubtnDropStash.Size = new System.Drawing.Size(266, 26);
             this.mnubtnDropStash.Text = "&Drop stash...";
