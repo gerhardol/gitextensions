@@ -1643,19 +1643,19 @@ namespace GitCommands
         #region Stage/Unstage
 
         /// <summary>
-        /// Set/unset assumeUnchanged
+        /// Set/unset whether given items are assumed unchanged by git-status.
         /// </summary>
-        /// <param name="files">Files to change</param>
-        /// <param name="assumeUnchanged">Set/unset assumeUnchanged</param>
-        /// <param name="alloutput">stdout and stderr output</param>
-        /// <returns>true if no errors occurred</returns>
-        public bool AssumeUnchangedFiles(IReadOnlyList<GitItemStatus> files, bool assumeUnchanged, out string alloutput)
+        /// <param name="files">The files to set the status for.</param>
+        /// <param name="assumeUnchanged">The status value.</param>
+        /// <param name="allOutput">stdout and stderr output.</param>
+        /// <returns><see langword="true"/> if no errors occurred; otherwise, <see langword="false"/>.</returns>
+        public bool AssumeUnchangedFiles(IReadOnlyList<GitItemStatus> files, bool assumeUnchanged, out string allOutput)
         {
             files = files.Where(file => file.IsAssumeUnchanged != assumeUnchanged).ToList();
 
             if (files.Count == 0)
             {
-                alloutput = "";
+                allOutput = "";
                 return true;
             }
 
@@ -1675,24 +1675,24 @@ namespace GitCommands
                 SystemEncoding,
                 throwOnErrorExit: false);
 
-            alloutput = execution.AllOutput;
+            allOutput = execution.AllOutput;
             return execution.ExitedSuccessfully;
         }
 
         /// <summary>
-        /// Set/unset skipworktree
+        /// Set/unset whether given items are not flagged as changed by git-status.
         /// </summary>
-        /// <param name="files">Files to change</param>
-        /// <param name="skipWorktree">Set/unset skipworktree</param>
-        /// <param name="alloutput">stdout and stderr output</param>
-        /// <returns>true if no errors occurred</returns>
-        public bool SkipWorktreeFiles(IReadOnlyList<GitItemStatus> files, bool skipWorktree, out string alloutput)
+        /// <param name="files">The files to set the status for.</param>
+        /// <param name="skipWorktree">The status value.</param>
+        /// <param name="allOutput">stdout and stderr output.</param>
+        /// <returns><see langword="true"/> if no errors occurred; otherwise, <see langword="false"/>.</returns>
+        public bool SkipWorktreeFiles(IReadOnlyList<GitItemStatus> files, bool skipWorktree, out string allOutput)
         {
             files = files.Where(file => file.IsSkipWorktree != skipWorktree).ToList();
 
             if (files.Count == 0)
             {
-                alloutput = "";
+                allOutput = "";
                 return true;
             }
 
@@ -1711,23 +1711,23 @@ namespace GitCommands
                 },
                 SystemEncoding);
 
-            alloutput = execution.AllOutput;
+            allOutput = execution.AllOutput;
             return execution.ExitedSuccessfully;
         }
 
         /// <summary>
-        /// Stage files worktree to index
+        /// Stage files from worktree to index.
         /// </summary>
-        /// <param name="files">Files to stage</param>
-        /// <param name="alloutput">stdout and stderr output</param>
-        /// <returns>true if no errors occurred</returns>
-        public bool StageFiles(IReadOnlyList<GitItemStatus> files, out string alloutput)
+        /// <param name="files">The files to set the status for.</param>
+        /// <param name="allOutput">stdout and stderr output.</param>
+        /// <returns><see langword="true"/> if no errors occurred; otherwise, <see langword="false"/>.</returns>
+        public bool StageFiles(IReadOnlyList<GitItemStatus> files, out string allOutput)
         {
             bool wereErrors = false;
 
             if (files.Count == 0)
             {
-                alloutput = "";
+                allOutput = "";
                 return !wereErrors;
             }
 
@@ -1775,7 +1775,7 @@ namespace GitCommands
                 output.Append(execution.AllOutput);
             }
 
-            alloutput = output.ToString();
+            allOutput = output.ToString();
             return !wereErrors;
         }
 
@@ -1790,18 +1790,18 @@ namespace GitCommands
         }
 
         /// <summary>
-        /// Unstage files index to worktree
+        /// Unstage files from index to worktree.
         /// </summary>
-        /// <param name="files">Files to unstage</param>
-        /// <param name="alloutput">stdout and stderr output</param>
-        /// <returns>true if no errors occurred</returns>
-        public bool UnstageFiles(IReadOnlyList<GitItemStatus> files, out string alloutput)
+        /// <param name="files">The files to set the status for.</param>
+        /// <param name="allOutput">stdout and stderr output.</param>
+        /// <returns><see langword="true"/> if no errors occurred; otherwise, <see langword="false"/>.</returns>
+        public bool UnstageFiles(IReadOnlyList<GitItemStatus> files, out string allOutput)
         {
             bool wereErrors = false;
 
             if (files.Count == 0)
             {
-                alloutput = "";
+                allOutput = "";
                 return !wereErrors;
             }
 
@@ -1814,7 +1814,7 @@ namespace GitCommands
                 GitArgumentBuilder sb = new("reset") { "--" };
                 foreach (var file in nonNewFiles)
                 {
-                    sb.Add($"\"{file.Name.ToPosixPath()}\"");
+                    sb.Add(file.Name.ToPosixPath().QuoteNE());
                 }
 
                 var execution = _gitExecutable.Execute(sb);
@@ -1842,7 +1842,7 @@ namespace GitCommands
                 output.Append(execution.AllOutput);
             }
 
-            alloutput = output.ToString();
+            allOutput = output.ToString();
             return !wereErrors;
         }
 

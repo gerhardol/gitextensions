@@ -232,12 +232,13 @@ namespace GitCommands.Gpg
                 return null;
             }
 
-            // '--raw' returns info in stderr
             GitArgumentBuilder args = new("verify-tag")
             {
                 { raw, "--raw" },
                 tagName
             };
+
+            // '--raw' returns info in stderr
             return GetModule().GitExecutable.Execute(args).StandardError;
         }
 
