@@ -44,7 +44,7 @@ namespace GitUI.BranchTreePanel
         /// <summary>
         /// Gets whether the commit that the node represents is currently visible in the revision grid.
         /// </summary>
-        public bool Visible { get; }
+        public bool Visible { get; set; }
 
         protected override void ApplyStyle()
         {

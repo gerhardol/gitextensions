@@ -1057,7 +1057,7 @@ namespace GitUI
                     });
 
                 // Initiate update side panel
-                RevisionsLoading?.Invoke(this, new RevisionLoadEventArgs(this, UICommands, getUnfilteredRefs, getStashRevs, forceRefresh));
+                RevisionsLoading?.Invoke(this, new RevisionLoadEventArgs(this, UICommands, getUnfilteredRefs, getStashRevs, forceRefresh, _filterInfo.HasFilter));
             }
             catch
             {
@@ -1341,7 +1341,7 @@ namespace GitUI
                         }
 
                         _isRefreshingRevisions = false;
-                        RevisionsLoaded?.Invoke(this, new RevisionLoadEventArgs(this, UICommands, getUnfilteredRefs, getStashRevs, forceRefresh));
+                        RevisionsLoaded?.Invoke(this, new RevisionLoadEventArgs(this, UICommands, getUnfilteredRefs, getStashRevs, forceRefresh, _filterInfo.HasFilter));
                     }).FileAndForget();
                     return;
                 }
@@ -1406,7 +1406,7 @@ namespace GitUI
 
                     SetPage(_gridView);
                     _isRefreshingRevisions = false;
-                    RevisionsLoaded?.Invoke(this, new RevisionLoadEventArgs(this, UICommands, getUnfilteredRefs, getStashRevs, forceRefresh));
+                    RevisionsLoaded?.Invoke(this, new RevisionLoadEventArgs(this, UICommands, getUnfilteredRefs, getStashRevs, forceRefresh, _filterInfo.HasFilter));
                     HighlightRevisionsByAuthor(GetSelectedRevisions());
 
                     await TaskScheduler.Default;
