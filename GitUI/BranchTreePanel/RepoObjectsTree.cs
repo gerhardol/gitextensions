@@ -238,31 +238,33 @@ namespace GitUI.BranchTreePanel
 
         /// <summary>
         /// FormBrowse refreshing the side panel when refreshing the grid.
-        /// The global filters include: show all branches / show current branch / show filtered branches, etc.
         /// </summary>
         /// <param name="isFiltering">
         ///  <see langword="true"/>, if the data is being filtered; otherwise <see langword="false"/>.
         /// </param>
         /// <param name="forceRefresh">Refresh may be required as references may have been changed.</param>
         /// <param name="getRefs">Function to get refs.</param>
-        public void RefreshWhenLoading(bool isFiltering, bool forceRefresh, Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs)
+        /// <param name="getStashRevs">Lazy accessor for stash commits.</param>
+        public void RefreshWhenLoading(bool isFiltering, bool forceRefresh, Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs, Lazy<IReadOnlyCollection<GitRevision>> getStashRevs)
         {
             _branchesTree.Refresh(isFiltering, forceRefresh, getRefs);
             _remotesTree.Refresh(isFiltering, forceRefresh, getRefs);
             _tagTree.Refresh(isFiltering, forceRefresh, getRefs);
-
-            // Clear current stash
-            _stashTree.Refresh(new(() => Array.Empty<GitRevision>()));
+            _stashTree.Refresh(getStashRevs);
         }
 
         /// <summary>
-        /// FormBrowse refreshing the side panel when refreshing the grid.
-        /// The global filters include: show all branches / show current branch / show filtered branches, etc.
+        /// FormBrowse refreshing the side panel after updating the grid.
         /// </summary>
+        /// <param name="isFiltering">
+        ///  <see langword="true"/>, if the data is being filtered; otherwise <see langword="false"/>.
+        /// </param>
+        /// <param name="forceRefresh">Refresh may be required as references may have been changed.</param>
+        /// <param name="getRefs">Function to get refs.</param>
         /// <param name="getStashRevs">Lazy accessor for stash commits.</param>
-        public void RefreshAfterLoaded(Lazy<IReadOnlyCollection<GitRevision>> getStashRevs)
+        public void RefreshAfterLoaded(bool isFiltering, bool forceRefresh, Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs, Lazy<IReadOnlyCollection<GitRevision>> getStashRevs)
         {
-            _stashTree.Refresh(getStashRevs);
+            _stashTree.UpdateVisibility();
         }
 
         /// <summary>

@@ -1,7 +1,5 @@
 ﻿using System.Diagnostics;
 using GitCommands;
-using GitUI.BranchTreePanel.Interfaces;
-using GitUI.CommandsDialogs;
 using GitUI.Properties;
 using GitUIPluginInterfaces;
 
@@ -21,6 +19,11 @@ namespace GitUI.BranchTreePanel
         public ObjectId? ObjectId { get; }
         public string DisplayName { get; }
         public string ReflogSelector { get; }
+
+        public void UpdateStyle()
+        {
+            ApplyStyle();
+        }
 
         internal override void OnSelected()
         {
