@@ -82,7 +82,7 @@ namespace GitUI.BranchTreePanel
             {
                 if (remoteByName.TryGetValue(remoteName, out var remote))
                 {
-                    RemoteRepoNode node = new(this, remoteName, remotesManager, remote, true);
+                    RemoteRepoNode node = new(this, objectId: null, remoteName, remotesManager, remote, true);
                     enabledRemoteRepoNodes.Add(node);
                 }
             }
@@ -99,11 +99,11 @@ namespace GitUI.BranchTreePanel
                 List<RemoteRepoNode> disabledRemoteRepoNodes = new();
                 foreach (var remote in disabledRemotes.OrderBy(remote => remote.Name))
                 {
-                    RemoteRepoNode node = new(this, remote.Name, remotesManager, remote, false);
+                    RemoteRepoNode node = new(this, objectId: null, remote.Name, remotesManager, remote, false);
                     disabledRemoteRepoNodes.Add(node);
                 }
 
-                RemoteRepoFolderNode disabledFolderNode = new(this, TranslatedStrings.Inactive);
+                RemoteRepoFolderNode disabledFolderNode = new(this, objectId: null, TranslatedStrings.Inactive);
                 disabledRemoteRepoNodes
                     .OrderBy(node => node.FullPath)
                     .ForEach(node => disabledFolderNode.Nodes.AddNode(node));
@@ -117,10 +117,10 @@ namespace GitUI.BranchTreePanel
             {
                 if (parentPath == remote.Name)
                 {
-                    return new RemoteRepoNode(tree, parentPath, remotesManager, remote, true);
+                    return new RemoteRepoNode(tree, objectId: null, parentPath, remotesManager, remote, true);
                 }
 
-                return new BasePathNode(tree, parentPath);
+                return new BasePathNode(tree, objectId: null, parentPath);
             }
 
             IReadOnlyList<string> GetEnabledRemoteNamesWithoutBranches(IReadOnlyList<IGitRef> branches, Dictionary<string, Remote> remoteByName)

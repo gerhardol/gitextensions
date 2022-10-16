@@ -6,12 +6,9 @@ namespace GitUI.BranchTreePanel
 {
     internal sealed class StashTree : Tree
     {
-        private readonly ICheckRefs _refsSource;
-
         public StashTree(TreeNode treeNode, IGitUICommandsSource uiCommands, ICheckRefs refsSource)
-            : base(treeNode, uiCommands)
+            : base(treeNode, uiCommands, refsSource)
         {
-            _refsSource = refsSource;
         }
 
         internal void Refresh(Lazy<IReadOnlyCollection<GitRevision>> getStashRevs)
@@ -51,7 +48,7 @@ namespace GitUI.BranchTreePanel
                 // Stashes does not support filtering, but stashes may not be visible.
                 // Visibility is set after the grid is loaded.
                 StashNode node = new(this, stash.ObjectId, stash.ReflogSelector, stash.Subject, visible: false);
-                Node? parent = node.CreateRootNode(pathToNodes, (tree, parentPath) => new BasePathNode(tree, parentPath));
+                Node? parent = node.CreateRootNode(pathToNodes, (tree, parentPath) => new BasePathNode(tree, objectId: null, parentPath));
 
                 if (parent is not null)
                 {
@@ -60,28 +57,6 @@ namespace GitUI.BranchTreePanel
             }
 
             return nodes;
-        }
-
-        internal void UpdateVisibility()
-        {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-            {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                foreach (Node node in Nodes)
-                {
-                    if (node is not StashNode stashNode)
-                    {
-                        continue;
-                    }
-
-                    bool isVisible = stashNode.ObjectId is not null && _refsSource.Contains(stashNode.ObjectId);
-                    if (stashNode.Visible != isVisible)
-                    {
-                        stashNode.Visible = isVisible;
-                        stashNode.UpdateStyle();
-                    }
-                }
-            }).FileAndForget();
         }
 
         protected override void PostFillTreeViewNode(bool firstTime)

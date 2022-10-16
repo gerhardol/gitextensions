@@ -95,7 +95,7 @@ namespace GitUI.BranchTreePanel
                     localBranchNode.UpdateAheadBehind(aheadBehind.ToDisplay(), aheadBehind.RemoteRef);
                 }
 
-                var parent = localBranchNode.CreateRootNode(pathToNode, (tree, parentPath) => new BranchPathNode(tree, parentPath));
+                var parent = localBranchNode.CreateRootNode(pathToNode, (tree, parentPath) => new BranchPathNode(tree, objectId: null, parentPath));
                 if (parent is not null)
                 {
                     nodes.AddNode(parent);

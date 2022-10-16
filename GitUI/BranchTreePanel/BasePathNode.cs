@@ -1,10 +1,11 @@
 ﻿using GitUI.Properties;
+using GitUIPluginInterfaces;
 
 namespace GitUI.BranchTreePanel
 {
     internal class BasePathNode : BaseBranchNode
     {
-        public BasePathNode(Tree tree, string fullPath) : base(tree, fullPath, visible: true)
+        public BasePathNode(Tree tree, ObjectId objectId, string fullPath) : base(tree, objectId, fullPath, visible: true)
         {
         }
 

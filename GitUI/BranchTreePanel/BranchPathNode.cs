@@ -1,12 +1,13 @@
 ﻿using System.Diagnostics;
+using GitUIPluginInterfaces;
 
 namespace GitUI.BranchTreePanel
 {
     [DebuggerDisplay("(Branch path) FullPath = {FullPath}")]
     internal sealed class BranchPathNode : BasePathNode
     {
-        public BranchPathNode(Tree tree, string fullPath)
-            : base(tree, fullPath)
+        public BranchPathNode(Tree tree, ObjectId objectId, string fullPath)
+            : base(tree, objectId, fullPath)
         {
         }
 

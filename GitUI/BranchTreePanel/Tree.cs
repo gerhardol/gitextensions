@@ -1,5 +1,6 @@
 ﻿using GitCommands;
 using GitUI.UserControls;
+using GitUI.UserControls.RevisionGrid;
 using GitUIPluginInterfaces;
 
 namespace GitUI.BranchTreePanel
@@ -9,12 +10,14 @@ namespace GitUI.BranchTreePanel
         private readonly IGitUICommandsSource _uiCommandsSource;
         private readonly CancellationTokenSequence _reloadCancellationTokenSequence = new();
         private bool _firstReloadNodesSinceModuleChanged = true;
+        protected readonly ICheckRefs _refsSource;
 
-        protected Tree(TreeNode treeNode, IGitUICommandsSource uiCommands)
+        protected Tree(TreeNode treeNode, IGitUICommandsSource uiCommands, ICheckRefs refsSource)
         {
             Nodes = new Nodes(this);
             _uiCommandsSource = uiCommands;
             TreeViewNode = treeNode;
+            _refsSource = refsSource;
             treeNode.Tag = this;
 
             uiCommands.UICommandsChanged += (a, e) =>
@@ -163,6 +166,28 @@ namespace GitUI.BranchTreePanel
             PostFillTreeViewNode(firstTime);
 
             TreeViewNode.RestoreExpandedNodesState(expandedNodesState);
+        }
+
+        internal void UpdateVisibility()
+        {
+            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                foreach (Node node in Nodes)
+                {
+                    if (node is not BaseBranchNode baseNode)
+                    {
+                        continue;
+                    }
+
+                    bool isVisible = baseNode.ObjectId is not null && _refsSource.Contains(baseNode.ObjectId);
+                    if (baseNode.Visible != isVisible)
+                    {
+                        baseNode.Visible = isVisible;
+                        baseNode.UpdateStyle();
+                    }
+                }
+            }).FileAndForget();
         }
 
         // Called after the TreeView has been populated from Nodes. A good place to update properties

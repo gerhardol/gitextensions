@@ -5,15 +5,12 @@ namespace GitUI.BranchTreePanel
 {
     internal abstract class BranchBaseTree : Tree
     {
-        protected readonly ICheckRefs _refsSource;
-
         // A flag to indicate whether the data is being filtered (e.g. Show Current Branch Only).
         private protected AsyncLocal<bool> IsFiltering = new();
         protected bool SupportsFiltering { get; } = true;
 
-        protected BranchBaseTree(TreeNode treeNode, IGitUICommandsSource uiCommands, ICheckRefs refsSource) : base(treeNode, uiCommands)
+        protected BranchBaseTree(TreeNode treeNode, IGitUICommandsSource uiCommands, ICheckRefs refsSource) : base(treeNode, uiCommands, refsSource)
         {
-            _refsSource = refsSource;
         }
 
         protected override void OnAttached()

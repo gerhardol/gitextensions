@@ -10,12 +10,9 @@ namespace GitUI.BranchTreePanel
     internal sealed class TagNode : BaseBranchNode, IGitRefActions, ICanDelete
     {
         public TagNode(Tree tree, in ObjectId? objectId, string fullPath, bool visible)
-            : base(tree, fullPath, visible)
+            : base(tree, objectId, fullPath, visible)
         {
-            ObjectId = objectId;
         }
-
-        public ObjectId? ObjectId { get; }
 
         internal override void OnSelected()
         {

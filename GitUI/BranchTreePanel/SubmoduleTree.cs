@@ -14,7 +14,7 @@ namespace GitUI.BranchTreePanel
         private Nodes? _currentNodes = null;
 
         public SubmoduleTree(TreeNode treeNode, IGitUICommandsSource uiCommands)
-            : base(treeNode, uiCommands)
+            : base(treeNode, uiCommands, refsSource: null)
         {
             SubmoduleStatusProvider.Default.StatusUpdating += Provider_StatusUpdating;
             SubmoduleStatusProvider.Default.StatusUpdated += Provider_StatusUpdated;

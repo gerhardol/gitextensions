@@ -1,12 +1,13 @@
 ﻿using System.Diagnostics;
 using GitUI.Properties;
+using GitUIPluginInterfaces;
 
 namespace GitUI.BranchTreePanel
 {
     [DebuggerDisplay("(Folder) FullPath = {FullPath}")]
     internal sealed class RemoteRepoFolderNode : BaseBranchNode
     {
-        public RemoteRepoFolderNode(Tree tree, string name) : base(tree, name, true)
+        public RemoteRepoFolderNode(Tree tree, ObjectId objectId, string name) : base(tree, objectId, name, true)
         {
         }
 

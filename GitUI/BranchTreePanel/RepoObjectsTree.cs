@@ -264,6 +264,9 @@ namespace GitUI.BranchTreePanel
         /// <param name="getStashRevs">Lazy accessor for stash commits.</param>
         public void RefreshAfterLoaded(bool isFiltering, bool forceRefresh, Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs, Lazy<IReadOnlyCollection<GitRevision>> getStashRevs)
         {
+            _branchesTree.UpdateVisibility();
+            _remotesTree.UpdateVisibility();
+            _tagTree.UpdateVisibility();
             _stashTree.UpdateVisibility();
         }
 

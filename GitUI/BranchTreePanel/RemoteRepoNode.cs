@@ -13,8 +13,8 @@ namespace GitUI.BranchTreePanel
         private readonly Remote _remote;
         private readonly IConfigFileRemoteSettingsManager _remotesManager;
 
-        public RemoteRepoNode(Tree tree, string fullPath, IConfigFileRemoteSettingsManager remotesManager, Remote remote, bool isEnabled)
-            : base(tree, fullPath, visible: true)
+        public RemoteRepoNode(Tree tree, ObjectId objectId, string fullPath, IConfigFileRemoteSettingsManager remotesManager, Remote remote, bool isEnabled)
+            : base(tree, objectId, fullPath, visible: true)
         {
             _remote = remote;
             Enabled = isEnabled;

@@ -9,21 +9,14 @@ namespace GitUI.BranchTreePanel
     internal sealed class StashNode : BaseBranchNode
     {
         public StashNode(Tree tree, in ObjectId? objectId, string reflogSelector, string subject, bool visible)
-            : base(tree, reflogSelector.RemovePrefix("refs/"), visible)
+            : base(tree, objectId, reflogSelector.RemovePrefix("refs/"), visible)
         {
-            ObjectId = objectId;
             DisplayName = $"{reflogSelector.RemovePrefix(GitRefName.RefsStashPrefix)}: {subject}";
             ReflogSelector = reflogSelector;
         }
 
-        public ObjectId? ObjectId { get; }
         public string DisplayName { get; }
         public string ReflogSelector { get; }
-
-        public void UpdateStyle()
-        {
-            ApplyStyle();
-        }
 
         internal override void OnSelected()
         {

@@ -11,9 +11,8 @@ namespace GitUI.BranchTreePanel
         private bool _isMerged = false;
 
         public BaseBranchLeafNode(Tree tree, in ObjectId? objectId, string fullPath, bool visible, string imageKeyUnmerged, string imageKeyMerged)
-            : base(tree, fullPath, visible)
+            : base(tree, objectId, fullPath, visible)
         {
-            ObjectId = objectId;
             _imageKeyUnmerged = imageKeyUnmerged;
             _imageKeyMerged = imageKeyMerged;
         }
@@ -33,8 +32,6 @@ namespace GitUI.BranchTreePanel
                 ApplyStyle();
             }
         }
-
-        public ObjectId? ObjectId { get; }
 
         protected override void ApplyStyle()
         {

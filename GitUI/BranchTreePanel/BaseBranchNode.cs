@@ -2,6 +2,7 @@
 using GitCommands;
 using GitExtUtils.GitUI.Theming;
 using GitUI.Properties;
+using GitUIPluginInterfaces;
 
 namespace GitUI.BranchTreePanel
 {
@@ -10,7 +11,7 @@ namespace GitUI.BranchTreePanel
     {
         protected const char PathSeparator = '/';
 
-        protected BaseBranchNode(Tree tree, string fullPath, bool visible)
+        protected BaseBranchNode(Tree tree, in ObjectId? objectId, string fullPath, bool visible)
             : base(tree)
         {
             fullPath = fullPath.Trim();
@@ -19,12 +20,14 @@ namespace GitUI.BranchTreePanel
                 throw new ArgumentNullException(nameof(fullPath));
             }
 
+            ObjectId = objectId;
             var dirs = fullPath.Split(PathSeparator);
             Name = dirs[dirs.Length - 1];
             ParentPath = dirs.Take(dirs.Length - 1).Join(PathSeparator.ToString());
             Visible = visible;
         }
 
+        public ObjectId? ObjectId { get; }
         protected string? AheadBehind { get; set; }
 
         protected string? RelatedBranch { get; set; }
@@ -102,6 +105,11 @@ namespace GitUI.BranchTreePanel
             parent.Nodes.AddNode(this);
 
             return result;
+        }
+
+        public void UpdateStyle()
+        {
+            ApplyStyle();
         }
 
         protected override string DisplayText()
