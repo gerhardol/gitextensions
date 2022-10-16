@@ -49,10 +49,10 @@ namespace GitUI.BranchTreePanel
             {
                 token.ThrowIfCancellationRequested();
 
-                // Stashes does not supprt filtering, but stashes may not be visible
+                // Stashes does not support filtering, but stashes may not be visible
                 bool isVisible = stash.ObjectId is not null && _refsSource.Contains(stash.ObjectId);
                 StashNode node = new(this, stash.ObjectId, stash.ReflogSelector, stash.Subject, isVisible);
-                var parent = node.CreateRootNode(pathToNodes, (tree, parentPath) => new BasePathNode(tree, parentPath));
+                Node? parent = node.CreateRootNode(pathToNodes, (tree, parentPath) => new BasePathNode(tree, parentPath));
 
                 if (parent is not null)
                 {

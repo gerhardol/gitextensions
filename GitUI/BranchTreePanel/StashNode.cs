@@ -14,7 +14,7 @@ namespace GitUI.BranchTreePanel
             : base(tree, reflogSelector.RemovePrefix("refs/"), visible)
         {
             ObjectId = objectId;
-            DisplayName = $"{reflogSelector.RemovePrefix("refs/")} {subject}";
+            DisplayName = $"{reflogSelector.RemovePrefix(GitRefName.RefsStashPrefix)}: {subject}";
             ReflogSelector = reflogSelector;
         }
 
