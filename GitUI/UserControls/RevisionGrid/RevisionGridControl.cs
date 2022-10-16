@@ -888,7 +888,10 @@ namespace GitUI
             _ambiguousRefs = new(() => GitRef.GetAmbiguousRefNames(getUnfilteredRefs.Value));
 
             // Get the "main" stash commit, including the reflog selector
-            Lazy<IReadOnlyCollection<GitRevision>> getStashRevs = new(() => (!AppSettings.ShowStashes ? new List<GitRevision>() : new RevisionReader(capturedModule, hasReflogSelector: true).GetStashes(cancellationToken)));
+            Lazy<IReadOnlyCollection<GitRevision>> getStashRevs = new(() =>
+                !AppSettings.ShowStashes
+                ? new List<GitRevision>()
+                : new RevisionReader(capturedModule, hasReflogSelector: true).GetStashes(cancellationToken));
 
             try
             {
@@ -1054,7 +1057,7 @@ namespace GitUI
                     });
 
                 // Initiate update side panel
-                RevisionsLoading?.Invoke(this, new RevisionLoadEventArgs(this, UICommands, getUnfilteredRefs, forceRefresh, getStashRevs));
+                RevisionsLoading?.Invoke(this, new RevisionLoadEventArgs(this, UICommands, getUnfilteredRefs, getStashRevs, forceRefresh));
             }
             catch
             {
@@ -1338,7 +1341,7 @@ namespace GitUI
                         }
 
                         _isRefreshingRevisions = false;
-                        RevisionsLoaded?.Invoke(this, new RevisionLoadEventArgs(this, UICommands, getUnfilteredRefs, forceRefresh, getStashRevs));
+                        RevisionsLoaded?.Invoke(this, new RevisionLoadEventArgs(this, UICommands, getUnfilteredRefs, getStashRevs, forceRefresh));
                     }).FileAndForget();
                     return;
                 }
@@ -1403,7 +1406,7 @@ namespace GitUI
 
                     SetPage(_gridView);
                     _isRefreshingRevisions = false;
-                    RevisionsLoaded?.Invoke(this, new RevisionLoadEventArgs(this, UICommands, getUnfilteredRefs, forceRefresh, getStashRevs));
+                    RevisionsLoaded?.Invoke(this, new RevisionLoadEventArgs(this, UICommands, getUnfilteredRefs, getStashRevs, forceRefresh));
                     HighlightRevisionsByAuthor(GetSelectedRevisions());
 
                     await TaskScheduler.Default;

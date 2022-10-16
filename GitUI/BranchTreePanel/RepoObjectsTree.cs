@@ -252,7 +252,7 @@ namespace GitUI.BranchTreePanel
             _tagTree.Refresh(isFiltering, forceRefresh, getRefs);
 
             // Clear current stash
-            _stashTree.Refresh(new(() => new List<GitRevision>()));
+            _stashTree.Refresh(new(() => Array.Empty<GitRevision>()));
         }
 
         /// <summary>
