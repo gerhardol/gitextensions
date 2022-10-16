@@ -238,7 +238,7 @@ namespace GitCommands.Gpg
                 tagName
             };
 
-            // '--raw' returns info in stderr
+            // 'verify-tag' returns info in stderr
             return GetModule().GitExecutable.Execute(args).StandardError;
         }
 
