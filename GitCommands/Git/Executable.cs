@@ -204,7 +204,7 @@ namespace GitCommands
             {
                 get
                 {
-                    if (!_redirectOutput && !_throwOnErrorExit)
+                    if (!_redirectOutput)
                     {
                         throw new InvalidOperationException("Process was not created with redirected output.");
                     }
