@@ -1,16 +1,16 @@
 ﻿using System.Diagnostics;
-using GitCommands;
 using GitExtUtils.GitUI.Theming;
 using GitUI.Properties;
+using GitUIPluginInterfaces;
 
 namespace GitUI.BranchTreePanel
 {
     [DebuggerDisplay("(Node) FullPath = {FullPath}")]
-    internal abstract class BaseBranchNode : Node
+    internal abstract class BaseRevisionNode : Node
     {
         protected const char PathSeparator = '/';
 
-        protected BaseBranchNode(Tree tree, string fullPath, bool visible)
+        protected BaseRevisionNode(Tree tree, string fullPath, bool visible)
             : base(tree)
         {
             fullPath = fullPath.Trim();
@@ -24,10 +24,6 @@ namespace GitUI.BranchTreePanel
             ParentPath = dirs.Take(dirs.Length - 1).Join(PathSeparator.ToString());
             Visible = visible;
         }
-
-        protected string? AheadBehind { get; set; }
-
-        protected string? RelatedBranch { get; set; }
 
         /// <summary>
         /// Short name of the branch/branch path. <example>"issue1344"</example>.
@@ -46,7 +42,12 @@ namespace GitUI.BranchTreePanel
         /// </summary>
         public bool Visible { get; set; }
 
-        protected override void ApplyStyle()
+        /// <summary>
+        /// ObjectId for nodes with a revision.
+        /// </summary>
+        public ObjectId? ObjectId { get; init; }
+
+        public override void ApplyStyle()
         {
             base.ApplyStyle();
 
@@ -58,14 +59,8 @@ namespace GitUI.BranchTreePanel
 
         public override bool Equals(object obj)
         {
-            return obj is BaseBranchNode other
+            return obj is BaseRevisionNode other
                 && (ReferenceEquals(other, this) || string.Equals(FullPath, other.FullPath));
-        }
-
-        public void UpdateAheadBehind(string aheadBehindData, string relatedBranch)
-        {
-            AheadBehind = aheadBehindData;
-            RelatedBranch = relatedBranch;
         }
 
         public bool Rebase()
@@ -78,15 +73,15 @@ namespace GitUI.BranchTreePanel
             return UICommands.StartResetCurrentBranchDialog(ParentWindow(), branch: FullPath);
         }
 
-        internal BaseBranchNode? CreateRootNode(IDictionary<string, BaseBranchNode> pathToNode,
-            Func<Tree, string, BaseBranchNode> createPathNode)
+        internal BaseRevisionNode? CreateRootNode(IDictionary<string, BaseRevisionNode> pathToNode,
+            Func<Tree, string, BaseRevisionNode> createPathNode)
         {
             if (string.IsNullOrEmpty(ParentPath))
             {
                 return this;
             }
 
-            BaseBranchNode? result;
+            BaseRevisionNode? result;
 
             if (pathToNode.TryGetValue(ParentPath, out var parent))
             {
@@ -106,16 +101,14 @@ namespace GitUI.BranchTreePanel
 
         protected override string DisplayText()
         {
-            return string.IsNullOrEmpty(AheadBehind) ? Name : $"{Name} ({AheadBehind})";
+            return Name;
         }
 
         protected virtual void SelectRevision()
         {
             TreeViewNode.TreeView?.BeginInvoke(new Action(() =>
             {
-                string branch = RelatedBranch is null || !RepoObjectsTree.ModifierKeys.HasFlag(Keys.Alt)
-                    ? FullPath : RelatedBranch.Substring(startIndex: GitRefName.RefsRemotesPrefix.Length);
-                UICommands.BrowseGoToRef(branch, showNoRevisionMsg: true, toggleSelection: RepoObjectsTree.ModifierKeys.HasFlag(Keys.Control));
+                UICommands.BrowseGoToRef(FullPath, showNoRevisionMsg: true, toggleSelection: RepoObjectsTree.ModifierKeys.HasFlag(Keys.Control));
                 TreeViewNode.TreeView?.Focus();
             }));
         }

@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.Threading;
 
 namespace GitUI.BranchTreePanel
 {
-    internal sealed class RemoteBranchTree : BranchBaseTree
+    internal sealed class RemoteBranchTree : BaseRefTree
     {
         // Retains the list of currently loaded branches.
         // This is needed to apply filtering without reloading the data.
@@ -45,7 +45,7 @@ namespace GitUI.BranchTreePanel
         private async Task<Nodes> FillBranchTreeAsync(IReadOnlyList<IGitRef> branches, CancellationToken token)
         {
             Nodes nodes = new(this);
-            Dictionary<string, BaseBranchNode> pathToNodes = new();
+            Dictionary<string, BaseRevisionNode> pathToNodes = new();
 
             List<RemoteRepoNode> enabledRemoteRepoNodes = new();
             Dictionary<string, Remote> remoteByName = (await Module.GetRemotesAsync().ConfigureAwaitRunInline()).ToDictionary(r => r.Name);
@@ -113,7 +113,7 @@ namespace GitUI.BranchTreePanel
 
             return nodes;
 
-            BaseBranchNode CreateRemoteBranchPathNode(Tree tree, string parentPath, Remote remote)
+            BaseRevisionNode CreateRemoteBranchPathNode(Tree tree, string parentPath, Remote remote)
             {
                 if (parentPath == remote.Name)
                 {

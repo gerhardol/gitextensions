@@ -4,14 +4,11 @@ using Microsoft.VisualStudio.Threading;
 
 namespace GitUI.BranchTreePanel
 {
-    internal sealed class StashTree : Tree
+    internal sealed class StashTree : BaseRevisionTree
     {
-        private readonly ICheckRefs _refsSource;
-
         public StashTree(TreeNode treeNode, IGitUICommandsSource uiCommands, ICheckRefs refsSource)
-            : base(treeNode, uiCommands)
+            : base(treeNode, uiCommands, refsSource)
         {
-            _refsSource = refsSource;
         }
 
         internal void Refresh(Lazy<IReadOnlyCollection<GitRevision>> getStashRevs)
@@ -42,7 +39,7 @@ namespace GitUI.BranchTreePanel
         private Nodes FillStashTree(IReadOnlyList<GitRevision> stashes, CancellationToken token)
         {
             Nodes nodes = new(this);
-            Dictionary<string, BaseBranchNode> pathToNodes = new();
+            Dictionary<string, BaseRevisionNode> pathToNodes = new();
 
             foreach (GitRevision stash in stashes)
             {
@@ -60,28 +57,6 @@ namespace GitUI.BranchTreePanel
             }
 
             return nodes;
-        }
-
-        internal void UpdateVisibility()
-        {
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
-            {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                foreach (Node node in Nodes)
-                {
-                    if (node is not StashNode stashNode)
-                    {
-                        continue;
-                    }
-
-                    bool isVisible = stashNode.ObjectId is not null && _refsSource.Contains(stashNode.ObjectId);
-                    if (stashNode.Visible != isVisible)
-                    {
-                        stashNode.Visible = isVisible;
-                        stashNode.UpdateStyle();
-                    }
-                }
-            }).FileAndForget();
         }
 
         protected override void PostFillTreeViewNode(bool firstTime)

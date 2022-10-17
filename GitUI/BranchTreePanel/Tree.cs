@@ -154,7 +154,7 @@ namespace GitUI.BranchTreePanel
 
                 if (node is not null)
                 {
-                    TreeViewNode.TreeView.SelectedNode = !(node.Tag is BaseBranchNode branchNode) || branchNode.Visible
+                    TreeViewNode.TreeView.SelectedNode = !(node.Tag is BaseRevisionNode branchNode) || branchNode.Visible
                         ? node
                         : null;
                 }

@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.Threading;
 
 namespace GitUI.BranchTreePanel
 {
-    internal sealed class TagTree : BranchBaseTree
+    internal sealed class TagTree : BaseRefTree
     {
         // Retains the list of currently loaded tags.
         // This is needed to apply filtering without reloading the data.
@@ -42,7 +42,7 @@ namespace GitUI.BranchTreePanel
         private Nodes FillTagTree(IReadOnlyList<IGitRef> tags, CancellationToken token)
         {
             Nodes nodes = new(this);
-            Dictionary<string, BaseBranchNode> pathToNodes = new();
+            Dictionary<string, BaseRevisionNode> pathToNodes = new();
 
             foreach (IGitRef tag in tags)
             {

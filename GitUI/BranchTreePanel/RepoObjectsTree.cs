@@ -185,7 +185,7 @@ namespace GitUI.BranchTreePanel
                     {
                         foreach (TreeNode node in nodes)
                         {
-                            if (node.Tag is BaseBranchNode branch)
+                            if (node.Tag is BaseRevisionNode branch)
                             {
                                 if (!branch.HasChildren)
                                 {
@@ -510,7 +510,7 @@ namespace GitUI.BranchTreePanel
                 {
                     var n = queue.Dequeue();
 
-                    if (n.Tag is BaseBranchNode branch)
+                    if (n.Tag is BaseRevisionNode branch)
                     {
                         if (branch.FullPath.IndexOf(text, StringComparison.InvariantCultureIgnoreCase) != -1)
                         {

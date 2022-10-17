@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.Threading;
 
 namespace GitUI.BranchTreePanel
 {
-    internal sealed class BranchTree : BranchBaseTree
+    internal sealed class BranchTree : BaseRefTree
     {
         private readonly IAheadBehindDataProvider? _aheadBehindDataProvider;
 
@@ -80,7 +80,7 @@ namespace GitUI.BranchTreePanel
             var aheadBehindData = _aheadBehindDataProvider?.GetData();
 
             var currentBranch = Module.GetSelectedBranch();
-            Dictionary<string, BaseBranchNode> pathToNode = new();
+            Dictionary<string, BaseRevisionNode> pathToNode = new();
             foreach (IGitRef branch in branches)
             {
                 token.ThrowIfCancellationRequested();

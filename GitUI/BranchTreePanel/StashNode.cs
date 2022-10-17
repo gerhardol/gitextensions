@@ -6,7 +6,7 @@ using GitUIPluginInterfaces;
 namespace GitUI.BranchTreePanel
 {
     [DebuggerDisplay("(Tag) FullPath = {FullPath}, Hash = {ObjectId}, Visible: {Visible}")]
-    internal sealed class StashNode : BaseBranchNode
+    internal sealed class StashNode : BaseRevisionNode
     {
         public StashNode(Tree tree, in ObjectId? objectId, string reflogSelector, string subject, bool visible)
             : base(tree, reflogSelector.RemovePrefix("refs/"), visible)
@@ -16,14 +16,8 @@ namespace GitUI.BranchTreePanel
             ReflogSelector = reflogSelector;
         }
 
-        public ObjectId? ObjectId { get; }
         public string DisplayName { get; }
         public string ReflogSelector { get; }
-
-        public void UpdateStyle()
-        {
-            ApplyStyle();
-        }
 
         internal override void OnSelected()
         {
@@ -46,7 +40,7 @@ namespace GitUI.BranchTreePanel
             return UICommands.StartStashDialog(TreeViewNode.TreeView, manageStashes: true, ReflogSelector);
         }
 
-        protected override void ApplyStyle()
+        public override void ApplyStyle()
         {
             base.ApplyStyle();
 
