@@ -266,6 +266,14 @@ namespace GitUI.BranchTreePanel
         /// </param>
         public void RefreshRevisionsLoaded(Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs, Lazy<IReadOnlyCollection<GitRevision>> getStashRevs, bool forceRefresh, bool isFiltering)
         {
+            if (isFiltering)
+            {
+                // Some refs may not be visible
+                _branchesTree.UpdateVisibility();
+                _remotesTree.UpdateVisibility();
+                _tagTree.UpdateVisibility();
+            }
+
             _stashTree.UpdateVisibility();
         }
 

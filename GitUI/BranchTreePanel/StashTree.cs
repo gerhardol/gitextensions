@@ -45,8 +45,7 @@ namespace GitUI.BranchTreePanel
             {
                 token.ThrowIfCancellationRequested();
 
-                // Stashes does not support filtering, but stashes may not be visible.
-                // Visibility is set after the grid is loaded.
+                // Visibility is set after the grid is loaded
                 StashNode node = new(this, stash.ObjectId, stash.ReflogSelector, stash.Subject, visible: false);
                 Node? parent = node.CreateRootNode(pathToNodes, (tree, parentPath) => new BasePathNode(tree, parentPath));
 
