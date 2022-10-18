@@ -54,7 +54,7 @@ namespace GitUI.CommandsDialogs
                     return;
                 }
 
-                repoObjectsTree.RefreshWhenLoading(e.HasFilter, e.ForceRefresh, e.GetRefs, e.GetStashRevs);
+                repoObjectsTree.RefreshRevisionsLoading(e.GetRefs, e.GetStashRevs, e.ForceRefresh, e.HasFilter);
             };
             RevisionGrid.RevisionsLoaded += (sender, e) =>
             {
@@ -65,7 +65,7 @@ namespace GitUI.CommandsDialogs
                     return;
                 }
 
-                repoObjectsTree.RefreshAfterLoaded(e.HasFilter, e.ForceRefresh, e.GetRefs, e.GetStashRevs);
+                repoObjectsTree.RefreshRevisionsLoaded(e.GetRefs, e.GetStashRevs, e.ForceRefresh, e.HasFilter);
             };
             RevisionGrid.SelectionChanged += (sender, e) =>
             {

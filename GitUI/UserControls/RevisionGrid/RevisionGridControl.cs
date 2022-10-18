@@ -24,6 +24,7 @@ using GitUI.UserControls.RevisionGrid;
 using GitUI.UserControls.RevisionGrid.Columns;
 using GitUIPluginInterfaces;
 using Microsoft;
+using Microsoft.VisualBasic;
 using Microsoft.VisualStudio.Threading;
 using ResourceManager;
 using TaskDialog = System.Windows.Forms.TaskDialog;
@@ -890,7 +891,7 @@ namespace GitUI
             // Get the "main" stash commit, including the reflog selector
             Lazy<IReadOnlyCollection<GitRevision>> getStashRevs = new(() =>
                 !AppSettings.ShowStashes
-                ? new List<GitRevision>()
+                ? Array.Empty<GitRevision>()
                 : new RevisionReader(capturedModule, hasReflogSelector: true).GetStashes(cancellationToken));
 
             try
