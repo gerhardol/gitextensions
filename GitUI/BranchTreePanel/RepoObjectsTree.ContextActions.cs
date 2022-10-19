@@ -178,6 +178,10 @@ namespace GitUI.BranchTreePanel
             RegisterClick<BranchPathNode>(mnubtnDeleteAllBranches, branchPath => branchPath.DeleteAll());
             RegisterClick<BranchPathNode>(mnubtnCreateBranch, branchPath => branchPath.CreateBranch());
 
+            // Stash
+            RegisterClick(mnubtnStashAllFromRootNode, () => _stashTree.StashAll(this));
+            RegisterClick(mnubtnStashStagedFromRootNode, () => _stashTree.StashStaged(this));
+            RegisterClick(mnubtnManageStashFromRootNode, () => _stashTree.OpenStash(this, null));
             RegisterClick<StashNode>(mnubtnOpenStash, node => _stashTree.OpenStash(this, node));
             RegisterClick<StashNode>(mnubtnApplyStash, node => _stashTree.ApplyStash(this, node));
             RegisterClick<StashNode>(mnubtnPopStash, node => _stashTree.PopStash(this, node));
@@ -231,6 +235,7 @@ namespace GitUI.BranchTreePanel
             EnableMenuItems(_tagNodeMenuItems, _ => hasSingleSelection && selectedNode is TagNode);
             EnableMenuItems(hasSingleSelection && selectedNode is RemoteBranchTree, mnuBtnManageRemotesFromRootNode, mnuBtnFetchAllRemotes, mnuBtnPruneAllRemotes);
             EnableRemoteRepoContextMenu(hasSingleSelection, selectedNode);
+            EnableMenuItems(hasSingleSelection && selectedNode is StashTree, mnubtnStashAllFromRootNode, mnubtnStashStagedFromRootNode, mnubtnManageStashFromRootNode);
             EnableStashContextMenu(hasSingleSelection, selectedNode);
             EnableSubmoduleContextMenu(hasSingleSelection, selectedNode);
             EnableMenuItems(hasSingleSelection && selectedNode is BranchPathNode, mnubtnCreateBranch, mnubtnDeleteAllBranches);

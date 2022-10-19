@@ -89,6 +89,10 @@ namespace GitUI.BranchTreePanel
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
             this.mnubtnCreateBranch = new System.Windows.Forms.ToolStripMenuItem();
             this.mnubtnDeleteAllBranches = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator10 = new System.Windows.Forms.ToolStripSeparator();
+            this.mnubtnStashAllFromRootNode = new System.Windows.Forms.ToolStripMenuItem();
+            this.mnubtnStashStagedFromRootNode = new System.Windows.Forms.ToolStripMenuItem();
+            this.mnubtnManageStashFromRootNode = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             this.mnubtnOpenStash = new System.Windows.Forms.ToolStripMenuItem();
             this.mnubtnApplyStash = new System.Windows.Forms.ToolStripMenuItem();
@@ -170,6 +174,10 @@ namespace GitUI.BranchTreePanel
             this.toolStripSeparator6,
             this.mnubtnCreateBranch,
             this.mnubtnDeleteAllBranches,
+            this.toolStripSeparator10,
+            this.mnubtnStashAllFromRootNode,
+            this.mnubtnStashStagedFromRootNode,
+            this.mnubtnManageStashFromRootNode,
             this.toolStripSeparator7,
             this.mnubtnOpenStash,
             this.mnubtnApplyStash,
@@ -419,6 +427,29 @@ namespace GitUI.BranchTreePanel
             this.mnubtnDeleteAllBranches.Text = "Delete All";
             this.mnubtnDeleteAllBranches.ToolTipText = "Delete all child branchs, which must all be fully merged in its upstream branch o" +
     "r in HEAD";
+            // 
+            // toolStripSeparator10
+            // 
+            this.toolStripSeparator10.Name = "toolStripSeparator10";
+            this.toolStripSeparator10.Size = new System.Drawing.Size(263, 6);
+            // 
+            // mnubtnStashAllFromRootNode
+            // 
+            this.mnubtnStashAllFromRootNode.Name = "mnubtnStashAllFromRootNode";
+            this.mnubtnStashAllFromRootNode.Size = new System.Drawing.Size(266, 26);
+            this.mnubtnStashAllFromRootNode.Text = "&Stash";
+            // 
+            // mnubtnStashStagedFromRootNode
+            // 
+            this.mnubtnStashStagedFromRootNode.Name = "mnubtnStashStagedFromRootNode";
+            this.mnubtnStashStagedFromRootNode.Size = new System.Drawing.Size(266, 26);
+            this.mnubtnStashStagedFromRootNode.Text = "S&tash staged";
+            // 
+            // mnubtnManageStashFromRootNode
+            // 
+            this.mnubtnManageStashFromRootNode.Name = "mnubtnManageStashFromRootNode";
+            this.mnubtnManageStashFromRootNode.Size = new System.Drawing.Size(266, 26);
+            this.mnubtnManageStashFromRootNode.Text = "&Manage stashes...";
             // 
             // toolStripSeparator7
             // 
@@ -728,6 +759,10 @@ namespace GitUI.BranchTreePanel
         private ToolStripMenuItem mnubtnFetchOneBranch;
         private ToolStripMenuItem mnubtnCreateBranch;
         private ToolStripMenuItem mnubtnDeleteAllBranches;
+        private ToolStripSeparator toolStripSeparator10;
+        private ToolStripMenuItem mnubtnStashAllFromRootNode;
+        private ToolStripMenuItem mnubtnStashStagedFromRootNode;
+        private ToolStripMenuItem mnubtnManageStashFromRootNode;
         private ToolStripSeparator toolStripSeparator7;
         private ToolStripMenuItem mnubtnOpenStash;
         private ToolStripMenuItem mnubtnApplyStash;
