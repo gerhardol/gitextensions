@@ -17,18 +17,18 @@ namespace GitUI.BranchTreePanel
             ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                foreach (Node node in Nodes)
+                foreach (BaseRevisionNode node in Nodes.DepthEnumerator<BaseRevisionNode>())
                 {
-                    if (node is not BaseRevisionNode baseNode || baseNode.ObjectId is null)
+                    if (node.ObjectId is null)
                     {
                         continue;
                     }
 
-                    bool isVisible = _refsSource.Contains(baseNode.ObjectId);
-                    if (baseNode.Visible != isVisible)
+                    bool isVisible = _refsSource.Contains(node.ObjectId);
+                    if (node.Visible != isVisible)
                     {
-                        baseNode.Visible = isVisible;
-                        baseNode.ApplyStyle();
+                        node.Visible = isVisible;
+                        node.ApplyStyle();
                     }
                 }
             }).FileAndForget();
