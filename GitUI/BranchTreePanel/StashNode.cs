@@ -54,14 +54,5 @@ namespace GitUI.BranchTreePanel
         {
             return DisplayName;
         }
-
-        protected override void SelectRevision()
-        {
-            TreeViewNode.TreeView?.BeginInvoke(new Action(() =>
-            {
-                UICommands.BrowseGoToRef(ObjectId.ToString(), showNoRevisionMsg: true, toggleSelection: RepoObjectsTree.ModifierKeys.HasFlag(Keys.Control));
-                TreeViewNode.TreeView?.Focus();
-            }));
-        }
     }
 }

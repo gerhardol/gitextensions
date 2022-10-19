@@ -106,9 +106,14 @@ namespace GitUI.BranchTreePanel
 
         protected virtual void SelectRevision()
         {
+            if (ObjectId is null)
+            {
+                return;
+            }
+
             TreeViewNode.TreeView?.BeginInvoke(new Action(() =>
             {
-                UICommands.BrowseGoToRef(FullPath, showNoRevisionMsg: true, toggleSelection: RepoObjectsTree.ModifierKeys.HasFlag(Keys.Control));
+                UICommands.BrowseGoToRef(ObjectId.ToString(), showNoRevisionMsg: true, toggleSelection: RepoObjectsTree.ModifierKeys.HasFlag(Keys.Control));
                 TreeViewNode.TreeView?.Focus();
             }));
         }
