@@ -21,12 +21,12 @@ namespace GitUI.BranchTreePanel
         /// <summary>
         /// Requests (from FormBrowse) to refresh the data tree and to apply filtering, if necessary.
         /// </summary>
+        /// <param name="getRefs">Function to get refs.</param>
         /// <param name="isFiltering">
         ///  <see langword="true"/>, if the data is being filtered; otherwise <see langword="false"/>.
         /// </param>
         /// <param name="forceRefresh">Refresh may be required as references may have been changed.</param>
-        /// <param name="getRefs">Function to get refs.</param>
-        internal void Refresh(bool isFiltering, bool forceRefresh, Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs)
+        internal void Refresh(Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs, bool isFiltering, bool forceRefresh)
         {
             if (!IsAttached)
             {

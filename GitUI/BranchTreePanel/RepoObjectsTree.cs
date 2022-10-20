@@ -248,9 +248,9 @@ namespace GitUI.BranchTreePanel
         /// </param>
         public void RefreshRevisionsLoading(Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs, Lazy<IReadOnlyCollection<GitRevision>> getStashRevs, bool forceRefresh, bool isFiltering)
         {
-            _branchesTree.Refresh(isFiltering, forceRefresh, getRefs);
-            _remotesTree.Refresh(isFiltering, forceRefresh, getRefs);
-            _tagTree.Refresh(isFiltering, forceRefresh, getRefs);
+            _branchesTree.Refresh(getRefs, isFiltering, forceRefresh);
+            _remotesTree.Refresh(getRefs, isFiltering, forceRefresh);
+            _tagTree.Refresh(getRefs, isFiltering, forceRefresh);
             _stashTree.Refresh(getStashRevs);
         }
 
