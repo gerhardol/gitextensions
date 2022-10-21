@@ -111,11 +111,11 @@ namespace GitUI.BranchTreePanel
                 return;
             }
 
-            TreeViewNode.TreeView?.BeginInvoke(new Action(() =>
+            TreeViewNode.TreeView?.BeginInvoke(() =>
             {
                 UICommands.BrowseGoToRef(ObjectId.ToString(), showNoRevisionMsg: true, toggleSelection: RepoObjectsTree.ModifierKeys.HasFlag(Keys.Control));
                 TreeViewNode.TreeView?.Focus();
-            }));
+            });
         }
     }
 }

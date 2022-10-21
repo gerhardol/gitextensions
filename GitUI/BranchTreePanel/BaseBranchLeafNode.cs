@@ -69,14 +69,14 @@ namespace GitUI.BranchTreePanel
 
         protected override void SelectRevision()
         {
-            TreeViewNode.TreeView?.BeginInvoke(new Action(() =>
+            TreeViewNode.TreeView?.BeginInvoke(() =>
             {
                 string branch = RelatedBranch is null || !RepoObjectsTree.ModifierKeys.HasFlag(Keys.Alt)
                     ? FullPath
                     : RelatedBranch;
                 UICommands.BrowseGoToRef(branch, showNoRevisionMsg: true, toggleSelection: RepoObjectsTree.ModifierKeys.HasFlag(Keys.Control));
                 TreeViewNode.TreeView?.Focus();
-            }));
+            });
         }
     }
 }
