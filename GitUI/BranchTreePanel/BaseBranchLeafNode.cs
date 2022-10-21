@@ -18,6 +18,10 @@ namespace GitUI.BranchTreePanel
             _imageKeyMerged = imageKeyMerged;
         }
 
+        protected string? AheadBehind { get; set; }
+
+        protected string? RelatedBranch { get; set; }
+
         public bool IsMerged
         {
             get => _isMerged;
@@ -50,6 +54,29 @@ namespace GitUI.BranchTreePanel
             {
                 TreeViewNode.ToolTipText = string.Format(TranslatedStrings.ContainedInCurrentCommit, Name);
             }
+        }
+
+        public void UpdateAheadBehind(string aheadBehindData, string relatedBranch)
+        {
+            AheadBehind = aheadBehindData;
+            RelatedBranch = relatedBranch;
+        }
+
+        protected override string DisplayText()
+        {
+            return string.IsNullOrEmpty(AheadBehind) ? Name : $"{Name} ({AheadBehind})";
+        }
+
+        protected override void SelectRevision()
+        {
+            TreeViewNode.TreeView?.BeginInvoke(new Action(() =>
+            {
+                string branch = RelatedBranch is null || !RepoObjectsTree.ModifierKeys.HasFlag(Keys.Alt)
+                    ? FullPath
+                    : RelatedBranch;
+                UICommands.BrowseGoToRef(branch, showNoRevisionMsg: true, toggleSelection: RepoObjectsTree.ModifierKeys.HasFlag(Keys.Control));
+                TreeViewNode.TreeView?.Focus();
+            }));
         }
     }
 }
