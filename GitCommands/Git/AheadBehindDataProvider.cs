@@ -9,7 +9,7 @@ namespace GitCommands.Git
     public interface IAheadBehindDataProvider
     {
         IDictionary<string, AheadBehindData>? GetData(string branchName = "");
-        void InitLazy();
+        void ResetCache();
     }
 
     public class AheadBehindDataProvider : IAheadBehindDataProvider
@@ -33,7 +33,7 @@ namespace GitCommands.Git
             _getGitExecutable = getGitExecutable;
         }
 
-        public void InitLazy()
+        public void ResetCache()
         {
             _lazyData = null;
             _branchName = null;
@@ -50,7 +50,7 @@ namespace GitCommands.Git
             if (string.IsNullOrWhiteSpace(branchName) && !string.IsNullOrWhiteSpace(_branchName))
             {
                 // Debug.Fail($"Unexpectedly call for all branches after cache filled with specific branch {_branchName}");
-                InitLazy();
+                ResetCache();
             }
 
             _lazyData ??= new(() => GetData(null, branchName));

@@ -576,7 +576,7 @@ namespace GitUI.CommandsDialogs
                 return;
             }
 
-            _aheadBehindDataProvider.InitLazy();
+            _aheadBehindDataProvider.ResetCache();
             bool isDashboard = string.IsNullOrEmpty(Module.WorkingDir) || (_dashboard?.Visible ?? false);
             if (isDashboard)
             {
