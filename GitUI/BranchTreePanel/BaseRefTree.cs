@@ -1,15 +1,25 @@
 ﻿using GitUI.UserControls.RevisionGrid;
 using GitUIPluginInterfaces;
+using Microsoft.VisualStudio.Threading;
 
 namespace GitUI.BranchTreePanel
 {
     internal abstract class BaseRefTree : BaseRevisionTree
     {
         // A flag to indicate whether the data is being filtered (e.g. Show Current Branch Only).
-        private protected AsyncLocal<bool> IsFiltering = new();
+        private protected System.Threading.AsyncLocal<bool> IsFiltering = new();
 
-        protected BaseRefTree(TreeNode treeNode, IGitUICommandsSource uiCommands, ICheckRefs refsSource) : base(treeNode, uiCommands, refsSource)
+        // Retains the list of currently loaded refs (branches/tags).
+        // This is needed to apply filtering without reloading the data.
+        // Whether or not force the reload of data is controlled by <see cref="_isFiltering"/> flag.
+        protected IReadOnlyList<IGitRef>? _loadedRefs;
+
+        protected readonly RefsFilter _filter;
+
+        protected BaseRefTree(TreeNode treeNode, IGitUICommandsSource uiCommands, ICheckRefs refsSource, RefsFilter filter)
+            : base(treeNode, uiCommands, refsSource)
         {
+            _filter = filter;
         }
 
         protected override void OnAttached()
@@ -17,6 +27,22 @@ namespace GitUI.BranchTreePanel
             IsFiltering.Value = false;
             base.OnAttached();
         }
+
+        private async Task<Nodes> LoadNodesAsync(CancellationToken token, Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs)
+        {
+            await TaskScheduler.Default;
+            token.ThrowIfCancellationRequested();
+
+            if (!IsFiltering.Value || _loadedRefs is null)
+            {
+                _loadedRefs = getRefs(_filter);
+                token.ThrowIfCancellationRequested();
+            }
+
+            return FillTree(_loadedRefs, token);
+        }
+
+        protected abstract Nodes FillTree(IReadOnlyList<IGitRef> branches, CancellationToken token);
 
         /// <summary>
         /// Requests (from FormBrowse) to refresh the data tree and to apply filtering, if necessary.
@@ -51,16 +77,15 @@ namespace GitUI.BranchTreePanel
         /// <summary>
         /// Requests to refresh the data tree and to apply filtering, if necessary.
         /// </summary>
-        protected internal virtual void Refresh(Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs)
+        protected internal void Refresh(Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs)
         {
-            // NOTE: descendants may need to break their local caches to ensure the latest data is loaded.
+            // Break the local cache to ensure the data is requeried to reflect the required sort order.
+            _loadedRefs = null;
 
             ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
                 await ReloadNodesAsync(LoadNodesAsync, getRefs);
             });
         }
-
-        protected abstract Task<Nodes> LoadNodesAsync(CancellationToken token, Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs);
     }
 }

@@ -27,7 +27,7 @@ namespace GitUI.BranchTreePanel
         private NativeTreeViewExplorerNavigationDecorator _explorerNavigationDecorator;
         private readonly List<Tree> _rootNodes = new();
         private readonly SearchControl<string> _txtBranchCriterion;
-        private BranchTree _branchesTree;
+        private LocalBranchTree _branchesTree;
         private RemoteBranchTree _remotesTree;
         private TagTree _tagTree;
         private StashTree _stashTree;
@@ -376,7 +376,7 @@ namespace GitUI.BranchTreePanel
                 SelectedImageKey = nameof(Images.BranchLocalRoot)
             };
 
-            _branchesTree = new BranchTree(rootNode, UICommandsSource, _aheadBehindDataProvider, _refsSource);
+            _branchesTree = new LocalBranchTree(rootNode, UICommandsSource, _aheadBehindDataProvider, _refsSource);
         }
 
         private void CreateRemotes()
