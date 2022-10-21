@@ -181,7 +181,7 @@ namespace GitUI.BranchTreePanel
             // Stash
             RegisterClick(mnubtnStashAllFromRootNode, () => _stashTree.StashAll(this));
             RegisterClick(mnubtnStashStagedFromRootNode, () => _stashTree.StashStaged(this));
-            RegisterClick(mnubtnManageStashFromRootNode, () => _stashTree.OpenStash(this, null));
+            RegisterClick(mnubtnManageStashFromRootNode, () => _stashTree.OpenStash(this, node: null));
             RegisterClick<StashNode>(mnubtnOpenStash, node => _stashTree.OpenStash(this, node));
             RegisterClick<StashNode>(mnubtnApplyStash, node => _stashTree.ApplyStash(this, node));
             RegisterClick<StashNode>(mnubtnPopStash, node => _stashTree.PopStash(this, node));
