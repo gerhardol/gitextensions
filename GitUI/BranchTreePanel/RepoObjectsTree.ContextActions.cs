@@ -181,11 +181,11 @@ namespace GitUI.BranchTreePanel
             // Stash
             RegisterClick(mnubtnStashAllFromRootNode, () => _stashTree.StashAll(this));
             RegisterClick(mnubtnStashStagedFromRootNode, () => _stashTree.StashStaged(this));
-            RegisterClick(mnubtnManageStashFromRootNode, () => _stashTree.OpenStash(this, node: null));
-            RegisterClick<StashNode>(mnubtnOpenStash, node => _stashTree.OpenStash(this, node));
-            RegisterClick<StashNode>(mnubtnApplyStash, node => _stashTree.ApplyStash(this, node));
-            RegisterClick<StashNode>(mnubtnPopStash, node => _stashTree.PopStash(this, node));
-            RegisterClick<StashNode>(mnubtnDropStash, node => _stashTree.DropStash(this, node));
+            RegisterClick(mnubtnManageStashFromRootNode, () => _stashTree.OpenStash(this));
+            RegisterClick<StashNode>(mnubtnOpenStash, node => node.OpenStash(this));
+            RegisterClick<StashNode>(mnubtnApplyStash, node => node.ApplyStash(this));
+            RegisterClick<StashNode>(mnubtnPopStash, node => node.PopStash(this));
+            RegisterClick<StashNode>(mnubtnDropStash, node => node.DropStash(this));
 
             // Expand / Collapse
             RegisterClick(mnubtnCollapse, () => GetSelectedNodes().HavingChildren().Collapsible().ForEach(node => node.TreeViewNode.Collapse()));

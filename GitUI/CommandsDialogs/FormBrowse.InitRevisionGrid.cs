@@ -22,7 +22,9 @@ namespace GitUI.CommandsDialogs
                         })
                     .FileAndForget();
             };
+
             RevisionGrid.MenuCommands.MenuChanged += (sender, e) => _formBrowseMenus.OnMenuCommandsPropertyChanged();
+
             RevisionGrid.FilterChanged += (sender, e) =>
             {
                 Text = _appTitleGenerator.Generate(Module.WorkingDir, Module.IsValidGitWorkingDir(), RevisionGrid.CurrentBranch.Value, TranslatedStrings.NoBranch, e.PathFilter);
@@ -38,6 +40,7 @@ namespace GitUI.CommandsDialogs
                 revisionDiff.FallbackFollowedFile = path;
                 fileTree.FallbackFollowedFile = path;
             };
+
             RevisionGrid.RevisionsLoading += (sender, e) =>
             {
                 // The FileTree tab should be shown at first start, in "filehistory" mode
@@ -54,8 +57,9 @@ namespace GitUI.CommandsDialogs
                     return;
                 }
 
-                repoObjectsTree.RefreshRevisionsLoading(e.GetRefs, e.GetStashRevs, e.ForceRefresh, e.HasFilter);
+                RefreshLeftPanel(e.GetRefs, e.GetStashRevs, e.ForceRefresh);
             };
+
             RevisionGrid.RevisionsLoaded += (sender, e) =>
             {
                 if (sender is null || MainSplitContainer.Panel1Collapsed)
@@ -65,13 +69,15 @@ namespace GitUI.CommandsDialogs
                     return;
                 }
 
-                repoObjectsTree.RefreshRevisionsLoaded(e.GetRefs, e.GetStashRevs, e.ForceRefresh, e.HasFilter);
+                repoObjectsTree.RefreshRevisionsLoaded();
             };
+
             RevisionGrid.SelectionChanged += (sender, e) =>
             {
                 _selectedRevisionUpdatedTargets = UpdateTargets.None;
                 RefreshSelection();
             };
+
             RevisionGrid.ToggledBetweenArtificialAndHeadCommits += (s, e) =>
             {
                 if (!revisionDiff.Visible)

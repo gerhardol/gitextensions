@@ -23,7 +23,17 @@ namespace GitUI.BranchTreePanel
             {
                 await ReloadNodesAsync((token, _) =>
                 {
-                    Task<Nodes>? loadNodesTask = LoadNodesAsync(token, getStashRevs);
+                    Task<Nodes>? loadNodesTask = null;
+                    _updateSemaphore.WaitAsync();
+                    try
+                    {
+                        loadNodesTask = LoadNodesAsync(token, getStashRevs);
+                    }
+                    finally
+                    {
+                        _updateSemaphore.Release();
+                    }
+
                     return loadNodesTask;
                 }, null).ConfigureAwait(false);
             });
@@ -34,10 +44,10 @@ namespace GitUI.BranchTreePanel
             await TaskScheduler.Default;
             token.ThrowIfCancellationRequested();
 
-            return FillStashTree(getStashRevs.Value.ToList(), token);
+            return FillStashTree(getStashRevs.Value, token);
         }
 
-        private Nodes FillStashTree(IReadOnlyList<GitRevision> stashes, CancellationToken token)
+        private Nodes FillStashTree(IReadOnlyCollection<GitRevision> stashes, CancellationToken token)
         {
             Nodes nodes = new(this);
             Dictionary<string, BaseRevisionNode> pathToNodes = new();
@@ -77,59 +87,9 @@ namespace GitUI.BranchTreePanel
             UICommands.StashStaged(owner);
         }
 
-        public void OpenStash(IWin32Window owner, StashNode? node)
+        public void OpenStash(IWin32Window owner)
         {
-            UICommands.StartStashDialog(owner, manageStashes: true, initialStash: node?.ReflogSelector);
-        }
-
-        public void ApplyStash(IWin32Window owner, StashNode node)
-        {
-            UICommands.StashApply(owner, node.ReflogSelector);
-        }
-
-        public void PopStash(IWin32Window owner, StashNode node)
-        {
-            UICommands.StashPop(owner, node.ReflogSelector);
-        }
-
-        public void DropStash(IWin32Window owner, StashNode node)
-        {
-            using (new WaitCursorScope())
-            {
-                TaskDialogButton result;
-                if (AppSettings.DontConfirmStashDrop)
-                {
-                    result = TaskDialogButton.Yes;
-                }
-                else
-                {
-                    TaskDialogPage page = new()
-                    {
-                        Text = TranslatedStrings.AreYouSure,
-                        Caption = TranslatedStrings.StashDropConfirmTitle,
-                        Heading = TranslatedStrings.CannotBeUndone,
-                        Buttons = { TaskDialogButton.Yes, TaskDialogButton.No },
-                        Icon = TaskDialogIcon.Information,
-                        Verification = new TaskDialogVerificationCheckBox
-                        {
-                            Text = TranslatedStrings.DontShowAgain
-                        },
-                        SizeToContent = true
-                    };
-
-                    result = TaskDialog.ShowDialog(owner, page);
-
-                    if (page.Verification.Checked)
-                    {
-                        AppSettings.DontConfirmStashDrop = true;
-                    }
-                }
-
-                if (result == TaskDialogButton.Yes)
-                {
-                    UICommands.StashDrop(owner, node.ReflogSelector);
-                }
-            }
+            UICommands.StartStashDialog(owner, manageStashes: true);
         }
     }
 }

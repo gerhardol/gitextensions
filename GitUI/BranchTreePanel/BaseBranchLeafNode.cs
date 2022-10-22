@@ -71,10 +71,10 @@ namespace GitUI.BranchTreePanel
         {
             TreeViewNode.TreeView?.BeginInvoke(() =>
             {
-                string branch = RelatedBranch is null || !RepoObjectsTree.ModifierKeys.HasFlag(Keys.Alt)
+                string branch = RelatedBranch is null || !Control.ModifierKeys.HasFlag(Keys.Alt)
                     ? FullPath
                     : RelatedBranch;
-                UICommands.BrowseGoToRef(branch, showNoRevisionMsg: true, toggleSelection: RepoObjectsTree.ModifierKeys.HasFlag(Keys.Control));
+                UICommands.BrowseGoToRef(branch, showNoRevisionMsg: true, toggleSelection: Control.ModifierKeys.HasFlag(Keys.Control));
                 TreeViewNode.TreeView?.Focus();
             });
         }

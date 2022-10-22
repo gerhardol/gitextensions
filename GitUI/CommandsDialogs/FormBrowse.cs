@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Text;
+using System.Threading;
 using ConEmu.WinForms;
 using GitCommands;
 using GitCommands.Config;
@@ -1210,6 +1211,11 @@ namespace GitUI.CommandsDialogs
 
             var info = await _controller.LoadGpgInfoAsync(revision);
             revisionGpgInfo1.DisplayGpgInfo(info);
+        }
+
+        private void RefreshLeftPanel(Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs, Lazy<IReadOnlyCollection<GitRevision>> getStashRevs, bool forceRefresh)
+        {
+            repoObjectsTree.RefreshRevisionsLoading(getRefs, getStashRevs, forceRefresh, RevisionGrid.FilterIsApplied());
         }
 
         private void OpenToolStripMenuItemClick(object sender, EventArgs e)
@@ -2936,6 +2942,19 @@ namespace GitUI.CommandsDialogs
                 new Dictionary<string, string> { { "ShowLeftPanel", MainSplitContainer.Panel1Collapsed.ToString() } });
 
             RefreshLayoutToggleButtonStates();
+
+            if (!MainSplitContainer.Panel1Collapsed)
+            {
+                // Refresh the side panel, update visibility of objects separately
+                // Get the "main" stash commit, including the reflog selector
+                Lazy<IReadOnlyCollection<GitRevision>> getStashRevs = new(() =>
+                    !AppSettings.ShowStashes
+                    ? Array.Empty<GitRevision>()
+                    : new RevisionReader(new(UICommands.GitModule.WorkingDir), hasReflogSelector: true).GetStashes(CancellationToken.None));
+
+                RefreshLeftPanel(new FilteredGitRefsProvider(UICommands.GitModule).GetRefs, getStashRevs, forceRefresh: true);
+                repoObjectsTree.RefreshRevisionsLoaded();
+            }
         }
 
         private void CommitInfoPositionClick(object sender, EventArgs e)

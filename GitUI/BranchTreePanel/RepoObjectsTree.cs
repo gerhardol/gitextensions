@@ -248,9 +248,9 @@ namespace GitUI.BranchTreePanel
         /// </param>
         public void RefreshRevisionsLoading(Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs, Lazy<IReadOnlyCollection<GitRevision>> getStashRevs, bool forceRefresh, bool isFiltering)
         {
-            _branchesTree.Refresh(getRefs, isFiltering, forceRefresh);
-            _remotesTree.Refresh(getRefs, isFiltering, forceRefresh);
-            _tagTree.Refresh(getRefs, isFiltering, forceRefresh);
+            _branchesTree.Refresh(getRefs, forceRefresh, isFiltering);
+            _remotesTree.Refresh(getRefs, forceRefresh, isFiltering);
+            _tagTree.Refresh(getRefs, forceRefresh, isFiltering);
             _stashTree.Refresh(getStashRevs);
         }
 
@@ -258,22 +258,12 @@ namespace GitUI.BranchTreePanel
         /// FormBrowse refreshing the side panel after updating the grid.
         /// (Update the visibility for side panel objects.)
         /// </summary>
-        /// <param name="getRefs">Function to get refs.</param>
-        /// <param name="getStashRevs">Lazy accessor for stash commits.</param>
-        /// <param name="forceRefresh">Refresh may be required as references may have been changed.</param>
-        /// <param name="isFiltering">
-        ///  <see langword="true"/>, if the data is being filtered; otherwise <see langword="false"/>.
-        /// </param>
-        public void RefreshRevisionsLoaded(Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs, Lazy<IReadOnlyCollection<GitRevision>> getStashRevs, bool forceRefresh, bool isFiltering)
+        public void RefreshRevisionsLoaded()
         {
-            if (isFiltering)
-            {
-                // Some refs may not be visible
-                _branchesTree.UpdateVisibility();
-                _remotesTree.UpdateVisibility();
-                _tagTree.UpdateVisibility();
-            }
-
+            // Some refs may not be visible
+            _branchesTree.UpdateVisibility();
+            _remotesTree.UpdateVisibility();
+            _tagTree.UpdateVisibility();
             _stashTree.UpdateVisibility();
         }
 
@@ -286,6 +276,10 @@ namespace GitUI.BranchTreePanel
             _branchesTree.Refresh(getRefs);
             _remotesTree.Refresh(getRefs);
             _tagTree.Refresh(getRefs);
+
+            _branchesTree.UpdateVisibility();
+            _remotesTree.UpdateVisibility();
+            _tagTree.UpdateVisibility();
         }
 
         public void ReloadHotkeys()
@@ -586,7 +580,13 @@ namespace GitUI.BranchTreePanel
 
         private void OnNodeSelected(object sender, TreeViewEventArgs e)
         {
-            Node.OnNode<Node>(e.Node, node => node.OnSelected());
+            Node.OnNode<Node>(e.Node, node =>
+            {
+                if (node is not BaseRevisionNode revNode || revNode.Visible)
+                {
+                    node.OnSelected();
+                }
+            });
         }
 
         private IEnumerable<NodeBase> GetSelectedNodes()

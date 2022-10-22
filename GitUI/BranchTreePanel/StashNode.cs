@@ -32,12 +32,62 @@ namespace GitUI.BranchTreePanel
 
         internal override void OnDoubleClick()
         {
-            OpenStash();
+            OpenStash(TreeViewNode.TreeView);
         }
 
-        internal bool OpenStash()
+        internal bool OpenStash(IWin32Window owner)
         {
-            return UICommands.StartStashDialog(TreeViewNode.TreeView, manageStashes: true, ReflogSelector);
+            return UICommands.StartStashDialog(owner, manageStashes: true, ReflogSelector);
+        }
+
+        public void ApplyStash(IWin32Window owner)
+        {
+            UICommands.StashApply(owner, ReflogSelector);
+        }
+
+        public void PopStash(IWin32Window owner)
+        {
+            UICommands.StashPop(owner, ReflogSelector);
+        }
+
+        public void DropStash(IWin32Window owner)
+        {
+            using (new WaitCursorScope())
+            {
+                TaskDialogButton result;
+                if (AppSettings.DontConfirmStashDrop)
+                {
+                    result = TaskDialogButton.Yes;
+                }
+                else
+                {
+                    TaskDialogPage page = new()
+                    {
+                        Text = TranslatedStrings.AreYouSure,
+                        Caption = TranslatedStrings.StashDropConfirmTitle,
+                        Heading = TranslatedStrings.CannotBeUndone,
+                        Buttons = { TaskDialogButton.Yes, TaskDialogButton.No },
+                        Icon = TaskDialogIcon.Information,
+                        Verification = new TaskDialogVerificationCheckBox
+                        {
+                            Text = TranslatedStrings.DontShowAgain
+                        },
+                        SizeToContent = true
+                    };
+
+                    result = TaskDialog.ShowDialog(owner, page);
+
+                    if (page.Verification.Checked)
+                    {
+                        AppSettings.DontConfirmStashDrop = true;
+                    }
+                }
+
+                if (result == TaskDialogButton.Yes)
+                {
+                    UICommands.StashDrop(owner, ReflogSelector);
+                }
+            }
         }
 
         public override void ApplyStyle()
