@@ -1928,6 +1928,18 @@ namespace GitCommands
             set => SetInt("RepoObjectsTree.StashesIndex", value);
         }
 
+        public static string RepoObjectsTreePrioBranchNames
+        {
+            get => GetString("RepoObjectsTree.PrioBranch", @"^(master)");
+            set => SetString("RepoObjectsTree.PrioBranch", value);
+        }
+
+        public static string RepoObjectsTreePrioRemoteNames
+        {
+            get => GetString("RepoObjectsTree.PrioRemoteNames", @"^(origin|upstream)$");
+            set => SetString("RepoObjectsTree.PrioRemoteNames", value);
+        }
+
         public static bool BlameDisplayAuthorFirst
         {
             get => GetBool("Blame.DisplayAuthorFirst", false);

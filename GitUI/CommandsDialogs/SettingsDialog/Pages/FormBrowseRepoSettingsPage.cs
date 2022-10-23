@@ -1,5 +1,6 @@
 ﻿using GitCommands;
 using GitUI.Shells;
+using GitUIPluginInterfaces.Settings;
 
 namespace GitUI.CommandsDialogs.SettingsDialog.Pages
 {
@@ -27,6 +28,8 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
             AppSettings.UseBrowseForFileHistory.Value = chkUseBrowseForFileHistory.Checked;
             AppSettings.UseDiffViewerForBlame.Value = chkUseDiffViewerForBlame.Checked;
             AppSettings.ShowGpgInformation.Value = chkShowGpgInformation.Checked;
+            AppSettings.RepoObjectsTreePrioBranchNames = txtPrioBranchNames.Text;
+            AppSettings.RepoObjectsTreePrioRemoteNames = txtPrioRemoteNames.Text;
 
             AppSettings.ConEmuTerminal.Value = ((IShellDescriptor)cboTerminal.SelectedItem).Name.ToLowerInvariant();
             base.PageToSettings();
@@ -38,6 +41,8 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
             chkUseBrowseForFileHistory.Checked = AppSettings.UseBrowseForFileHistory.Value;
             chkUseDiffViewerForBlame.Checked = AppSettings.UseDiffViewerForBlame.Value;
             chkShowGpgInformation.Checked = AppSettings.ShowGpgInformation.Value;
+            txtPrioBranchNames.Text = AppSettings.RepoObjectsTreePrioBranchNames;
+            txtPrioRemoteNames.Text = AppSettings.RepoObjectsTreePrioRemoteNames;
 
             foreach (IShellDescriptor shell in _shellProvider.GetShells())
             {

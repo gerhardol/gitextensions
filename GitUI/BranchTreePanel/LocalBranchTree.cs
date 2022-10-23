@@ -1,4 +1,7 @@
-﻿using GitCommands.Git;
+﻿using System.Diagnostics;
+using System.Text.RegularExpressions;
+using GitCommands;
+using GitCommands.Git;
 using GitUI.UserControls.RevisionGrid;
 using GitUIPluginInterfaces;
 using Microsoft;
@@ -50,9 +53,12 @@ namespace GitUI.BranchTreePanel
             Nodes nodes = new(this);
             var aheadBehindData = _aheadBehindDataProvider?.GetData();
 
-            var currentBranch = Module.GetSelectedBranch();
+            // Sort prio branches first (if set) with the compile cache (no need to instanceiate)
+            bool isBranchRegex = !string.IsNullOrWhiteSpace(AppSettings.RepoObjectsTreePrioBranchNames);
+            string currentBranch = Module.GetSelectedBranch();
             Dictionary<string, BaseRevisionNode> pathToNode = new();
-            foreach (IGitRef branch in branches)
+            foreach (IGitRef branch in branches.OrderBy(node =>
+                    isBranchRegex && !Regex.IsMatch(node.LocalName, AppSettings.RepoObjectsTreePrioBranchNames, RegexOptions.ExplicitCapture)))
             {
                 token.ThrowIfCancellationRequested();
 

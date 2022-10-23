@@ -34,6 +34,8 @@
             this.label2 = new System.Windows.Forms.Label();
             this.chkUseBrowseForFileHistory = new System.Windows.Forms.CheckBox();
             this.chkUseDiffViewerForBlame = new System.Windows.Forms.CheckBox();
+            this.txtPrioBranchNames = new System.Windows.Forms.TextBox();
+            this.txtPrioRemoteNames = new System.Windows.Forms.TextBox();
             this.gbGeneral = new System.Windows.Forms.GroupBox();
             this.gbTabs = new System.Windows.Forms.GroupBox();
             this.gbGeneral.SuspendLayout();
@@ -99,6 +101,18 @@
             this.chkUseDiffViewerForBlame.Text = "Show blame in diff viewer";
             this.chkUseDiffViewerForBlame.UseVisualStyleBackColor = true;
             // 
+            // txtPrioBranchNames
+            // 
+            this.txtPrioBranchNames.Location = new System.Drawing.Point(11, 209);
+            this.txtPrioBranchNames.Name = "txtPrioBranchNames";
+            this.txtPrioBranchNames.Size = new System.Drawing.Size(179, 20);
+            // 
+            // txtPrioRemoteNames
+            // 
+            this.txtPrioRemoteNames.Location = new System.Drawing.Point(11, 238);
+            this.txtPrioRemoteNames.Name = "txtPrioRemoteNames";
+            this.txtPrioRemoteNames.Size = new System.Drawing.Size(179, 20);
+            // 
             // gbGeneral
             // 
             this.gbGeneral.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -133,6 +147,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.Controls.Add(this.gbTabs);
             this.Controls.Add(this.gbGeneral);
+            this.Controls.Add(this.txtPrioBranchNames);
+            this.Controls.Add(this.txtPrioRemoteNames);
             this.Name = "FormBrowseRepoSettingsPage";
             this.Padding = new System.Windows.Forms.Padding(8);
             this.Size = new System.Drawing.Size(457, 215);
@@ -141,6 +157,7 @@
             this.gbTabs.ResumeLayout(false);
             this.gbTabs.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -152,6 +169,8 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.CheckBox chkUseBrowseForFileHistory;
         private System.Windows.Forms.CheckBox chkUseDiffViewerForBlame;
+        private System.Windows.Forms.TextBox txtPrioBranchNames;
+        private System.Windows.Forms.TextBox txtPrioRemoteNames;
         private System.Windows.Forms.GroupBox gbGeneral;
         private System.Windows.Forms.GroupBox gbTabs;
     }
