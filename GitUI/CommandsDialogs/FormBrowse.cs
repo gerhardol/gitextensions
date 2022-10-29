@@ -225,6 +225,7 @@ namespace GitUI.CommandsDialogs
         private bool _fileBlameHistorySidePanelStartupState;
 
         private TabPage? _consoleTabPage;
+        private readonly TabPage _gitOutputTabPage;
 
         private readonly Dictionary<Brush, Icon> _overlayIconByBrush = new();
 
@@ -271,6 +272,8 @@ namespace GitUI.CommandsDialogs
 
             MainSplitContainer.Visible = false;
             MainSplitContainer.SplitterDistance = DpiUtil.Scale(260);
+
+            _gitOutputTabPage = CreateGitOutputTabPage(CommitInfoTabControl);
 
             ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
             {
@@ -325,6 +328,30 @@ namespace GitUI.CommandsDialogs
 
             // Application is init, the repo related operations are triggered in OnLoad()
             return;
+
+            static TabPage CreateGitOutputTabPage(TabControl tabControl)
+            {
+                RichTextBox gitOutputControl = new()
+                {
+                    Name = "GitOutput",
+                    ReadOnly = true,
+                    Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Bottom
+                };
+                FormStatus.OnDone = (formStatus) => gitOutputControl.Text = formStatus.GetOutputString();
+                gitOutputControl.LinkClicked += (_, e) => OsShellUtil.OpenUrlInDefaultBrowser(e.LinkText);
+
+                TabPage gitOutputTabPage = new()
+                {
+                    Text = "Git output",
+                    Name = "GitOutputTab",
+                    ImageKey = nameof(Images.Console)
+                };
+
+                gitOutputTabPage.Controls.Add(gitOutputControl);
+                tabControl.TabPages.Add(gitOutputTabPage);
+
+                return gitOutputTabPage;
+            }
 
             void InitCountArtificial(out GitStatusMonitor gitStatusMonitor)
             {
@@ -1868,18 +1895,21 @@ namespace GitUI.CommandsDialogs
         internal enum Command
         {
             // Focus or visuals
+            FocusBranchTree = 25,
             FocusRevisionGrid = 3,
             FocusCommitInfo = 4,
             FocusDiff = 5,
             FocusFileTree = 6,
-            FocusFilter = 18,
-            ToggleBranchTreePanel = 21,
-            FocusBranchTree = 25,
             FocusGpgInfo = 26,
+            FocusGitOutput = 47,
             FocusGitConsole = 29,
             FocusBuildServerStatus = 30,
             FocusNextTab = 31,
             FocusPrevTab = 32,
+
+            FocusFilter = 18,
+
+            ToggleBranchTreePanel = 21,
 
             // START menu
             OpenRepo = 45,
@@ -2025,6 +2055,7 @@ namespace GitUI.CommandsDialogs
                 case Command.FocusDiff: FocusTabOf(revisionDiff, (c, alreadyContainedFocus) => c.SwitchFocus(alreadyContainedFocus)); break;
                 case Command.FocusFileTree: FocusTabOf(fileTree, (c, alreadyContainedFocus) => c.SwitchFocus(alreadyContainedFocus)); break;
                 case Command.FocusGpgInfo when AppSettings.ShowGpgInformation.Value: FocusTabOf(revisionGpgInfo1, (c, alreadyContainedFocus) => c.Focus()); break;
+                case Command.FocusGitOutput: CommitInfoTabControl.SelectedTab = _gitOutputTabPage; break;
                 case Command.FocusGitConsole: FocusGitConsole(); break;
                 case Command.FocusBuildServerStatus: FocusTabOf(_buildReportTabPageExtension?.Control, (c, alreadyContainedFocus) => c.Focus()); break;
                 case Command.FocusNextTab: FocusNextTab(); break;
