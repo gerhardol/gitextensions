@@ -801,12 +801,14 @@ namespace GitUI.CommitInfo
 
         internal sealed class BranchComparer : IComparer<string>
         {
-            private const string RemoteBranchPrefix = "remotes/";
-
-            private static readonly Regex _importantRepoRegex = new($"^{RemoteBranchPrefix}(origin|upstream)/",
-                RegexOptions.Compiled | RegexOptions.CultureInvariant);
-            private static readonly Regex _remoteMasterRegex = new($"^{RemoteBranchPrefix}.*/(main|master)[^/]*$",
-                RegexOptions.Compiled | RegexOptions.CultureInvariant);
+            private const string _remoteBranchPrefix = "remotes/";
+            private static readonly char[] _startEndChars = { '^', '$' };
+            private static readonly Regex _importantRepoRegex = new($"^{_remoteBranchPrefix}({AppSettings.RepoObjectsTreePrioRemoteNames.Trim(_startEndChars)})/",
+                RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.CultureInvariant);
+            private static readonly Regex _remoteImportantBranchRegex = new($"^{_remoteBranchPrefix}[^/]+/({AppSettings.RepoObjectsTreePrioBranchNames.Trim(_startEndChars)})$",
+                RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.CultureInvariant);
+            private static readonly Regex _localImportantBranchRegex = new($"^({AppSettings.RepoObjectsTreePrioBranchNames.Trim(_startEndChars)})$",
+                RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.CultureInvariant);
 
             private readonly string _currentBranch;
 
@@ -832,11 +834,10 @@ namespace GitUI.CommitInfo
                     : IsImportantRepo() ? 5
                     : 6;
 
-                // Note: This assumes that branches starting with "master" are important branches, this is not configurable.
-                bool IsImportantLocalBranch() => branch.StartsWith("master") || branch.StartsWith("main");
-                bool IsImportantRemoteBranch() => _remoteMasterRegex.IsMatch(branch);
+                bool IsImportantLocalBranch() => _localImportantBranchRegex.IsMatch(branch);
+                bool IsImportantRemoteBranch() => _remoteImportantBranchRegex.IsMatch(branch);
                 bool IsImportantRepo() => _importantRepoRegex.IsMatch(branch);
-                bool IsLocalBranch() => !branch.StartsWith(RemoteBranchPrefix);
+                bool IsLocalBranch() => !branch.StartsWith(_remoteBranchPrefix);
             }
         }
 

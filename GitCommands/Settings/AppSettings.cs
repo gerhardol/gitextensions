@@ -1930,13 +1930,13 @@ namespace GitCommands
 
         public static string RepoObjectsTreePrioBranchNames
         {
-            get => GetString("RepoObjectsTree.PrioBranch", @"^(master)");
+            get => GetString("RepoObjectsTree.PrioBranch", "main|(master.*)|(release/.*)");
             set => SetString("RepoObjectsTree.PrioBranch", value);
         }
 
         public static string RepoObjectsTreePrioRemoteNames
         {
-            get => GetString("RepoObjectsTree.PrioRemoteNames", @"^(origin|upstream)$");
+            get => GetString("RepoObjectsTree.PrioRemoteNames", "origin|upstream");
             set => SetString("RepoObjectsTree.PrioRemoteNames", value);
         }
 

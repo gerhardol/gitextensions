@@ -36,7 +36,7 @@ namespace GitUI.BranchTreePanel
             // If prio is set, exclude "refs/remotes/<remote>/"
             bool isBranchRegex = !string.IsNullOrWhiteSpace(AppSettings.RepoObjectsTreePrioBranchNames);
             foreach (IGitRef branch in branches.OrderBy(node =>
-                    isBranchRegex && !Regex.IsMatch(node.LocalName, AppSettings.RepoObjectsTreePrioBranchNames, RegexOptions.ExplicitCapture)))
+                    isBranchRegex && !Regex.IsMatch(node.LocalName, $"^({AppSettings.RepoObjectsTreePrioBranchNames})$", RegexOptions.ExplicitCapture)))
             {
                 token.ThrowIfCancellationRequested();
 
@@ -77,7 +77,7 @@ namespace GitUI.BranchTreePanel
             bool isRemoteRegex = !string.IsNullOrWhiteSpace(AppSettings.RepoObjectsTreePrioRemoteNames);
             enabledRemoteRepoNodes
                 .OrderBy(node => node.FullPath)
-                .OrderBy(node => isRemoteRegex && !Regex.IsMatch(node.FullPath, AppSettings.RepoObjectsTreePrioRemoteNames, RegexOptions.ExplicitCapture))
+                .OrderBy(node => isRemoteRegex && !Regex.IsMatch(node.FullPath, $"^({AppSettings.RepoObjectsTreePrioRemoteNames})$", RegexOptions.ExplicitCapture))
                 .ForEach(node => nodes.AddNode(node));
 
             // Add disabled remotes, if any
@@ -85,7 +85,7 @@ namespace GitUI.BranchTreePanel
             if (disabledRemotes.Count > 0)
             {
                 List<RemoteRepoNode> disabledRemoteRepoNodes = new();
-                foreach (var remote in disabledRemotes.OrderBy(remote => remote.Name).OrderBy(node => isRemoteRegex && !Regex.IsMatch(node.Name, AppSettings.RepoObjectsTreePrioRemoteNames, RegexOptions.ExplicitCapture)))
+                foreach (var remote in disabledRemotes.OrderBy(remote => remote.Name).OrderBy(node => isRemoteRegex && !Regex.IsMatch(node.Name, $"^({AppSettings.RepoObjectsTreePrioRemoteNames})$", RegexOptions.ExplicitCapture)))
                 {
                     RemoteRepoNode node = new(this, remote.Name, remotesManager, remote, false);
                     disabledRemoteRepoNodes.Add(node);
