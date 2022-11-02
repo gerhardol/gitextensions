@@ -333,11 +333,48 @@ namespace GitUI.CommandsDialogs
             {
                 RichTextBox gitOutputControl = new()
                 {
+                    Dock = DockStyle.Fill,
                     Name = "GitOutput",
-                    ReadOnly = true,
-                    Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Bottom
+                    ReadOnly = true
                 };
-                FormStatus.OnDone = (formStatus) => gitOutputControl.Text = formStatus.GetOutputString();
+                List<StringBuilder> outputs = new(capacity: 5);
+                FormStatus.OnDone = (formStatus) =>
+                {
+                    if (outputs.Count == outputs.Capacity)
+                    {
+                        outputs.RemoveAt(0);
+                    }
+
+                    outputs.Add(GetOutput(formStatus));
+
+                    StringBuilder sb = new();
+                    foreach (StringBuilder output in outputs)
+                    {
+                        sb.Append(output);
+                    }
+
+                    sb.Append('$');
+
+                    gitOutputControl.Text = sb.ToString();
+                    gitOutputControl.SelectionStart = sb.Length;
+                    gitOutputControl.ScrollToCaret();
+                    return;
+
+                    static StringBuilder GetOutput(FormStatus formStatus)
+                    {
+                        StringBuilder sb = new();
+                        if (formStatus is FormProcess formProcess)
+                        {
+                            sb.Append("$ ").Append(formProcess.ProcessString).Append(' ').Append(formProcess.ProcessArguments).AppendLine();
+                        }
+                        else
+                        {
+                            sb.AppendLine("---");
+                        }
+
+                        return sb.AppendLine(formStatus.GetOutputString());
+                    }
+                };
                 gitOutputControl.LinkClicked += (_, e) => OsShellUtil.OpenUrlInDefaultBrowser(e.LinkText);
 
                 TabPage gitOutputTabPage = new()
