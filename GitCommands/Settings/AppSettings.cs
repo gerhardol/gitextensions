@@ -1928,16 +1928,16 @@ namespace GitCommands
             set => SetInt("RepoObjectsTree.StashesIndex", value);
         }
 
-        public static string RepoObjectsTreePrioBranchNames
+        public static string PrioritizedBranchNames
         {
-            get => GetString("RepoObjectsTree.PrioBranch", "main|(master.*)|(release/.*)");
-            set => SetString("RepoObjectsTree.PrioBranch", value);
+            get => GetString("PrioritizedBranchNames", "main.*|master.*|release/.*");
+            set => SetString("PrioritizedBranchNames", value);
         }
 
-        public static string RepoObjectsTreePrioRemoteNames
+        public static string PrioritizedRemoteNames
         {
-            get => GetString("RepoObjectsTree.PrioRemoteNames", "origin|upstream");
-            set => SetString("RepoObjectsTree.PrioRemoteNames", value);
+            get => GetString("PrioritizedRemoteNames", "origin|upstream");
+            set => SetString("PrioritizedRemoteNames", value);
         }
 
         public static bool BlameDisplayAuthorFirst

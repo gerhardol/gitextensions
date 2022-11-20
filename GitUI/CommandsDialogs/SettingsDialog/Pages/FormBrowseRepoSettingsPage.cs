@@ -28,8 +28,8 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
             AppSettings.UseBrowseForFileHistory.Value = chkUseBrowseForFileHistory.Checked;
             AppSettings.UseDiffViewerForBlame.Value = chkUseDiffViewerForBlame.Checked;
             AppSettings.ShowGpgInformation.Value = chkShowGpgInformation.Checked;
-            AppSettings.RepoObjectsTreePrioBranchNames = txtPrioBranchNames.Text;
-            AppSettings.RepoObjectsTreePrioRemoteNames = txtPrioRemoteNames.Text;
+            AppSettings.PrioritizedBranchNames = txtPrioBranchNames.Text;
+            AppSettings.PrioritizedRemoteNames = txtPrioRemoteNames.Text;
 
             AppSettings.ConEmuTerminal.Value = ((IShellDescriptor)cboTerminal.SelectedItem).Name.ToLowerInvariant();
             base.PageToSettings();
@@ -41,8 +41,8 @@ namespace GitUI.CommandsDialogs.SettingsDialog.Pages
             chkUseBrowseForFileHistory.Checked = AppSettings.UseBrowseForFileHistory.Value;
             chkUseDiffViewerForBlame.Checked = AppSettings.UseDiffViewerForBlame.Value;
             chkShowGpgInformation.Checked = AppSettings.ShowGpgInformation.Value;
-            txtPrioBranchNames.Text = AppSettings.RepoObjectsTreePrioBranchNames;
-            txtPrioRemoteNames.Text = AppSettings.RepoObjectsTreePrioRemoteNames;
+            txtPrioBranchNames.Text = AppSettings.PrioritizedBranchNames;
+            txtPrioRemoteNames.Text = AppSettings.PrioritizedRemoteNames;
 
             foreach (IShellDescriptor shell in _shellProvider.GetShells())
             {

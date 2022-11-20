@@ -54,11 +54,11 @@ namespace GitUI.BranchTreePanel
             var aheadBehindData = _aheadBehindDataProvider?.GetData();
 
             // Sort prio branches first (if set) with the compile cache (no need to instanceiate)
-            bool isBranchRegex = !string.IsNullOrWhiteSpace(AppSettings.RepoObjectsTreePrioBranchNames);
+            bool isBranchRegex = !string.IsNullOrWhiteSpace(AppSettings.PrioritizedBranchNames);
             string currentBranch = Module.GetSelectedBranch();
             Dictionary<string, BaseRevisionNode> pathToNode = new();
             foreach (IGitRef branch in branches.OrderBy(node =>
-                    isBranchRegex && !Regex.IsMatch(node.LocalName, $"^({AppSettings.RepoObjectsTreePrioBranchNames})$", RegexOptions.ExplicitCapture)))
+                    isBranchRegex && !Regex.IsMatch(node.LocalName, $"^({AppSettings.PrioritizedBranchNames})$", RegexOptions.ExplicitCapture)))
             {
                 token.ThrowIfCancellationRequested();
 

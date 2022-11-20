@@ -803,11 +803,11 @@ namespace GitUI.CommitInfo
         {
             private const string _remoteBranchPrefix = "remotes/";
             private static readonly char[] _startEndChars = { '^', '$' };
-            private static readonly Regex _importantRepoRegex = new($"^{_remoteBranchPrefix}({AppSettings.RepoObjectsTreePrioRemoteNames.Trim(_startEndChars)})/",
+            private static readonly Regex _importantRepoRegex = new($"^{_remoteBranchPrefix}({AppSettings.PrioritizedRemoteNames.Trim(_startEndChars)})/",
                 RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.CultureInvariant);
-            private static readonly Regex _remoteImportantBranchRegex = new($"^{_remoteBranchPrefix}[^/]+/({AppSettings.RepoObjectsTreePrioBranchNames.Trim(_startEndChars)})$",
+            private static readonly Regex _remoteImportantBranchRegex = new($"^{_remoteBranchPrefix}[^/]+/({AppSettings.PrioritizedBranchNames.Trim(_startEndChars)})$",
                 RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.CultureInvariant);
-            private static readonly Regex _localImportantBranchRegex = new($"^({AppSettings.RepoObjectsTreePrioBranchNames.Trim(_startEndChars)})$",
+            private static readonly Regex _localImportantBranchRegex = new($"^({AppSettings.PrioritizedBranchNames.Trim(_startEndChars)})$",
                 RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.CultureInvariant);
 
             private readonly string _currentBranch;
