@@ -549,7 +549,12 @@ namespace GitUI.CommandsDialogs
                         new WindowsThumbnailToolbarButton(_closeAll.Text, Images.DeleteFile, (s, e) => NativeMethods.PostMessageW(NativeMethods.HWND_BROADCAST, _closeAllMessage))));
             }
 
-            this.InvokeAsync(OnActivate).FileAndForget();
+            // if the Git commands run async when restoring, it may fail
+            if (!AppSettings.WorkaroundRestoreFromMinimize)
+            {
+                this.InvokeAsync(OnActivate).FileAndForget();
+            }
+
             base.OnActivated(e);
         }
 
