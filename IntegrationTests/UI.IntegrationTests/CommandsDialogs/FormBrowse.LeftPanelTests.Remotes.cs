@@ -80,44 +80,71 @@ namespace GitExtensions.UITests.CommandsDialogs
         [Test]
         public void RepoObjectTree_should_load_active_remotes()
         {
+            bool revisionGraphShowArtificialCommits = AppSettings.RevisionGraphShowArtificialCommits;
+            AppSettings.RevisionGraphShowArtificialCommits = false;
             RunRepoObjectsTreeTest(
                 remotesNode =>
                 {
-                    // act
-                    // no-op: by the virtue of loading the form, the left panel has loaded its content
+                    try
+                    {
+                        // act
+                        // no-op: by the virtue of loading the form, the left panel has loaded its content
 
-                    // assert
-                    remotesNode.Nodes.Count.Should().Be(RemoteNames.Length);
+                        // assert
+                        remotesNode.Nodes.Count.Should().Be(RemoteNames.Length);
+                    }
+                    finally
+                    {
+                        AppSettings.RevisionGraphShowArtificialCommits = revisionGraphShowArtificialCommits;
+                    }
                 });
         }
 
         [Test]
         public void RepoObjectTree_should_order_active_remotes_alphabetically()
         {
+            bool revisionGraphShowArtificialCommits = AppSettings.RevisionGraphShowArtificialCommits;
+            AppSettings.RevisionGraphShowArtificialCommits = false;
             RunRepoObjectsTreeTest(
                 remotesNode =>
                 {
-                    // act
-                    // no-op: by the virtue of loading the form, the left panel has loaded its content
+                    try
+                    {
+                        // act
+                        // no-op: by the virtue of loading the form, the left panel has loaded its content
 
-                    // assert
-                    var names = remotesNode.Nodes.OfType<TreeNode>().Select(x => x.Text).ToList();
-                    names.Should().BeEquivalentTo(RemoteNames);
-                    names.Should().BeInAscendingOrder();
+                        // assert
+                        var names = remotesNode.Nodes.OfType<TreeNode>().Select(x => x.Text).ToList();
+                        names.Should().BeEquivalentTo(RemoteNames);
+                        names.Should().BeInAscendingOrder();
+                    }
+                    finally
+                    {
+                        AppSettings.RevisionGraphShowArtificialCommits = revisionGraphShowArtificialCommits;
+                    }
                 });
         }
 
         [Test]
         public void RepoObjectTree_should_order_should_not_display_inactive_if_none()
         {
+            bool revisionGraphShowArtificialCommits = AppSettings.RevisionGraphShowArtificialCommits;
+            AppSettings.RevisionGraphShowArtificialCommits = false;
             RunRepoObjectsTreeTest(
                 remotesNode =>
                 {
-                    // act
-                    // no-op: by the virtue of loading the form, the left panel has loaded its content
+                    try
+                    {
+                        // act
+                        // no-op: by the virtue of loading the form, the left panel has loaded its content
 
-                    // assert
-                    remotesNode.Nodes.OfType<TreeNode>().Any(n => n.Text == TranslatedStrings.Inactive).Should().BeFalse();
+                        // assert
+                        remotesNode.Nodes.OfType<TreeNode>().Any(n => n.Text == TranslatedStrings.Inactive).Should().BeFalse();
+                    }
+                    finally
+                    {
+                        AppSettings.RevisionGraphShowArtificialCommits = revisionGraphShowArtificialCommits;
+                    }
                 });
         }
 
@@ -127,14 +154,23 @@ namespace GitExtensions.UITests.CommandsDialogs
             // setup
             DeactivateTreeNode(RemoteNames[1]);
 
+            bool revisionGraphShowArtificialCommits = AppSettings.RevisionGraphShowArtificialCommits;
+            AppSettings.RevisionGraphShowArtificialCommits = false;
             RunRepoObjectsTreeTest(
                 remotesNode =>
                 {
-                    // act
-                    // no-op: by the virtue of loading the form, the left panel has loaded its content
+                    try
+                    {
+                        // act
+                        // no-op: by the virtue of loading the form, the left panel has loaded its content
 
-                    // assert
-                    remotesNode.Nodes.OfType<TreeNode>().Count(n => n.Text == TranslatedStrings.Inactive).Should().Be(1);
+                        // assert
+                        remotesNode.Nodes.OfType<TreeNode>().Count(n => n.Text == TranslatedStrings.Inactive).Should().Be(1);
+                    }
+                    finally
+                    {
+                        AppSettings.RevisionGraphShowArtificialCommits = revisionGraphShowArtificialCommits;
+                    }
                 });
         }
 
@@ -144,14 +180,23 @@ namespace GitExtensions.UITests.CommandsDialogs
             // setup
             DeactivateTreeNode(RemoteNames[1]);
 
+            bool revisionGraphShowArtificialCommits = AppSettings.RevisionGraphShowArtificialCommits;
+            AppSettings.RevisionGraphShowArtificialCommits = false;
             RunRepoObjectsTreeTest(
                 remotesNode =>
                 {
-                    // act
-                    // no-op: by the virtue of loading the form, the left panel has loaded its content
+                    try
+                    {
+                        // act
+                        // no-op: by the virtue of loading the form, the left panel has loaded its content
 
-                    // assert
-                    remotesNode.Nodes.OfType<TreeNode>().Last().Text.Should().Be(TranslatedStrings.Inactive);
+                        // assert
+                        remotesNode.Nodes.OfType<TreeNode>().Last().Text.Should().Be(TranslatedStrings.Inactive);
+                    }
+                    finally
+                    {
+                        AppSettings.RevisionGraphShowArtificialCommits = revisionGraphShowArtificialCommits;
+                    }
                 });
         }
 
@@ -163,17 +208,26 @@ namespace GitExtensions.UITests.CommandsDialogs
             DeactivateTreeNode(RemoteNames[0]);
             DeactivateTreeNode(RemoteNames[1]);
 
+            bool revisionGraphShowArtificialCommits = AppSettings.RevisionGraphShowArtificialCommits;
+            AppSettings.RevisionGraphShowArtificialCommits = false;
             RunRepoObjectsTreeTest(
                 remotesNode =>
                 {
-                    // act
-                    // no-op: by the virtue of loading the form, the left panel has loaded its content
+                    try
+                    {
+                        // act
+                        // no-op: by the virtue of loading the form, the left panel has loaded its content
 
-                    // assert
-                    var inactiveNodes = remotesNode.Nodes.OfType<TreeNode>().Last().Nodes.OfType<TreeNode>().Select(n => n.Text).ToList();
-                    inactiveNodes.Count.Should().Be(3);
-                    inactiveNodes.Should().BeEquivalentTo(RemoteNames[3], RemoteNames[0], RemoteNames[1]);
-                    inactiveNodes.Should().BeInAscendingOrder();
+                        // assert
+                        var inactiveNodes = remotesNode.Nodes.OfType<TreeNode>().Last().Nodes.OfType<TreeNode>().Select(n => n.Text).ToList();
+                        inactiveNodes.Count.Should().Be(3);
+                        inactiveNodes.Should().BeEquivalentTo(RemoteNames[3], RemoteNames[0], RemoteNames[1]);
+                        inactiveNodes.Should().BeInAscendingOrder();
+                    }
+                    finally
+                    {
+                        AppSettings.RevisionGraphShowArtificialCommits = revisionGraphShowArtificialCommits;
+                    }
                 });
         }
 
