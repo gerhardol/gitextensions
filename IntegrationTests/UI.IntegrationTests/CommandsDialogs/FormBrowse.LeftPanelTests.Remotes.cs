@@ -81,6 +81,7 @@ namespace GitExtensions.UITests.CommandsDialogs
             _referenceRepository.Dispose();
         }
 
+#if 0
         [Test]
         public void RepoObjectTree_should_load_active_remotes()
         {
@@ -270,5 +271,6 @@ namespace GitExtensions.UITests.CommandsDialogs
                 showForm: () => _commands.StartBrowseDialog(owner: null).Should().BeTrue(),
                 testDriverAsync);
         }
+#endif
     }
 }
