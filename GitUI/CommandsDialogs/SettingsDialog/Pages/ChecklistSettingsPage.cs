@@ -3,6 +3,7 @@ using GitCommands.Config;
 using GitCommands.DiffMergeTools;
 using GitCommands.Utils;
 using GitUI.CommandsDialogs.SettingsDialog.ShellExtension;
+using GitUI.Infrastructure;
 using Microsoft;
 using ResourceManager;
 
