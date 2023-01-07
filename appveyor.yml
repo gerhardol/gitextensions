@@ -64,6 +64,10 @@ build_script:
         $isBuildingPR = $true;
     }
 - ps: |
+    # add to index, to set crlf in .gitattributes 
+    git -c core.autocrlf=false add -A
+    if ($LastExitCode -ne 0) { $host.SetShouldExit($LastExitCode) }
+- ps: |
     # build VC++
     dotnet build .\scripts\native.proj -c Release --verbosity q --nologo /bl:.\artifacts\log\native.binlog
     if ($LastExitCode -ne 0) { $host.SetShouldExit($LastExitCode) }
