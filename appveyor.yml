@@ -78,8 +78,7 @@ build_script:
     if ($isBuildingPR) {
         git config user.email "gitextensions@github.com"
         git config user.name "Git Extensions"
-        git -c core.autocrlf=true add -A
-        git commit -m "restore merge commit"
+        git commit -a -m "commit version files"
         # ignore warning about line-endings conversion
         $global:LASTEXITCODE = 0
     }

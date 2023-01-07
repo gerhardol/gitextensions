@@ -2,6 +2,7 @@
 *.xml diff -text
 *.patch diff -text
 *.blame diff -text
+*.xlf text
 *.cs text diff=csharp
 *.sln text eol=crlf
 *.bat text eol=crlf
