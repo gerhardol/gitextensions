@@ -78,7 +78,7 @@ build_script:
     if ($isBuildingPR) {
         git config user.email "gitextensions@github.com"
         git config user.name "Git Extensions"
-        git commit -a -m "commit version files"
+        git -c core.autocrlf=false commit -a -m "commit version files"
         # ignore warning about line-endings conversion
         $global:LASTEXITCODE = 0
     }
