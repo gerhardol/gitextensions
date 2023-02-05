@@ -1499,6 +1499,12 @@ namespace GitCommands
             set => SetBool("FillRefLabels", value);
         }
 
+        public static bool ReduceGraphCurves
+        {
+            get => GetBool("ReduceGraphCurves", true);
+            set => SetBool("ReduceGraphCurves", value);
+        }
+
         public static string LastFormatPatchDir
         {
             get => GetString("lastformatpatchdir", "");
