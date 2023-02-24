@@ -200,7 +200,9 @@ namespace GitUI.CommandsDialogs.BrowseDialog
             get { return _currentStatus; }
             set
             {
-                var prevStatus = _currentStatus;
+                ThreadHelper.AssertOnUIThread();
+
+                GitStatusMonitorState prevStatus = _currentStatus;
                 _currentStatus = value;
                 switch (_currentStatus)
                 {
@@ -209,6 +211,11 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                             _timerRefresh.Stop();
                             _workTreeWatcher.EnableRaisingEvents = false;
                             _gitDirWatcher.EnableRaisingEvents = false;
+
+                            if (_currentStatus != prevStatus)
+                            {
+                                InvalidateGitWorkingDirectoryStatus();
+                            }
                         }
 
                         break;
@@ -224,7 +231,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
 
                     case GitStatusMonitorState.Inactive:
                         {
-                            if (prevStatus != GitStatusMonitorState.Inactive)
+                            if (_currentStatus != prevStatus)
                             {
                                 InvalidateGitWorkingDirectoryStatus();
                             }
@@ -424,35 +431,29 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                     {
                         try
                         {
-                            GitExtUtils.ArgumentString cmd = GitCommandHelpers.GetAllChangedFilesCmd(true, UntrackedFilesMode.Default, noLocks: noLocks);
-                            ExecutionResult result = await module.GitExecutable.ExecuteAsync(cmd, cancellationToken: cancelToken).ConfigureAwait(false);
-
-                            if (result.ExitedSuccessfully && !ModuleHasChanged())
-                            {
-                                // Update callers also if cancelled, this is for the correct module
-                                string output = result.StandardOutput;
-                                IReadOnlyList<GitItemStatus> changedFiles = _getAllChangedFilesOutputParser.Parse(output);
-
-                                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                                GitWorkingDirectoryStatusChanged?.Invoke(this, new GitWorkingDirectoryStatusEventArgs(changedFiles));
-                            }
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            // No action
+                            await UpdateAsync();
                         }
                         catch
                         {
+                            // Try again once
                             try
                             {
-                                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                                // Avoid possible popups on every file changes
-                                CurrentStatus = GitStatusMonitorState.Stopped;
+                                await Task.Delay(InteractiveUpdateDelay);
+                                await UpdateAsync();
                             }
                             catch
                             {
-                                // No action
+                                try
+                                {
+                                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+                                    // Avoid possible popups on every file changes
+                                    CurrentStatus = GitStatusMonitorState.Stopped;
+                                }
+                                catch
+                                {
+                                    // No action
+                                }
                             }
                         }
                         finally
@@ -474,6 +475,31 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                                 }
 
                                 _commandIsRunning = false;
+                            }
+                        }
+
+                        return;
+
+                        async Task UpdateAsync()
+                        {
+                            try
+                            {
+                                GitExtUtils.ArgumentString cmd = GitCommandHelpers.GetAllChangedFilesCmd(true, UntrackedFilesMode.Default, noLocks: noLocks);
+                                ExecutionResult result = await module.GitExecutable.ExecuteAsync(cmd, cancellationToken: cancelToken).ConfigureAwait(false);
+
+                                if (result.ExitedSuccessfully && !ModuleHasChanged())
+                                {
+                                    // Update callers also if cancelled, this is for the correct module
+                                    string output = result.StandardOutput;
+                                    IReadOnlyList<GitItemStatus> changedFiles = _getAllChangedFilesOutputParser.Parse(output);
+
+                                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                                    GitWorkingDirectoryStatusChanged?.Invoke(this, new GitWorkingDirectoryStatusEventArgs(changedFiles));
+                                }
+                            }
+                            catch (OperationCanceledException)
+                            {
+                                // No action
                             }
                         }
                     })
