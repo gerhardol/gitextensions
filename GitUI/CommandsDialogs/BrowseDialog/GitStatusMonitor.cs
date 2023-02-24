@@ -437,6 +437,10 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                                 GitWorkingDirectoryStatusChanged?.Invoke(this, new GitWorkingDirectoryStatusEventArgs(changedFiles));
                             }
                         }
+                        catch (OperationCanceledException)
+                        {
+                            // No action
+                        }
                         catch
                         {
                             try
@@ -469,10 +473,7 @@ namespace GitUI.CommandsDialogs.BrowseDialog
                                     }
                                 }
 
-                                if (!cancelToken.IsCancellationRequested)
-                                {
-                                    _commandIsRunning = false;
-                                }
+                                _commandIsRunning = false;
                             }
                         }
                     })
