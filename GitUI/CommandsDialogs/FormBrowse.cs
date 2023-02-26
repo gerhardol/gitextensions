@@ -390,6 +390,10 @@ namespace GitUI.CommandsDialogs
                             var (image, _) = repoStateVisualiser.Invoke(status);
                             _windowsJumpListManager.UpdateCommitIcon(image);
                         }
+                        else if (lastBrush is not null)
+                        {
+                            TaskbarManager.Instance.SetOverlayIcon(_overlayIconByBrush[lastBrush], "");
+                        }
 
                         if (AppSettings.ShowSubmoduleStatus)
                         {
