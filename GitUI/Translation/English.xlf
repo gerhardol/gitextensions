@@ -2285,7 +2285,7 @@ compare with first:</source>
         <target />
       </trans-unit>
       <trans-unit id="_closeAll.Text">
-        <source>Close all instances!</source>
+        <source>Close all windows</source>
         <target />
       </trans-unit>
       <trans-unit id="_commitButtonText.Text">

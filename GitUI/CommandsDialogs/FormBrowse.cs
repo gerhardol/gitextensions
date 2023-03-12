@@ -168,7 +168,7 @@ namespace GitUI.CommandsDialogs
 
         #region Translation
 
-        private readonly TranslationString _closeAll = new("Close all instances!");
+        private readonly TranslationString _closeAll = new("Close all windows");
 
         private readonly TranslationString _noSubmodulesPresent = new("No submodules");
         private readonly TranslationString _topProjectModuleFormat = new("Top project: {0}");
@@ -608,7 +608,7 @@ namespace GitUI.CommandsDialogs
 
         protected override void WndProc(ref Message m)
         {
-            if (m.Msg == _closeAllMessage || (m.Msg == NativeMethods.WM_SYSCOMMAND && m.WParam.ToInt32() == NativeMethods.SC_CLOSE))
+            if (m.Msg == _closeAllMessage || (m.Msg == NativeMethods.WM_SYSCOMMAND && m.WParam == NativeMethods.SC_CLOSE))
             {
                 // Application close is requested, e.g. using the Taskbar context menu.
                 // This request is directed to the main form also if a modal form like FormCommit is on top.

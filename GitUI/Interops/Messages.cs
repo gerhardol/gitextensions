@@ -97,6 +97,6 @@
         /// <summary>
         /// The type of a WM_SYSCOMMAND (given in WParam).
         /// </summary>
-        public const int SC_CLOSE = 0xf060;
+        public const nint SC_CLOSE = 0xf060;
     }
 }
