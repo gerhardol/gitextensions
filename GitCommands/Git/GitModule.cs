@@ -1334,6 +1334,31 @@ namespace GitCommands
             return _gitExecutable.GetOutput(args);
         }
 
+        public bool ResetAllChanges(bool resetAndDelete, bool onlyWorkTree = false)
+        {
+            if (onlyWorkTree)
+            {
+                GitArgumentBuilder args = new("checkout")
+                    {
+                        "--",
+                        "."
+                    };
+                GitExecutable.GetOutput(args);
+            }
+            else
+            {
+                // Reset all changes.
+                Reset(ResetMode.Hard);
+            }
+
+            if (resetAndDelete)
+            {
+                Clean(CleanMode.OnlyNonIgnored, directories: true);
+            }
+
+            return true;
+        }
+
         public void Reset(ResetMode mode, string? file = null)
         {
             _gitExecutable.RunCommand(GitCommandHelpers.ResetCmd(mode, null, file));
