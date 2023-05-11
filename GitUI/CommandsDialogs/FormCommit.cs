@@ -2120,63 +2120,55 @@ namespace GitUI.CommandsDialogs
                     return;
                 }
 
-                // Unstage file first, then reset
-                List<GitItemStatus> selectedFiles = Staged.SelectedItems.Items().ToList();
+                // remember max selected index
+                _currentFilesList.StoreNextIndexToSelect();
+
+                // If Staged was selected, unstage file first
+                List<GitItemStatus> stagedFiles = Staged.SelectedItems.Items().ToList();
                 toolStripProgressBar1.Visible = true;
-                toolStripProgressBar1.Maximum = selectedFiles.Count;
+                toolStripProgressBar1.Maximum = stagedFiles.Count;
                 toolStripProgressBar1.Value = 0;
-                Module.BatchUnstageFiles(selectedFiles, (eventArgs) =>
+                Module.BatchUnstageFiles(stagedFiles, (eventArgs) =>
                 {
                     toolStripProgressBar1.Value = Math.Min(toolStripProgressBar1.Maximum - 1, toolStripProgressBar1.Value + eventArgs.ProcessedCount);
                 });
 
-                // remember max selected index
-                _currentFilesList.StoreNextIndexToSelect();
-
-                bool deleteNewFiles = _currentFilesList.SelectedItems.Any(item => DeletableItem(item)) && (resetType == FormResetChanges.ActionEnum.ResetAndDelete);
                 List<string> filesInUse = new();
                 List<string> filesToReset = new();
                 List<string> conflictsToReset = new();
                 StringBuilder output = new();
-                foreach (var item in _currentFilesList.SelectedItems)
+                foreach (FileStatusItem item in _currentFilesList.SelectedItems)
                 {
-                    if (DeletableItem(item))
+                    if (resetType == FormResetChanges.ActionEnum.ResetAndDelete && DeletableItem(item))
                     {
-                        if (deleteNewFiles)
+                        try
                         {
-                            try
+                            string? path = _fullPathResolver.Resolve(item.Item.Name);
+                            if (File.Exists(path))
                             {
-                                string? path = _fullPathResolver.Resolve(item.Item.Name);
-                                if (File.Exists(path))
-                                {
-                                    File.Delete(path);
-                                }
-                                else if (Directory.Exists(path))
-                                {
-                                    Directory.Delete(path, recursive: true);
-                                }
+                                File.Delete(path);
                             }
-                            catch (IOException)
+                            else if (Directory.Exists(path))
                             {
-                                filesInUse.Add(item.Item.Name);
+                                Directory.Delete(path, recursive: true);
                             }
-                            catch (UnauthorizedAccessException)
-                            {
-                            }
+                        }
+                        catch (IOException)
+                        {
+                            filesInUse.Add(item.Item.Name);
+                        }
+                        catch (UnauthorizedAccessException)
+                        {
                         }
                     }
 
-                    if (item.Item.IsRenamed)
-                    {
-                        filesToReset.Add(item.Item.OldName);
-                    }
-                    else if (item.Item.IsConflict)
+                    if (item.Item.IsConflict)
                     {
                         conflictsToReset.Add(item.Item.Name);
                     }
                     else if (!item.Item.IsNew)
                     {
-                        filesToReset.Add(item.Item.Name);
+                        filesToReset.Add(item.Item.IsRenamed ? item.Item.OldName : item.Item.Name);
                     }
                 }
 
