@@ -1393,6 +1393,75 @@ namespace GitCommands
         }
 
         /// <summary>
+        /// Reset changes to the selected files.
+        /// </summary>
+        /// <param name="selectedItems">Items to reset, with Staged status set.</param>
+        /// <param name="resetAndDelete">Delete new (and renamed) files.</param>
+        /// <param name="fullPathResolver">The </param>
+        /// <param name="filesInUse">Out put listing files in use, that cannot be deleted.</param>
+        /// <param name="output">Error messages from the reset.</param>
+        /// <param name="action">Action to update  </param>
+        /// <returns><see langword="true"/> if successfully executed</returns>
+        public bool ResetChanges(IEnumerable<GitItemStatus> selectedItems, bool resetAndDelete, IFullPathResolver fullPathResolver, out List<string> filesInUse, out StringBuilder output, Action<BatchProgressEventArgs>? action = null)
+        {
+            // If Staged was selected, unstage file first
+            List<GitItemStatus> stagedFiles = selectedItems.Where(item => item.Staged == StagedStatus.Index).ToList();
+            BatchUnstageFiles(stagedFiles, action);
+
+            filesInUse = new();
+            List<string> filesToReset = new();
+            List<string> conflictsToReset = new();
+            output = new();
+            foreach (GitItemStatus item in selectedItems)
+            {
+                if (resetAndDelete && DeletableItem(item))
+                {
+                    try
+                    {
+                        string? path = fullPathResolver.Resolve(item.Name);
+                        if (File.Exists(path))
+                        {
+                            File.Delete(path);
+                        }
+                        else if (Directory.Exists(path))
+                        {
+                            Directory.Delete(path, recursive: true);
+                        }
+                    }
+                    catch (IOException)
+                    {
+                        filesInUse.Add(item.Name);
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                    }
+                }
+
+                if (item.IsConflict)
+                {
+                    conflictsToReset.Add(item.Name);
+                }
+                else if (!item.IsNew)
+                {
+                    filesToReset.Add(item.IsRenamed ? item.OldName : item.Name);
+                }
+            }
+
+            output.Append(ResetFiles(filesToReset));
+            if (conflictsToReset.Count > 0)
+            {
+                // Special handling for conflicted files, shown in worktree (with the raw diff).
+                // Must be reset to HEAD as Index is just a status marker.
+                ObjectId headId = RevParse("HEAD");
+                CheckoutFiles(conflictsToReset, headId, force: false);
+            }
+
+            return true;
+
+            static bool DeletableItem(GitItemStatus item) => item.IsNew || item.IsRenamed;
+        }
+
+        /// <summary>
         /// Delete index.lock in the current working folder.
         /// </summary>
         /// <param name="includeSubmodules">

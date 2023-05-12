@@ -2123,63 +2123,15 @@ namespace GitUI.CommandsDialogs
                 // remember max selected index
                 _currentFilesList.StoreNextIndexToSelect();
 
-                // If Staged was selected, unstage file first
-                List<GitItemStatus> stagedFiles = Staged.SelectedItems.Items().ToList();
+                IReadOnlyList<GitItemStatus> selectedItems = _currentFilesList.SelectedItems.Items().ToList();
                 toolStripProgressBar1.Visible = true;
-                toolStripProgressBar1.Maximum = stagedFiles.Count;
+                toolStripProgressBar1.Maximum = selectedItems.Where(item => item.Staged == StagedStatus.Index).Count();
                 toolStripProgressBar1.Value = 0;
-                Module.BatchUnstageFiles(stagedFiles, (eventArgs) =>
+
+                Module.ResetChanges(selectedItems, resetType == FormResetChanges.ActionEnum.ResetAndDelete, _fullPathResolver, out List<string> filesInUse, out StringBuilder output, (eventArgs) =>
                 {
                     toolStripProgressBar1.Value = Math.Min(toolStripProgressBar1.Maximum - 1, toolStripProgressBar1.Value + eventArgs.ProcessedCount);
                 });
-
-                List<string> filesInUse = new();
-                List<string> filesToReset = new();
-                List<string> conflictsToReset = new();
-                StringBuilder output = new();
-                foreach (FileStatusItem item in _currentFilesList.SelectedItems)
-                {
-                    if (resetType == FormResetChanges.ActionEnum.ResetAndDelete && DeletableItem(item))
-                    {
-                        try
-                        {
-                            string? path = _fullPathResolver.Resolve(item.Item.Name);
-                            if (File.Exists(path))
-                            {
-                                File.Delete(path);
-                            }
-                            else if (Directory.Exists(path))
-                            {
-                                Directory.Delete(path, recursive: true);
-                            }
-                        }
-                        catch (IOException)
-                        {
-                            filesInUse.Add(item.Item.Name);
-                        }
-                        catch (UnauthorizedAccessException)
-                        {
-                        }
-                    }
-
-                    if (item.Item.IsConflict)
-                    {
-                        conflictsToReset.Add(item.Item.Name);
-                    }
-                    else if (!item.Item.IsNew)
-                    {
-                        filesToReset.Add(item.Item.IsRenamed ? item.Item.OldName : item.Item.Name);
-                    }
-                }
-
-                output.Append(Module.ResetFiles(filesToReset));
-                if (conflictsToReset.Count > 0)
-                {
-                    // Special handling for conflicted files, shown in worktree (with the raw diff).
-                    // Must be reset to HEAD as Index is just a status marker.
-                    ObjectId headId = Module.RevParse("HEAD");
-                    Module.CheckoutFiles(conflictsToReset, headId, force: false);
-                }
 
                 toolStripProgressBar1.Value = toolStripProgressBar1.Maximum;
                 toolStripProgressBar1.Visible = false;
