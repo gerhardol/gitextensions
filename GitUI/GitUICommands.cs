@@ -737,14 +737,15 @@ namespace GitUI
                     return Module.ResetAllChanges(resetAndDelete: resetType == FormResetChanges.ActionEnum.ResetAndDelete);
                 }
 
-                List<GitItemStatus> selectedItems = Module.GetAllChangedFilesWithSubmodulesStatus().Where(item => item.Name == fileName).ToList();
-                if (selectedItems.Count != 1)
+                string filePath = Path.GetRelativePath(Module.WorkingDir, fileName);
+                List<GitItemStatus> selectedItems = Module.GetAllChangedFilesWithSubmodulesStatus().Where(item => item.Name == filePath).ToList();
+                if (selectedItems.Count is < 1 or > 2)
                 {
                     return false;
                 }
 
-                Module.ResetChanges(selectedItems, resetType == FormResetChanges.ActionEnum.ResetAndDelete, _fullPathResolver, out List<string> filesInUse, out StringBuilder output);
-                if (string.IsNullOrWhiteSpace(output.ToString()))
+                Module.ResetChanges(selectedItems, resetAndDelete: resetType == FormResetChanges.ActionEnum.ResetAndDelete, _fullPathResolver, out List<string> filesInUse, out StringBuilder output);
+                if (!string.IsNullOrWhiteSpace(output.ToString()))
                 {
                     MessageBox.Show(null, output.ToString(), TranslatedStrings.ResetChangesCaption, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }

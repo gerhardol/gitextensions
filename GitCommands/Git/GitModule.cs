@@ -1402,6 +1402,13 @@ namespace GitCommands
             output = new();
             foreach (GitItemStatus item in selectedItems)
             {
+                if (stagedFiles.Any(staged => staged.Name == item.Name && item.Staged != StagedStatus.Index))
+                {
+                    // TODO recalculate status for unstaged files instead, replace all other occurrences (special handling for renamed?)
+                    // File handled in WorkTree, ignore "duplicate" in Index
+                    continue;
+                }
+
                 if (resetAndDelete && DeletableItem(item))
                 {
                     try
