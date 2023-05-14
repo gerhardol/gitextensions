@@ -1361,7 +1361,7 @@ namespace GitCommands
 
         public void Reset(ResetMode mode, string? file = null)
         {
-            _gitExecutable.RunCommand(GitCommandHelpers.ResetCmd(mode, null, file));
+            _gitExecutable.RunCommand(GitCommandHelpers.ResetCmd(mode, commit: null, file));
         }
 
         public string ResetFiles(IReadOnlyList<string> files)
@@ -1388,7 +1388,7 @@ namespace GitCommands
         /// <param name="fullPathResolver">The </param>
         /// <param name="filesInUse">Out put listing files in use, that cannot be deleted.</param>
         /// <param name="output">Error messages from the reset.</param>
-        /// <param name="action">Action to update  </param>
+        /// <param name="action">Action when unstaging files (to update a progress bar).</param>
         /// <returns><see langword="true"/> if successfully executed</returns>
         public bool ResetChanges(IEnumerable<GitItemStatus> selectedItems, bool resetAndDelete, IFullPathResolver fullPathResolver, out List<string> filesInUse, out StringBuilder output, Action<BatchProgressEventArgs>? action = null)
         {
