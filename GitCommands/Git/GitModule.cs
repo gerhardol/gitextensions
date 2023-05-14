@@ -1395,18 +1395,20 @@ namespace GitCommands
             // If Staged was selected, unstage file first
             List<GitItemStatus> stagedFiles = selectedItems.Where(item => item.Staged == StagedStatus.Index).ToList();
             BatchUnstageFiles(stagedFiles, action);
+            List<GitItemStatus> unstagedItems = stagedFiles.Count == 0 ? new() : GetAllChangedFilesWithSubmodulesStatus().ToList();
 
             filesInUse = new();
             List<string> filesToReset = new();
             List<string> conflictsToReset = new();
             output = new();
-            foreach (GitItemStatus item in selectedItems)
+            foreach (GitItemStatus itemStatus in selectedItems)
             {
-                if (stagedFiles.Any(staged => staged.Name == item.Name && item.Staged != StagedStatus.Index))
+                GitItemStatus item = itemStatus;
+                if (unstagedItems.Where(staged => staged.Name == item.Name).First() is GitItemStatus unstagedItem)
                 {
-                    // TODO recalculate status for unstaged files instead, replace all other occurrences (special handling for renamed?)
-                    // File handled in WorkTree, ignore "duplicate" in Index
-                    continue;
+                    // Use the new status instead
+                    // TODO special handling for renamed?
+                    item = unstagedItem;
                 }
 
                 if (resetAndDelete && DeletableItem(item))
