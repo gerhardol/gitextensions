@@ -737,11 +737,17 @@ namespace GitUI
                     return Module.ResetAllChanges(resetAndDelete: resetType == FormResetChanges.ActionEnum.ResetAndDelete);
                 }
 
-                string filePath = Path.GetRelativePath(Module.WorkingDir, fileName);
+                string filePath = Path.GetRelativePath(Module.WorkingDir, fileName).ToPosixPath();
                 List<GitItemStatus> selectedItems = Module.GetAllChangedFilesWithSubmodulesStatus().Where(item => item.Name == filePath).ToList();
-                if (selectedItems.Count is < 1 or > 2)
+                if (selectedItems.Count < 1)
                 {
                     return false;
+                }
+
+                if (selectedItems.Count > 1)
+                {
+                    // Only index needed, git-status required after unstaging
+                    selectedItems = selectedItems.Where(item => item.Staged == StagedStatus.Index).ToList();
                 }
 
                 Module.ResetChanges(selectedItems, resetAndDelete: resetType == FormResetChanges.ActionEnum.ResetAndDelete, _fullPathResolver, out List<string> filesInUse, out StringBuilder output);
