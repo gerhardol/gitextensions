@@ -1393,9 +1393,9 @@ namespace GitCommands
         public bool ResetChanges(IEnumerable<GitItemStatus> selectedItems, bool resetAndDelete, IFullPathResolver fullPathResolver, out List<string> filesInUse, out StringBuilder output, Action<BatchProgressEventArgs>? action = null)
         {
             // If Staged was selected, unstage file first
-            List<GitItemStatus> stagedFiles = selectedItems.Where(item => item.Staged == StagedStatus.Index).ToList();
+            IEnumerable<GitItemStatus> stagedFiles = selectedItems.Where(item => item.Staged == StagedStatus.Index).ToList();
             BatchUnstageFiles(stagedFiles, action);
-            List<GitItemStatus> unstagedItems = stagedFiles.Count == 0 ? new() : GetAllChangedFilesWithSubmodulesStatus().ToList();
+            List<GitItemStatus> unstagedItems = stagedFiles.Count() == 0 ? new() : GetAllChangedFilesWithSubmodulesStatus().ToList();
 
             filesInUse = new();
             List<string> filesToReset = new();
@@ -1404,7 +1404,7 @@ namespace GitCommands
             foreach (GitItemStatus itemStatus in selectedItems)
             {
                 GitItemStatus item = itemStatus;
-                if (unstagedItems.Where(staged => staged.Name == item.Name).First() is GitItemStatus unstagedItem)
+                if (unstagedItems.Where(staged => staged.Name == item.Name).FirstOrDefault() is GitItemStatus unstagedItem)
                 {
                     // Use the new status instead
                     // TODO special handling for renamed?
