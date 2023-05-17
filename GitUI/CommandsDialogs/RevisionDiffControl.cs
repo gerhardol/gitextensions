@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Text;
 using GitCommands;
 using GitCommands.Git;
 using GitCommands.Git.Commands;
@@ -518,6 +519,15 @@ namespace GitUI.CommandsDialogs
                 else
                 {
                     // Reset to parent revision
+
+                    // Special handling for conflicts as in FormCommit
+                    // (some scenarios comparing to artificial may not be handled)
+                    if (selectedItems.All(item => item.Item.Staged is StagedStatus.WorkTree or StagedStatus.Index
+                        && item.FirstRevision.ObjectId == _revisionGrid.CurrentCheckout && item.SecondRevision.IsArtificial))
+                    {
+                        Module.ResetChanges(selectedItems.Items(), resetAndDelete: deleteUncommittedAddedItems, _fullPathResolver, out List<string> filesInUse, out StringBuilder output);
+                        return;
+                    }
 
                     // If file is new to the parent or is copied, it has to be deleted or removed if un/committed, respectively
                     IEnumerable<FileStatusItem> addedItems = selectedItems.Where(item => item.Item.IsAdded || RenamedIndexItem(item));

@@ -1404,8 +1404,14 @@ namespace GitCommands
             foreach (GitItemStatus itemStatus in selectedItems)
             {
                 GitItemStatus item = itemStatus;
-                if (unstagedItems.Where(staged => staged.Name == item.Name).FirstOrDefault() is GitItemStatus unstagedItem)
+                if (stagedFiles.Contains(item))
                 {
+                    if (unstagedItems.Where(staged => staged.Name == item.Name).FirstOrDefault() is not GitItemStatus unstagedItem)
+                    {
+                        // reset when unstaging
+                        continue;
+                    }
+
                     // Use the new status instead
                     // TODO special handling for renamed?
                     item = unstagedItem;
