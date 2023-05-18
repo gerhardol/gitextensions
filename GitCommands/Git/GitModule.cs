@@ -1383,41 +1383,70 @@ namespace GitCommands
         /// <summary>
         /// Reset changes to the selected files.
         /// </summary>
-        /// <param name="selectedItems">Items to reset, with Staged status set.</param>
+        /// <param name="resetId">Id to reset to, null for HEAD</param>
+        /// <param name="originalSelectedItems">Items to reset.</param>
         /// <param name="resetAndDelete">Delete new (and renamed) files.</param>
         /// <param name="fullPathResolver">The </param>
         /// <param name="filesInUse">Out put listing files in use, that cannot be deleted.</param>
         /// <param name="output">Error messages from the reset.</param>
         /// <param name="action">Action when unstaging files (to update a progress bar).</param>
         /// <returns><see langword="true"/> if successfully executed</returns>
-        public bool ResetChanges(IEnumerable<GitItemStatus> selectedItems, bool resetAndDelete, IFullPathResolver fullPathResolver, out List<string> filesInUse, out StringBuilder output, Action<BatchProgressEventArgs>? action = null)
+        public bool ResetChanges(ObjectId? resetId, IEnumerable<GitItemStatus> originalSelectedItems, bool resetAndDelete, IFullPathResolver fullPathResolver, out List<string> filesInUse, out StringBuilder output, Action<BatchProgressEventArgs>? action = null)
         {
-            // If Staged was selected, unstage file first
-            IEnumerable<GitItemStatus> stagedFiles = selectedItems.Where(item => item.Staged == StagedStatus.Index).ToList();
-            BatchUnstageFiles(stagedFiles, action);
-            List<GitItemStatus> unstagedItems = stagedFiles.Count() == 0 ? new() : GetAllChangedFilesWithSubmodulesStatus().ToList();
+            Lazy<List<GitItemStatus>> initialItems = new(() => GetAllChangedFilesWithSubmodulesStatus().ToList());
+            List<GitItemStatus> selectedItems;
+            if (originalSelectedItems.Any(item => item.Staged is StagedStatus.Unset))
+            {
+                // staged status required (not always provided by RevisionDiff).
+                selectedItems = new();
+                foreach (GitItemStatus item in initialItems.Value)
+                {
+                    if (originalSelectedItems.Any(orig => orig.Name == item.Name))
+                    {
+                        selectedItems.Add(item);
+                    }
+                }
+            }
+            else
+            {
+                selectedItems = originalSelectedItems.ToList();
+            }
 
+            // unstage first
+            IEnumerable<GitItemStatus> stagedFiles = selectedItems.Where(item => item.Staged == StagedStatus.Index).ToList();
+            IEnumerable<GitItemStatus> unstagedFiles = selectedItems.Where(item => item.Staged == StagedStatus.WorkTree).ToList();
+            List<GitItemStatus> filesToUnstage = stagedFiles.ToList();
+            if (unstagedFiles.Any())
+            {
+                foreach (GitItemStatus item in initialItems.Value)
+                {
+                    if (stagedFiles.Any(staged => item.Staged == StagedStatus.Index && staged.Name == item.Name))
+                    {
+                        filesToUnstage.Add(item);
+                    }
+                }
+            }
+
+            BatchUnstageFiles(filesToUnstage, action);
+
+            List<GitItemStatus> allItems = GetAllChangedFilesWithSubmodulesStatus().ToList();
             filesInUse = new();
             List<string> filesToReset = new();
             List<string> conflictsToReset = new();
             output = new();
+
             foreach (GitItemStatus itemStatus in selectedItems)
             {
                 GitItemStatus item = itemStatus;
-                if (stagedFiles.Contains(item))
+                if (allItems.Where(staged => staged.Name == item.Name).FirstOrDefault() is GitItemStatus unstagedItem)
                 {
-                    if (unstagedItems.Where(staged => staged.Name == item.Name).FirstOrDefault() is not GitItemStatus unstagedItem)
-                    {
-                        // reset when unstaging
-                        continue;
-                    }
-
-                    // Use the new status instead
-                    // TODO special handling for renamed?
+                    // file was not reset when unstaging, use new status
                     item = unstagedItem;
                 }
 
-                if (resetAndDelete && DeletableItem(item))
+                // TODO special handling for renamed?
+
+                if ((resetAndDelete || stagedFiles.Contains(itemStatus)) && DeletableItem(item))
                 {
                     try
                     {
@@ -1450,15 +1479,17 @@ namespace GitCommands
                 }
             }
 
+            CheckoutFiles(filesToReset, resetId, force: false);
+            /*
             output.Append(ResetFiles(filesToReset));
             if (conflictsToReset.Count > 0)
             {
                 // Special handling for conflicted files, shown in worktree (with the raw diff).
                 // Must be reset to HEAD as Index is just a status marker.
                 ObjectId headId = RevParse("HEAD");
-                CheckoutFiles(conflictsToReset, headId, force: false);
+                CheckoutFiles(conflictsToReset, resetId, force: false);
             }
-
+            */
             return true;
 
             static bool DeletableItem(GitItemStatus item) => item.IsNew || item.IsRenamed;
@@ -1490,18 +1521,19 @@ namespace GitCommands
                 });
         }
 
-        public void CheckoutFiles(IReadOnlyList<string> files, ObjectId revision, bool force)
+        public void CheckoutFiles(IReadOnlyList<string> files, ObjectId? revision, bool force)
         {
             if (files.Count == 0)
             {
                 return;
             }
 
+            string revStr = revision?.ToString() ?? "HEAD";
             if (revision == ObjectId.IndexId)
             {
                 // Reset to index has no revision
                 // All other artificial commits are errors
-                revision = null!;
+                revStr = null!;
             }
 
             // Run batch arguments to work around max command line length on Windows. Fix #6593
@@ -1510,7 +1542,7 @@ namespace GitCommands
             _gitExecutable.RunBatchCommand(new GitArgumentBuilder("checkout")
                 {
                     { force, "--force" },
-                    revision,
+                    revStr,
                     "--"
                 }
                 .BuildBatchArgumentsForFiles(files));

@@ -2128,7 +2128,7 @@ namespace GitUI.CommandsDialogs
                 toolStripProgressBar1.Maximum = selectedItems.Count(item => item.Staged == StagedStatus.Index);
                 toolStripProgressBar1.Value = 0;
 
-                Module.ResetChanges(selectedItems, resetAndDelete: resetType == FormResetChanges.ActionEnum.ResetAndDelete, _fullPathResolver, out List<string> filesInUse, out StringBuilder output, (eventArgs) =>
+                Module.ResetChanges(resetId: null, selectedItems, resetAndDelete: resetType == FormResetChanges.ActionEnum.ResetAndDelete, _fullPathResolver, out List<string> filesInUse, out StringBuilder output, (eventArgs) =>
                 {
                     toolStripProgressBar1.Value = Math.Min(toolStripProgressBar1.Maximum - 1, toolStripProgressBar1.Value + eventArgs.ProcessedCount);
                 });

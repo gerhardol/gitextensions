@@ -489,17 +489,37 @@ namespace GitUI.CommandsDialogs
 
         private void ResetSelectedItemsTo(bool actsAsChild, bool deleteUncommittedAddedItems)
         {
-            var selectedItems = DiffFiles.SelectedItems.ToList();
-            if (!selectedItems.Any())
+            IReadOnlyList<FileStatusItem> selectedItems = DiffFiles.SelectedItems.ToList();
+            ObjectId resetId = actsAsChild ? selectedItems.SecondIds().FirstOrDefault() : selectedItems.FirstIds().FirstOrDefault();
+            if (!selectedItems.Any() || resetId is null)
             {
                 return;
             }
 
             try
             {
-                if (actsAsChild)
+                Module.ResetChanges(resetId, selectedItems.Items(), resetAndDelete: deleteUncommittedAddedItems, _fullPathResolver, filesInUse: out _, output: out _);
+/*
+                // Special handling for conflicts as in FormCommit
+                // (some scenarios comparing to artificial may not be handled)
+                // Note: reset WorkTree to HEAD
+                if (selectedItems.All(item => (item.Item.Staged is StagedStatus.WorkTree or StagedStatus.Index)
+                        && IsResetToHead(item, actsAsChild, _revisionGrid.CurrentCheckout)))
+                {
+                    Module.ResetChanges(selectedItems.Items(), resetAndDelete: deleteUncommittedAddedItems, _fullPathResolver, filesInUse: out _, output: out _);
+                    return;
+                }
+                else if (actsAsChild)
                 {
                     // Reset to selected revision
+
+                    if (selectedItems.All(item => item.Item.Staged is StagedStatus.WorkTree or StagedStatus.Index
+                        && (item.SecondRevision.ObjectId == _revisionGrid.CurrentCheckout || item.SecondRevision.ObjectId == ObjectId.IndexId)
+                        && item.FirstRevision.IsArtificial))
+                    {
+                        Module.ResetChanges(selectedItems.Items(), resetAndDelete: deleteUncommittedAddedItems, _fullPathResolver, filesInUse: out _, output: out _);
+                        return;
+                    }
 
                     List<string> deletedItems = selectedItems
                         .Where(item => item.Item.IsDeleted)
@@ -522,10 +542,12 @@ namespace GitUI.CommandsDialogs
 
                     // Special handling for conflicts as in FormCommit
                     // (some scenarios comparing to artificial may not be handled)
+                    // Note: reset WorkTree to HEAD
                     if (selectedItems.All(item => item.Item.Staged is StagedStatus.WorkTree or StagedStatus.Index
-                        && item.FirstRevision.ObjectId == _revisionGrid.CurrentCheckout && item.SecondRevision.IsArtificial))
+                        && (item.FirstRevision.ObjectId == _revisionGrid.CurrentCheckout || item.FirstRevision.ObjectId == ObjectId.IndexId)
+                        && item.SecondRevision.IsArtificial))
                     {
-                        Module.ResetChanges(selectedItems.Items(), resetAndDelete: deleteUncommittedAddedItems, _fullPathResolver, out List<string> filesInUse, out StringBuilder output);
+                        Module.ResetChanges(selectedItems.Items(), resetAndDelete: deleteUncommittedAddedItems, _fullPathResolver, filesInUse: out _, output: out _);
                         return;
                     }
 
@@ -560,6 +582,7 @@ namespace GitUI.CommandsDialogs
                         Module.CheckoutFiles(conflictsToCheckout, _revisionGrid.CurrentCheckout, force: false);
                     }
                 }
+*/
             }
             finally
             {
@@ -1159,24 +1182,18 @@ namespace GitUI.CommandsDialogs
             InitResetFileToToolStripMenuItem();
         }
 
-        /// <summary>
-        /// Checks if it is possible to reset to the revision.
-        /// For artificial is Index is possible but not WorkTree or Combined.
-        /// </summary>
-        /// <param name="guid">The Git objectId.</param>
-        /// <returns>If it is possible to reset to the revisions.</returns>
-        private bool CanResetToRevision(ObjectId guid)
-        {
-            return guid != ObjectId.WorkTreeId
-                   && guid != ObjectId.CombinedDiffId;
-        }
-
         private void InitResetFileToToolStripMenuItem()
         {
-            var items = DiffFiles.SelectedItems;
+            IEnumerable<FileStatusItem> items = DiffFiles.SelectedItems;
 
-            var selectedIds = items.SecondIds().ToList();
-            if (selectedIds.Count == 0 || selectedIds.Any(id => !CanResetToRevision(id)))
+            List<ObjectId> selectedIds = DiffFiles.SelectedItems.SecondIds().ToList();
+            List<ObjectId> parentIds = DiffFiles.SelectedItems.FirstIds().ToList();
+
+            // if an artificial revision is selected, reset to the current checkout
+            // Only show one menu item if all selectedIds are artificial or head
+            ObjectId selectedId = (selectedIds.FirstOrDefault()?.IsArtificial ?? true) == true ? _revisionGrid.CurrentCheckout : selectedIds.FirstOrDefault();
+            ObjectId parentId = (parentIds.FirstOrDefault()?.IsArtificial ?? true) == true ? _revisionGrid.CurrentCheckout : parentIds.FirstOrDefault();
+            if (selectedIds.Count == 0 || selectedId == parentId)
             {
                 resetFileToSelectedToolStripMenuItem.Enabled = false;
                 resetFileToSelectedToolStripMenuItem.Visible = false;
@@ -1186,11 +1203,10 @@ namespace GitUI.CommandsDialogs
                 resetFileToSelectedToolStripMenuItem.Enabled = true;
                 resetFileToSelectedToolStripMenuItem.Visible = true;
                 resetFileToSelectedToolStripMenuItem.Text =
-                    _selectedRevision + DescribeRevision(selectedIds.FirstOrDefault(), 50);
+                    _selectedRevision + DescribeRevision(selectedId, 50);
             }
 
-            var parentIds = DiffFiles.SelectedItems.FirstIds().ToList();
-            if (parentIds.Count == 0 || parentIds.Any(id => !CanResetToRevision(id)))
+            if (parentIds.Count == 0)
             {
                 resetFileToParentToolStripMenuItem.Enabled = false;
                 resetFileToParentToolStripMenuItem.Visible = false;
@@ -1200,7 +1216,7 @@ namespace GitUI.CommandsDialogs
                 resetFileToParentToolStripMenuItem.Enabled = true;
                 resetFileToParentToolStripMenuItem.Visible = true;
                 resetFileToParentToolStripMenuItem.Text =
-                    _firstRevision + DescribeRevision(parentIds.FirstOrDefault(), 50);
+                    _firstRevision + DescribeRevision(parentId, 50);
             }
         }
 

@@ -750,7 +750,7 @@ namespace GitUI
                     selectedItems = selectedItems.Where(item => item.Staged == StagedStatus.Index).ToList();
                 }
 
-                Module.ResetChanges(selectedItems, resetAndDelete: resetType == FormResetChanges.ActionEnum.ResetAndDelete, _fullPathResolver, out List<string> filesInUse, out StringBuilder output);
+                Module.ResetChanges(resetId: null, selectedItems, resetAndDelete: resetType == FormResetChanges.ActionEnum.ResetAndDelete, _fullPathResolver, out List<string> filesInUse, out StringBuilder output);
                 if (!string.IsNullOrWhiteSpace(output.ToString()))
                 {
                     MessageBox.Show(null, output.ToString(), TranslatedStrings.ResetChangesCaption, MessageBoxButtons.OK, MessageBoxIcon.Error);
