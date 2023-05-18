@@ -490,7 +490,7 @@ namespace GitUI.CommandsDialogs
         private void ResetSelectedItemsTo(bool actsAsChild, bool deleteUncommittedAddedItems)
         {
             IReadOnlyList<FileStatusItem> selectedItems = DiffFiles.SelectedItems.ToList();
-            ObjectId resetId = actsAsChild ? selectedItems.SecondIds().FirstOrDefault() : selectedItems.FirstIds().FirstOrDefault();
+            ObjectId? resetId = (actsAsChild ? selectedItems.SecondIds() : selectedItems.FirstIds()).FirstOrDefault();
             if (!selectedItems.Any() || resetId is null)
             {
                 return;
@@ -499,90 +499,6 @@ namespace GitUI.CommandsDialogs
             try
             {
                 Module.ResetChanges(resetId, selectedItems.Items(), resetAndDelete: deleteUncommittedAddedItems, _fullPathResolver, filesInUse: out _, output: out _);
-/*
-                // Special handling for conflicts as in FormCommit
-                // (some scenarios comparing to artificial may not be handled)
-                // Note: reset WorkTree to HEAD
-                if (selectedItems.All(item => (item.Item.Staged is StagedStatus.WorkTree or StagedStatus.Index)
-                        && IsResetToHead(item, actsAsChild, _revisionGrid.CurrentCheckout)))
-                {
-                    Module.ResetChanges(selectedItems.Items(), resetAndDelete: deleteUncommittedAddedItems, _fullPathResolver, filesInUse: out _, output: out _);
-                    return;
-                }
-                else if (actsAsChild)
-                {
-                    // Reset to selected revision
-
-                    if (selectedItems.All(item => item.Item.Staged is StagedStatus.WorkTree or StagedStatus.Index
-                        && (item.SecondRevision.ObjectId == _revisionGrid.CurrentCheckout || item.SecondRevision.ObjectId == ObjectId.IndexId)
-                        && item.FirstRevision.IsArtificial))
-                    {
-                        Module.ResetChanges(selectedItems.Items(), resetAndDelete: deleteUncommittedAddedItems, _fullPathResolver, filesInUse: out _, output: out _);
-                        return;
-                    }
-
-                    List<string> deletedItems = selectedItems
-                        .Where(item => item.Item.IsDeleted)
-                        .Select(item => item.Item.Name)
-                        .ToList();
-                    Module.RemoveFiles(deletedItems, false);
-
-                    foreach (ObjectId childId in selectedItems.SecondIds())
-                    {
-                        List<string> itemsToCheckout = selectedItems
-                            .Where(item => !item.Item.IsDeleted && item.SecondRevision.ObjectId == childId)
-                            .Select(item => item.Item.Name)
-                            .ToList();
-                        Module.CheckoutFiles(itemsToCheckout, childId, force: false);
-                    }
-                }
-                else
-                {
-                    // Reset to parent revision
-
-                    // Special handling for conflicts as in FormCommit
-                    // (some scenarios comparing to artificial may not be handled)
-                    // Note: reset WorkTree to HEAD
-                    if (selectedItems.All(item => item.Item.Staged is StagedStatus.WorkTree or StagedStatus.Index
-                        && (item.FirstRevision.ObjectId == _revisionGrid.CurrentCheckout || item.FirstRevision.ObjectId == ObjectId.IndexId)
-                        && item.SecondRevision.IsArtificial))
-                    {
-                        Module.ResetChanges(selectedItems.Items(), resetAndDelete: deleteUncommittedAddedItems, _fullPathResolver, filesInUse: out _, output: out _);
-                        return;
-                    }
-
-                    // If file is new to the parent or is copied, it has to be deleted or removed if un/committed, respectively
-                    IEnumerable<FileStatusItem> addedItems = selectedItems.Where(item => item.Item.IsAdded || RenamedIndexItem(item));
-                    if (selectedItems.First().Item.IsUncommitted)
-                    {
-                        if (deleteUncommittedAddedItems)
-                        {
-                            DeleteFromFilesystem(addedItems);
-                        }
-                    }
-                    else
-                    {
-                        Module.RemoveFiles(addedItems.Select(item => item.Item.Name).ToList(), force: false);
-                    }
-
-                    foreach (ObjectId parentId in selectedItems.FirstIds())
-                    {
-                        List<string> itemsToCheckout = selectedItems
-                            .Where(item => !item.Item.IsNew && !(item.Item.IsConflict && parentId == ObjectId.IndexId) && item.FirstRevision?.ObjectId == parentId)
-                            .Select(item => RenamedIndexItem(item) ? item.Item.OldName : item.Item.Name)
-                            .ToList();
-                        Module.CheckoutFiles(itemsToCheckout, parentId, force: false);
-
-                        // Special handling for conflicted files, shown in worktree (with the raw diff).
-                        // Must be reset to HEAD as Index is just a status marker.
-                        List<string> conflictsToCheckout = selectedItems
-                            .Where(item => item.Item.IsConflict && parentId == ObjectId.IndexId)
-                            .Select(item => RenamedIndexItem(item) ? item.Item.OldName : item.Item.Name)
-                            .ToList();
-                        Module.CheckoutFiles(conflictsToCheckout, _revisionGrid.CurrentCheckout, force: false);
-                    }
-                }
-*/
             }
             finally
             {

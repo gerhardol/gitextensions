@@ -1393,13 +1393,13 @@ namespace GitCommands
         /// <returns><see langword="true"/> if successfully executed</returns>
         public bool ResetChanges(ObjectId? resetId, IEnumerable<GitItemStatus> originalSelectedItems, bool resetAndDelete, IFullPathResolver fullPathResolver, out List<string> filesInUse, out StringBuilder output, Action<BatchProgressEventArgs>? action = null)
         {
-            Lazy<List<GitItemStatus>> initialItems = new(() => GetAllChangedFilesWithSubmodulesStatus().ToList());
+            Lazy<List<GitItemStatus>> initialStatus = new(() => GetAllChangedFilesWithSubmodulesStatus().ToList());
             List<GitItemStatus> selectedItems;
-            if (originalSelectedItems.Any(item => item.Staged is StagedStatus.Unset))
+            if (originalSelectedItems.Any(item => item.Staged is StagedStatus.Unset or StagedStatus.Unknown))
             {
                 // staged status required (not always provided by RevisionDiff).
                 selectedItems = new();
-                foreach (GitItemStatus item in initialItems.Value)
+                foreach (GitItemStatus item in initialStatus.Value)
                 {
                     if (originalSelectedItems.Any(orig => orig.Name == item.Name))
                     {
@@ -1418,7 +1418,7 @@ namespace GitCommands
             List<GitItemStatus> filesToUnstage = stagedFiles.ToList();
             if (unstagedFiles.Any())
             {
-                foreach (GitItemStatus item in initialItems.Value)
+                foreach (GitItemStatus item in initialStatus.Value)
                 {
                     if (stagedFiles.Any(staged => item.Staged == StagedStatus.Index && staged.Name == item.Name))
                     {
@@ -1429,7 +1429,7 @@ namespace GitCommands
 
             BatchUnstageFiles(filesToUnstage, action);
 
-            List<GitItemStatus> allItems = GetAllChangedFilesWithSubmodulesStatus().ToList();
+            List<GitItemStatus> postUnstageStatus = GetAllChangedFilesWithSubmodulesStatus().ToList();
             filesInUse = new();
             List<string> filesToReset = new();
             List<string> conflictsToReset = new();
@@ -1438,7 +1438,7 @@ namespace GitCommands
             foreach (GitItemStatus itemStatus in selectedItems)
             {
                 GitItemStatus item = itemStatus;
-                if (allItems.Where(staged => staged.Name == item.Name).FirstOrDefault() is GitItemStatus unstagedItem)
+                if (postUnstageStatus.Where(staged => staged.Name == item.Name).FirstOrDefault() is GitItemStatus unstagedItem)
                 {
                     // file was not reset when unstaging, use new status
                     item = unstagedItem;
@@ -1446,7 +1446,7 @@ namespace GitCommands
 
                 // TODO special handling for renamed?
 
-                if ((resetAndDelete || stagedFiles.Contains(itemStatus)) && DeletableItem(item))
+                if (resetAndDelete && DeletableItem(item))
                 {
                     try
                     {
@@ -1480,16 +1480,7 @@ namespace GitCommands
             }
 
             CheckoutFiles(filesToReset, resetId, force: false);
-            /*
-            output.Append(ResetFiles(filesToReset));
-            if (conflictsToReset.Count > 0)
-            {
-                // Special handling for conflicted files, shown in worktree (with the raw diff).
-                // Must be reset to HEAD as Index is just a status marker.
-                ObjectId headId = RevParse("HEAD");
-                CheckoutFiles(conflictsToReset, resetId, force: false);
-            }
-            */
+
             return true;
 
             static bool DeletableItem(GitItemStatus item) => item.IsNew || item.IsRenamed;
