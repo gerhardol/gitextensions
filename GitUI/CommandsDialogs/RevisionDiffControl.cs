@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Text;
 using GitCommands;
 using GitCommands.Git;
 using GitCommands.Git.Commands;
@@ -507,7 +508,12 @@ namespace GitUI.CommandsDialogs
 
                     IReadOnlyList<GitItemStatus> resetItems = (resetToParent ? selectedItems.Items()
                         : selectedItems.Items().Select(item => item.ReverseSelection())).ToList();
-                    Module.ResetChanges(id, resetItems, resetAndDelete: resetAndDelete, _fullPathResolver, filesInUse: out _, output: out _);
+                    Module.ResetChanges(id, resetItems, resetAndDelete: resetAndDelete, _fullPathResolver, out StringBuilder output);
+
+                    if (!string.IsNullOrEmpty(output.ToString()))
+                    {
+                        MessageBox.Show(this, output.ToString(), TranslatedStrings.ResetChangesCaption, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
             }
             finally
