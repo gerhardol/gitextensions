@@ -328,7 +328,7 @@ namespace GitCommands
             var committerEmail = reader.ReadLine();
             var reflogSelector = _hasReflogSelector ? reader.ReadLine() : null;
 
-            bool skipBody = _sixMonths > authorUnixTime;
+            bool skipBody = _sixMonths < authorUnixTime;
             (string? subject, string? body, bool hasMultiLineMessage) = reader.PeekSubjectBody(skipBody);
 
             // We keep a full multiline message body within the last six months.
