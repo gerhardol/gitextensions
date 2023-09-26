@@ -3,8 +3,10 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Windows.Markup;
 using GitExtUtils;
 using GitUIPluginInterfaces;
+using Microsoft.Toolkit.HighPerformance;
 using Microsoft.Toolkit.HighPerformance.Buffers;
 
 namespace GitCommands
@@ -27,14 +29,16 @@ namespace GitCommands
             /* Committer name  */ "%cN%n" +
             /* Committer email */ "%cE%n" +
             /* Reflog selector placeholder */ "{0}" +
-            /* Commit raw body */ "%B";
+            /* Commit raw body */ "%B" +
+            /* Notes placeholder */ "{1}";
 
         private const string _reflogSelectorFormat = "%gD%n";
+        private const string _notesFormat = "%nNotes:%n%-N";
 
         // Trace info for parse errors
         private int _noOfParseError = 0;
 
-        private readonly GitModule _module;
+        private readonly IGitModule _module;
         private readonly Encoding _logOutputEncoding;
         private readonly long _oldestBody;
         private const int _offsetDaysForOldestBody = 6 * 30; // about 6 months
@@ -42,15 +46,18 @@ namespace GitCommands
         // reflog selector to identify stashes
         private bool _hasReflogSelector;
 
+        // Include Git Notes for the commit
+        private bool _hasNotes;
+
         // Buffer to decode subject
         private char[] _decodeBuffer = new char[4096];
 
-        public RevisionReader(GitModule module, bool allBodies = false)
+        public RevisionReader(IGitModule module, bool allBodies = false)
             : this(module, module.LogOutputEncoding, allBodies ? 0 : GetUnixTimeForOffset(_offsetDaysForOldestBody))
         {
         }
 
-        private RevisionReader(GitModule module, Encoding logOutputEncoding, long oldestBody)
+        private RevisionReader(IGitModule module, Encoding logOutputEncoding, long oldestBody)
         {
             _module = module;
             _logOutputEncoding = logOutputEncoding;
@@ -61,10 +68,10 @@ namespace GitCommands
         /// Return the git-log format and set the reflogSelector flag
         /// (used when parsing the buffer).
         /// </summary>
-        private string GetLogFormat(bool hasReflogSelector = false)
+        private string GetLogFormat(bool hasReflogSelector = false, bool hasNotes = false)
         {
             _hasReflogSelector = hasReflogSelector;
-            return string.Format(_fullFormat, hasReflogSelector ? _reflogSelectorFormat : "");
+            return string.Format(_fullFormat, hasReflogSelector ? _reflogSelectorFormat : "", hasNotes ? _notesFormat : "");
         }
 
         private static long GetUnixTimeForOffset(int days)
@@ -127,13 +134,54 @@ namespace GitCommands
             }
 
             GitArgumentBuilder arguments = new("log")
-                {
-                    "-z",
-                    $"--pretty=format:\"{GetLogFormat()}\"",
-                    $"{olderCommitHash}~..{newerCommitHash}"
-                };
+            {
+                "-z",
+                $"--pretty=format:\"{GetLogFormat()}\"",
+                $"{olderCommitHash}~..{newerCommitHash}"
+            };
 
             return GetRevisionsFromArguments(arguments, cancellationToken);
+        }
+
+        /// <summary>
+        /// Retrieves the GitRevision.
+        /// </summary>
+        /// <param name="commitHash">The Git commit hash.</param>
+        /// <param name="hasNotes">A cancellation token.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The retrieved git history.</returns>
+        public GitRevision GetRevision(string commitHash, bool hasNotes, CancellationToken cancellationToken)
+        {
+            _hasNotes = hasNotes;
+            GitArgumentBuilder arguments = new("log")
+            {
+                "-z",
+                $"--pretty=format:\"{GetLogFormat(hasNotes)}\"",
+                commitHash
+            };
+
+            // output can be cached if Git Notes is not included
+            if (!hasNotes && GitModule.GitCommandCache.TryGet(arguments.ToString(), out byte[]? cachedOutput, out _) is true)
+            {
+                // OK
+            }
+            else
+            {
+                using IProcess process = _module.GitCommandRunner.RunDetached(cancellationToken, arguments, redirectOutput: true, outputEncoding: null);
+                cachedOutput = process.StandardOutput.BaseStream.SplitLogOutput().SingleOrDefault().ToArray();
+            }
+
+            if (!TryParseRevision(cachedOutput, out GitRevision? revision))
+            {
+                return null;
+            }
+
+            if (!hasNotes)
+            {
+                GitModule.GitCommandCache.Add(arguments.ToString(), cachedOutput, cachedOutput);
+            }
+
+            return revision;
         }
 
         /// <summary>
@@ -166,18 +214,20 @@ namespace GitCommands
         /// <param name="subject">Observer to update the revision grid when the revisions are available.</param>
         /// <param name="revisionFilter">Revision filter, including branch filter.</param>
         /// <param name="pathFilter">Pathfilter.</param>
+        /// <param name="hasNotes">Include Git Notes.</param>
         /// <param name="cancellationToken">Cancellation cancellationToken.</param>
         public void GetLog(
             IObserver<GitRevision> subject,
             string revisionFilter,
             string pathFilter,
+            bool hasNotes,
             CancellationToken cancellationToken)
         {
 #if TRACE_REVISIONREADER
             int revisionCount = 0;
             Stopwatch sw = Stopwatch.StartNew();
 #endif
-            ArgumentBuilder arguments = BuildArguments(revisionFilter, pathFilter);
+            ArgumentBuilder arguments = BuildArguments(revisionFilter, pathFilter, hasNotes);
 #if DEBUG
             Debug.WriteLine($"git {arguments}");
 #endif
@@ -208,12 +258,13 @@ namespace GitCommands
             }
         }
 
-        private ArgumentBuilder BuildArguments(string revisionFilter, string pathFilter)
+        private ArgumentBuilder BuildArguments(string revisionFilter, string pathFilter, bool hasNotes)
         {
+            _hasNotes = hasNotes;
             return new GitArgumentBuilder("log")
             {
                 "-z",
-                $"--pretty=format:\"{GetLogFormat()}\"",
+                $"--pretty=format:\"{GetLogFormat(hasNotes: hasNotes)}\"",
 
                 // sorting
                 { AppSettings.RevisionSortOrder == RevisionSortOrder.AuthorDate, "--author-date-order" },
@@ -347,8 +398,7 @@ namespace GitCommands
                 AuthorUnixTime = authorUnixTime,
                 Committer = GetNextLine(buffer),
                 CommitterEmail = GetNextLine(buffer),
-                CommitUnixTime = commitUnixTime,
-                HasNotes = false
+                CommitUnixTime = commitUnixTime
             };
 
             // Body is occasionally big, like linux repo has 35K bytes, the buffer is over 100K
@@ -368,7 +418,7 @@ namespace GitCommands
             }
 
             int decodedLength = _logOutputEncoding.GetChars(buffer.Slice(offset), _decodeBuffer);
-            Span<char> decoded = _decodeBuffer.AsSpan(0, decodedLength);
+            Span<char> decoded = _decodeBuffer.AsSpan(0, decodedLength).TrimEnd();
 
             // reflogSelector are only used when listing stashes
             if (_hasReflogSelector)
@@ -383,13 +433,32 @@ namespace GitCommands
 
                 // No reflogselector for notes and such
                 revision.ReflogSelector = lineLength > 0 ? decoded.Slice(0, lineLength).ToString() : null;
-                decoded = decoded.Slice(lineLength + 1);
+                decoded = decoded.Slice(lineLength + 1).TrimEnd();
+            }
+
+            if (_hasNotes)
+            {
+                if (decoded.EndsWith("Notes:"))
+                {
+#if DEBUG
+                    if (decoded.Length < 6)
+                    {
+                        ParseAssert($"Log parse error, notes without content for {objectId}");
+                        revision = default;
+                        return false;
+                    }
+#endif
+
+                    // Remove the empty marker
+                    decoded = decoded[..^6].TrimEnd();
+                }
+
+                revision.HasNotes = true;
             }
 
             // Keep a full multi-line message body within the last six months (by default).
             // Note also that if body and subject are identical (single line), the body never need to be stored
             bool keepBody = authorUnixTime >= _oldestBody;
-            decoded = decoded.TrimEnd();
 
             // Subject can also be defined as the contents before empty line (%s for --pretty),
             // this uses the alternative definition of first line in body.
@@ -473,8 +542,8 @@ namespace GitCommands
                 return reader;
             }
 
-            internal ArgumentBuilder BuildArguments(string revisionFilter, string pathFilter) =>
-                _revisionReader.BuildArguments(revisionFilter, pathFilter);
+            internal ArgumentBuilder BuildArguments(string revisionFilter, string pathFilter, bool hasNotes) =>
+                _revisionReader.BuildArguments(revisionFilter, pathFilter, hasNotes);
 
             internal bool TryParseRevision(ReadOnlySpan<byte> chunk, [NotNullWhen(returnValue: true)] out GitRevision? revision) =>
                 _revisionReader.TryParseRevision(chunk, out revision);

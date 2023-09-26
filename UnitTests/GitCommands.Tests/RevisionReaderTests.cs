@@ -23,7 +23,7 @@ namespace GitCommandsTests
         public void BuildArguments_should_be_NUL_terminated()
         {
             RevisionReader reader = RevisionReader.TestAccessor.RevisionReader(new GitModule(""), hasReflogSelector: false, _logOutputEncoding, _sixMonths);
-            ArgumentBuilder args = reader.GetTestAccessor().BuildArguments("", "");
+            ArgumentBuilder args = reader.GetTestAccessor().BuildArguments("", "", hasNotes: false);
 
             args.ToString().Should().Contain(" log -z ");
         }
@@ -60,6 +60,8 @@ namespace GitCommandsTests
         [TestCase("empty_commit", true)]
         [TestCase("reflogselector", true, true, false)]
         [TestCase("reflogselector_empty", true, true)]
+        [TestCase("notes_data", true)]
+        [TestCase("notes_empty", true)]
         public async Task TryParseRevision_test(string testName, bool expectedReturn, bool hasReflogSelector = false, bool hasEmptyReflogSelector = true)
         {
             string path = Path.Combine(TestContext.CurrentContext.TestDirectory, "TestData/RevisionReader", testName + ".bin");
