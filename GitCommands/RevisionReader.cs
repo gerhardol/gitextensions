@@ -81,6 +81,7 @@ namespace GitCommands
             {
                 "list",
                 "-z",
+                "--log-size",
                 $"--pretty=format:\"{GetLogFormat(hasReflogSelector: true)}\""
             };
 
@@ -103,6 +104,7 @@ namespace GitCommands
             GitArgumentBuilder arguments = new("log")
             {
                 "-z",
+                "--log-size",
                 $"--pretty=format:\"{GetLogFormat()}\"",
                 "--dirstat=files",
                 string.Join(" ", untracked),
@@ -129,6 +131,7 @@ namespace GitCommands
             GitArgumentBuilder arguments = new("log")
                 {
                     "-z",
+                    "--log-size",
                     $"--pretty=format:\"{GetLogFormat()}\"",
                     $"{olderCommitHash}~..{newerCommitHash}"
                 };
@@ -213,6 +216,7 @@ namespace GitCommands
             return new GitArgumentBuilder("log")
             {
                 "-z",
+                "--log-size",
                 $"--pretty=format:\"{GetLogFormat()}\"",
 
                 // sorting

@@ -1,91 +1,161 @@
-﻿using JetBrains.Annotations;
+﻿using System.Buffers.Text;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
+using Microsoft.Toolkit.HighPerformance;
 
 namespace GitCommands
 {
     public static class StreamExtensions
     {
-        [MustUseReturnValue]
-        public static IEnumerable<ReadOnlyMemory<byte>> SplitLogOutput(this Stream stream, int initialBufferSize = 4096)
-        {
-            byte[] buffer = new byte[initialBufferSize];
+#if DEBUG
+        // Prefix for each commit: "log size "
+        private static readonly byte[] _prefix = { (byte)'l', (byte)'o', (byte)'g', (byte)' ', (byte)'s', (byte)'i', (byte)'z', (byte)'e', (byte)' ' };
+#endif
 
-            int yieldFromIndex = 0;
-            int writeToIndex = 0;
+        [MustUseReturnValue]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057:Use range operator", Justification = "Performance")]
+        public static IEnumerable<ReadOnlyMemory<byte>> SplitLogOutput(this Stream stream)
+        {
+            byte[] buffer = new byte[4096];
+
+            // The bytes to read for next commit, possibly including the null terminator
+            // after previous (avoid waiting for it after data to minimize reads)
+            int allBytesToRead = 0;
+#if TRACE_REVISIONREADER
+            int readCount = 0;
+#else
+            // Dummy declarations for Trace.Write()
+            const string readCount = "";
+#endif
 
             while (true)
             {
-                // Fill the buffer with data
-                int bytesRead = stream.Read(buffer, writeToIndex, buffer.Length - writeToIndex);
+                // Bytes that has been read for next commit
+                int bytesRead = 0;
 
-                if (bytesRead == 0)
+                // Position to the start of the log in the buffer (skippng e.g. the prefix)
+                int logStart = 0;
+
+                GetBytesToRead(buffer, ref allBytesToRead, ref logStart, ref bytesRead);
+                if (allBytesToRead <= 0)
                 {
-                    // End of stream, just yield the remaining data (no null terminator for last commit)
-                    if (writeToIndex != 0 && writeToIndex != yieldFromIndex)
-                    {
-                        yield return new ReadOnlyMemory<byte>(buffer, yieldFromIndex, writeToIndex - yieldFromIndex);
-                    }
-
+                    // no more data to read
                     yield break;
                 }
 
-                int dataUntilIndex = writeToIndex + bytesRead;
-
-                int searchFromIndex = writeToIndex;
-                writeToIndex += bytesRead;
-                int searchBeforeIndex = writeToIndex;
-
-                while (searchFromIndex < searchBeforeIndex)
+                if (allBytesToRead > buffer.Length)
                 {
-                    int nullIndex = Array.IndexOf<byte>(buffer, 0, searchFromIndex, searchBeforeIndex - searchFromIndex);
-
-                    if (nullIndex == -1)
+                    // Allocate size for next power of 2
+                    int newSize = buffer.Length;
+                    while (newSize < allBytesToRead)
                     {
-                        // null not found in the data available to process
-                        if (searchBeforeIndex == buffer.Length)
+                        newSize *= 2;
+                    }
+
+                    // Copy relevant part of existing buffer
+                    byte[] newBuffer = new byte[newSize];
+                    Array.Copy(buffer, logStart, newBuffer, 0, bytesRead - logStart);
+
+                    buffer = newBuffer;
+                    bytesRead -= logStart;
+                    allBytesToRead -= logStart;
+                    logStart = 0;
+                }
+
+                // .NET7 'stream.ReadAtLeast()' can simplify this loop
+                do
+                {
+                    int lastRead = stream.Read(buffer, bytesRead, allBytesToRead - bytesRead);
+                    if (lastRead == 0)
+                    {
+                        // out of sync if not all expected read
+                        Trace.WriteLineIf(bytesRead < allBytesToRead, $"Read failed for commit {readCount} {bytesRead} {lastRead}/{allBytesToRead}");
+
+                        // no more data in stream
+                        yield break;
+                    }
+
+                    // Not all read is a common scenario (especially if the null terminator would be read with the preceding commit)
+                    // Debug.WriteLineIf(bytesRead < size, $"Read incomplete {readCount} {bytesRead}/{lastRead}/{size}");
+                    bytesRead += lastRead;
+                }
+                while (bytesRead < allBytesToRead);
+
+#if TRACE_REVISIONREADER
+                readCount++;
+#endif
+
+                yield return buffer.AsMemory(logStart..allBytesToRead);
+
+                // Read the null terminator in next commit
+                allBytesToRead = 1;
+            }
+
+            // Get the total bytes to read for next commit in bytesToReadNext, including the "log size" prefix.
+            // bytesRead is increased, may contain bytes after the prefix.
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            void GetBytesToRead(byte[] buffer, ref int allBytesToRead, ref int logStart, ref int bytesRead)
+            {
+                // The min header: ignore byte (max 1) + prefix (9) + log size chars + newline (1)
+                // log size is minimum 2 chars as a log can never be less than 89 bytes,
+                // reasonable max is 5 chars (linux about 36KB).
+                // Read some more than necessary (to be efficient),
+                // but be satisfied with a 21 byte header (at least 10 chars, well out of bounds).
+                const int prefixLength = 9;
+                const int readHeaderLength = 21;
+                int firstPossibleNewlineIndex = allBytesToRead + prefixLength + 2;
+
+                do
+                {
+                    Debug.Assert(!Debugger.IsAttached || bytesRead < readHeaderLength, "Size is larger than header buffer {readCount} {bytesRead}/{ignoreBytes} {lastRead}");
+                    int lastRead = stream.Read(buffer, bytesRead, readHeaderLength - bytesRead);
+                    if (lastRead == 0)
+                    {
+                        // No more data in stream if zero read
+                        if (bytesRead > 0)
                         {
-                            // end of the buffer
-                            if (yieldFromIndex != 0)
-                            {
-                                // Shift unprocessed to the beginning
-                                int unprocessedByteCount = buffer.Length - yieldFromIndex;
-                                Array.Copy(buffer, yieldFromIndex, buffer, 0, unprocessedByteCount);
-
-                                // Restart loop
-                                yieldFromIndex = 0;
-                                writeToIndex = unprocessedByteCount;
-                            }
-                            else
-                            {
-                                // The buffer is full, with no nulls, so allocate a larger buffer
-
-                                // Allocate new buffer with twice the size and copy
-                                byte[] newBuffer = new byte[buffer.Length * 2];
-                                Array.Copy(buffer, newBuffer, buffer.Length);
-
-                                // Restart loop (yieldFromIndex is unchanged)
-                                writeToIndex = buffer.Length;
-
-                                // Writeback
-                                buffer = newBuffer;
-                            }
+                            Trace.WriteLine($"Only partial log size header received for commit {readCount} {bytesRead}/{allBytesToRead} {lastRead}");
+                            allBytesToRead = -1;
+                            return;
                         }
 
-                        break;
+                        // No usable data at eof, nothing to be read
+                        Debug.WriteLineIf(bytesRead >= buffer.Length, $"No log size header received for commit {readCount} {bytesRead}/{allBytesToRead} {lastRead}");
+                        allBytesToRead = 0;
+                        return;
                     }
 
-                    // yield any inner chunks
-                    yield return new ReadOnlyMemory<byte>(buffer, yieldFromIndex, nullIndex - yieldFromIndex);
-
-                    if (nullIndex + 1 == dataUntilIndex)
-                    {
-                        // all data in the buffer processed
-                        yieldFromIndex = writeToIndex = 0;
-                        break;
-                    }
-
-                    // process the remaining (possibly partial) commits
-                    searchFromIndex = yieldFromIndex = nullIndex + 1;
+                    bytesRead += lastRead;
                 }
+                while (bytesRead < readHeaderLength);
+
+#if DEBUG
+                if (buffer.AsSpan(allBytesToRead, _prefix.Length).SequenceCompareTo<byte>(_prefix) != 0)
+                {
+                    Trace.WriteLine($"Unexpected log size header for commit {readCount} {bytesRead}/{allBytesToRead} {buffer[bytesRead - 1]}");
+                    allBytesToRead = -1;
+                    return;
+                }
+#endif
+
+                int newlineIndex = Array.IndexOf(buffer, (byte)'\n', firstPossibleNewlineIndex, bytesRead - firstPossibleNewlineIndex);
+                if (newlineIndex < 0)
+                {
+                    Trace.WriteLine($"Only partial log size header received for commit {readCount} {bytesRead}/{allBytesToRead} {buffer[bytesRead - 1]}");
+                    allBytesToRead = -1;
+                    return;
+                }
+
+                logStart = newlineIndex + 1;
+                if (!Utf8Parser.TryParse(buffer.AsSpan(allBytesToRead + prefixLength, logStart - allBytesToRead - prefixLength - 1), out int logSize, out int _))
+                {
+                    Trace.WriteLine($"Cannot parse size in log size header for commit {readCount} {bytesRead}/{allBytesToRead} {buffer[bytesRead - 1]}");
+                    allBytesToRead = -1;
+                    return;
+                }
+
+                allBytesToRead = logStart + logSize;
             }
         }
     }
