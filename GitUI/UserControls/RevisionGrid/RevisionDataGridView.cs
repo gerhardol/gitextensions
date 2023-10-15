@@ -338,26 +338,8 @@ namespace GitUI.UserControls.RevisionGrid
                 ResetGraphIndices();
             }
 
-            // Where to insert the revision, -1 is before existing in the graph.
-            int insertScore = -1;
-            const int insertRange = 2;
-
-            // Find the first parent that is already in the graph.
-            foreach (ObjectId parentId in parents!)
-            {
-                if (_revisionGraph.TryGetNode(parentId, out RevisionGraphRevision? parentRev))
-                {
-                    // Insert before this ancestor
-                    insertScore = parentRev.Score;
-                    _revisionGraph.ReserveRange(insertScore, insertRange);
-                    break;
-                }
-            }
-
-            // Add workTree as a normal revision but force the score.
-            // Index will be added (with next score) as well as the segment.
-            _revisionGraph.Add(workTreeRev, insertScore - insertRange);
-            _revisionGraph.AddExisting(indexRev);
+            // Insert at matching parent.
+            _revisionGraph.Insert(workTreeRev, indexRev, parents);
 
             if (ToBeSelectedObjectIds.Contains(workTreeRev.ObjectId))
             {

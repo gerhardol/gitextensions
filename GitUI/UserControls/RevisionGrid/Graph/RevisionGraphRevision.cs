@@ -37,11 +37,10 @@ namespace GitUI.UserControls.RevisionGrid.Graph
         public int Score { get; private set; }
 
         /// <summary>
-        /// Offset the score for the revision.
-        /// If negative decreasing the score, i.e. increasing priority.
+        /// Override the score for the revision.
         /// </summary>
-        /// <param name="offset">The offset to the current score.</param>
-        public void OffsetScore(int offset) => Score += offset;
+        /// <param name="score">The new score.</param>
+        public void OverrideScore(int score) => Score = score;
 
         // This method is called to ensure that the score is higher than a given score.
         // E.g. the score needs to be higher that the score of its children.

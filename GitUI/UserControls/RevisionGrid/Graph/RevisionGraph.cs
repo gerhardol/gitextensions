@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using GitUIPluginInterfaces;
@@ -199,25 +198,25 @@ namespace GitUI.UserControls.RevisionGrid.Graph
         /// Add a single revision from the git log to the graph, including segments to parents.
         /// </summary>
         /// <param name="revision">The revision to add.</param>
-        /// <param name="insertScore">Insert the revision at this score.</param>
-        public void Add(GitRevision revision, int? insertScore = null)
+        public void Add(GitRevision revision)
         {
-            // The commits are sorted by the score (not continuous numbering there may be gaps)
-            // This commit will be ordered after existing, _maxScore is a preliminary score
-            // if insertScore is set use that (the scores must be reserved)
-            int nextScore = insertScore ?? ++_maxScore;
+            int minExistingScore;
 
+            // The commits will be sorted by the score (not continuous numbering, there may be gaps).
+            // This revision will be ordered after existing, 1+_maxScore is a preliminary score.
             if (_nodeByObjectId.TryGetValue(revision.ObjectId, out RevisionGraphRevision revisionGraphRevision))
             {
-                // This revision was added earlier, but is now found in the log.
-                // Increase the score to the current maxScore to keep the order intact.
-                revisionGraphRevision.EnsureScoreIsAbove(nextScore);
+                // This revision was added as a parent, but is now found in the log.
+                // Increase the score for this revision and parents to keep the order intact.
+                minExistingScore = revisionGraphRevision.Score;
+                revisionGraphRevision.OverrideScore(++_maxScore);
             }
             else
             {
                 // This revision is added from the log, but not seen before. This is probably a root node (new branch)
-                // OR the revisions are not in topo order. If this the case, we deal with it later.
-                revisionGraphRevision = new RevisionGraphRevision(revision.ObjectId, nextScore);
+                // or the revisions are not in topo order. If this the case, we deal with it later.
+                revisionGraphRevision = new RevisionGraphRevision(revision.ObjectId, ++_maxScore);
+                minExistingScore = revisionGraphRevision.Score;
                 _nodeByObjectId.TryAdd(revision.ObjectId, revisionGraphRevision);
             }
 
@@ -225,33 +224,30 @@ namespace GitUI.UserControls.RevisionGrid.Graph
             revisionGraphRevision.GitRevision = revision;
             revisionGraphRevision.ApplyFlags(isCheckedOut: HeadId == revision.ObjectId);
 
-            // Build the revisions parent/child structure. The parents need to added here. The child structure is kept in synch in
-            // the RevisionGraphRevision class.
+            // Build the parent/child structure. The parent revisions need to added here.
             if (revision.ParentIds is not null)
             {
                 foreach (ObjectId parentObjectId in revision.ParentIds)
                 {
                     if (_nodeByObjectId.TryGetValue(parentObjectId, out RevisionGraphRevision parentRevisionGraphRevision))
                     {
-                        // This revision is already loaded, add the existing revision to the parents list of new revision.
-                        // If the current score is lower, cache is invalid. The new score will (probably) be higher.
-                        MarkCacheAsInvalidIfNeeded(parentRevisionGraphRevision);
+                        // Node existed, may need to adjust the score.
+                        // This parent must already have a score lower than its parents and may be the score where to invalidate the cache from.
+                        minExistingScore = Math.Min(minExistingScore, parentRevisionGraphRevision.Score);
+                        parentRevisionGraphRevision.OverrideScore(++_maxScore);
                     }
                     else
                     {
-                        // This parent is not loaded before. Create a new (partial) revision. We will complete the info in the revision
-                        // when this revision is loaded from the log.
-                        parentRevisionGraphRevision = new RevisionGraphRevision(parentObjectId, ++nextScore);
+                        // This parent is not seen before. Create a new (partial) revision.
+                        // Complete the info in the revision when this revision is loaded from the log.
+                        parentRevisionGraphRevision = new RevisionGraphRevision(parentObjectId, ++_maxScore);
                         _nodeByObjectId.TryAdd(parentObjectId, parentRevisionGraphRevision);
                     }
 
                     // Store the newly created segment (connection between 2 revisions)
+                    // Also adjust the score of the parents of the parent if required.
                     revisionGraphRevision.AddParent(parentRevisionGraphRevision, out int newMaxScore);
                     _maxScore = Math.Max(_maxScore, newMaxScore);
-                    if (insertScore is null)
-                    {
-                        nextScore = Math.Max(nextScore, _maxScore);
-                    }
 
                     if (OnlyFirstParent)
                     {
@@ -262,39 +258,60 @@ namespace GitUI.UserControls.RevisionGrid.Graph
 
             // Ensure all parents are loaded before adding it to the _nodes list. This is important for ordering.
             ImmutableInterlocked.Update(ref _nodes, (list, revision) => list.Add(revision), revisionGraphRevision);
+            MarkCacheAsInvalidIfNeeded(minExistingScore);
         }
 
         /// <summary>
-        /// Complete the revision info for an existing revision, not changing score or segments to parents.
-        /// This is used to add the index (staged) revision when the HEAD is not in the log.
+        /// Insert workTree and index revisions to the graph, offset existing revisions.
         /// </summary>
-        /// <param name="revision">The revision to add.</param>
-        public void AddExisting(GitRevision revision)
+        /// <param name="workTreeRev">The workTree revision to add.</param>
+        /// <param name="indexRev">The index revision to add.</param>
+        /// <param name="parents">Parent ids for the revision to find (and insert before).</param>
+        public void Insert(GitRevision workTreeRev, GitRevision indexRev, IReadOnlyList<ObjectId> parents)
         {
-            // Index has no parent segment in the graph. Add missing information.
-            if (_nodeByObjectId.TryGetValue(revision.ObjectId, out RevisionGraphRevision revisionGraphRevision))
+            // Find the first parent that is already in the graph, insert a gap in scores before.
+            // Set the default insert score if not found as before the existing.
+            int insertScore = int.MinValue;
+            foreach (ObjectId parentId in parents!)
             {
-                revisionGraphRevision.GitRevision = revision;
-                ImmutableInterlocked.Update(ref _nodes, (list, revision) => list.Add(revision), revisionGraphRevision);
-            }
-        }
-
-        /// <summary>
-        /// Insert a range of scores before the given score.
-        /// </summary>
-        /// <param name="insertScore">The score where to insert revisions</param>
-        /// <param name="insertRange">The range to insert</param>
-        public void ReserveRange(int insertScore, int insertRange)
-        {
-            // This will lock the cache, so it is consistent.
-            foreach (RevisionGraphRevision graphRevision in _nodeByObjectId.Values)
-            {
-                if (graphRevision.Score < insertScore)
+                if (TryGetNode(parentId, out RevisionGraphRevision? parentRev))
                 {
-                    // Lower existing scores to reserve the inserted range
-                    graphRevision.OffsetScore(-insertRange);
+                    // Insert before this ancestor
+                    const int insertRange = 2;
+                    int limitScore = parentRev.Score;
+                    insertScore = limitScore - insertRange;
+                    foreach (RevisionGraphRevision graphRevision in _nodeByObjectId.Values)
+                    {
+                        if (graphRevision.Score < limitScore)
+                        {
+                            // Lower existing scores to reserve the inserted range
+                            graphRevision.OverrideScore(graphRevision.Score - insertRange);
+                        }
+                    }
+
+                    break;
                 }
             }
+
+            // Add graph revisions including segment.
+            RevisionGraphRevision workTreeGraphRevision = new(workTreeRev.ObjectId, insertScore)
+            {
+                GitRevision = workTreeRev
+            };
+
+            RevisionGraphRevision indexGraphRevision = new(indexRev.ObjectId, ++insertScore)
+            {
+                GitRevision = indexRev
+            };
+
+            workTreeGraphRevision.AddParent(indexGraphRevision, out _);
+            _nodeByObjectId.TryAdd(workTreeRev.ObjectId, workTreeGraphRevision);
+            _nodeByObjectId.TryAdd(indexRev.ObjectId, indexGraphRevision);
+            ImmutableInterlocked.Update(ref _nodes, (list, revision) => list.Add(revision), workTreeGraphRevision);
+            ImmutableInterlocked.Update(ref _nodes, (list, revision) => list.Add(revision), indexGraphRevision);
+
+            // Invalidate caches
+            MarkCacheAsInvalidIfNeeded(workTreeGraphRevision.Score);
         }
 
         public void InvalidateCacheAndRebuild()
@@ -561,9 +578,13 @@ namespace GitUI.UserControls.RevisionGrid.Graph
             }
         }
 
-        private void MarkCacheAsInvalidIfNeeded(RevisionGraphRevision revisionGraphRevision)
+        /// <summary>
+        /// Mark the cache as invalid if the node scores have been changed.
+        /// </summary>
+        /// <param name="minScore">The minimum score of the modified nodes.</param>
+        private void MarkCacheAsInvalidIfNeeded(int minScore)
         {
-            if (revisionGraphRevision.Score <= _orderedUntilScore)
+            if (minScore <= _orderedUntilScore)
             {
                 _reorder = true;
             }
