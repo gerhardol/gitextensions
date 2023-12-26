@@ -25,15 +25,15 @@ namespace GitUI
         private readonly FileStatusDiffCalculator _diffCalculator;
         private readonly SortDiffListContextMenuItem _sortByContextMenu;
         private readonly IReadOnlyList<GitItemStatus> _noItemStatuses;
+        private readonly ToolStripItem _NO_TRANSLATE_openSubmoduleMenuItem;
+        private readonly ToolStripItem _openInVisualStudioSeparator = new ToolStripSeparator();
+        private readonly ToolStripItem _NO_TRANSLATE_openInVisualStudioMenuItem;
+        private readonly CancellationTokenSequence _reloadSequence = new();
 
         private int _nextIndexToSelect = -1;
         private bool _enableSelectedIndexChangeEvent = true;
         private bool _mouseEntered;
-        private readonly ToolStripItem _NO_TRANSLATE_openSubmoduleMenuItem;
-        private readonly ToolStripItem _openInVisualStudioSeparator = new ToolStripSeparator();
-        private readonly ToolStripItem _NO_TRANSLATE_openInVisualStudioMenuItem;
         private Rectangle _dragBoxFromMouseDown;
-        private IReadOnlyList<FileStatusWithDescription> _itemsWithDescription = new List<FileStatusWithDescription>();
         private IDisposable? _selectedIndexChangeSubscription;
         private IDisposable? _diffListSortSubscription;
 
@@ -72,22 +72,21 @@ namespace GitUI
             SetupUnifiedDiffListSorting();
             lblSplitter.Height = DpiUtil.Scale(1);
             InitializeComplete();
-            FilterVisible = true;
 
             SelectFirstItemOnSetItems = true;
 
             FileStatusListView.SmallImageList = CreateImageList();
             FileStatusListView.LargeImageList = FileStatusListView.SmallImageList;
 
-            HandleVisibility_NoFilesLabel_FilterComboBox(filesPresent: true);
             NoFiles.Text = TranslatedStrings.NoChanges;
             LoadingFiles.Text = TranslatedStrings.LoadingData;
-            Controls.SetChildIndex(NoFiles, 0);
             Controls.SetChildIndex(LoadingFiles, 0);
+            Controls.SetChildIndex(NoFiles, 1);
             NoFiles.Font = new Font(NoFiles.Font, FontStyle.Italic);
             LoadingFiles.Font = new Font(LoadingFiles.Font, FontStyle.Italic);
             FilterWatermarkLabel.Font = new Font(FilterWatermarkLabel.Font, FontStyle.Italic);
             FilterComboBox.Font = new Font(FilterComboBox.Font, FontStyle.Bold);
+            SetFileStatusListViewBounds(filesPresent: false, loadingFiles: false, _reloadSequence.Next());
 
             _diffCalculator = new FileStatusDiffCalculator(() => Module);
             _fullPathResolver = new FullPathResolver(() => Module.WorkingDir);
@@ -295,37 +294,39 @@ namespace GitUI
 
         public bool FilterFocused => FilterComboBox.Focused;
 
-        public bool FilterVisible
+        private void SetFileStatusListViewBounds(bool filesPresent, bool loadingFiles, CancellationToken cancellationToken)
         {
-            get { return _filterVisible; }
-            set
-            {
-                if (value == _filterVisible)
-                {
-                    return;
-                }
+            LoadingFiles.Visible = false;
+            NoFiles.Visible = !filesPresent && !loadingFiles && !FileStatusListView.ShowGroups;
 
-                _filterVisible = value;
-                FilterVisibleInternal = value;
+            if (!loadingFiles)
+            {
+                // do not change the visibility of comboboxes etc (avoid flicker)
+                FilterComboBox.Visible = filesPresent;
             }
-        }
 
-        private bool FilterVisibleInternal
-        {
-            get => FilterComboBox.Visible;
-            set
+            SetDeleteFilterButtonVisibility();
+            SetFilterWatermarkLabelVisibility();
+            int top = FileStatusListView.Margin.Top;
+            if (FilterComboBox.Visible)
             {
-                FilterComboBox.Visible = value;
-                SetDeleteFilterButtonVisibility();
-                SetFilterWatermarkLabelVisibility();
+                top += FilterComboBox.Height + FilterComboBox.Margin.Bottom;
+            }
 
-                int top = value
-                    ? FileStatusListView.Margin.Top + FilterComboBox.Bottom + FilterComboBox.Margin.Bottom
-                    : FileStatusListView.Margin.Top;
+            int height = ClientRectangle.Height - FileStatusListView.Margin.Bottom - top;
+            FileStatusListView.SetBounds(0, top, 0, height, BoundsSpecified.Y | BoundsSpecified.Height);
 
-                int height = ClientRectangle.Height - FileStatusListView.Margin.Bottom - top;
-
-                FileStatusListView.SetBounds(0, top, 0, height, BoundsSpecified.Y | BoundsSpecified.Height);
+            if (loadingFiles)
+            {
+                // Filelist must already be cleared
+                LoadingFiles.Top = top;
+                ThreadHelper.FileAndForget(async () =>
+                {
+                    // Do not show loading immediately, it appears as flicker
+                    await Task.Delay(300);
+                    await this.SwitchToMainThreadAsync(cancellationToken);
+                    LoadingFiles.Visible = true;
+                });
             }
         }
 
@@ -346,17 +347,9 @@ namespace GitUI
             }
         }
 
-        private IReadOnlyList<FileStatusWithDescription> GitItemStatusesWithDescription
-        {
-            get => _itemsWithDescription;
-            set
-            {
-                _itemsWithDescription = value ?? throw new ArgumentNullException(nameof(value));
-                UpdateFileStatusListView();
-            }
-        }
+        private IReadOnlyList<FileStatusWithDescription> GitItemStatusesWithDescription { get; set; } = Array.Empty<FileStatusWithDescription>();
 
-        public bool GroupByRevision { get; set; }
+        public bool GroupByRevision { get; set; } = false;
 
         [Browsable(false)]
         [DefaultValue(true)]
@@ -750,23 +743,31 @@ namespace GitUI
 
         public void SetDiffs(IReadOnlyList<GitRevision> revisions)
         {
+            CancellationToken cancellationToken = _reloadSequence.Next();
+            FileStatusListLoading(cancellationToken);
             _enableDisablingShowDiffForAllParents = true;
-            GitItemStatusesWithDescription = _diffCalculator.SetDiffs(revisions, headId: null, allowMultiDiff: false, cancellationToken: default);
+            _diffCalculator.SetDiff(revisions, headId: null, allowMultiDiff: false);
+            UpdateFileStatusListView(_diffCalculator.Calculate(cancellationToken));
         }
 
         public async Task SetDiffsAsync(IReadOnlyList<GitRevision> revisions, ObjectId? headId, CancellationToken cancellationToken)
         {
+            // Cancel possible ongoing updates, _reloadSequence is always used for displaying "Files Loading" label.
+            // "External" cancellations are not cancelled by "_reloadSequence".
+            CancellationToken internalCancellationToken = _reloadSequence.Next();
+
             _enableDisablingShowDiffForAllParents = true;
             await this.SwitchToMainThreadAsync(cancellationToken);
-            FileStatusListLoading();
+            FileStatusListLoading(internalCancellationToken);
 
             await TaskScheduler.Default;
             cancellationToken.ThrowIfCancellationRequested();
-            IReadOnlyList<FileStatusWithDescription> gitItemStatusesWithDescription = _diffCalculator.SetDiffs(revisions, headId, allowMultiDiff: true, cancellationToken);
+            _diffCalculator.SetDiff(revisions, headId, allowMultiDiff: true);
+            IReadOnlyList<FileStatusWithDescription> gitItemStatusesWithDescription = _diffCalculator.Calculate(cancellationToken);
 
             await this.SwitchToMainThreadAsync(cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
-            GitItemStatusesWithDescription = gitItemStatusesWithDescription;
+            UpdateFileStatusListView(gitItemStatusesWithDescription);
         }
 
         /// <summary>
@@ -787,8 +788,9 @@ namespace GitUI
             string workTreeDesc,
             IReadOnlyList<GitItemStatus> workTreeItems)
         {
-            GroupByRevision = true;
-            GitItemStatusesWithDescription = new List<FileStatusWithDescription>
+            CancellationToken cancellationToken = _reloadSequence.Next();
+            FileStatusListLoading(cancellationToken);
+            UpdateFileStatusListView(new List<FileStatusWithDescription>
             {
                 new(
                     firstRev: indexRev,
@@ -800,25 +802,26 @@ namespace GitUI
                     secondRev: indexRev,
                     summary: indexDesc,
                     statuses: indexItems)
-            };
+            });
         }
 
         public void SetDiffs(GitRevision? firstRev, GitRevision secondRev, IReadOnlyList<GitItemStatus> items)
         {
-            GroupByRevision = false;
-            GitItemStatusesWithDescription = new List<FileStatusWithDescription>
+            CancellationToken cancellationToken = _reloadSequence.Next();
+            FileStatusListLoading(cancellationToken);
+            UpdateFileStatusListView(new List<FileStatusWithDescription>
             {
                 new(
                     firstRev: firstRev,
                     secondRev: secondRev,
                     summary: TranslatedStrings.DiffWithParent + GetDescriptionForRevision(firstRev?.ObjectId),
                     statuses: items)
-            };
+            });
         }
 
         public void ClearDiffs()
         {
-            GitItemStatusesWithDescription = new List<FileStatusWithDescription>();
+            UpdateFileStatusListView(new List<FileStatusWithDescription>());
         }
 
         private string? GetDescriptionForRevision(ObjectId? objectId) =>
@@ -967,36 +970,31 @@ namespace GitUI
 
         private void SetDeleteFilterButtonVisibility()
         {
-            DeleteFilterButton.Visible = FilterVisibleInternal && !string.IsNullOrEmpty(FilterComboBox.Text);
+            DeleteFilterButton.Visible = FilterComboBox.Visible && !string.IsNullOrEmpty(FilterComboBox.Text);
         }
 
         private void SetFilterWatermarkLabelVisibility()
         {
-            FilterWatermarkLabel.Visible = FilterVisibleInternal && !FilterComboBox.Focused && string.IsNullOrEmpty(FilterComboBox.Text);
+            FilterWatermarkLabel.Visible = FilterComboBox.Visible && !FilterComboBox.Focused && string.IsNullOrEmpty(FilterComboBox.Text);
         }
 
-        private void FileStatusListLoading()
+        private void FileStatusListLoading(CancellationToken cancellationToken)
         {
-            LoadingFiles.Visible = true;
-            NoFiles.Visible = false;
-
             FileStatusListView.BeginUpdate();
             FileStatusListView.Groups.Clear();
             FileStatusListView.Items.Clear();
+            SetFileStatusListViewBounds(filesPresent: false, loadingFiles: true, cancellationToken);
             FileStatusListView.EndUpdate();
         }
 
-        private void UpdateFileStatusListView(bool updateCausedByFilter = false)
+        private void UpdateFileStatusListView(IReadOnlyList<FileStatusWithDescription> items, bool updateCausedByFilter = false)
         {
-            bool hasChangesOrMultipleGroups = GitItemStatusesWithDescription.Count > 1 || GitItemStatusesWithDescription.Any(x => x.Statuses.Count > 0);
-            if (!hasChangesOrMultipleGroups)
-            {
-                HandleVisibility_NoFilesLabel_FilterComboBox(filesPresent: false);
-            }
-            else
+            GitItemStatusesWithDescription = items ?? throw new ArgumentNullException(nameof(items));
+            bool filesPresent = GitItemStatusesWithDescription.Any(x => x.Statuses.Count > 0);
+            bool hasChangesOrMultipleGroups = filesPresent || GitItemStatusesWithDescription.Count > 1 || GroupByRevision;
+            if (hasChangesOrMultipleGroups)
             {
                 EnsureSelectedIndexChangeSubscription();
-                HandleVisibility_NoFilesLabel_FilterComboBox(filesPresent: true);
             }
 
             HashSet<GitItemStatus>? previouslySelectedItems = null;
@@ -1011,7 +1009,11 @@ namespace GitUI
             }
 
             FileStatusListView.BeginUpdate();
+
+            // Do not display "Files loading" label
+            CancellationToken cancellationToken = _reloadSequence.Next();
             FileStatusListView.ShowGroups = GitItemStatusesWithDescription.Count > 1 || GroupByRevision;
+            SetFileStatusListViewBounds(filesPresent, loadingFiles: false, cancellationToken);
             FileStatusListView.Groups.Clear();
             FileStatusListView.Items.Clear();
 
@@ -1024,9 +1026,10 @@ namespace GitUI
                 ListViewGroup group = new(name)
                 {
                     // Collapse some groups for diffs with common BASE
-                    CollapsedState = i.Statuses.Count <= 7 || GitItemStatusesWithDescription.Count < 3 || i == GitItemStatusesWithDescription[0]
-                        ? ListViewGroupCollapsedState.Expanded
-                        : ListViewGroupCollapsedState.Collapsed,
+                    // Always expand grep results
+                    CollapsedState = (i.Statuses.Count <= 7 || GitItemStatusesWithDescription.Count < 3 || i == GitItemStatusesWithDescription[0])
+                            ? ListViewGroupCollapsedState.Expanded
+                            : ListViewGroupCollapsedState.Collapsed,
                     Tag = i.FirstRev
                 };
                 FileStatusListView.Groups.Add(group);
@@ -1269,13 +1272,6 @@ namespace GitUI
             }
         }
 
-        private void HandleVisibility_NoFilesLabel_FilterComboBox(bool filesPresent)
-        {
-            LoadingFiles.Visible = false;
-            NoFiles.Visible = !filesPresent;
-            FilterVisibleInternal = FilterVisible && filesPresent;
-        }
-
         public void SelectPreviousVisibleItem()
         {
             if (FileStatusListView.Items.Count <= 1)
@@ -1411,19 +1407,19 @@ namespace GitUI
             }
 
             // Show 'Show file differences for all parents' menu item if it is possible that there are multiple first revisions
-            bool mayBeMultipleRevs = _enableDisablingShowDiffForAllParents && _itemsWithDescription.Count > 1;
+            bool mayBeMultipleRevs = _enableDisablingShowDiffForAllParents && GitItemStatusesWithDescription.Count > 1;
 
             const string showAllDifferencesItemName = "ShowDiffForAllParentsText";
             ToolStripItem[] diffItem = cm.Items.Find(showAllDifferencesItemName, true);
             const string separatorKey = showAllDifferencesItemName + "Separator";
-            if (!diffItem.Any())
+            if (diffItem.Length == 0)
             {
                 cm.Items.Add(new ToolStripSeparator
                 {
                     Name = separatorKey,
                     Visible = mayBeMultipleRevs
                 });
-                ToolStripMenuItem showAllDiferencesItem = new(TranslatedStrings.ShowDiffForAllParentsText)
+                ToolStripMenuItem showAllDifferencesItem = new(TranslatedStrings.ShowDiffForAllParentsText)
                 {
                     Checked = AppSettings.ShowDiffForAllParents,
                     ToolTipText = TranslatedStrings.ShowDiffForAllParentsTooltip,
@@ -1431,20 +1427,21 @@ namespace GitUI
                     CheckOnClick = true,
                     Visible = mayBeMultipleRevs
                 };
-                showAllDiferencesItem.CheckedChanged += (s, e) =>
+                showAllDifferencesItem.CheckedChanged += (s, e) =>
                 {
-                    AppSettings.ShowDiffForAllParents = showAllDiferencesItem.Checked;
-                    FileStatusListLoading();
+                    AppSettings.ShowDiffForAllParents = showAllDifferencesItem.Checked;
+                    CancellationToken cancellationToken = _reloadSequence.Next();
+                    FileStatusListLoading(cancellationToken);
                     ThreadHelper.FileAndForget(async () =>
                     {
-                        IReadOnlyList<FileStatusWithDescription> gitItemStatusesWithDescription = _diffCalculator.Reload();
+                        IReadOnlyList<FileStatusWithDescription> gitItemStatusesWithDescription = _diffCalculator.Calculate(cancellationToken);
 
-                        await this.SwitchToMainThreadAsync();
-                        GitItemStatusesWithDescription = gitItemStatusesWithDescription;
+                        await this.SwitchToMainThreadAsync(cancellationToken);
+                        UpdateFileStatusListView(gitItemStatusesWithDescription);
                     });
                 };
 
-                cm.Items.Add(showAllDiferencesItem);
+                cm.Items.Add(showAllDifferencesItem);
             }
             else
             {
@@ -1725,7 +1722,6 @@ namespace GitUI
         private string _toolTipText = "";
         private readonly Subject<string> _filterSubject = new();
         private Regex? _filter;
-        private bool _filterVisible = false;
 
         public void SetFilter(string value)
         {
@@ -1742,7 +1738,8 @@ namespace GitUI
         {
             StoreFilter(value);
 
-            UpdateFileStatusListView(updateCausedByFilter: true);
+            // Feed back the current list of files
+            UpdateFileStatusListView(GitItemStatusesWithDescription, updateCausedByFilter: true);
             FilterChanged?.Invoke(this, EventArgs.Empty);
             return FileStatusListView.Items.Count;
         }
@@ -2009,6 +2006,7 @@ namespace GitUI
             internal Regex? Filter => _fileStatusList._filter;
             internal bool FilterWatermarkLabelVisible => _fileStatusList.FilterWatermarkLabel.Visible;
             internal void StoreFilter(string value) => _fileStatusList.StoreFilter(value);
+            internal void SetFileStatusListViewBounds(bool filesPresent) => _fileStatusList.SetFileStatusListViewBounds(filesPresent, loadingFiles: false, _fileStatusList._reloadSequence.Next());
         }
     }
 }

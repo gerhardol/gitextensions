@@ -57,7 +57,7 @@
             FileStatusListView.ShowItemToolTips = true;
             FileStatusListView.Size = new Size(682, 464);
             FileStatusListView.Sorting = SortOrder.Ascending;
-            FileStatusListView.TabIndex = 4;
+            FileStatusListView.TabIndex = 3;
             FileStatusListView.UseCompatibleStateImageBehavior = false;
             FileStatusListView.View = View.Details;
             FileStatusListView.DrawSubItem += FileStatusListView_DrawSubItem;
@@ -83,18 +83,16 @@
             NoFiles.Margin = new Padding(0);
             NoFiles.Name = "NoFiles";
             NoFiles.Size = new Size(65, 13);
-            NoFiles.TabIndex = 5;
             // 
             // LoadingFiles
             // 
             LoadingFiles.AutoSize = true;
             LoadingFiles.BackColor = SystemColors.Window;
             LoadingFiles.ForeColor = SystemColors.GrayText;
-            LoadingFiles.Location = new Point(4, 21);
+            LoadingFiles.Location = new Point(4, 4);
             LoadingFiles.Margin = new Padding(0);
             LoadingFiles.Name = "LoadingFiles";
             LoadingFiles.Size = new Size(65, 13);
-            LoadingFiles.TabIndex = 5;
             // 
             // FilterComboBox
             // 
@@ -105,7 +103,7 @@
             FilterComboBox.Margin = new Padding(0, 0, 0, 1);
             FilterComboBox.Name = "FilterComboBox";
             FilterComboBox.Size = new Size(682, 21);
-            FilterComboBox.TabIndex = 2;
+            FilterComboBox.TabIndex = 1;
             FilterComboBox.SelectedIndexChanged += FilterComboBox_SelectedIndexChanged;
             FilterComboBox.TextUpdate += FilterComboBox_TextUpdate;
             FilterComboBox.SizeChanged += FilterComboBox_SizeChanged;
@@ -121,7 +119,6 @@
             FilterWatermarkLabel.Location = new Point(4, 4);
             FilterWatermarkLabel.Name = "FilterWatermarkLabel";
             FilterWatermarkLabel.Size = new Size(184, 13);
-            FilterWatermarkLabel.TabIndex = 0;
             FilterWatermarkLabel.Text = "Filter files using a regular expression...";
             FilterWatermarkLabel.Click += FilterWatermarkLabel_Click;
             // 
@@ -140,7 +137,6 @@
             lblSplitter.Location = new Point(0, 21);
             lblSplitter.Name = "lblSplitter";
             lblSplitter.Size = new Size(682, 2);
-            lblSplitter.TabIndex = 3;
             // 
             // DeleteFilterButton
             // 
@@ -151,16 +147,15 @@
             DeleteFilterButton.Location = new Point(646, 1);
             DeleteFilterButton.Name = "DeleteFilterButton";
             DeleteFilterButton.Size = new Size(18, 19);
-            DeleteFilterButton.TabIndex = 1;
             DeleteFilterButton.Click += DeleteFilterButton_Click;
             // 
             // FileStatusList
             // 
             AutoScaleMode = AutoScaleMode.Inherit;
-            Controls.Add(DeleteFilterButton);
-            Controls.Add(FilterWatermarkLabel);
-            Controls.Add(NoFiles);
             Controls.Add(LoadingFiles);
+            Controls.Add(NoFiles);
+            Controls.Add(FilterWatermarkLabel);
+            Controls.Add(DeleteFilterButton);
             Controls.Add(FileStatusListView);
             Controls.Add(lblSplitter);
             Controls.Add(FilterComboBox);
