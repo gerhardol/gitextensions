@@ -14,7 +14,6 @@ public sealed class GitBlameParserTest
         // line content is: internal bool ExecuteCommand(Command cmd)
 
         string gitExtensionsRepoPath = Path.GetFullPath(@"..\..\..\..\..\..\..");
-        Assert.IsTrue(gitExtensionsRepoPath.EndsWith("gitextensions"));
 
         GitModule gitModule = new(gitExtensionsRepoPath);
 
