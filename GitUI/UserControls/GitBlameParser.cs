@@ -51,7 +51,7 @@ internal partial class GitBlameParser : IGitBlameParser
                 }
 
                 int currentChunkStartingLine = int.Parse(match.Groups["CurrentLineNumber"].Value);
-                if (currentChunkStartingLine < selectedLine)
+                if (currentChunkStartingLine <= selectedLine)
                 {
                     // Calculate the offset thanks to the diff chunk header
                     int previousChunkStartingLine = int.Parse(match.Groups["PreviousLineNumber"].Value);
