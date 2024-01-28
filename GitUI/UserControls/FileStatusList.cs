@@ -86,7 +86,7 @@ namespace GitUI
             LoadingFiles.Font = new Font(LoadingFiles.Font, FontStyle.Italic);
             FilterWatermarkLabel.Font = new Font(FilterWatermarkLabel.Font, FontStyle.Italic);
             FilterComboBox.Font = new Font(FilterComboBox.Font, FontStyle.Bold);
-            SetFileStatusListViewBounds(filesPresent: false, loadingFiles: false, _reloadSequence.Next());
+            SetFileStatusListVisibility(filesPresent: false);
 
             _diffCalculator = new FileStatusDiffCalculator(() => Module);
             _fullPathResolver = new FullPathResolver(() => Module.WorkingDir);
@@ -294,19 +294,16 @@ namespace GitUI
 
         public bool FilterFocused => FilterComboBox.Focused;
 
-        private void SetFileStatusListViewBounds(bool filesPresent, bool loadingFiles, CancellationToken cancellationToken)
+        private void SetFileStatusListVisibility(bool filesPresent)
         {
             LoadingFiles.Visible = false;
-            NoFiles.Visible = !filesPresent && !loadingFiles && !FileStatusListView.ShowGroups;
-
-            if (!loadingFiles)
-            {
-                // do not change the visibility of comboboxes etc (avoid flicker)
-                FilterComboBox.Visible = filesPresent;
-            }
+            NoFiles.Visible = !filesPresent;
+            FilterComboBox.Visible = filesPresent;
 
             SetDeleteFilterButtonVisibility();
             SetFilterWatermarkLabelVisibility();
+
+            // Adjust background canvas for labels
             int top = FileStatusListView.Margin.Top;
             if (FilterComboBox.Visible)
             {
@@ -315,19 +312,6 @@ namespace GitUI
 
             int height = ClientRectangle.Height - FileStatusListView.Margin.Bottom - top;
             FileStatusListView.SetBounds(0, top, 0, height, BoundsSpecified.Y | BoundsSpecified.Height);
-
-            if (loadingFiles)
-            {
-                // Filelist must already be cleared
-                LoadingFiles.Top = top;
-                ThreadHelper.FileAndForget(async () =>
-                {
-                    // Do not show loading immediately, it appears as flicker
-                    await Task.Delay(300);
-                    await this.SwitchToMainThreadAsync(cancellationToken);
-                    LoadingFiles.Visible = true;
-                });
-            }
         }
 
         public override bool Focused => FileStatusListView.Focused;
@@ -983,7 +967,7 @@ namespace GitUI
             FileStatusListView.BeginUpdate();
             FileStatusListView.Groups.Clear();
             FileStatusListView.Items.Clear();
-            SetFileStatusListViewBounds(filesPresent: false, loadingFiles: true, cancellationToken);
+            LoadingFiles.Visible = true;
             FileStatusListView.EndUpdate();
         }
 
@@ -991,7 +975,7 @@ namespace GitUI
         {
             GitItemStatusesWithDescription = items ?? throw new ArgumentNullException(nameof(items));
             bool filesPresent = GitItemStatusesWithDescription.Any(x => x.Statuses.Count > 0);
-            bool hasChangesOrMultipleGroups = filesPresent || GitItemStatusesWithDescription.Count > 1 || GroupByRevision;
+            bool hasChangesOrMultipleGroups = filesPresent && (GitItemStatusesWithDescription.Count > 1 || GroupByRevision);
             if (hasChangesOrMultipleGroups)
             {
                 EnsureSelectedIndexChangeSubscription();
@@ -1010,10 +994,8 @@ namespace GitUI
 
             FileStatusListView.BeginUpdate();
 
-            // Do not display "Files loading" label
-            CancellationToken cancellationToken = _reloadSequence.Next();
+            SetFileStatusListVisibility(filesPresent);
             FileStatusListView.ShowGroups = GitItemStatusesWithDescription.Count > 1 || GroupByRevision;
-            SetFileStatusListViewBounds(filesPresent, loadingFiles: false, cancellationToken);
             FileStatusListView.Groups.Clear();
             FileStatusListView.Items.Clear();
 
@@ -2006,7 +1988,7 @@ namespace GitUI
             internal Regex? Filter => _fileStatusList._filter;
             internal bool FilterWatermarkLabelVisible => _fileStatusList.FilterWatermarkLabel.Visible;
             internal void StoreFilter(string value) => _fileStatusList.StoreFilter(value);
-            internal void SetFileStatusListViewBounds(bool filesPresent) => _fileStatusList.SetFileStatusListViewBounds(filesPresent, loadingFiles: false, _fileStatusList._reloadSequence.Next());
+            internal void SetFileStatusListViewBounds(bool filesPresent) => _fileStatusList.SetFileStatusListVisibility(filesPresent);
         }
     }
 }

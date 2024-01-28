@@ -89,7 +89,7 @@
             LoadingFiles.AutoSize = true;
             LoadingFiles.BackColor = SystemColors.Window;
             LoadingFiles.ForeColor = SystemColors.GrayText;
-            LoadingFiles.Location = new Point(4, 4);
+            LoadingFiles.Location = new Point(4, 21);
             LoadingFiles.Margin = new Padding(0);
             LoadingFiles.Name = "LoadingFiles";
             LoadingFiles.Size = new Size(65, 13);
