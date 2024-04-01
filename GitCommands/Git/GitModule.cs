@@ -2172,6 +2172,53 @@ namespace GitCommands
             return stashes;
         }
 
+        public async Task<ExecutionResult> GetSingleDifftoolAsync(
+            ObjectId? firstId,
+            ObjectId? secondId,
+            string? fileName,
+            string? oldFileName,
+            ArgumentString extraDiffArguments,
+            bool cacheResult,
+            bool isTracked,
+            bool useGitColoring,
+            CancellationToken cancellationToken)
+        {
+            // fix refs slashes
+            fileName = fileName.ToPosixPath();
+            oldFileName = oldFileName.ToPosixPath();
+            string? firstRevision = firstId?.ToString().ToPosixPath();
+            string? secondRevision = secondId?.ToString().ToPosixPath();
+
+            string? diffOptions = _revisionDiffProvider.Get(firstRevision, secondRevision, fileName, oldFileName, isTracked);
+
+            GitArgumentBuilder args = new("difftool", commandConfiguration: null, "--no-pager")
+            {
+                "--find-renames",
+                "--find-copies",
+                "-y",
+                extraDiffArguments,
+                diffOptions
+            };
+
+            CommandCache? cache = false && cacheResult &&
+                        !string.IsNullOrEmpty(secondRevision) &&
+                        !string.IsNullOrEmpty(firstRevision) &&
+                        !secondRevision.IsArtificial() &&
+                        !firstRevision.IsArtificial()
+                ? GitCommandCache
+                : null;
+
+            ExecutionResult result = await _gitExecutable.ExecuteAsync(
+                args,
+                cache: cache,
+                outputEncoding: LosslessEncoding,
+                stripAnsiEscapeCodes: !useGitColoring,
+                throwOnErrorExit: false,
+                cancellationToken: cancellationToken);
+
+            return result;
+        }
+
         public async Task<(Patch? patch, string? errorMessage)> GetSingleDiffAsync(
             ObjectId? firstId,
             ObjectId? secondId,

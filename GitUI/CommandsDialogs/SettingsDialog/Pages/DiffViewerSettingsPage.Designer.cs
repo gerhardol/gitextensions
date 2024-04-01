@@ -32,7 +32,7 @@
             chkRememberIgnoreWhiteSpacePreference = new CheckBox();
             chkRememberShowNonPrintingCharsPreference = new CheckBox();
             chkRememberShowEntireFilePreference = new CheckBox();
-            chkRememberShowGitWordColoringPreference = new CheckBox();
+            chkRememberDiffAppearancePreference = new CheckBox();
             chkRememberNumberOfContextLines = new CheckBox();
             chkRememberShowSyntaxHighlightingInDiff = new CheckBox();
             chkOmitUninterestingDiff = new CheckBox();
@@ -61,7 +61,7 @@
             tlpnlGeneral.Controls.Add(chkRememberIgnoreWhiteSpacePreference, 0, 0);
             tlpnlGeneral.Controls.Add(chkRememberShowNonPrintingCharsPreference, 0, 1);
             tlpnlGeneral.Controls.Add(chkRememberShowEntireFilePreference, 0, 2);
-            tlpnlGeneral.Controls.Add(chkRememberShowGitWordColoringPreference, 0, 3);
+            tlpnlGeneral.Controls.Add(chkRememberDiffAppearancePreference, 0, 3);
             tlpnlGeneral.Controls.Add(chkRememberNumberOfContextLines, 0, 4);
             tlpnlGeneral.Controls.Add(chkRememberShowSyntaxHighlightingInDiff, 0, 5);
             tlpnlGeneral.Controls.Add(chkOmitUninterestingDiff, 0, 6);
@@ -120,15 +120,15 @@
             chkRememberShowEntireFilePreference.Text = "Remember the \'Show entire file\' preference";
             chkRememberShowEntireFilePreference.UseVisualStyleBackColor = true;
             // 
-            // chkRememberShowGitWordColoringPreference
+            // chkRememberDiffAppearancePreference
             // 
-            chkRememberShowGitWordColoringPreference.AutoSize = true;
-            chkRememberShowGitWordColoringPreference.Dock = DockStyle.Fill;
-            chkRememberShowGitWordColoringPreference.Location = new Point(3, 53);
-            chkRememberShowGitWordColoringPreference.Name = "chkRememberShowGitWordColoringPreference";
-            chkRememberShowGitWordColoringPreference.Size = new Size(325, 19);
-            chkRememberShowGitWordColoringPreference.Text = "Remember the \'Show Git word coloring\' preference";
-            chkRememberShowGitWordColoringPreference.UseVisualStyleBackColor = true;
+            chkRememberDiffAppearancePreference.AutoSize = true;
+            chkRememberDiffAppearancePreference.Dock = DockStyle.Fill;
+            chkRememberDiffAppearancePreference.Location = new Point(3, 53);
+            chkRememberDiffAppearancePreference.Name = "chkRememberDiffAppearancePreference";
+            chkRememberDiffAppearancePreference.Size = new Size(325, 19);
+            chkRememberDiffAppearancePreference.Text = "Remember the \'Diff appearance\' preference";
+            chkRememberDiffAppearancePreference.UseVisualStyleBackColor = true;
             // 
             // chkRememberNumberOfContextLines
             // 
@@ -284,7 +284,7 @@
         private CheckBox chkRememberIgnoreWhiteSpacePreference;
         private CheckBox chkRememberShowNonPrintingCharsPreference;
         private CheckBox chkRememberShowEntireFilePreference;
-        private CheckBox chkRememberShowGitWordColoringPreference;
+        private CheckBox chkRememberDiffAppearancePreference;
         private CheckBox chkRememberNumberOfContextLines;
         private CheckBox chkRememberShowSyntaxHighlightingInDiff;
         private CheckBox chkOmitUninterestingDiff;

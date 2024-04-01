@@ -1373,6 +1373,10 @@ Please make sure that Git for Windows is installed or set the correct command ma
         <source>Open Submodule Diff in separate window</source>
         <target />
       </trans-unit>
+      <trans-unit id="chkRememberDiffAppearancePreference.Text">
+        <source>Remember the 'Diff appearance' preference</source>
+        <target />
+      </trans-unit>
       <trans-unit id="chkRememberIgnoreWhiteSpacePreference.Text">
         <source>Remember the 'Ignore whitespaces' preference</source>
         <target />
@@ -1383,10 +1387,6 @@ Please make sure that Git for Windows is installed or set the correct command ma
       </trans-unit>
       <trans-unit id="chkRememberShowEntireFilePreference.Text">
         <source>Remember the 'Show entire file' preference</source>
-        <target />
-      </trans-unit>
-      <trans-unit id="chkRememberShowGitWordColoringPreference.Text">
-        <source>Remember the 'Show Git word coloring' preference</source>
         <target />
       </trans-unit>
       <trans-unit id="chkRememberShowNonPrintingCharsPreference.Text">
@@ -1558,6 +1558,10 @@ The primary difftool can still be selected by clicking the main menu entry.</sou
         <source>&amp;Decrease the number of lines of context</source>
         <target />
       </trans-unit>
+      <trans-unit id="diffAppearanceToolStripMenuItem.Text">
+        <source>&amp;Diff appearance</source>
+        <target />
+      </trans-unit>
       <trans-unit id="findToolStripMenuItem.Text">
         <source>&amp;Find...</source>
         <target />
@@ -1618,6 +1622,10 @@ The primary difftool can still be selected by clicking the main menu entry.</sou
         <source>Settings</source>
         <target />
       </trans-unit>
+      <trans-unit id="showDifftasticToolStripMenuItem.Text">
+        <source>&amp;Difftastic</source>
+        <target />
+      </trans-unit>
       <trans-unit id="showEntireFileButton.ToolTipText">
         <source>Show entire file</source>
         <target />
@@ -1627,7 +1635,7 @@ The primary difftool can still be selected by clicking the main menu entry.</sou
         <target />
       </trans-unit>
       <trans-unit id="showGitWordColoringToolStripMenuItem.Text">
-        <source>Show Git wor&amp;d coloring</source>
+        <source>&amp;Git word coloring</source>
         <target />
       </trans-unit>
       <trans-unit id="showNonPrintChars.ToolTipText">
@@ -1636,6 +1644,10 @@ The primary difftool can still be selected by clicking the main menu entry.</sou
       </trans-unit>
       <trans-unit id="showNonprintableCharactersToolStripMenuItem.Text">
         <source>S&amp;how nonprinting characters</source>
+        <target />
+      </trans-unit>
+      <trans-unit id="showPatchToolStripMenuItem.Text">
+        <source>&amp;Patch</source>
         <target />
       </trans-unit>
       <trans-unit id="showSyntaxHighlighting.ToolTipText">
@@ -2336,7 +2348,7 @@ compare with first:</source>
         <target />
       </trans-unit>
       <trans-unit id="_configureWorkingDirMenu.Text">
-        <source>&amp;Configure this menu...</source>
+        <source>&amp;Configure this menu</source>
         <target />
       </trans-unit>
       <trans-unit id="_consoleTabCaption.Text">
