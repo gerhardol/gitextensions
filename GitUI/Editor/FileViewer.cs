@@ -284,6 +284,10 @@ namespace GitUI.Editor
         [DefaultValue(false)]
         public bool PatchUseGitColoring => showGitWordColoringToolStripMenuItem.Checked || AppSettings.UseGitColoring.Value;
 
+        [Description("Show Difftastic diff coloring.")]
+        [DefaultValue(false)]
+        public bool IsDifftasticEnabled => showDifftasticToolStripMenuItem.Enabled;
+
         // Private properties
 
         [Description("Sets what kind of whitespace changes shall be ignored in diffs")]
@@ -307,14 +311,6 @@ namespace GitUI.Editor
         private bool ShowSyntaxHighlightingInDiff { get; set; }
 
         // Public methods
-
-        [Description("Use Git coloring with patch commands.")]
-        [DefaultValue(false)]
-        public bool PatchUseGitColoring => AppSettings.DiffDisplayAppearance.Value != DiffDisplayAppearance.Patch || AppSettings.UseGitColoring.Value;
-
-        [Description("Show Difftastic diff coloring.")]
-        [DefaultValue(false)]
-        public bool IsDifftasticEnabled => showDifftasticToolStripMenuItem.Enabled;
 
         public void SetGitBlameGutter(IEnumerable<GitBlameEntry> gitBlameEntries)
         {

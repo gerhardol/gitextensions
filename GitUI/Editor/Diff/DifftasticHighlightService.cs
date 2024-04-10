@@ -23,7 +23,7 @@ public partial class DifftasticHighlightService : TextHighlightService
     {
         if (!int.TryParse(new EnvironmentAbstraction().GetEnvironmentVariable("DFT_WIDTH"), out int column))
         {
-            column = 0;
+            column = 80;
         }
 
         StringBuilder sb = new(text.Length);

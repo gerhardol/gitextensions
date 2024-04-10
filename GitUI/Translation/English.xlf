@@ -1635,7 +1635,7 @@ The primary difftool can still be selected by clicking the main menu entry.</sou
         <target />
       </trans-unit>
       <trans-unit id="showGitWordColoringToolStripMenuItem.Text">
-        <source>&amp;Git word coloring</source>
+        <source>&amp;Git word diff</source>
         <target />
       </trans-unit>
       <trans-unit id="showNonPrintChars.ToolTipText">

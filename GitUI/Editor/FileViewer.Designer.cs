@@ -248,14 +248,15 @@ namespace GitUI.Editor
             // 
             // showGitWordColoringToolStripMenuItem
             // 
-            showGitWordColoringToolStripMenuItem.Image = Properties.Images.Colors;
+            showGitWordColoringToolStripMenuItem.Image = Properties.Images.EditColor;
             showGitWordColoringToolStripMenuItem.Name = "showGitWordColoringToolStripMenuItem";
             showGitWordColoringToolStripMenuItem.Size = new Size(243, 22);
-            showGitWordColoringToolStripMenuItem.Text = "&Git word coloring";
+            showGitWordColoringToolStripMenuItem.Text = "&Git word diff";
             showGitWordColoringToolStripMenuItem.Click += ToggleGitWordColoringToolStripMenuItemClick;
             // 
             // showDifftasticToolStripMenuItem
             // 
+            showDifftasticToolStripMenuItem.Image = Properties.Images.Difftastic;
             showDifftasticToolStripMenuItem.Name = "showDifftasticToolStripMenuItem";
             showDifftasticToolStripMenuItem.Size = new Size(243, 22);
             showDifftasticToolStripMenuItem.Text = "&Difftastic";

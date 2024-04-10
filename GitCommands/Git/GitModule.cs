@@ -2200,11 +2200,11 @@ namespace GitCommands
                 diffOptions
             };
 
-            CommandCache? cache = false && cacheResult &&
-                        !string.IsNullOrEmpty(secondRevision) &&
-                        !string.IsNullOrEmpty(firstRevision) &&
-                        !secondRevision.IsArtificial() &&
-                        !firstRevision.IsArtificial()
+            CommandCache? cache = false && cacheResult
+                        && !string.IsNullOrEmpty(secondRevision)
+                        && !string.IsNullOrEmpty(firstRevision)
+                        && !secondRevision.IsArtificial()
+                        && !firstRevision.IsArtificial()
                 ? GitCommandCache
                 : null;
 
