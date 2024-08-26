@@ -239,11 +239,12 @@ public abstract class DiffHighlightService : TextHighlightService
         }
     }
 
-    private static IEnumerable<TextMarker> GetDifferenceMarkers(Func<int, char> getCharAt, ISegment lineRemoved, ISegment lineAdded, int beginOffset)
+    private static IEnumerable<TextMarker> GetDifferenceMarkers(Func<int, char> getCharAt, ISegment lineRemoved, ISegment lineAdded, int lineStartOffset)
     {
         int lineRemovedEndOffset = lineRemoved.Length;
         int lineAddedEndOffset = lineAdded.Length;
         int endOffsetMin = Math.Min(lineRemovedEndOffset, lineAddedEndOffset);
+        int beginOffset = lineStartOffset;
         int reverseOffset = 0;
 
         while (beginOffset < endOffsetMin)
@@ -286,19 +287,63 @@ public abstract class DiffHighlightService : TextHighlightService
         int addedLength = lineAdded.Length - beginOffset - reverseOffset;
         if (addedLength > 0)
         {
-            yield return CreateTextMarker(lineAdded.Offset + beginOffset, addedLength, AppColor.AnsiTerminalGreenBackBold.GetThemeColor());
+            int beforeLength = beginOffset - lineStartOffset;
+            if (beforeLength > 0)
+            {
+                yield return CreatePaleMarker(lineAdded.Offset + lineStartOffset, beforeLength, GetAddedBackColor());
+            }
+
+            int afterBegin = beginOffset + addedLength;
+            int afterLength = lineAdded.Length - afterBegin;
+            if (afterLength > 0)
+            {
+                yield return CreatePaleMarker(lineAdded.Offset + afterBegin, afterLength, GetAddedBackColor());
+            }
+        }
+        else
+        {
+            int length = lineAdded.Length - lineStartOffset;
+            if (length > 0)
+            {
+                yield return CreatePaleMarker(lineAdded.Offset + lineStartOffset, length, GetAddedBackColor());
+            }
         }
 
         int removedLength = lineRemoved.Length - beginOffset - reverseOffset;
         if (removedLength > 0)
         {
-            yield return CreateTextMarker(lineRemoved.Offset + beginOffset, removedLength, AppColor.AnsiTerminalRedBackBold.GetThemeColor());
+            int beforeLength = beginOffset - lineStartOffset;
+            if (beforeLength > 0)
+            {
+                yield return CreatePaleMarker(lineRemoved.Offset + lineStartOffset, beforeLength, GetRemovedBackColor());
+            }
+
+            int afterBegin = beginOffset + removedLength;
+            int afterLength = lineRemoved.Length - afterBegin;
+            if (afterLength > 0)
+            {
+                yield return CreatePaleMarker(lineRemoved.Offset + afterBegin, afterLength, GetRemovedBackColor());
+            }
+        }
+        else
+        {
+            int length = lineRemoved.Length - lineStartOffset;
+            if (length > 0)
+            {
+                yield return CreatePaleMarker(lineRemoved.Offset + lineStartOffset, length, GetRemovedBackColor());
+            }
         }
 
         yield break;
 
+        static TextMarker CreatePaleMarker(int offset, int length, Color color)
+            => CreateTextMarker(offset, length, ColorHelper.DimColor(ColorHelper.DimColor(color)));
+
         static TextMarker CreateTextMarker(int offset, int length, Color color)
             => new(offset, length, TextMarkerType.SolidBlock, color, ColorHelper.GetForeColorForBackColor(color));
+
+        static Color GetAddedBackColor() => AppColor.AnsiTerminalGreenBackNormal.GetThemeColor();
+        static Color GetRemovedBackColor() => AppColor.AnsiTerminalRedBackNormal.GetThemeColor();
     }
 
     private void AddExtraPatchHighlighting(IDocument document)
