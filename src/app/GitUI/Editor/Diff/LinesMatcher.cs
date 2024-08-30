@@ -133,7 +133,7 @@ internal static class LinesMatcher
         }
     }
 
-    internal static IEnumerable<(string Word, int Offset)> GetWords(string text) => GetWords(text, TextUtilities.IsLetterDigitOrUnderscore);
+    internal static IEnumerable<(string Word, int Offset)> GetWords(string text) => GetWords(text, IsWordChar);
 
     internal static IEnumerable<(string Word, int Offset)> GetWords(string text, Func<char, bool> isWordChar)
     {
@@ -169,6 +169,8 @@ internal static class LinesMatcher
             }
         }
     }
+
+    internal static bool IsWordChar(char c) => TextUtilities.IsLetterDigitOrUnderscore(c);
 
     internal static string SelectWord((string Word, int Offset) pair) => pair.Word;
     internal static int SelectOffset((string Word, int Offset) pair) => pair.Offset;
