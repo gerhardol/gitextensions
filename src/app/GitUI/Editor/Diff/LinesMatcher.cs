@@ -107,7 +107,7 @@ internal static class LinesMatcher
     }
 
     /// <summary>
-    ///  Iterates all combinations of indices - starting with (0,0), (1,0), (1,1), (2,0), ...
+    ///  Iterates all combinations of indices - starting with (0,0), (1,0), (0,1), (2,0), (1,1), ...
     /// </summary>
     /// <returns>an enumeration of the index pairs</returns>
     internal static IEnumerable<(int FirstIndex, int SecondIndex)> GetAllCombinations(int firstEnd, int secondEnd)
