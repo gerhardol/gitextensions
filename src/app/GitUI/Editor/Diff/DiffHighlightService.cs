@@ -96,7 +96,7 @@ public abstract class DiffHighlightService : TextHighlightService
             // Apply GE word highlighting for Patch display (may apply to Difftastic setting, if not available for a repo)
             if (AppSettings.DiffDisplayAppearance.Value != GitCommands.Settings.DiffDisplayAppearance.GitWordDiff)
             {
-                AddExtraPatchHighlighting(document);
+                MarkInlineDifferences(document);
             }
 
             foreach (TextMarker tm in _textMarkers)
@@ -107,22 +107,15 @@ public abstract class DiffHighlightService : TextHighlightService
             return;
         }
 
-        bool forceAbort = false;
+        MarkInlineDifferences(document);
 
-        AddExtraPatchHighlighting(document);
-
-        for (int line = 0; line < document.TotalNumberOfLines && !forceAbort; line++)
+        for (int line = 0; line < document.TotalNumberOfLines; line++)
         {
             LineSegment lineSegment = document.GetLineSegment(line);
 
             if (lineSegment.TotalLength == 0)
             {
                 continue;
-            }
-
-            if (line == document.TotalNumberOfLines - 1)
-            {
-                forceAbort = true;
             }
 
             line = TryHighlightAddedAndDeletedLines(document, line, lineSegment);
@@ -217,7 +210,10 @@ public abstract class DiffHighlightService : TextHighlightService
         text = sb.ToString();
     }
 
-    private static void MarkDifference(IDocument document, IReadOnlyList<ISegment> linesRemoved, IReadOnlyList<ISegment> linesAdded, int beginOffset)
+    /// <summary>
+    ///  Matches related removed and added lines in a consecutive block and marks identical parts dimmed.
+    /// </summary>
+    private static void MarkInlineDifferences(IDocument document, IReadOnlyList<ISegment> linesRemoved, IReadOnlyList<ISegment> linesAdded, int beginOffset)
     {
         MarkerStrategy markerStrategy = document.MarkerStrategy;
 
@@ -290,14 +286,14 @@ public abstract class DiffHighlightService : TextHighlightService
             int beforeLength = beginOffset - lineStartOffset;
             if (beforeLength > 0)
             {
-                yield return CreatePaleMarker(lineAdded.Offset + lineStartOffset, beforeLength, GetAddedBackColor());
+                yield return CreateDimmedMarker(lineAdded.Offset + lineStartOffset, beforeLength, GetAddedBackColor());
             }
 
             int afterBegin = beginOffset + addedLength;
             int afterLength = lineAdded.Length - afterBegin;
             if (afterLength > 0)
             {
-                yield return CreatePaleMarker(lineAdded.Offset + afterBegin, afterLength, GetAddedBackColor());
+                yield return CreateDimmedMarker(lineAdded.Offset + afterBegin, afterLength, GetAddedBackColor());
             }
         }
         else
@@ -305,7 +301,7 @@ public abstract class DiffHighlightService : TextHighlightService
             int length = lineAdded.Length - lineStartOffset;
             if (length > 0)
             {
-                yield return CreatePaleMarker(lineAdded.Offset + lineStartOffset, length, GetAddedBackColor());
+                yield return CreateDimmedMarker(lineAdded.Offset + lineStartOffset, length, GetAddedBackColor());
             }
         }
 
@@ -315,14 +311,14 @@ public abstract class DiffHighlightService : TextHighlightService
             int beforeLength = beginOffset - lineStartOffset;
             if (beforeLength > 0)
             {
-                yield return CreatePaleMarker(lineRemoved.Offset + lineStartOffset, beforeLength, GetRemovedBackColor());
+                yield return CreateDimmedMarker(lineRemoved.Offset + lineStartOffset, beforeLength, GetRemovedBackColor());
             }
 
             int afterBegin = beginOffset + removedLength;
             int afterLength = lineRemoved.Length - afterBegin;
             if (afterLength > 0)
             {
-                yield return CreatePaleMarker(lineRemoved.Offset + afterBegin, afterLength, GetRemovedBackColor());
+                yield return CreateDimmedMarker(lineRemoved.Offset + afterBegin, afterLength, GetRemovedBackColor());
             }
         }
         else
@@ -330,13 +326,13 @@ public abstract class DiffHighlightService : TextHighlightService
             int length = lineRemoved.Length - lineStartOffset;
             if (length > 0)
             {
-                yield return CreatePaleMarker(lineRemoved.Offset + lineStartOffset, length, GetRemovedBackColor());
+                yield return CreateDimmedMarker(lineRemoved.Offset + lineStartOffset, length, GetRemovedBackColor());
             }
         }
 
         yield break;
 
-        static TextMarker CreatePaleMarker(int offset, int length, Color color)
+        static TextMarker CreateDimmedMarker(int offset, int length, Color color)
             => CreateTextMarker(offset, length, ColorHelper.DimColor(ColorHelper.DimColor(color)));
 
         static TextMarker CreateTextMarker(int offset, int length, Color color)
@@ -346,7 +342,10 @@ public abstract class DiffHighlightService : TextHighlightService
         static Color GetRemovedBackColor() => AppColor.AnsiTerminalRedBackNormal.GetThemeColor();
     }
 
-    private void AddExtraPatchHighlighting(IDocument document)
+    /// <summary>
+    ///  Matches related removed and added lines in a consecutive block of a patch document and marks identical parts dimmed.
+    /// </summary>
+    private void MarkInlineDifferences(IDocument document)
     {
         int line = 0;
 
@@ -354,6 +353,8 @@ public abstract class DiffHighlightService : TextHighlightService
         int diffContentOffset;
         List<ISegment> linesRemoved = GetRemovedLines(document, ref line, ref found);
         List<ISegment> linesAdded = GetAddedLines(document, ref line, ref found);
+
+        // The first pair of removed / added lines uses to contain the filenames which could also have changed but have a different prefix length.
         if (linesAdded.Count == 1 && linesRemoved.Count == 1)
         {
             ISegment lineA = linesRemoved[0];
@@ -369,18 +370,18 @@ public abstract class DiffHighlightService : TextHighlightService
                 diffContentOffset = 4;
             }
 
-            MarkDifference(document, linesRemoved, linesAdded, diffContentOffset);
+            MarkInlineDifferences(document, linesRemoved, linesAdded, diffContentOffset);
         }
 
-        // overlap when marking
-        diffContentOffset = 1;
+        // Process the next blocks of removed / added lines and mark in-line differences
+        diffContentOffset = 1; // in order to skip the prefixes '-' / '+'
         while (line < document.TotalNumberOfLines)
         {
             found = false;
             linesRemoved = GetRemovedLines(document, ref line, ref found);
             linesAdded = GetAddedLines(document, ref line, ref found);
 
-            MarkDifference(document, linesRemoved, linesAdded, diffContentOffset);
+            MarkInlineDifferences(document, linesRemoved, linesAdded, diffContentOffset);
         }
     }
 }
