@@ -61,7 +61,7 @@ namespace GitUI.Editor
                 }
             };
 
-            TextEditor.TextChanged += (s, e) => TextChanged?.Invoke(s, e);
+            TextEditor.TextChanged += TextChanged;
             TextEditor.ActiveTextAreaControl.HScrollBar.ValueChanged += (s, e) => OnHScrollPositionChanged(EventArgs.Empty);
             TextEditor.ActiveTextAreaControl.VScrollBar.ValueChanged += (s, e) => OnVScrollPositionChanged(EventArgs.Empty);
             TextEditor.ActiveTextAreaControl.TextArea.KeyUp += (s, e) => KeyUp?.Invoke(s, e);
@@ -264,7 +264,9 @@ namespace GitUI.Editor
                 _ => throw new ArgumentException($"Unexpected viewMode: {viewMode}", nameof(viewMode))
             };
 
+            TextEditor.TextChanged -= TextChanged;
             TextEditor.Text = text;
+            TextEditor.TextChanged += TextChanged;
             bool hasLineNumberControl = viewMode.IsPartialTextView();
             _lineNumbersControl.Clear();
             _lineNumbersControl.SetVisibility(hasLineNumberControl);
@@ -288,6 +290,8 @@ namespace GitUI.Editor
                 Padding = new Padding(DpiUtil.Scale(5), Padding.Top, Padding.Right, Padding.Bottom);
             }
 
+            // Update highlighting
+            AddTextHighlighting();
             TextEditor.Refresh();
 
             // Restore position if contentIdentification matches the capture

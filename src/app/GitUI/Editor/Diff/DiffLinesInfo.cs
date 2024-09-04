@@ -1,4 +1,6 @@
-﻿namespace GitUI.Editor.Diff;
+﻿using ICSharpCode.TextEditor.Document;
+
+namespace GitUI.Editor.Diff;
 
 public sealed class DiffLinesInfo
 {

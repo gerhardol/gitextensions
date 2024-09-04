@@ -57,11 +57,15 @@ public partial class DiffLineNumAnalyzer
                     LineNumInDiff = lineNumInDiff,
                     LeftLineNumber = DiffLineInfo.NotApplicableLineNum,
                     RightLineNumber = DiffLineInfo.NotApplicableLineNum,
+                    Segment = new Segment() { Offset = textOffset, Length = textLength },
+                    IsAddedRemoved = true,
                 };
 
                 if (IsMinusLineInCombinedDiff(line))
                 {
                     meta.LineType = DiffLineType.Minus;
+                    meta.LeftLineNumber = leftLineNum;
+                    leftLineNum++;
                 }
                 else if (IsPlusLineInCombinedDiff(line))
                 {
@@ -80,7 +84,7 @@ public partial class DiffLineNumAnalyzer
             }
             else if (isHeaderLineLocated && ((!isGitWordDiff && IsMinusLine(line))
 
-                // Heuristics: For GitWordDiff AppSettings.ReverseGitColoring is assumed, otherwise just DiffLineType.Mixed is detected
+                // Heuristics: For GitWordDiff AppSettings.ReverseGitColoring is assumed, otherwise just DiffLineType.MinusPlus is detected
                 || (isGitWordDiff && textMarkers.Value.Count > 0 && textMarkers.Value.All(i => i.Color == AppColor.AnsiTerminalRedBackNormal.GetThemeColor()))))
             {
                 DiffLineInfo meta = new()
@@ -88,7 +92,11 @@ public partial class DiffLineNumAnalyzer
                     LineNumInDiff = lineNumInDiff,
                     LeftLineNumber = leftLineNum,
                     RightLineNumber = DiffLineInfo.NotApplicableLineNum,
-                    LineType = isGitWordDiff ? DiffLineType.MinusLeft : DiffLineType.Minus
+                    LineType = isGitWordDiff ? DiffLineType.MinusLeft : DiffLineType.Minus,
+                    Segment = new Segment() { Offset = textOffset, Length = textLength },
+
+                    // Heuristics, Git coloring uses other colors for moved lines
+                    IsAddedRemoved = textMarkers.Value.Count == 0 || textMarkers.Value.All(i => i.Color == AppColor.AnsiTerminalRedBackNormal.GetThemeColor()),
                 };
                 ret.Add(meta);
 
@@ -103,6 +111,8 @@ public partial class DiffLineNumAnalyzer
                     LeftLineNumber = DiffLineInfo.NotApplicableLineNum,
                     RightLineNumber = rightLineNum,
                     LineType = isGitWordDiff ? DiffLineType.PlusRight : DiffLineType.Plus,
+                    Segment = new Segment() { Offset = textOffset, Length = textLength },
+                    IsAddedRemoved = textMarkers.Value.Count == 0 || textMarkers.Value.All(i => i.Color == AppColor.AnsiTerminalGreenBackNormal.GetThemeColor()),
                 };
                 ret.Add(meta);
                 rightLineNum++;

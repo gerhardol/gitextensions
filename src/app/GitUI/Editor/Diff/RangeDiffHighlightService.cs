@@ -30,12 +30,12 @@ public partial class RangeDiffHighlightService : DiffHighlightService
 
     public override void SetLineControl(DiffViewerLineNumberControl lineNumbersControl, TextEditorControl textEditor)
     {
-        DiffLinesInfo result = new();
+        _diffLinesInfo = new();
         int bufferLine = 0;
         foreach (string line in textEditor.Text.Split(Delimiters.LineFeed))
         {
             ++bufferLine;
-            result.Add(new DiffLineInfo
+            _diffLinesInfo.Add(new DiffLineInfo
             {
                 LineNumInDiff = bufferLine,
                 LeftLineNumber = DiffLineInfo.NotApplicableLineNum,
@@ -46,7 +46,7 @@ public partial class RangeDiffHighlightService : DiffHighlightService
             });
         }
 
-        lineNumbersControl.DisplayLineNum(result, showLeftColumn: false);
+        lineNumbersControl.DisplayLineNum(_diffLinesInfo, showLeftColumn: false);
     }
 
     public override string[] GetFullDiffPrefixes() => _diffFullPrefixes;
