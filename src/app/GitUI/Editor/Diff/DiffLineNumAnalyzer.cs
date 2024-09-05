@@ -3,7 +3,6 @@ using GitCommands;
 using GitExtensions.Extensibility;
 using GitExtUtils.GitUI.Theming;
 using GitUI.Theming;
-using ICSharpCode.TextEditor;
 using ICSharpCode.TextEditor.Document;
 
 namespace GitUI.Editor.Diff;
@@ -13,15 +12,15 @@ public partial class DiffLineNumAnalyzer
     [GeneratedRegex(@"\-(?<leftStart>\d{1,})\,{0,}(?<leftCount>\d{0,})\s\+(?<rightStart>\d{1,})\,{0,}(?<rightCount>\d{0,})", RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture)]
     private static partial Regex DiffRegex();
 
-    public static DiffLinesInfo Analyze(TextEditorControl textEditor, bool isCombinedDiff, bool isGitWordDiff = false)
+    public static DiffLinesInfo Analyze(string text, List<TextMarker> allTextMarkers, bool isCombinedDiff, bool isGitWordDiff = false)
     {
         DiffLinesInfo ret = new();
         int lineNumInDiff = 0;
         int leftLineNum = DiffLineInfo.NotApplicableLineNum;
         int rightLineNum = DiffLineInfo.NotApplicableLineNum;
         bool isHeaderLineLocated = false;
-        string[] lines = textEditor.Text.Split(Delimiters.LineFeed);
-        int textOffset = 0; // for git-diff-word
+        string[] lines = text.Split(Delimiters.LineFeed);
+        int textOffset = 0;
         for (int i = 0; i < lines.Length; i++)
         {
             string line = lines[i];
@@ -31,7 +30,9 @@ public partial class DiffLineNumAnalyzer
             }
 
             int textLength = lines[i].Length + 1;
-            Lazy<List<TextMarker>> textMarkers = new(() => textEditor.Document.MarkerStrategy.GetMarkers(textOffset, textLength));
+            Lazy<List<TextMarker>> textMarkers = new(()
+                => allTextMarkers.Where(i => (i.Offset >= textOffset && i.Offset < textOffset + textLength)
+                    || (i.EndOffset > textOffset && i.EndOffset < textOffset + textLength)).ToList());
             lineNumInDiff++;
             if (line.StartsWith("@@"))
             {
@@ -63,6 +64,7 @@ public partial class DiffLineNumAnalyzer
 
                 if (IsMinusLineInCombinedDiff(line))
                 {
+                    // left line is from two documents, so undefined
                     meta.LineType = DiffLineType.Minus;
                     meta.LeftLineNumber = leftLineNum;
                     leftLineNum++;
@@ -82,10 +84,10 @@ public partial class DiffLineNumAnalyzer
 
                 ret.Add(meta);
             }
-            else if (isHeaderLineLocated && ((!isGitWordDiff && IsMinusLine(line))
+            else if (isHeaderLineLocated && !isGitWordDiff ? IsMinusLine(line)
 
                 // Heuristics: For GitWordDiff AppSettings.ReverseGitColoring is assumed, otherwise just DiffLineType.MinusPlus is detected
-                || (isGitWordDiff && textMarkers.Value.Count > 0 && textMarkers.Value.All(i => i.Color == AppColor.AnsiTerminalRedBackNormal.GetThemeColor()))))
+                : (textMarkers.Value.Count > 0 && textMarkers.Value.All(i => i.Color == AppColor.AnsiTerminalRedBackNormal.GetThemeColor())))
             {
                 DiffLineInfo meta = new()
                 {
@@ -102,8 +104,8 @@ public partial class DiffLineNumAnalyzer
 
                 leftLineNum++;
             }
-            else if (isHeaderLineLocated && ((!isGitWordDiff && IsPlusLine(line))
-                || (isGitWordDiff && textMarkers.Value.Count > 0 && textMarkers.Value.All(i => i.Color == AppColor.AnsiTerminalGreenBackNormal.GetThemeColor()))))
+            else if (isHeaderLineLocated && !isGitWordDiff ? IsPlusLine(line)
+                : (textMarkers.Value.Count > 0 && textMarkers.Value.All(i => i.Color == AppColor.AnsiTerminalGreenBackNormal.GetThemeColor())))
             {
                 DiffLineInfo meta = new()
                 {

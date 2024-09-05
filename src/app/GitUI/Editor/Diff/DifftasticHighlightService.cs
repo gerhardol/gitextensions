@@ -3,7 +3,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using GitCommands;
 using GitExtensions.Extensibility;
-using ICSharpCode.TextEditor;
 using ICSharpCode.TextEditor.Document;
 
 namespace GitUI.Editor.Diff;
@@ -19,7 +18,7 @@ public partial class DifftasticHighlightService : TextHighlightService
     [GeneratedRegex(@"^(\s*(?<matchStart>(?<lineNo>\d+)|(\.+)) )", RegexOptions.ExplicitCapture)]
     private static partial Regex LineNoRegex();
 
-    public DifftasticHighlightService(ref string text)
+    public DifftasticHighlightService(ref string text, DiffViewerLineNumberControl lineNumbersControl)
     {
         if (!int.TryParse(new EnvironmentAbstraction().GetEnvironmentVariable("DFT_WIDTH"), out int column))
         {
@@ -256,6 +255,8 @@ public partial class DifftasticHighlightService : TextHighlightService
         }
 
         text = sb.ToString();
+        lineNumbersControl.DisplayLineNum(_diffLinesInfo, showLeftColumn: true);
+
         return;
 
         void AddInfo(int leftLineNo, int rightLineNo, DiffLineType lineType, List<TextMarker> textMarkers, StringBuilder lineBuilder)
@@ -290,10 +291,5 @@ public partial class DifftasticHighlightService : TextHighlightService
         {
             document.MarkerStrategy.AddMarker(tm);
         }
-    }
-
-    public override void SetLineControl(DiffViewerLineNumberControl lineNumbersControl, TextEditorControl textEditor)
-    {
-        lineNumbersControl.DisplayLineNum(_diffLinesInfo, showLeftColumn: true);
     }
 }

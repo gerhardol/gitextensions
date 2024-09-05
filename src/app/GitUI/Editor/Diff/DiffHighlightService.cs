@@ -112,7 +112,6 @@ public abstract class DiffHighlightService : TextHighlightService
         MarkInlineDifferences(document);
         HighlightAddedAndDeletedLines(document);
 
-        // TODO the code previous marked all lines starting with @ or \, need to add more?
         int line = 0;
         foreach (ISegment segment in GetLines(document, ref line, DiffLineType.Minus))
         {
@@ -204,13 +203,13 @@ public abstract class DiffHighlightService : TextHighlightService
     private List<ISegment> GetLines(IDocument document, ref int line, DiffLineType diffLineType)
     {
         int first = line;
-        List<ISegment> result = _diffLinesInfo?.DiffLines.Where(i => i.Key >= first && i.Value.LineType == diffLineType && i.Value.Segment is not null)
+        List<ISegment> result = _diffLinesInfo?.DiffLines.Where(i => i.Key >= first && i.Value.IsAddedRemoved && i.Value.LineType == diffLineType && i.Value.Segment is not null)
             .Select(i => i.Value.Segment)
             .ToList()
             ?? [];
         if (result.Count != 0)
         {
-            line = 1 + _diffLinesInfo.DiffLines.Where(i => i.Key >= first && i.Value.LineType == diffLineType).Select(i => i.Key).First();
+            line = 1 + _diffLinesInfo.DiffLines.Where(i => i.Key >= first && i.Value.IsAddedRemoved && i.Value.LineType == diffLineType).Select(i => i.Key).First();
         }
         else
         {

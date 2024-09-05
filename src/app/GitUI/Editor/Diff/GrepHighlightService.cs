@@ -5,7 +5,6 @@ using GitCommands;
 using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
 using GitExtUtils;
-using ICSharpCode.TextEditor;
 using ICSharpCode.TextEditor.Document;
 
 namespace GitUI.Editor.Diff;
@@ -18,14 +17,14 @@ public partial class GrepHighlightService : TextHighlightService
     [GeneratedRegex(@"^(?<line>\d+)(?<kind>:|.)(?<text>.*)$", RegexOptions.ExplicitCapture)]
     private static partial Regex GrepLineRegex();
 
-    public GrepHighlightService(ref string text)
-        => SetText(ref text);
+    public GrepHighlightService(ref string text, DiffViewerLineNumberControl lineNumbersControl)
+    {
+        SetText(ref text);
+        lineNumbersControl.DisplayLineNum(_diffLinesInfo, showLeftColumn: false);
+    }
 
     public override bool IsSearchMatch(DiffViewerLineNumberControl lineNumbersControl, int indexInText)
         => lineNumbersControl.GetLineInfo(indexInText)?.LineType is (DiffLineType.Minus or DiffLineType.Plus or DiffLineType.MinusPlus or DiffLineType.Grep);
-
-    public override void SetLineControl(DiffViewerLineNumberControl lineNumbersControl, TextEditorControl textEditor)
-        => lineNumbersControl.DisplayLineNum(_diffLinesInfo, showLeftColumn: false);
 
     /// <summary>
     /// Get the next/previous line for the grep match.
