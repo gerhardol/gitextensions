@@ -112,8 +112,7 @@ public abstract class DiffHighlightService : TextHighlightService
         MarkInlineDifferences(document);
         HighlightAddedAndDeletedLines(document);
 
-        int line = 0;
-        foreach (ISegment segment in GetLines(document, ref line, DiffLineType.Minus))
+        foreach (ISegment segment in GetAllLines(document, DiffLineType.Header))
         {
             document.MarkerStrategy.AddMarker(CreateTextMarker(segment, AppColor.DiffSection.GetThemeColor()));
         }
@@ -149,14 +148,12 @@ public abstract class DiffHighlightService : TextHighlightService
     /// <param name="document">The document to analyze.</param>
     private void HighlightAddedAndDeletedLines(IDocument document)
     {
-        int line = 0;
-        foreach (ISegment segment in GetLines(document, ref line, DiffLineType.Minus))
+        foreach (ISegment segment in GetAllLines(document, DiffLineType.Minus))
         {
             document.MarkerStrategy.AddMarker(CreateTextMarker(segment, AppColor.AnsiTerminalRedBackNormal.GetThemeColor()));
         }
 
-        line = 0;
-        foreach (ISegment segment in GetLines(document, ref line, DiffLineType.Plus))
+        foreach (ISegment segment in GetAllLines(document, DiffLineType.Plus))
         {
             document.MarkerStrategy.AddMarker(CreateTextMarker(segment, AppColor.AnsiTerminalGreenBackNormal.GetThemeColor()));
         }
@@ -173,14 +170,17 @@ public abstract class DiffHighlightService : TextHighlightService
     private void MarkInlineDifferences(IDocument document)
     {
         int line = 0;
+        bool found = false;
 
         const int diffContentOffset = 1; // in order to skip the prefixes '-' / '+'
 
         // Process the next blocks of removed / added lines and mark in-line differences
         while (line < document.TotalNumberOfLines)
         {
-            List<ISegment> linesRemoved = GetLines(document, ref line, DiffLineType.Minus);
-            List<ISegment> linesAdded = GetLines(document, ref line, DiffLineType.Plus);
+            found = false;
+
+            List<ISegment> linesRemoved = GetBlockOfLines(document, DiffLineType.Minus, ref line, ref found);
+            List<ISegment> linesAdded = GetBlockOfLines(document, DiffLineType.Plus, ref line, ref found);
 
             MarkInlineDifferences(document, linesRemoved, linesAdded, diffContentOffset);
         }
@@ -200,20 +200,43 @@ public abstract class DiffHighlightService : TextHighlightService
         }
     }
 
-    private List<ISegment> GetLines(IDocument document, ref int line, DiffLineType diffLineType)
-    {
-        int first = line;
-        List<ISegment> result = _diffLinesInfo?.DiffLines.Where(i => i.Key >= first && i.Value.IsAddedRemoved && i.Value.LineType == diffLineType && i.Value.Segment is not null)
+    private List<ISegment> GetAllLines(IDocument document, DiffLineType diffLineType)
+    => _diffLinesInfo?.DiffLines.Where(i => i.Value.LineType == diffLineType && i.Value.Segment is not null)
             .Select(i => i.Value.Segment)
             .ToList()
             ?? [];
-        if (result.Count != 0)
+
+    /// <summary>
+    /// Get next block of lines following beginline
+    /// </summary>
+    /*
+    /// <param name="document"></param>
+    /// <param name="diffLineType"></param>
+    /// <param name="beginIndex"></param>
+    /// <param name="found"></param>
+    /// <returns></returns>
+    */
+    private List<ISegment> GetBlockOfLines(IDocument document, DiffLineType diffLineType, ref int beginIndex, ref bool found)
+    {
+        List<ISegment> result = [];
+
+        while (beginIndex < document.TotalNumberOfLines)
         {
-            line = 1 + _diffLinesInfo.DiffLines.Where(i => i.Key >= first && i.Value.IsAddedRemoved && i.Value.LineType == diffLineType).Select(i => i.Key).First();
-        }
-        else
-        {
-            line = document.TotalNumberOfLines;
+            beginIndex++;
+            if (!_diffLinesInfo.DiffLines.TryGetValue(beginIndex, out DiffLineInfo diffLine) || diffLine.Segment is null || diffLine.LineType != diffLineType)
+            {
+                if (found)
+                {
+                    // Block ended, no more to add.
+                    break;
+                }
+
+                // Start of block not found yet.
+                continue;
+            }
+
+            found = true;
+            result.Add(diffLine.Segment);
         }
 
         return result;
