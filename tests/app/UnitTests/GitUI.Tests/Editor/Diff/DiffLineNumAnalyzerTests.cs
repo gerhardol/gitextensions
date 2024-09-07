@@ -157,16 +157,18 @@ public class DiffLineNumAnalyzerTests
     [Test]
     public void CanGetGitWordDiffInfo()
     {
+        GitCommands.Settings.DiffDisplayAppearance theme = AppSettings.DiffDisplayAppearance.Value;
+        AppSettings.DiffDisplayAppearance.Value = GitCommands.Settings.DiffDisplayAppearance.GitWordDiff;
+
         string text = _sampleGitWordDiff;
         DiffHighlightService diffHighlightService = new PatchHighlightService(ref text, useGitColoring: true, _diffViewerLineNumber);
         _textEditor.Text = text;
-        diffHighlightService.AddTextHighlighting(_textEditor.Document);
-        DiffLinesInfo result = DiffLineNumAnalyzer.Analyze(_textEditor.Text, _textEditor.Document.MarkerStrategy.GetMarkers(0), isCombinedDiff: false, isGitWordDiff: true);
+        DiffLinesInfo result = _diffViewerLineNumber.GetTestAccessor().Result;
 
         result.DiffLines[5].LeftLineNumber.Should().Be(DiffLineInfo.NotApplicableLineNum);
         result.DiffLines[5].RightLineNumber.Should().Be(DiffLineInfo.NotApplicableLineNum);
         result.DiffLines[5].LineType.Should().Be(DiffLineType.Header);
-/* TODO
+
         result.DiffLines[6].LeftLineNumber.Should().Be(DiffLineInfo.NotApplicableLineNum);
         result.DiffLines[6].RightLineNumber.Should().Be(1);
         result.DiffLines[6].LineType.Should().Be(DiffLineType.PlusRight);
@@ -182,7 +184,8 @@ public class DiffLineNumAnalyzerTests
         result.DiffLines[23].LeftLineNumber.Should().Be(28);
         result.DiffLines[23].RightLineNumber.Should().Be(28);
         result.DiffLines[23].LineType.Should().Be(DiffLineType.MinusPlus);
-*/
+
+        AppSettings.DiffDisplayAppearance.Value = theme;
     }
 
     [Test]
@@ -196,8 +199,6 @@ public class DiffLineNumAnalyzerTests
 
         DifftasticHighlightService diffHighlightService = new(ref text, _diffViewerLineNumber);
         _textEditor.Text = text;
-
-        diffHighlightService.AddTextHighlighting(_textEditor.Document);
         DiffLinesInfo result = _diffViewerLineNumber.GetTestAccessor().Result;
 
         result.DiffLines[5].LeftLineNumber.Should().Be(DiffLineInfo.NotApplicableLineNum);
