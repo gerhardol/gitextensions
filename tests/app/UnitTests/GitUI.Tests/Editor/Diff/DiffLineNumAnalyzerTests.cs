@@ -145,7 +145,7 @@ public class DiffLineNumAnalyzerTests
         result.DiffLines[34].RightLineNumber.Should().Be(100);
         result.DiffLines[34].LineType.Should().Be(DiffLineType.Context);
 
-        result.DiffLines[37].LeftLineNumber.Should().Be(DiffLineInfo.NotApplicableLineNum);
+        result.DiffLines[37].LeftLineNumber.Should().Be(90);
         result.DiffLines[37].RightLineNumber.Should().Be(DiffLineInfo.NotApplicableLineNum);
         result.DiffLines[37].LineType.Should().Be(DiffLineType.Minus);
 
