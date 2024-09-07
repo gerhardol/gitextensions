@@ -22,6 +22,11 @@ public abstract class DiffHighlightService : TextHighlightService
     {
         _useGitColoring = useGitColoring;
         SetText(ref text);
+
+        if (!_useGitColoring)
+        {
+            HighlightAddedAndDeletedLines(_textMarkers);
+        }
     }
 
     public static IGitCommandConfiguration GetGitCommandConfiguration(IGitModule module, bool useGitColoring, string command)
@@ -93,34 +98,18 @@ public abstract class DiffHighlightService : TextHighlightService
 
     public override void AddTextHighlighting(IDocument document)
     {
-        if (_useGitColoring)
+        // Apply GE word highlighting for Patch display (may apply to Difftastic setting, if not available for a repo)
+        if (!_useGitColoring || AppSettings.DiffDisplayAppearance.Value != GitCommands.Settings.DiffDisplayAppearance.GitWordDiff)
         {
-            // Apply GE word highlighting for Patch display (may apply to Difftastic setting, if not available for a repo)
-            if (AppSettings.DiffDisplayAppearance.Value != GitCommands.Settings.DiffDisplayAppearance.GitWordDiff)
-            {
-                MarkInlineDifferences(document);
-            }
-
-            foreach (TextMarker tm in _textMarkers)
-            {
-                document.MarkerStrategy.AddMarker(tm);
-            }
-
-            return;
+            MarkInlineDifferences(document);
         }
 
-        MarkInlineDifferences(document);
-        HighlightAddedAndDeletedLines(document);
-
-        foreach (ISegment segment in GetAllLines(document, DiffLineType.Header))
+        foreach (TextMarker tm in _textMarkers)
         {
-            document.MarkerStrategy.AddMarker(CreateTextMarker(segment, AppColor.DiffSection.GetThemeColor()));
+            document.MarkerStrategy.AddMarker(tm);
         }
 
         return;
-
-        static TextMarker CreateTextMarker(ISegment segment, Color color)
-            => new(segment.Offset, segment.Length, TextMarkerType.SolidBlock, color, ColorHelper.GetForeColorForBackColor(color));
     }
 
     public override bool IsSearchMatch(DiffViewerLineNumberControl lineNumbersControl, int indexInText)
@@ -142,20 +131,25 @@ public abstract class DiffHighlightService : TextHighlightService
     }
 
     /// <summary>
-    /// Highlight added and removed lines.
-    /// Overridden in the HighlightServices where GE coloring is used (AddTextHighlighting() for Patch and CombinedDiff).
+    /// Highlight lines that are added, removed and header lines.
+    /// This is an alternative configuration to use the Git diff coloring (that has more features).
     /// </summary>
-    /// <param name="document">The document to analyze.</param>
-    private void HighlightAddedAndDeletedLines(IDocument document)
+    /// <param name="textMarkers">The markers to append to.</param>
+    private void HighlightAddedAndDeletedLines(List<TextMarker> textMarkers)
     {
-        foreach (ISegment segment in GetAllLines(document, DiffLineType.Minus))
+        foreach (ISegment segment in GetAllLines(DiffLineType.Minus))
         {
-            document.MarkerStrategy.AddMarker(CreateTextMarker(segment, AppColor.AnsiTerminalRedBackNormal.GetThemeColor()));
+            textMarkers.Add(CreateTextMarker(segment, AppColor.AnsiTerminalRedBackNormal.GetThemeColor()));
         }
 
-        foreach (ISegment segment in GetAllLines(document, DiffLineType.Plus))
+        foreach (ISegment segment in GetAllLines(DiffLineType.Plus))
         {
-            document.MarkerStrategy.AddMarker(CreateTextMarker(segment, AppColor.AnsiTerminalGreenBackNormal.GetThemeColor()));
+            textMarkers.Add(CreateTextMarker(segment, AppColor.AnsiTerminalGreenBackNormal.GetThemeColor()));
+        }
+
+        foreach (ISegment segment in GetAllLines(DiffLineType.Header))
+        {
+            textMarkers.Add(CreateTextMarker(segment, AppColor.DiffSection.GetThemeColor()));
         }
 
         return;
@@ -201,7 +195,7 @@ public abstract class DiffHighlightService : TextHighlightService
         }
     }
 
-    private List<ISegment> GetAllLines(IDocument document, DiffLineType diffLineType)
+    private List<ISegment> GetAllLines(DiffLineType diffLineType)
     => _diffLinesInfo?.DiffLines.Where(i => i.Value.LineType == diffLineType && i.Value.Segment is not null)
             .Select(i => i.Value.Segment)
             .ToList()
