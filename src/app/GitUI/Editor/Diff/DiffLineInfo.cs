@@ -2,12 +2,6 @@
 
 namespace GitUI.Editor.Diff;
 
-public struct Segment : ISegment
-{
-    public int Offset { get; set; }
-    public int Length { get; set; }
-}
-
 public class DiffLineInfo
 {
     public static readonly int NotApplicableLineNum = -1;
