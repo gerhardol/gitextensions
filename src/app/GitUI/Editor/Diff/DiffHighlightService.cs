@@ -204,7 +204,6 @@ public abstract class DiffHighlightService : TextHighlightService
 
         while (beginIndex < _diffLinesInfo.MaxLineNumber)
         {
-            beginIndex++;
             if (!_diffLinesInfo.DiffLines.TryGetValue(beginIndex, out DiffLineInfo diffLine) || diffLine.Segment is null || diffLine.LineType != diffLineType)
             {
                 if (found)
@@ -214,12 +213,14 @@ public abstract class DiffHighlightService : TextHighlightService
                 }
 
                 // Start of block not found yet.
+                beginIndex++;
                 continue;
             }
 
             // In block, continue to add
             found = true;
             result.Add(diffLine.Segment);
+            beginIndex++;
         }
 
         return result;
