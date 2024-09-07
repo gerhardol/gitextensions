@@ -91,14 +91,7 @@ public abstract class DiffHighlightService : TextHighlightService
     }
 
     public override void AddTextHighlighting(IDocument document)
-    {
-        foreach (TextMarker tm in _textMarkers)
-        {
-            document.MarkerStrategy.AddMarker(tm);
-        }
-
-        return;
-    }
+        => document.MarkerStrategy.AddMarkerRange(_textMarkers);
 
     public override bool IsSearchMatch(DiffViewerLineNumberControl lineNumbersControl, int indexInText)
         => lineNumbersControl.GetLineInfo(indexInText)?.LineType is (DiffLineType.Minus or DiffLineType.Plus or DiffLineType.MinusPlus or DiffLineType.Grep);

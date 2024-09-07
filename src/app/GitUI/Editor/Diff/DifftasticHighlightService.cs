@@ -284,12 +284,4 @@ public partial class DifftasticHighlightService : TextHighlightService
 
     public override bool IsSearchMatch(DiffViewerLineNumberControl lineNumbersControl, int indexInText)
         => lineNumbersControl.GetLineInfo(indexInText)?.LineType is DiffLineType.Plus or DiffLineType.Minus or DiffLineType.MinusPlus or DiffLineType.MinusLeft or DiffLineType.PlusRight;
-
-    public override void AddTextHighlighting(IDocument document)
-    {
-        foreach (TextMarker tm in _textMarkers)
-        {
-            document.MarkerStrategy.AddMarker(tm);
-        }
-    }
 }

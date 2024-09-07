@@ -80,14 +80,6 @@ public partial class GrepHighlightService : TextHighlightService
         }
     }
 
-    public override void AddTextHighlighting(IDocument document)
-    {
-        foreach (TextMarker tm in _textMarkers)
-        {
-            document.MarkerStrategy.AddMarker(tm);
-        }
-    }
-
     private void SetText(ref string text)
     {
         StringBuilder sb = new(text.Length);
