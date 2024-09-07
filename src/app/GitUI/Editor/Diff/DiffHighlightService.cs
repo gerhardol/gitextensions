@@ -208,7 +208,7 @@ public abstract class DiffHighlightService : TextHighlightService
             {
                 if (found)
                 {
-                    // Block ended, no more to add.
+                    // Block ended, no more to add (not updating beginIndex, next start search here)
                     break;
                 }
 
@@ -217,10 +217,16 @@ public abstract class DiffHighlightService : TextHighlightService
                 continue;
             }
 
+            beginIndex++;
+            if (!diffLine.IsAddedRemoved)
+            {
+                // Ignore this line, seem to be moved
+                continue;
+            }
+
             // In block, continue to add
             found = true;
             result.Add(diffLine.Segment);
-            beginIndex++;
         }
 
         return result;
