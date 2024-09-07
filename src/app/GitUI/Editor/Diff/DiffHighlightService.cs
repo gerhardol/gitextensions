@@ -181,6 +181,7 @@ public abstract class DiffHighlightService : TextHighlightService
 
             List<ISegment> linesRemoved = GetBlockOfLines(document, DiffLineType.Minus, ref line, ref found);
             List<ISegment> linesAdded = GetBlockOfLines(document, DiffLineType.Plus, ref line, ref found);
+            // git-diff presents the removed lines followed by added lines in a "block"
 
             MarkInlineDifferences(document, linesRemoved, linesAdded, diffContentOffset);
         }
@@ -235,6 +236,7 @@ public abstract class DiffHighlightService : TextHighlightService
                 continue;
             }
 
+            // In block, continue to add
             found = true;
             result.Add(diffLine.Segment);
         }
