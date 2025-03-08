@@ -49,21 +49,6 @@ namespace GitUITests.Theming
             settingsColor.Should().Be(defaultColor);
         }
 
-#if SUPPORT_THEMES
-        [Test]
-        public void Default_values_are_specified_in_invariant_theme()
-        {
-            Theme invariantTheme = GetInvariantTheme();
-            invariantTheme.Should().NotBeNull();
-            foreach (AppColor name in Enum.GetValues(typeof(AppColor)))
-            {
-                Color value = invariantTheme.GetColor(name);
-                value.Should().NotBe(Color.Empty);
-
-                Color defaultValue = AppColorDefaults.GetBy(name);
-                value.ToArgb().Should().Be(defaultValue.ToArgb());
-            }
-        }
 
         [Test]
         public void Invariant_theme_colors_match_AppColorDefaults()
