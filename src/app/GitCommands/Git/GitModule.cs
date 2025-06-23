@@ -2559,8 +2559,13 @@ namespace GitCommands
             return resultCollection;
         }
 
-        public IReadOnlyList<GitItemStatus> GetTreeFiles(ObjectId commitId, bool full)
+        public IReadOnlyList<GitItemStatus> GetTreeFiles(ObjectId commitId, bool full, CancellationToken cancellationToken = default)
         {
+            if (commitId.IsArtificial)
+            {
+                return GetGrepFilesStatus(commitId, @"-e ""^""", applyAppSettings: false, cancellationToken);
+            }
+
             IEnumerable<INamedGitItem> tree = GetTree(commitId, full);
 
             List<GitItemStatus> list = tree

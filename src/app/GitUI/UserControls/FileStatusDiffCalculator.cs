@@ -95,7 +95,7 @@ namespace GitUI
                             ? module.GetDiffFilesWithSubmodulesStatus(firstId: null, selectedRev.ObjectId, parentToSecond: null, cancellationToken)
 
                             // No parent for the initial commit
-                            : module.GetTreeFiles(selectedRev.TreeGuid, full: true)));
+                            : module.GetTreeFiles(selectedRev.TreeGuid, full: true, cancellationToken)));
                 }
                 else
                 {
@@ -309,14 +309,14 @@ namespace GitUI
 
         private FileStatusWithDescription? GetGrepItemStatuses(GitRevision selectedRev, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(_fileStatusDiffCalculatorInfo.GrepArguments))
+            if (string.IsNullOrEmpty(_fileStatusDiffCalculatorInfo.GrepArguments) && !_fileStatusDiffCalculatorInfo.FileTreeMode)
             {
                 return null;
             }
 
             IGitModule module = GetModule();
-            IReadOnlyList<GitItemStatus> statuses = !selectedRev.IsArtificial && _fileStatusDiffCalculatorInfo.GrepArguments == @"-e ""^"""
-                ? module.GetTreeFiles(selectedRev.ObjectId, full: true)
+            IReadOnlyList<GitItemStatus> statuses = string.IsNullOrEmpty(_fileStatusDiffCalculatorInfo.GrepArguments)
+                ? module.GetTreeFiles(selectedRev.ObjectId, full: true, cancellationToken)
                 : module.GetGrepFilesStatus(selectedRev.ObjectId, _fileStatusDiffCalculatorInfo.GrepArguments, applyAppSettings: !_fileStatusDiffCalculatorInfo.FileTreeMode, cancellationToken);
 
             if (_fileStatusDiffCalculatorInfo.FileTreeMode)

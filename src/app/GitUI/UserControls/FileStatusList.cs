@@ -328,7 +328,7 @@ namespace GitUI
                 Toolbar.Visible = false;
                 lblSplitter.Height = DpiUtil.Scale(1);
                 SetFindInCommitFilesGitGrepVisibilityImpl(AppSettings.ShowFindInCommitFilesGitGrep.Value);
-                _diffCalculator.SetGrep(@"-e ""^""", fileTreeMode: true);
+                _diffCalculator.SetGrep("", fileTreeMode: true);
                 GroupByRevision = false;
                 FileStatusListView.ShowRootLines = true;
             }
