@@ -83,21 +83,7 @@ namespace GitUI
                 // If the grid is filtered, parents may be rewritten
                 GitRevision actualRev = GetActualRevisionForRevision(selectedRev);
 
-                if (actualRev.ParentIds is null || actualRev.ParentIds.Count == 0)
-                {
-                    fileStatusDescs.Add(new FileStatusWithDescription(
-                        firstRev: null,
-                        secondRev: selectedRev,
-                        summary: GetDescriptionForRevision(selectedRev.ObjectId),
-                        statuses: selectedRev.TreeGuid is null
-
-                            // likely index commit without HEAD
-                            ? module.GetDiffFilesWithSubmodulesStatus(firstId: null, selectedRev.ObjectId, parentToSecond: null, cancellationToken)
-
-                            // No parent for the initial commit
-                            : module.GetTreeFiles(selectedRev.TreeGuid, full: true, cancellationToken)));
-                }
-                else
+                if (actualRev.ParentIds?.Count is > 0)
                 {
                     // Get the parents for the selected revision
                     // Exclude the optional third group with the diff to the orphan commit containing the untracked files of a stash
@@ -112,6 +98,20 @@ namespace GitUI
                                 secondRev: selectedRev,
                                 summary: TranslatedStrings.DiffWithParent + GetDescriptionForRevision(parentId),
                                 statuses: module.GetDiffFilesWithSubmodulesStatus(parentId, selectedRev.ObjectId, actualRev.ParentIds[0], cancellationToken))));
+                }
+                else
+                {
+                    fileStatusDescs.Add(new FileStatusWithDescription(
+                        firstRev: null,
+                        secondRev: selectedRev,
+                        summary: GetDescriptionForRevision(selectedRev.ObjectId),
+                        statuses: selectedRev.TreeGuid is null
+
+                            // likely index commit without HEAD
+                            ? module.GetDiffFilesWithSubmodulesStatus(firstId: null, selectedRev.ObjectId, parentToSecond: null, cancellationToken)
+
+                            // No parent for the initial commit, show files
+                            : module.GetTreeFiles(selectedRev.TreeGuid, full: true, cancellationToken)));
                 }
 
                 // Show combined (merge conflicts) when a single merge commit is selected
