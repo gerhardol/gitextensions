@@ -2031,17 +2031,12 @@ namespace GitUI
                 // delay to handle keypresses
                 await Task.Delay(delay, cancellationToken);
                 string searchArg = search;
-                if (_isFileTreeMode && string.IsNullOrWhiteSpace(searchArg))
-                {
-                    searchArg = "^";
-                }
-
                 if (!string.IsNullOrWhiteSpace(searchArg) && !GrepStringRegex().IsMatch(searchArg))
                 {
                     searchArg = $@"-e ""{searchArg}""";
                 }
 
-                _diffCalculator.SetGrep(searchArg, fileTreeMode: false);
+                _diffCalculator.SetGrep(searchArg, fileTreeMode: _isFileTreeMode && string.IsNullOrWhiteSpace(searchArg));
                 IReadOnlyList<FileStatusWithDescription> gitItemStatusesWithDescription = _diffCalculator.Calculate(prevList: GitItemStatusesWithDescription, refreshDiff: false, refreshGrep: true, cancellationToken);
 
                 await this.SwitchToMainThreadAsync(cancellationToken);
