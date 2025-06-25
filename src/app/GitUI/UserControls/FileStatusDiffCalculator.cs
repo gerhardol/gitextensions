@@ -316,7 +316,7 @@ namespace GitUI
 
             IGitModule module = GetModule();
             IReadOnlyList<GitItemStatus> statuses = string.IsNullOrEmpty(_fileStatusDiffCalculatorInfo.GrepArguments)
-                ? FakeGrepResult(module.GetTreeFiles(selectedRev.ObjectId, full: true, cancellationToken))
+                ? module.GetTreeFiles(selectedRev.ObjectId, full: true, cancellationToken)
                 : module.GetGrepFilesStatus(selectedRev.ObjectId, _fileStatusDiffCalculatorInfo.GrepArguments, applyAppSettings: true, cancellationToken);
 
             if (_fileStatusDiffCalculatorInfo.FileTreeMode)
@@ -335,16 +335,6 @@ namespace GitUI
                                summary: $"{_grepSummaryPrefix}{_fileStatusDiffCalculatorInfo.GrepArguments} {GetDescriptionForRevision(selectedRev.ObjectId)}",
                                statuses,
                                iconName: GitGrepIconName);
-
-            static IReadOnlyList<GitItemStatus> FakeGrepResult(IReadOnlyList<GitItemStatus> statuses)
-            {
-                foreach (GitItemStatus status in statuses)
-                {
-                    status.GrepString = "^"; // must not be not empty in order to show file icons
-                }
-
-                return statuses;
-            }
         }
 
         private string GetDescriptionForRevision(ObjectId objectId)

@@ -1436,9 +1436,12 @@ namespace GitUI
                     return imageIndex;
                 }
 
-                string imageKey = gitItemStatus.IsStatusOnly || !string.IsNullOrWhiteSpace(gitItemStatus.ErrorMessage)
-                    ? gitItemStatus == noItemStatuses[0] && !isGitGrep ? nameof(Images.FileStatusCopiedSame) : nameof(Images.FileStatusUnknown)
-                    : GetItemImageKey(gitItemStatus);
+                // FileTree/grep images are added async to _imageListData
+                string imageKey = isGitGrep
+                    ? nameof(ImageListData.DefaultFileImage)
+                    : gitItemStatus.IsStatusOnly || !string.IsNullOrWhiteSpace(gitItemStatus.ErrorMessage)
+                        ? gitItemStatus == noItemStatuses[0] ? nameof(Images.FileStatusCopiedSame) : nameof(Images.FileStatusUnknown)
+                        : GetItemImageKey(gitItemStatus);
                 return _imageListData.StateImageIndexMap.TryGetValue(imageKey, out int value)
                     ? value
                     : _imageListData.StateImageIndexMap[nameof(Images.FileStatusUnknown)];
