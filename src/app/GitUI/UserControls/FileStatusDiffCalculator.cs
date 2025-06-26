@@ -319,16 +319,6 @@ namespace GitUI
                 ? module.GetTreeFiles(selectedRev.ObjectId, full: true, cancellationToken)
                 : module.GetGrepFilesStatus(selectedRev.ObjectId, _fileStatusDiffCalculatorInfo.GrepArguments, applyAppSettings: true, cancellationToken);
 
-            if (_fileStatusDiffCalculatorInfo.FileTreeMode)
-            {
-                List<GitItemStatus> statusesWithSubmodules = new(statuses);
-                statuses = statusesWithSubmodules;
-                foreach (string submodulePath in module.GetSubmodulesLocalPaths(recursive: false))
-                {
-                    statusesWithSubmodules.Add(new GitItemStatus(submodulePath) { IsSubmodule = true });
-                }
-            }
-
             return new FileStatusWithDescription(
                                firstRev: null,
                                secondRev: selectedRev,

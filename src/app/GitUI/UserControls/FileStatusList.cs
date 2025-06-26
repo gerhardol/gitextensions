@@ -1390,7 +1390,8 @@ namespace GitUI
                     item.Name = $"{item.Name}/";
                 }
 
-                listItem.ImageIndex = GetItemImageIndex(item, FileStatusDiffCalculator.IsGrepItemStatuses(fileStatusWithDescription));
+                bool isGitGrep = FileStatusDiffCalculator.IsGrepItemStatuses(fileStatusWithDescription);
+                listItem.ImageIndex = GetItemImageIndex(item, isGitGrep);
                 listItem.SelectedImageIndex = listItem.ImageIndex;
 
                 if (item.IsSubmodule
@@ -1411,7 +1412,7 @@ namespace GitUI
 
                         await activeForm.SwitchToMainThreadAsync();
 
-                        listItem.ImageIndex = GetItemImageIndex(capturedItem, isGitGrep: false);
+                        listItem.ImageIndex = GetItemImageIndex(capturedItem, isGitGrep);
                         listItem.SelectedImageIndex = listItem.ImageIndex;
                         listItem.Text = AppendItemSubmoduleStatus(listItem.Text, capturedItem);
                     });
@@ -1431,17 +1432,31 @@ namespace GitUI
 
             int GetItemImageIndex(GitItemStatus gitItemStatus, bool isGitGrep)
             {
-                if (isGitGrep && Path.GetExtension(gitItemStatus.Name) is string extension && _imageListData.StateImageIndexMap.TryGetValue(extension, out int imageIndex))
+                string imageKey;
+                if (isGitGrep)
                 {
-                    return imageIndex;
+                    if (gitItemStatus.IsSubmodule)
+                    {
+                        imageKey = GetSubmoduleItemImageKey(gitItemStatus);
+                    }
+                    else if (Path.GetExtension(gitItemStatus.Name) is string extension && _imageListData.StateImageIndexMap.TryGetValue(extension, out int imageIndex))
+                    {
+                        // The extension is cached
+                        return imageIndex;
+                    }
+                    else
+                    {
+                        // placeholder, to be added to _imageListData
+                        imageKey = nameof(ImageListData.DefaultFileImage);
+                    }
+                }
+                else
+                {
+                    imageKey = gitItemStatus.IsStatusOnly || !string.IsNullOrWhiteSpace(gitItemStatus.ErrorMessage)
+                                ? gitItemStatus == noItemStatuses[0] ? nameof(Images.FileStatusCopiedSame) : nameof(Images.FileStatusUnknown)
+                                : GetItemImageKey(gitItemStatus);
                 }
 
-                // FileTree/grep images are added async to _imageListData
-                string imageKey = isGitGrep
-                    ? nameof(ImageListData.DefaultFileImage)
-                    : gitItemStatus.IsStatusOnly || !string.IsNullOrWhiteSpace(gitItemStatus.ErrorMessage)
-                        ? gitItemStatus == noItemStatuses[0] ? nameof(Images.FileStatusCopiedSame) : nameof(Images.FileStatusUnknown)
-                        : GetItemImageKey(gitItemStatus);
                 return _imageListData.StateImageIndexMap.TryGetValue(imageKey, out int value)
                     ? value
                     : _imageListData.StateImageIndexMap[nameof(Images.FileStatusUnknown)];
@@ -1491,33 +1506,7 @@ namespace GitUI
 
             if (gitItemStatus.IsSubmodule)
             {
-                if (gitItemStatus.GetSubmoduleStatusAsync() is not Task<GitSubmoduleStatus> task
-                    || task is null
-                    || !task.IsCompleted
-                    || task.CompletedResult() is not GitSubmoduleStatus status
-                    || status is null)
-                {
-                    return gitItemStatus.IsDirty ? nameof(Images.SubmoduleDirty) : nameof(Images.SubmodulesManage);
-                }
-
-                return status.Status switch
-                {
-                    SubmoduleStatus.FastForward => status.IsDirty
-                        ? nameof(Images.SubmoduleRevisionUpDirty)
-                        : nameof(Images.SubmoduleRevisionUp),
-                    SubmoduleStatus.Rewind => status.IsDirty
-                        ? nameof(Images.SubmoduleRevisionDownDirty)
-                        : nameof(Images.SubmoduleRevisionDown),
-                    SubmoduleStatus.NewerTime => status.IsDirty
-                        ? nameof(Images.SubmoduleRevisionSemiUpDirty)
-                        : nameof(Images.SubmoduleRevisionSemiUp),
-                    SubmoduleStatus.OlderTime => status.IsDirty
-                        ? nameof(Images.SubmoduleRevisionSemiDownDirty)
-                        : nameof(Images.SubmoduleRevisionSemiDown),
-                    _ => status.IsDirty
-                        ? nameof(Images.SubmoduleDirty)
-                        : nameof(Images.FolderSubmodule)
-                };
+                GetSubmoduleItemImageKey(gitItemStatus);
             }
 
             if (gitItemStatus.IsChanged || (gitItemStatus.IsRenamed && gitItemStatus.RenameCopyPercentage != "100"))
@@ -1558,6 +1547,37 @@ namespace GitUI
 
             // Illegal flag combinations or no flags set?
             return nameof(Images.FileStatusUnknown);
+        }
+
+        private static string GetSubmoduleItemImageKey(GitItemStatus gitItemStatus)
+        {
+            if (gitItemStatus.GetSubmoduleStatusAsync() is not Task<GitSubmoduleStatus> task
+                || task is null
+                || !task.IsCompleted
+                || task.CompletedResult() is not GitSubmoduleStatus status
+                || status is null)
+            {
+                return gitItemStatus.IsDirty ? nameof(Images.SubmoduleDirty) : nameof(Images.SubmodulesManage);
+            }
+
+            return status.Status switch
+            {
+                SubmoduleStatus.FastForward => status.IsDirty
+                    ? nameof(Images.SubmoduleRevisionUpDirty)
+                    : nameof(Images.SubmoduleRevisionUp),
+                SubmoduleStatus.Rewind => status.IsDirty
+                    ? nameof(Images.SubmoduleRevisionDownDirty)
+                    : nameof(Images.SubmoduleRevisionDown),
+                SubmoduleStatus.NewerTime => status.IsDirty
+                    ? nameof(Images.SubmoduleRevisionSemiUpDirty)
+                    : nameof(Images.SubmoduleRevisionSemiUp),
+                SubmoduleStatus.OlderTime => status.IsDirty
+                    ? nameof(Images.SubmoduleRevisionSemiDownDirty)
+                    : nameof(Images.SubmoduleRevisionSemiDown),
+                _ => status.IsDirty
+                    ? nameof(Images.SubmoduleDirty)
+                    : nameof(Images.FolderSubmodule)
+            };
         }
 
         public void SelectPreviousVisibleItem()
