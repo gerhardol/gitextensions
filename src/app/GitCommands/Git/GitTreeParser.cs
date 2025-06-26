@@ -33,10 +33,13 @@ namespace GitCommands.Git
             // 100644 blob 7e4eb9dc6a1531a6ee37d8efa6bf570e4bf61146    README.md
             // 100644 blob 5b0965cd097b8c48b66dd456337852640fa429c8    stylecop.json
 
-            // Split on \0 too, as GitModule.GetTree uses `ls-tree -z` which uses null terminators
-            string[] items = tree.Split(Delimiters.NullAndLineFeed);
+            // Split on \0, as GitModule.GetTree uses `ls-tree -z`
+            IEnumerable<string> items = tree.LazySplit('\0');
 
-            return items.Select(ParseSingle).Where(item => item is not null)!;
+            return from item in items
+                   let parsed = ParseSingle(item)
+                   where parsed is not null
+                   select parsed;
         }
 
         public GitItem? ParseSingle(string? rawItem)

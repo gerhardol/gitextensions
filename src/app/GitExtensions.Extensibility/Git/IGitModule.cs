@@ -21,7 +21,7 @@ public interface IGitModule
 
     IReadOnlyList<IGitRef> GetRefs(RefsFilter getRef);
     IEnumerable<string> GetSettings(string setting);
-    IEnumerable<INamedGitItem> GetTree(ObjectId? commitId, bool full);
+    IEnumerable<INamedGitItem> GetTree(ObjectId? commitId, bool full, CancellationToken cancellationToken = default);
 
     /// <summary>
     ///  Loads the user-defined colors for the remote branches specific for the current repository.
