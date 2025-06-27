@@ -3193,7 +3193,7 @@ namespace GitCommands
             bool isArtificial = commitId?.IsArtificial is true;
             if (isArtificial && !full)
             {
-                throw new ArgumentOutOfRangeException(nameof(full), "Artificial commit requires fu.");
+                throw new ArgumentOutOfRangeException(nameof(full), "Artificial commit requires 'full'.");
             }
 
             GitArgumentBuilder args = isArtificial
