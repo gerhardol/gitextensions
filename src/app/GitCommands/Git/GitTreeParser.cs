@@ -35,11 +35,18 @@ namespace GitCommands.Git
 
             // Split on \0, as GitModule.GetTree uses `ls-tree -z`
             IEnumerable<string> items = tree.LazySplit('\0');
+            List<GitItem> result = new();
 
-            return from item in items
-                   let parsed = ParseSingle(item)
-                   where parsed is not null
-                   select parsed;
+            foreach (string item in items)
+            {
+                GitItem? parsed = ParseSingle(item);
+                if (parsed is not null)
+                {
+                    result.Add(parsed);
+                }
+            }
+
+            return result;
         }
 
         public GitItem? ParseSingle(string? rawItem)
