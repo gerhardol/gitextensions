@@ -671,13 +671,14 @@ namespace GitUI.Editor
         {
             if (file.TreeGuid is null)
             {
-                IEnumerable<IObjectGitItem> items = Module.GetGitItemTree(objectId, full: true, file.Name);
+                IEnumerable<IObjectGitItem> items = Module.GetTree(objectId, full: true, file.Name);
                 if (items.Count() == 1)
                 {
                     // set fields possibly not set from git-diff
                     // (git-status does not report submodule, assume IsSubmodule is not set if not TreeGuid is)
-                    file.IsSubmodule = items.First().ObjectType == GitObjectType.Commit;
-                    file.TreeGuid ??= items.First().ObjectId;
+                    IObjectGitItem gitObject = items.First();
+                    file.IsSubmodule = gitObject.ObjectType == GitObjectType.Commit;
+                    file.TreeGuid ??= gitObject.ObjectId;
                 }
             }
 
@@ -712,7 +713,6 @@ namespace GitUI.Editor
                     || (!file.Name.EndsWith(".diff", StringComparison.OrdinalIgnoreCase)
                        && !file.Name.EndsWith(".patch", StringComparison.OrdinalIgnoreCase));
                 FilePreamble = [];
-                string? fileText = Module.GetFileText(file.TreeGuid, Encoding, stripAnsiEscapeCodes);
                 return Module.GetFileText(file.TreeGuid, Encoding, stripAnsiEscapeCodes) is string s ? s : "";
             }
 

@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using System.Text.RegularExpressions;
 using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
