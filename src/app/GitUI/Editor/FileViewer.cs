@@ -669,13 +669,13 @@ namespace GitUI.Editor
         /// <returns>Task to view the item</returns>
         private Task ViewGitItemAsync(GitItemStatus file, ObjectId? objectId, FileStatusItem? item, int? line, Action? openWithDifftool)
         {
-            // Assume that IsSubmodule is set if TreeGuid is not null.
             if (file.TreeGuid is null)
             {
                 IEnumerable<INamedGitItem> items = Module.GetGitItemTree(objectId, full: true, file.Name);
                 if (items.Count() == 1 && items.First() is GitItem g)
                 {
-                    // set filelds possibly not set from git-diff
+                    // set fields possibly not set from git-diff
+                    // (git-status does not report submodule, assume IsSubmodule is not set if not TreeGuid is)
                     file.IsSubmodule = g.ObjectType == GitObjectType.Commit;
                     file.TreeGuid ??= g.ObjectId;
                 }
@@ -686,7 +686,7 @@ namespace GitUI.Editor
                 string? fullPath = _fullPathResolver.Resolve(file.Name);
                 if (string.IsNullOrEmpty(fullPath))
                 {
-                    return ViewTextAsync(file.Name, $"Cannot get treeId from Git for {file.Name} for commit {objectId}.");
+                    return ViewTextAsync(file.Name, $"Cannot get treeId from Git or path for {file.Name} for commit {objectId}.");
                 }
 
                 return ViewFileAsync(file.Name, file.IsSubmodule, item, line, openWithDifftool);
@@ -698,13 +698,13 @@ namespace GitUI.Editor
                 file.Name,
                 file.IsSubmodule,
                 getImage: () => ThreadHelper.JoinableTaskFactory.Run(GetImageAsync),
-                getFileText: GetFileTextIfBlobExists,
+                getFileText: GetFileText,
                 getSubmoduleText: () => LocalizationHelpers.GetSubmoduleText(Module, file.Name.TrimEnd('/'), sha, cache: objectId?.IsArtificial is false),
                 item: item,
                 line: line,
                 openWithDifftool: openWithDifftool);
 
-            string GetFileTextIfBlobExists()
+            string GetFileText()
             {
                 // If the file blob seem to be a diff file, get also escape sequences, that possibly are stored in the diff
                 // _viewMode is not set yet, similar check there
@@ -713,7 +713,7 @@ namespace GitUI.Editor
                        && !file.Name.EndsWith(".patch", StringComparison.OrdinalIgnoreCase));
                 FilePreamble = [];
                 string? fileText = Module.GetFileText(file.TreeGuid, Encoding, stripAnsiEscapeCodes);
-                return file.TreeGuid is not null && Module.GetFileText(file.TreeGuid, Encoding, stripAnsiEscapeCodes) is string s ? s : "";
+                return Module.GetFileText(file.TreeGuid, Encoding, stripAnsiEscapeCodes) is string s ? s : "";
             }
 
             async Task<Image?> GetImageAsync()
