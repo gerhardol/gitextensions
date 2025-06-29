@@ -20,7 +20,7 @@ namespace GitCommands.Git
         {
             if (string.IsNullOrWhiteSpace(tree))
             {
-                return Enumerable.Empty<GitItem>();
+                return [];
             }
 
             // $ git ls-tree HEAD
@@ -33,20 +33,7 @@ namespace GitCommands.Git
             // 100644 blob 7e4eb9dc6a1531a6ee37d8efa6bf570e4bf61146    README.md
             // 100644 blob 5b0965cd097b8c48b66dd456337852640fa429c8    stylecop.json
 
-            // Split on \0, as GitModule.GetTree uses `ls-tree -z`
-            IEnumerable<string> items = tree.LazySplit('\0');
-            List<GitItem> result = new();
-
-            foreach (string item in items)
-            {
-                GitItem? parsed = ParseSingle(item);
-                if (parsed is not null)
-                {
-                    result.Add(parsed);
-                }
-            }
-
-            return result;
+            return tree.LazySplit('\0').Select(ParseSingle).WhereNotNull();
         }
 
         public GitItem? ParseSingle(string? rawItem)
