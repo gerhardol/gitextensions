@@ -671,7 +671,7 @@ namespace GitUI.Editor
         {
             if (file.TreeGuid is null)
             {
-                IEnumerable<IObjectGitItem> items = Module.GetTree(objectId, full: true, file.Name);
+                List<IObjectGitItem> items = Module.GetTree(objectId, full: true, file.Name).ToList();
                 if (items.Count() == 1)
                 {
                     // set fields possibly not set from git-diff
