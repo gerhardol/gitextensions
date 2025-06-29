@@ -2561,10 +2561,10 @@ namespace GitCommands
 
         public IReadOnlyList<GitItemStatus> GetTreeFiles(ObjectId commitId, bool full, CancellationToken cancellationToken = default)
         {
-            IEnumerable<INamedGitItem> tree = GetGitItemTree(commitId, full, "", cancellationToken);
+            IEnumerable<IObjectGitItem> tree = GetGitItemTree(commitId, full, "", cancellationToken);
 
             List<GitItemStatus> list = new(tree is ICollection<GitItem> collection ? collection.Count : 0);
-            foreach (GitItem file in tree)
+            foreach (IObjectGitItem file in tree)
             {
                 list.Add(new GitItemStatus(file.Name)
                 {
@@ -3185,10 +3185,10 @@ namespace GitCommands
                 .Split(Delimiters.NullAndLineFeed);
         }
 
-        public IEnumerable<INamedGitItem> GetTree(ObjectId? commitId, bool full, CancellationToken cancellationToken = default)
+        public IEnumerable<IObjectGitItem> GetTree(ObjectId? commitId, bool full, CancellationToken cancellationToken = default)
             => GetGitItemTree(commitId, full, "", cancellationToken);
 
-        public IEnumerable<INamedGitItem> GetGitItemTree(ObjectId? commitId, bool full, string? fileName, CancellationToken cancellationToken = default)
+        public IEnumerable<IObjectGitItem> GetGitItemTree(ObjectId? commitId, bool full, string? fileName, CancellationToken cancellationToken = default)
         {
             bool isArtificial = commitId?.IsArtificial is true;
             if (isArtificial && !full)
@@ -3509,9 +3509,9 @@ namespace GitCommands
 
         public ObjectId? GetFileBlobHash(string fileName, ObjectId objectId)
         {
-            IEnumerable<INamedGitItem> items = GetGitItemTree(objectId, full: true, fileName);
-            return items.Count() == 1 && items.First() is GitItem g && g.ObjectType == GitObjectType.Blob
-                ? g.ObjectId
+            IEnumerable<IObjectGitItem> items = GetGitItemTree(objectId, full: true, fileName);
+            return items.Count() == 1 && items.First().ObjectType == GitObjectType.Blob
+                ? items.First().ObjectId
                 : null;
         }
 
