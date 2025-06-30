@@ -2561,10 +2561,10 @@ namespace GitCommands
 
         public IReadOnlyList<GitItemStatus> GetTreeFiles(ObjectId commitId, bool full, CancellationToken cancellationToken = default)
         {
-            IEnumerable<IObjectGitItem> tree = GetTree(commitId, full, cancellationToken: cancellationToken);
+            IEnumerable<INamedGitItem> tree = GetTree(commitId, full, cancellationToken: cancellationToken);
 
             List<GitItemStatus> list = new(tree is ICollection<GitItem> collection ? collection.Count : 0);
-            foreach (IObjectGitItem file in tree)
+            foreach (INamedGitItem file in tree)
             {
                 list.Add(new GitItemStatus(file.Name)
                 {
@@ -3185,7 +3185,7 @@ namespace GitCommands
                 .Split(Delimiters.NullAndLineFeed);
         }
 
-        public IEnumerable<IObjectGitItem> GetTree(ObjectId? commitId, bool full, string fileName = "", CancellationToken cancellationToken = default)
+        public IEnumerable<INamedGitItem> GetTree(ObjectId? commitId, bool full, string fileName = "", CancellationToken cancellationToken = default)
         {
             bool isArtificial = commitId?.IsArtificial is true;
             if (isArtificial && !full)
@@ -3506,7 +3506,7 @@ namespace GitCommands
 
         public ObjectId? GetFileBlobHash(string fileName, ObjectId objectId)
         {
-            IEnumerable<IObjectGitItem> items = GetTree(objectId, full: true, fileName);
+            IEnumerable<INamedGitItem> items = GetTree(objectId, full: true, fileName);
             return items.Count() == 1 && items.First().ObjectType == GitObjectType.Blob
                 ? items.First().ObjectId
                 : null;

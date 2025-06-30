@@ -3,4 +3,5 @@
 public interface INamedGitItem : IGitItem
 {
     string Name { get; }
+    GitObjectType ObjectType { get; }
 }

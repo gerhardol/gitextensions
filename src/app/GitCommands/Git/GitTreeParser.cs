@@ -19,7 +19,7 @@ namespace GitCommands.Git
 
     public sealed partial class GitTreeParser : IGitTreeParser
     {
-        [GeneratedRegex(@"^(?<mode>\d{6}) (?<type>(blob|tree|commit)+) (?<objectid>[0-9a-f]{40})\s+(?<name>.+)$", RegexOptions.ExplicitCapture)]
+        [GeneratedRegex(@"^(?<mode>\d{6}) (?<type>(blob|tree|commit|tag)+) (?<objectid>[0-9a-f]{40})\s+(?<name>.+)$", RegexOptions.ExplicitCapture)]
         private static partial Regex TreeLineRegex();
 
         public string GitTreeFormat { get; } = "%(objectmode) %(objecttype) %(objectname)%x09%(path)";

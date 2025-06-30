@@ -127,6 +127,14 @@ namespace GitCommands
 
         public string Remote { get; }
 
+        /// <summary>
+        /// ObjectType for the refs/, almost all points to `commit`,
+        /// only an annotated tag is a `tag`.
+        /// This method is added to comply with <see cref="INamedGitItem"/> interface.
+        /// </summary>
+        public GitObjectType ObjectType => !IsTag ? GitObjectType.Commit
+            : throw new NotImplementedException($"{nameof(ObjectType)} for tags ({CompleteName}) is not implemented.");
+
         [AllowNull]
         public string TrackingRemote
         {

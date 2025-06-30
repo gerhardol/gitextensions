@@ -4,7 +4,7 @@ using GitExtensions.Extensibility.Git;
 namespace GitCommands.Git
 {
     [DebuggerDisplay("GitItem( {" + nameof(FileName) + "} )")]
-    public class GitItem : IObjectGitItem
+    public class GitItem : INamedGitItem
     {
         public GitItem(int mode, GitObjectType objectType, ObjectId objectId, string name)
         {

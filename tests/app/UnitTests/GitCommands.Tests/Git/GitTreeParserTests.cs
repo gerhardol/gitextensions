@@ -42,6 +42,11 @@ namespace GitCommandsTests.Git
             items[9].Mode.Should().Be(160000);
             items[9].Name.Should().Be("subm");
             items[9].ObjectType.Should().Be(GitObjectType.Commit);
+
+            items[10].Guid.Should().Be("ec097fc11ec61f502d5fced60e27d54b5fe326c0");
+            items[10].Mode.Should().Be(160000);
+            items[10].Name.Should().Be("subm");
+            items[10].ObjectType.Should().Be(GitObjectType.Commit);
         }
 
         [TestCase(null)]
@@ -83,6 +88,8 @@ namespace GitCommandsTests.Git
                 "100644 blob 1e53ed8f6759a92d4596af6a99ef04f1554bfd57	.travis.yml", "\0",
                 "040000 tree 58d57013ed2ef925fc1b3f6fe72ead258c522e75	Bin", "\0",
                 "160000 commit ec097fc11ec61f502d5fced60e27d54b5fe326c0	subm", "\0",
+                // tag cannot be listed with ls-tree/ls-files, but test parsing
+                "160000 tag 8d6ef9be6f449e8177da7a8f899c2e3eadd70c20    refs/tags/v6.0", "\0",
                 "040000 tree 0c7cce8981b980d03431f65b9b54c680a467fa2e	Build");
         }
     }

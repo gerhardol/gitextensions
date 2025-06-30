@@ -671,12 +671,12 @@ namespace GitUI.Editor
         {
             if (file.TreeGuid is null)
             {
-                IObjectGitItem[] items = Module.GetTree(objectId, full: true, file.Name).ToArray();
+                INamedGitItem[] items = Module.GetTree(objectId, full: true, file.Name).ToArray();
                 if (items.Count() == 1)
                 {
                     // set fields possibly not set from git-diff
                     // (git-status does not report submodule, assume IsSubmodule is not set if not TreeGuid is)
-                    IObjectGitItem gitObject = items[0];
+                    INamedGitItem gitObject = items[0];
                     file.IsSubmodule = gitObject.ObjectType == GitObjectType.Commit;
                     file.TreeGuid ??= gitObject.ObjectId;
                 }

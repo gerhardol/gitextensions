@@ -5,5 +5,6 @@ public enum GitObjectType
     None = 0,
     Commit,
     Tree,
-    Blob
+    Blob,
+    Tag
 }
