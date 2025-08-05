@@ -37,7 +37,8 @@ namespace GitCommands.Git
             if (submoduleStatus is not null && submoduleStatus.Commit != submoduleStatus.OldCommit)
             {
                 IGitModule submodule = submoduleStatus.GetSubmodule(module);
-                submoduleStatus.CheckSubmoduleStatus(submodule);
+                ICommitDataManager commitDataManager = new CommitDataManager(() => submodule);
+                submoduleStatus.Status = submoduleStatus.GetSubmoduleStatus((string commitId) => commitDataManager.GetCommitData(commitId));
             }
 
             return submoduleStatus;
@@ -139,6 +140,62 @@ namespace GitCommands.Git
             Validates.NotNull(name);
 
             return new GitSubmoduleStatus(name, oldName, isDirty, commitId, oldCommitId, addedCommits, removedCommits);
+        }
+
+        public static SubmoduleStatus GetSubmoduleStatus(this GitSubmoduleStatus submoduleStatus, Func<string, CommitData?> getCommitData)
+        {
+            if (submoduleStatus.OldCommit is null)
+            {
+                return SubmoduleStatus.NewSubmodule;
+            }
+
+            if (submoduleStatus.Commit is null)
+            {
+                return SubmoduleStatus.Unknown;
+            }
+
+            if (submoduleStatus.Commit == submoduleStatus.OldCommit)
+            {
+                return SubmoduleStatus.SameTime;
+            }
+
+            // From this on, the status is by default Modified
+
+            if (submoduleStatus.AddedCommits is null || submoduleStatus.RemovedCommits is null)
+            {
+                return SubmoduleStatus.Unknown;
+            }
+
+            if (submoduleStatus.AddedCommits > 0 && submoduleStatus.RemovedCommits == 0)
+            {
+                return SubmoduleStatus.FastForward;
+            }
+            else if (submoduleStatus.AddedCommits == 0 && submoduleStatus.RemovedCommits > 0)
+            {
+                return SubmoduleStatus.Rewind;
+            }
+
+            CommitData commitData = getCommitData(submoduleStatus.Commit.ToString());
+            CommitData oldCommitData = getCommitData(submoduleStatus.OldCommit.ToString());
+            if (commitData is null || oldCommitData is null)
+            {
+                return SubmoduleStatus.Unknown;
+            }
+
+            if (commitData.CommitDate > oldCommitData.CommitDate)
+            {
+                return SubmoduleStatus.NewerTime;
+            }
+            else if (commitData.CommitDate < oldCommitData.CommitDate)
+            {
+                return SubmoduleStatus.OlderTime;
+            }
+            else if (commitData.CommitDate == oldCommitData.CommitDate)
+            {
+                return SubmoduleStatus.SameTime;
+            }
+
+            return SubmoduleStatus.Unknown;
         }
     }
 }

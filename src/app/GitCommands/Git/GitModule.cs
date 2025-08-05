@@ -3658,6 +3658,7 @@ namespace GitCommands
                 : null;
         }
 
+        // To be removed when interface can be updated
         public SubmoduleStatus CheckSubmoduleStatus(ObjectId? commit, ObjectId? oldCommit, CommitData? data, CommitData? oldData, bool loadData)
         {
             // Submodule directory must exist to run commands, unknown otherwise

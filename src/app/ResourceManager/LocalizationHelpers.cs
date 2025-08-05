@@ -200,10 +200,11 @@ namespace ResourceManager
                 sb.AppendLine();
             }
 
+            // Rely of Git caching for commitdata (often not needed)
+            status.Status = status.GetSubmoduleStatus((string commitId) => commitDataManager.GetCommitData(commitId));
             sb.AppendLine();
-            SubmoduleStatus submoduleStatus = gitModule.CheckSubmoduleStatus(status.Commit, status.OldCommit, commitData, oldCommitData, loadData: false);
             sb.Append("Type: ");
-            switch (submoduleStatus)
+            switch (status.Status)
             {
                 case SubmoduleStatus.NewSubmodule:
                     sb.AppendLine("New submodule");
