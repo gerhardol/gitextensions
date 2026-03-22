@@ -178,6 +178,8 @@ internal class RepositoryHistoryUIService : IRepositoryHistoryUIService
 
     public void PopulateFavouriteRepositoriesMenu(ToolStripDropDownItem container)
     {
+        container.DropDownItems.Clear();
+
         IList<Repository> repositoryHistory = ThreadHelper.JoinableTaskFactory.Run(
             async () => (await GetOrCreateHistoryTask()).Favourite);
 
@@ -202,7 +204,7 @@ internal class RepositoryHistoryUIService : IRepositoryHistoryUIService
         splitter.SplitRecentRepos(repositoryHistory, pinnedRepos, allRecentRepos);
 
         List<string> pathsForBranchUpdate = new(pinnedRepos.Count + allRecentRepos.Count);
-        foreach (IGrouping<string, RecentRepoInfo> repo in pinnedRepos.Concat(allRecentRepos).GroupBy(k => k.Repo.Category).OrderBy(k => k.Key))
+        foreach (IGrouping<string, RecentRepoInfo> repo in pinnedRepos.Union(allRecentRepos).GroupBy(k => k.Repo.Category).OrderBy(k => k.Key))
         {
             AddFavouriteRepositories(repo.Key, repo);
         }
@@ -211,16 +213,8 @@ internal class RepositoryHistoryUIService : IRepositoryHistoryUIService
 
         void AddFavouriteRepositories(string? category, IEnumerable<RecentRepoInfo> repos)
         {
-            ToolStripMenuItem menuItemCategory;
-            if (!container.DropDownItems.ContainsKey(category))
-            {
-                menuItemCategory = new ToolStripMenuItem(category);
-                container.DropDownItems.Add(menuItemCategory);
-            }
-            else
-            {
-                menuItemCategory = (ToolStripMenuItem)container.DropDownItems[category];
-            }
+            ToolStripMenuItem menuItemCategory = new(category);
+            container.DropDownItems.Add(menuItemCategory);
 
             menuItemCategory.DropDown.SuspendLayout();
             int number = 0;
