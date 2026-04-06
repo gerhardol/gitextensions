@@ -169,9 +169,10 @@ internal sealed class AppSettingsTests
 
             const bool isISetting = true;
             const bool isNoISetting = false;
+            const bool isNullable = true;
             const bool isNotNullable = false;
 
-            yield return (properties[nameof(AppSettings.TelemetryEnabled)], null, true, isISetting);
+            yield return (properties[nameof(AppSettings.TelemetryEnabled)], null, isNullable, isISetting);
             yield return (properties[nameof(AppSettings.AutoNormaliseBranchName)], true, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.FileStatusFindInFilesGitGrepTypeIndex)], 1, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.FileStatusMergeSingleItemWithFolder)], false, isNotNullable, isISetting);
@@ -186,7 +187,7 @@ internal sealed class AppSettingsTests
             yield return (properties[nameof(AppSettings.ReverseGitColoring)], true, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.ShowErrorsWhenStagingFiles)], true, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.EnsureCommitMessageSecondLineEmpty)], true, isNotNullable, isISetting);
-            yield return (properties[nameof(AppSettings.LastCommitMessage)], string.Empty, true, isISetting);
+            yield return (properties[nameof(AppSettings.LastCommitMessage)], string.Empty, isNullable, isISetting);
             yield return (properties[nameof(AppSettings.CommitDialogNumberOfPreviousMessages)], 6, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.CommitDialogSelectStagedOnEnterMessage)], true, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.CommitDialogShowOnlyMyMessages)], false, isNotNullable, isISetting);
@@ -195,8 +196,8 @@ internal sealed class AppSettingsTests
             yield return (properties[nameof(AppSettings.ShowResetAllChanges)], true, isNotNullable, isISetting);
 
             yield return (properties[nameof(AppSettings.ShowConEmuTab)], true, isNotNullable, isISetting);
-            yield return (properties[nameof(AppSettings.ConEmuStyle)], "Default", true, isISetting);
-            yield return (properties[nameof(AppSettings.ConEmuTerminal)], "bash", true, isISetting);
+            yield return (properties[nameof(AppSettings.ConEmuStyle)], "Default", isNullable, isISetting);
+            yield return (properties[nameof(AppSettings.ConEmuTerminal)], "bash", isNullable, isISetting);
             yield return (properties[nameof(AppSettings.OutputHistoryDepth)], 20, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.OutputHistoryPanelVisible)], false, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.ShowOutputHistoryAsTab)], true, isNotNullable, isISetting);
@@ -222,9 +223,9 @@ internal sealed class AppSettingsTests
             yield return (properties[nameof(AppSettings.AvatarImageCacheDays)], 13, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.ShowAuthorAvatarInCommitInfo)], true, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.AvatarProvider)], AvatarProvider.None, isNotNullable, isNoISetting);
-            yield return (properties[nameof(AppSettings.Translation)], string.Empty, true, isISetting);
+            yield return (properties[nameof(AppSettings.Translation)], string.Empty, isNullable, isISetting);
             yield return (properties[nameof(AppSettings.UserProfileHomeDir)], false, isNotNullable, isISetting);
-            yield return (properties[nameof(AppSettings.CustomHomeDir)], string.Empty, true, isISetting);
+            yield return (properties[nameof(AppSettings.CustomHomeDir)], string.Empty, isNullable, isISetting);
             yield return (properties[nameof(AppSettings.EnableAutoScale)], true, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.CloseCommitDialogAfterCommit)], true, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.CloseCommitDialogAfterLastCommit)], true, isNotNullable, isISetting);
@@ -256,9 +257,9 @@ internal sealed class AppSettingsTests
             yield return (properties[nameof(AppSettings.DontConfirmAmend)], false, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.DontConfirmCommitIfNoBranch)], false, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.ConfirmBranchCheckout)], false, isNotNullable, isISetting);
-            yield return (properties[nameof(AppSettings.AutoPopStashAfterPull)], null, true, isISetting);
-            yield return (properties[nameof(AppSettings.AutoPopStashAfterCheckoutBranch)], null, true, isISetting);
-            yield return (properties[nameof(AppSettings.AutoPullOnPushRejectedAction)], null, true, isISetting);
+            yield return (properties[nameof(AppSettings.AutoPopStashAfterPull)], null, isNullable, isISetting);
+            yield return (properties[nameof(AppSettings.AutoPopStashAfterCheckoutBranch)], null, isNullable, isISetting);
+            yield return (properties[nameof(AppSettings.AutoPullOnPushRejectedAction)], null, isNullable, isISetting);
             yield return (properties[nameof(AppSettings.DontConfirmPushNewBranch)], false, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.DontConfirmAddTrackingRef)], false, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.DontConfirmCommitAfterConflictsResolved)], false, isNotNullable, isISetting);
@@ -275,8 +276,8 @@ internal sealed class AppSettingsTests
             yield return (properties[nameof(AppSettings.ShowSuperprojectTags)], false, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.ShowSuperprojectBranches)], true, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.ShowSuperprojectRemoteBranches)], false, isNotNullable, isISetting);
-            yield return (properties[nameof(AppSettings.UpdateSubmodulesOnCheckout)], null, true, isISetting);
-            yield return (properties[nameof(AppSettings.DontConfirmUpdateSubmodulesOnCheckout)], null, true, isISetting);
+            yield return (properties[nameof(AppSettings.UpdateSubmodulesOnCheckout)], null, isNullable, isISetting);
+            yield return (properties[nameof(AppSettings.DontConfirmUpdateSubmodulesOnCheckout)], null, isNullable, isISetting);
             yield return (properties[nameof(AppSettings.ShowGitCommandLine)], false, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.ShowStashCount)], false, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.ShowAheadBehindData)], true, isNotNullable, isISetting);
@@ -301,7 +302,7 @@ internal sealed class AppSettingsTests
             yield return (properties[nameof(AppSettings.BranchFilterEnabled)], false, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.ShowOnlyFirstParent)], false, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.CommitDialogSelectionFilter)], false, isNotNullable, isISetting);
-            yield return (properties[nameof(AppSettings.DefaultCloneDestinationPath)], string.Empty, true, isISetting);
+            yield return (properties[nameof(AppSettings.DefaultCloneDestinationPath)], string.Empty, isNullable, isISetting);
             yield return (properties[nameof(AppSettings.RevisionGridQuickSearchTimeout)], 4000, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.MaxRevisionGraphCommits)], 100000, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.ShowDiffForAllParents)], true, isNotNullable, isISetting);
@@ -311,7 +312,7 @@ internal sealed class AppSettingsTests
             yield return (properties[nameof(AppSettings.GitGrepUserArguments)], "", isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.GitGrepIgnoreCase)], false, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.GitGrepMatchWholeWord)], false, isNotNullable, isISetting);
-            yield return (properties[nameof(AppSettings.RecentWorkingDir)], string.Empty, true, isISetting);
+            yield return (properties[nameof(AppSettings.RecentWorkingDir)], string.Empty, isNullable, isISetting);
             yield return (properties[nameof(AppSettings.StartWithRecentWorkingDir)], false, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.AutoStartPageant)], true, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.MarkIllFormedLinesInCommitMsg)], true, isNotNullable, isISetting);
@@ -323,7 +324,7 @@ internal sealed class AppSettingsTests
             yield return (properties[nameof(AppSettings.RenderGraphWithDiagonals)], true, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.StraightenGraphDiagonals)], true, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.StraightenGraphSegmentsLimit)], 80, isNotNullable, isISetting);
-            yield return (properties[nameof(AppSettings.LastFormatPatchDir)], string.Empty, true, isISetting);
+            yield return (properties[nameof(AppSettings.LastFormatPatchDir)], string.Empty, isNullable, isISetting);
             yield return (properties[nameof(AppSettings.IgnoreWhitespaceKind)], IgnoreWhitespaceKind.None, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.RememberIgnoreWhiteSpacePreference)], true, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.ShowNonPrintingChars)], false, isNotNullable, isISetting);
@@ -336,14 +337,14 @@ internal sealed class AppSettingsTests
             yield return (properties[nameof(AppSettings.ShowSyntaxHighlightingInDiff)], true, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.RememberShowSyntaxHighlightingInDiff)], true, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.ShowRepoCurrentBranch)], true, isNotNullable, isISetting);
-            yield return (properties[nameof(AppSettings.OwnScripts)], string.Empty, true, isISetting);
+            yield return (properties[nameof(AppSettings.OwnScripts)], string.Empty, isNullable, isISetting);
             yield return (properties[nameof(AppSettings.RecursiveSubmodules)], 1, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.ShorteningRecentRepoPathStrategy)], ShorteningRecentRepoPathStrategy.None, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.MaxTopRepositories)], 0, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.RecentRepositoriesHistorySize)], 30, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.HideTopRepositoriesFromRecentList)], false, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.RecentReposComboMinWidth)], 0, isNotNullable, isISetting);
-            yield return (properties[nameof(AppSettings.SerializedHotkeys)], string.Empty, true, isISetting);
+            yield return (properties[nameof(AppSettings.SerializedHotkeys)], string.Empty, isNullable, isISetting);
             yield return (properties[nameof(AppSettings.SortTopRepos)], false, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.SortRecentRepos)], false, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.DontCommitMerge)], false, isNotNullable, isISetting);
@@ -352,13 +353,13 @@ internal sealed class AppSettingsTests
             yield return (properties[nameof(AppSettings.CommitValidationSecondLineMustBeEmpty)], false, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.CommitValidationIndentAfterFirstLine)], true, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.CommitValidationAutoWrap)], true, isNotNullable, isISetting);
-            yield return (properties[nameof(AppSettings.CommitValidationRegEx)], string.Empty, true, isISetting);
-            yield return (properties[nameof(AppSettings.CommitTemplates)], string.Empty, true, isISetting);
+            yield return (properties[nameof(AppSettings.CommitValidationRegEx)], string.Empty, isNullable, isISetting);
+            yield return (properties[nameof(AppSettings.CommitTemplates)], string.Empty, isNullable, isISetting);
             yield return (properties[nameof(AppSettings.CreateLocalBranchForRemote)], false, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.UseFormCommitMessage)], true, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.CommitAutomaticallyAfterCherryPick)], false, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.AddCommitReferenceToCherryPick)], false, isNotNullable, isISetting);
-            yield return (properties[nameof(AppSettings.LastUpdateCheck)], default(DateTime), false, isISetting);
+            yield return (properties[nameof(AppSettings.LastUpdateCheck)], default(DateTime), isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.CheckForUpdates)], true, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.CheckForReleaseCandidates)], false, isNotNullable, isISetting);
             yield return (properties[nameof(AppSettings.OmitUninterestingDiff)], false, isNotNullable, isISetting);
