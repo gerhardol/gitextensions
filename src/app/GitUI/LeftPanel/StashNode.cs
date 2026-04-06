@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using GitCommands;
 using GitExtensions.Extensibility.Git;
 using GitUI.Properties;
@@ -55,7 +55,7 @@ internal sealed class StashNode : BaseRevisionNode
         using (new WaitCursorScope())
         {
             TaskDialogButton result;
-            if (AppSettings.DontConfirmStashDrop)
+            if (AppSettings.DontConfirmStashDrop.Value)
             {
                 result = TaskDialogButton.Yes;
             }
@@ -79,7 +79,7 @@ internal sealed class StashNode : BaseRevisionNode
 
                 if (page.Verification.Checked)
                 {
-                    AppSettings.DontConfirmStashDrop = true;
+                    AppSettings.DontConfirmStashDrop.Value = true;
                 }
             }
 
