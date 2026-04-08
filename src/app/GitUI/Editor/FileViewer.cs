@@ -724,7 +724,7 @@ public partial class FileViewer : GitModuleControl
                 file.IsSubmodule,
                 getImage: () => ThreadHelper.JoinableTaskFactory.Run(GetImageAsync),
                 getFileText: GetFileText,
-                getSubmoduleText: () => SubmoduleResources.GetSubmoduleText(Module, file.Name.TrimEnd('/'), blobId.ToString()),
+                getSubmoduleText: () => SubmoduleResources.GetSubmoduleText(Module, file.Name.TrimEnd('/'), blobId.Value.ToString()),
                 item: item,
                 line: line,
                 openWithDifftool: openWithDifftool,
@@ -738,14 +738,14 @@ public partial class FileViewer : GitModuleControl
                 || (!file.Name.EndsWith(".diff", StringComparison.OrdinalIgnoreCase)
                    && !file.Name.EndsWith(".patch", StringComparison.OrdinalIgnoreCase));
             FilePreamble = [];
-            return Module.GetFileText(blobId, Encoding, stripAnsiEscapeCodes) ?? "";
+            return Module.GetFileText(blobId.Value, Encoding, stripAnsiEscapeCodes) ?? "";
         }
 
         async Task<Image?> GetImageAsync()
         {
             try
             {
-                using MemoryStream? stream = await Module.GetFileStreamAsync(blobId.ToString(), cancellationToken: default);
+                using MemoryStream? stream = await Module.GetFileStreamAsync(blobId.Value.ToString(), cancellationToken: default);
                 if (stream is not null)
                 {
                     return CreateImage(file.Name, stream);

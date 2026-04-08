@@ -125,7 +125,7 @@ public partial class BranchSelector : GitModuleControl
 
             ThreadHelper.FileAndForget(async () =>
             {
-                string text = Module.GetCommitCountString(currentCheckout, branchName);
+                string text = Module.GetCommitCountString(currentCheckout.Value, branchName);
                 await this.SwitchToMainThreadAsync();
                 lbChanges.Text = text;
             });

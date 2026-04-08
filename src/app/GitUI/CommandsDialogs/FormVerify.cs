@@ -545,7 +545,7 @@ public sealed partial class FormVerify : GitModuleForm
 
             if (parent is not null)
             {
-                ClipboardUtil.TrySetText(parent.ToString());
+                ClipboardUtil.TrySetText(parent.Value.ToString());
             }
         }
     }

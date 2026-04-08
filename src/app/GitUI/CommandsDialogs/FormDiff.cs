@@ -69,8 +69,8 @@ public partial class FormDiff : GitModuleForm
         }
         else
         {
-            ObjectId? mergeBase = Module.GetMergeBase(firstMergeId, secondMergeId);
-            _mergeBase = mergeBase is not null ? new GitRevision(mergeBase) : null;
+            ObjectId? mergeBase = Module.GetMergeBase(firstMergeId.Value, secondMergeId.Value);
+            _mergeBase = mergeBase is not null ? new GitRevision(mergeBase.Value) : null;
         }
 
         ckCompareToMergeBase.Text = $"{_ckCompareToMergeBase} ({_mergeBase?.ObjectId.ToShortString()})";
@@ -222,7 +222,7 @@ public partial class FormDiff : GitModuleForm
         {
             displayStr = form.BranchName;
             ObjectId? objectId = Module.RevParse(form.BranchName!);
-            revision = objectId is null ? null : new GitRevision(objectId);
+            revision = objectId is null ? null : new GitRevision(objectId.Value);
             PopulateDiffFiles();
         }
     }

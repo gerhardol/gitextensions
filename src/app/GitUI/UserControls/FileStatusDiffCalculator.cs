@@ -122,7 +122,7 @@ public sealed partial class FileStatusDiffCalculator
                         ? module.GetDiffFilesWithSubmodulesStatus(firstId: null, selectedRev.ObjectId, parentToSecond: null, cancellationToken: cancellationToken)
 
                         // No parent for the initial commit, show files and explicitly set IsNew
-                        : module.GetTreeFiles(selectedRev.TreeGuid, full: true, cancellationToken)
+                        : module.GetTreeFiles(selectedRev.TreeGuid.Value, full: true, cancellationToken)
                             .Select(i =>
                             {
                                 i.IsNew = true;
@@ -168,8 +168,8 @@ public sealed partial class FileStatusDiffCalculator
         }
 
         // Get merge base commit, use HEAD for artificial
-        ObjectId? firstRevHead = GetRevisionOrHead(firstRev, headId!);
-        ObjectId? selectedRevHead = GetRevisionOrHead(selectedRev, headId!);
+        ObjectId firstRevHead = GetRevisionOrHead(firstRev, headId!.Value);
+        ObjectId selectedRevHead = GetRevisionOrHead(selectedRev, headId!.Value);
         ObjectId? baseRevId = null;
         if (revisions.Count != 3)
         {
@@ -207,10 +207,10 @@ public sealed partial class FileStatusDiffCalculator
             // Four: Two ranges must be selected
             else
             {
-                baseA = GetMergeBase(GetRevisionOrHead(revisions[3], headId!), firstRevHead);
+                baseA = GetMergeBase(GetRevisionOrHead(revisions[3], headId!.Value), firstRevHead);
                 if (baseA == revisions[3].ObjectId)
                 {
-                    baseB = GetMergeBase(GetRevisionOrHead(revisions[1], headId!), selectedRevHead);
+                    baseB = GetMergeBase(GetRevisionOrHead(revisions[1], headId!.Value), selectedRevHead);
                     if (baseB != revisions[1].ObjectId)
                     {
                         baseB = null;
@@ -270,7 +270,7 @@ public sealed partial class FileStatusDiffCalculator
                 : DiffBranchStatus.UnequalChange;
         }
 
-        GitRevision revBase = new(baseRevId);
+        GitRevision revBase = new(baseRevId.Value);
         fileStatusDescs.Add(new FileStatusWithDescription(
             firstRev: revBase,
             secondRev: selectedRev,
@@ -296,7 +296,7 @@ public sealed partial class FileStatusDiffCalculator
 
         // first and selected has a common merge base and count must be available
         // Only a printout, so no Validates
-        string desc = $"{TranslatedStrings.DiffRange} {baseToFirstCount ?? -1}↓ {baseToSecondCount ?? -1}↑ BASE {GetDescriptionForRevision(baseRevId)}";
+        string desc = $"{TranslatedStrings.DiffRange} {baseToFirstCount ?? -1}↓ {baseToSecondCount ?? -1}↑ BASE {GetDescriptionForRevision(baseRevId.Value)}";
         fileStatusDescs.Insert(index: 1, new FileStatusWithDescription(
             firstRev: firstRev,
             secondRev: selectedRev,
@@ -313,7 +313,7 @@ public sealed partial class FileStatusDiffCalculator
                 return null;
             }
 
-            return module.GetMergeBase(a, b);
+            return module.GetMergeBase(a.Value, b.Value);
         }
 
         static ObjectId GetRevisionOrHead(GitRevision rev, ObjectId headId)

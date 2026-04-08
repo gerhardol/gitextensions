@@ -14,7 +14,7 @@ public class RememberFileContextMenuControllerTests
     /// <param name="name">The git blob name</param>
     /// <param name="id">The commit id</param>
     /// <returns>The Git commit id for the item, to get a predictable output</returns>
-    private static ObjectId GetFileBlobHash(string name, ObjectId id)
+    private static ObjectId? GetFileBlobHash(string name, ObjectId id)
     {
         return id;
     }

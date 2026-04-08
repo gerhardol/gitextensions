@@ -1829,8 +1829,12 @@ public sealed partial class FormBrowse : GitModuleForm, IBrowseRepo
         {
             foreach (IGitRef branch in GetBranches())
             {
-                Validates.NotNull(branch.ObjectId);
-                bool isBranchVisible = ((ICheckRefs)RevisionGridControl).Contains(branch.ObjectId);
+                if (!branch.ObjectId.HasValue)
+                {
+                    throw new InvalidOperationException($"Branch '{branch.Name}' has no ObjectId.");
+                }
+
+                bool isBranchVisible = ((ICheckRefs)RevisionGridControl).Contains(branch.ObjectId.Value);
 
                 ToolStripItem toolStripItem = branchSelect.DropDownItems.Add(branch.Name);
                 Color effectiveBackColor = toolStripItem.BackColor.IsEmpty
@@ -2428,13 +2432,13 @@ public sealed partial class FormBrowse : GitModuleForm, IBrowseRepo
         {
             case "gotocommit":
                 Validates.NotNull(e.Data);
-                if (!Module.TryResolvePartialCommitId(e.Data, out ObjectId? commitId) || !RevisionGrid.SetSelectedRevision(commitId))
+                if (!Module.TryResolvePartialCommitId(e.Data, out ObjectId commitId))
                 {
-                    if (commitId is null)
-                    {
-                        return;
-                    }
+                    return;
+                }
 
+                if (!RevisionGrid.SetSelectedRevision(commitId))
+                {
                     // This may occur at various filters, like AppSettings.ShowOnlyFirstParent
                     // will hide other than the first parent.
                     MessageBoxes.RevisionFilteredInGrid(this, commitId);

@@ -59,9 +59,12 @@ internal sealed class LocalBranchTree : BaseRefTree
         {
             token.ThrowIfCancellationRequested();
 
-            Validates.NotNull(branch.ObjectId);
+            if (!branch.ObjectId.HasValue)
+            {
+                continue;
+            }
 
-            LocalBranchNode localBranchNode = new(this, branch.ObjectId, branch.Name, branch.Name == currentBranch, visible: true);
+            LocalBranchNode localBranchNode = new(this, branch.ObjectId.Value, branch.Name, branch.Name == currentBranch, visible: true);
 
             if (aheadBehindData?.TryGetValue(localBranchNode.FullPath, out AheadBehindData aheadBehind) is true)
             {

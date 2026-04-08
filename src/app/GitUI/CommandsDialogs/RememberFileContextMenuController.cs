@@ -110,7 +110,7 @@ public class RememberFileContextMenuController
         {
             // Must be referenced by blob - treeid is mutable.
             // File name presented in difftool will be blob or the other file
-            return getFileBlobHash?.Invoke(name, id)?.ToString();
+            return getFileBlobHash?.Invoke(name, id.Value)?.ToString();
         }
 
         // commit:path

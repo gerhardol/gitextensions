@@ -554,7 +554,7 @@ public sealed partial class FormFileHistory : GitModuleForm, IRevisionGridFileUp
         if (e.Command == "gotocommit")
         {
             Validates.NotNull(e.Data);
-            if (Module.TryResolvePartialCommitId(e.Data, out ObjectId? commitId))
+            if (Module.TryResolvePartialCommitId(e.Data, out ObjectId commitId))
             {
                 if (!RevisionGrid.SetSelectedRevision(commitId))
                 {

@@ -2,6 +2,7 @@
 using GitCommands.Git;
 using GitCommands.Git.Tag;
 using GitExtensions.Extensibility.Git;
+using NUnit.Framework.Legacy;
 
 namespace GitCommandsTests_Git;
 
@@ -25,8 +26,8 @@ partial class CommandsTests
     [Test]
     public void Validate_should_throw_if_tag_revision_invalid()
     {
-        GitCreateTagArgs args = new(TagName, null!);
-        ((Action)(() => Commands.CreateTag(args, TagMessageFile, PathUtil.ToPosixPath))).Should().Throw<ArgumentException>();
+        Action act = () => new GitCreateTagArgs(TagName, default);
+        act.Should().Throw<ArgumentException>();
     }
 
     [TestCase(null)]

@@ -15,6 +15,7 @@ public class GitItem : IObjectGitItem
     }
 
     public ObjectId ObjectId { get; }
+    ObjectId? IGitItem.ObjectId => ObjectId;
     public GitObjectType ObjectType { get; }
     public string Name { get; }
     public string FileName { get; set; }

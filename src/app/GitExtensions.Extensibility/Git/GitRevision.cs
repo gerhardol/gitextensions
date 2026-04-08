@@ -28,7 +28,12 @@ public sealed partial class GitRevision : IGitItem, INotifyPropertyChanged
 
     public GitRevision(ObjectId objectId)
     {
-        ObjectId = objectId ?? throw new ArgumentNullException(nameof(objectId));
+        if (objectId.IsZero)
+        {
+            throw new ArgumentException("ObjectId must not be the default (zero) value.", nameof(objectId));
+        }
+
+        ObjectId = objectId;
     }
 
     /// <summary>
@@ -41,6 +46,11 @@ public sealed partial class GitRevision : IGitItem, INotifyPropertyChanged
     }
 
     public ObjectId ObjectId { get; }
+
+    /// <summary>
+    /// Explicit interface implementation to satisfy the nullable <see cref="IGitItem.ObjectId"/> contract.
+    /// </summary>
+    ObjectId? IGitItem.ObjectId => ObjectId;
 
     public string Guid => ObjectId.ToString();
 

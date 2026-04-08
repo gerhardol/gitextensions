@@ -117,11 +117,6 @@ public sealed class CommitDataManager : ICommitDataManager
     {
         ArgumentNullException.ThrowIfNull(revision);
 
-        if (revision.ObjectId is null)
-        {
-            throw new ArgumentException($"Cannot have a null {nameof(GitRevision.ObjectId)}.", nameof(revision));
-        }
-
         return new CommitData(revision.ObjectId, revision.ParentIds,
             FormatUser(revision.Author, revision.AuthorEmail), revision.AuthorDate,
             FormatUser(revision.Committer, revision.CommitterEmail), revision.CommitDate,

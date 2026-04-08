@@ -131,7 +131,7 @@ public static partial class SubmoduleHelpers
             }
             else if (submodule.IsValidGitWorkingDir())
             {
-                (addedCommits, removedCommits) = submodule.GetCommitRangeDiffCount(commitId, oldCommitId);
+                (addedCommits, removedCommits) = submodule.GetCommitRangeDiffCount(commitId.Value, oldCommitId.Value);
             }
         }
 

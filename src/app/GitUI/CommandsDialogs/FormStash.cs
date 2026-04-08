@@ -258,10 +258,10 @@ public sealed partial class FormStash : GitModuleForm
             }
             else
             {
-                GitRevision headRev = new(headId);
+                GitRevision headRev = new(headId.Value);
                 GitRevision indexRev = new(ObjectId.IndexId)
                 {
-                    ParentIds = new[] { headId }
+                    ParentIds = new ObjectId[] { headId.Value }
                 };
                 List<GitItemStatus> indexItems = [.. gitItemStatuses.Where(item => item.Staged == StagedStatus.Index)];
                 List<GitItemStatus> workTreeItems = [.. gitItemStatuses.Where(item => item.Staged != StagedStatus.Index)];
@@ -271,14 +271,18 @@ public sealed partial class FormStash : GitModuleForm
         else
         {
             ObjectId? firstId = Module.RevParse(gitStash.Name + "^");
-            GitRevision? firstRev = firstId is null ? null : new(firstId);
+            GitRevision? firstRev = firstId is null ? null : new(firstId.Value);
 
             ObjectId? selectedId = Module.RevParse(gitStash.Name);
-            Validates.NotNull(selectedId);
-            GitRevision secondRev = new(selectedId);
+            if (selectedId is null)
+            {
+                throw new InvalidOperationException("selectedId must not be null");
+            }
+
+            GitRevision secondRev = new(selectedId.Value);
             if (firstId is not null)
             {
-                secondRev.ParentIds = new[] { firstId };
+                secondRev.ParentIds = new ObjectId[] { firstId.Value };
             }
 
             Stashed.SetDiffs(firstRev, secondRev, gitItemStatuses);

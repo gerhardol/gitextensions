@@ -416,7 +416,7 @@ public partial class FormRebase : GitExtensionsDialog
                 {
                     ObjectId? commit1 = UICommands.Module.RevParse(cboBranches.Text);
                     ObjectId? commit2 = UICommands.Module.RevParse("HEAD");
-                    mergeBaseCommitId = UICommands.Module.GetMergeBase(commit1!, commit2!)?.ToString();
+                    mergeBaseCommitId = UICommands.Module.GetMergeBase(commit1!.Value, commit2!.Value)?.ToString();
                 }
                 catch (Exception)
                 {

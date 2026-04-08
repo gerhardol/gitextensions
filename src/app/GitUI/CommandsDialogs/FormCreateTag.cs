@@ -87,7 +87,7 @@ public sealed partial class FormCreateTag : GitModuleForm
         }
 
         GitCreateTagArgs createTagArgs = new(textBoxTagName.Text,
-                                                 objectId,
+                                                 objectId.Value,
                                                  GetSelectedOperation(annotate.SelectedIndex),
                                                  tagMessage.Text,
                                                  textBoxGpgKey.Text,

@@ -231,13 +231,35 @@ public static class ArgumentBuilderExtensions
     /// <summary>
     /// Adds <paramref name="objectId"/> as a SHA-1 argument without allocating a string.
     /// </summary>
+    /// <param name="builder">The <see cref="ArgumentBuilder"/> to add arguments to.</param>
+    /// <param name="objectId">The SHA-1 object ID to add to the builder.</param>
+    /// <exception cref="ArgumentException"><paramref name="objectId"/> does not represent a real git object.</exception>
+    public static void Add(this ArgumentBuilder builder, ObjectId objectId)
+    {
+        if (objectId.IsZeroOrArtificial)
+        {
+            if (objectId.IsZero)
+            {
+                return;
+            }
+
+            throw new ArgumentException("Unexpected artificial commit in Git command: " + objectId);
+        }
+
+        Span<char> buffer = stackalloc char[ObjectId.Sha1CharCount];
+        objectId.WriteTo(buffer);
+        builder.Add((ReadOnlySpan<char>)buffer);
+    }
+
+    /// <summary>
+    /// Adds <paramref name="objectId"/> as a SHA-1 argument.
+    /// </summary>
     /// <remarks>
-    /// If <paramref name="objectId"/> is <c>null</c> then no change is made to the arguments.
+    /// If <paramref name="objectId"/> is <see langword="null"/> or zero, no change is made to the arguments.
     /// </remarks>
     /// <param name="builder">The <see cref="ArgumentBuilder"/> to add arguments to.</param>
-    /// <param name="objectId">The SHA-1 object ID to add to the builder, or <c>null</c>.</param>
+    /// <param name="objectId">The SHA-1 object ID to add to the builder, or <see langword="null"/>.</param>
     /// <exception cref="ArgumentException"><paramref name="objectId"/> represents an artificial commit.</exception>
-    [SkipLocalsInit]
     public static void Add(this ArgumentBuilder builder, ObjectId? objectId)
     {
         if (objectId is null)
@@ -245,14 +267,26 @@ public static class ArgumentBuilderExtensions
             return;
         }
 
-        if (objectId.IsArtificial)
+        builder.Add(objectId.Value);
+    }
+
+    /// <summary>
+    /// Adds a sequence of <paramref name="objectIds"/> to the builder.
+    /// </summary>
+    /// <param name="builder">The <see cref="ArgumentBuilder"/> to add arguments to.</param>
+    /// <param name="objectIds">A sequence of SHA-1 object IDs to add to the builder, or <see langword="null"/>.</param>
+    /// <exception cref="ArgumentException"><paramref name="objectIds"/> contains an artificial commit.</exception>
+    public static void Add(this ArgumentBuilder builder, IEnumerable<ObjectId>? objectIds)
+    {
+        if (objectIds is null)
         {
-            throw new ArgumentException("Unexpected artificial commit in Git command: " + objectId);
+            return;
         }
 
-        Span<char> buffer = stackalloc char[ObjectId.Sha1CharCount];
-        objectId.WriteTo(buffer);
-        builder.Add((ReadOnlySpan<char>)buffer);
+        foreach (ObjectId objectId in objectIds)
+        {
+            builder.Add(objectId);
+        }
     }
 
     /// <summary>

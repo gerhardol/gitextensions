@@ -59,7 +59,7 @@ internal abstract class BaseRevisionTree : Tree
                     continue;
                 }
 
-                bool isVisible = _refsSource.Contains(node.ObjectId);
+                bool isVisible = _refsSource.Contains(node.ObjectId.Value);
                 if (node.Visible != isVisible)
                 {
                     node.Visible = isVisible;

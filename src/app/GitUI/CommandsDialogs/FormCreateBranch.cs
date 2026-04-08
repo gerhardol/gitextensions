@@ -152,9 +152,20 @@ public sealed partial class FormCreateBranch : GitExtensionsDialog
         {
             ObjectId? originalHash = Module.GetCurrentCheckout();
 
-            ArgumentString command = chkCreateOrphan.Checked
-                ? Commands.CreateOrphan(branchName, objectId)
-                : Commands.Branch(branchName, objectId!.ToString(), chkCheckoutAfterCreate.Checked);
+            ArgumentString command;
+            if (chkCreateOrphan.Checked)
+            {
+                command = Commands.CreateOrphan(branchName, objectId);
+            }
+            else
+            {
+                if (objectId is null)
+                {
+                    throw new InvalidOperationException("objectId must be set for non-orphan branch creation");
+                }
+
+                command = Commands.Branch(branchName, objectId.Value.ToString(), chkCheckoutAfterCreate.Checked);
+            }
 
             bool success = FormProcess.ShowDialog(this, UICommands, arguments: command, Module.WorkingDir, input: null, useDialogSettings: true);
             if (chkCreateOrphan.Checked && success && chkClearOrphan.Checked)

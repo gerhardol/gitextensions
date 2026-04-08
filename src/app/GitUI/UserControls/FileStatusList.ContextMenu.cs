@@ -1098,7 +1098,7 @@ partial class FileStatusList
 
             string fileName = PathUtil.GetFileName(item.Item.Name);
             fileName = (Path.GetTempPath() + fileName).ToNativePath();
-            await Module.SaveBlobAsAsync(fileName, blob.ToString());
+            await Module.SaveBlobAsAsync(fileName, blob.Value.ToString());
 
             onSaved(fileName);
         });

@@ -1745,7 +1745,7 @@ public sealed class GitUICommands : IGitUICommands
             firstId = null;
             foreach (string part in arg.LazySplit(','))
             {
-                if (!module.TryResolvePartialCommitId(part, out ObjectId? objectId))
+                if (!module.TryResolvePartialCommitId(part, out ObjectId objectId))
                 {
                     return false;
                 }
@@ -1852,7 +1852,7 @@ public sealed class GitUICommands : IGitUICommands
         GitRevision? revision = null;
         if (args.Count > 3)
         {
-            if (!ObjectId.TryParse(args[3], out ObjectId? objectId))
+            if (!ObjectId.TryParse(args[3], out ObjectId objectId))
             {
                 return false;
             }

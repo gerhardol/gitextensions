@@ -27,9 +27,7 @@ public class GitRevisionInfoProviderTests
     {
         IGitItem item = Substitute.For<IGitItem>();
 
-        // ObjectId checks input, use Try to get an illegal value
-        ObjectId.TryParse("", out ObjectId? objectId);
-        item.ObjectId.Returns(objectId);
+        item.ObjectId.Returns((ObjectId?)null);
 
         ((Action)(() => _provider.LoadChildren(item))).Should().Throw<ArgumentException>();
     }

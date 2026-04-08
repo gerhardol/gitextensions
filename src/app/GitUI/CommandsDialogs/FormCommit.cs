@@ -1736,8 +1736,8 @@ public sealed partial class FormCommit : GitModuleForm
         ObjectId? headId = Module.RevParse("HEAD");
         if (headId is not null)
         {
-            headRev = new GitRevision(headId);
-            indexRev = new GitRevision(ObjectId.IndexId) { ParentIds = new[] { headId } };
+            headRev = new GitRevision(headId.Value);
+            indexRev = new GitRevision(ObjectId.IndexId) { ParentIds = new ObjectId[] { headId.Value } };
         }
         else
         {

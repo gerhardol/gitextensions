@@ -16,6 +16,11 @@ public class GitCreateTagArgs
     /// <param name="force">Force parameter</param>
     public GitCreateTagArgs(string tagName, ObjectId objectId, TagOperation operation = TagOperation.Lightweight, string tagMessage = "", string signKeyId = "", bool force = false)
     {
+        if (objectId.IsZeroOrArtificial)
+        {
+            throw new ArgumentException("A valid, non-artificial revision is required for tagging.", nameof(objectId));
+        }
+
         TagName = tagName;
         ObjectId = objectId;
         Operation = operation;

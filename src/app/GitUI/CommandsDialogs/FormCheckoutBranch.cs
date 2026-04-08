@@ -292,14 +292,14 @@ public partial class FormCheckoutBranch : GitExtensionsDialog
                 IGitRef remoteBranchRef = GetRemoteBranchRef(branchName);
                 if (localBranchRef is not null && remoteBranchRef is not null && localBranchRef.ObjectId is not null && remoteBranchRef.ObjectId is not null)
                 {
-                    ObjectId? mergeBaseGuid = Module.GetMergeBase(localBranchRef.ObjectId, remoteBranchRef.ObjectId);
+                    ObjectId? mergeBaseGuid = Module.GetMergeBase(localBranchRef.ObjectId.Value, remoteBranchRef.ObjectId.Value);
                     bool isResetFastForward = localBranchRef.ObjectId == mergeBaseGuid;
 
                     if (!isResetFastForward)
                     {
                         string mergeBaseText = mergeBaseGuid is null
                             ? "merge base"
-                            : mergeBaseGuid.ToShortString();
+                            : mergeBaseGuid.Value.ToShortString();
 
                         string warningMessage = string.Format(_resetNonFastForwardBranch.Text, _localBranchName, mergeBaseText);
 
@@ -485,7 +485,7 @@ public partial class FormCheckoutBranch : GitExtensionsDialog
                 ObjectId? currentCheckout = Module.GetCurrentCheckout();
                 if (currentCheckout is not null)
                 {
-                    aheadBehindInfo = Module.GetCommitCountString(currentCheckout, branch);
+                    aheadBehindInfo = Module.GetCommitCountString(currentCheckout.Value, branch);
                 }
 
                 await this.SwitchToMainThreadAsync();

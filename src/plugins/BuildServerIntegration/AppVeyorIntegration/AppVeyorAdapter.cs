@@ -137,11 +137,15 @@ internal sealed class AppVeyorAdapter : IBuildServerAdapter
             List<AppVeyorBuildInfo> filteredBuilds = [];
             foreach (AppVeyorBuildInfo build in allBuilds.OrderByDescending(b => b.StartDate))
             {
-                Validates.NotNull(build.CommitId);
-                if (!_fetchBuilds.Contains(build.CommitId))
+                if (build.CommitId is not { } commitId)
+                {
+                    continue;
+                }
+
+                if (!_fetchBuilds.Contains(commitId))
                 {
                     filteredBuilds.Add(build);
-                    _fetchBuilds.Add(build.CommitId);
+                    _fetchBuilds.Add(commitId);
                 }
             }
 
@@ -195,7 +199,7 @@ internal sealed class AppVeyorAdapter : IBuildServerAdapter
             {
                 string? commitHash = GetNodeString(b["pullRequestHeadCommitId"])
                     ?? GetNodeString(b["commitId"]);
-                if (!ObjectId.TryParse(commitHash, out ObjectId? objectId) || !_isCommitInRevisionGrid(objectId))
+                if (!ObjectId.TryParse(commitHash, out ObjectId objectId) || !_isCommitInRevisionGrid(objectId))
                 {
                     continue;
                 }
@@ -217,7 +221,7 @@ internal sealed class AppVeyorAdapter : IBuildServerAdapter
                     BuildId = GetNodeString(b["buildId"]),
                     Branch = GetNodeString(b["branch"]),
                     CommitId = objectId,
-                    CommitHashList = new[] { objectId },
+                    CommitHashList = [objectId],
                     Status = status,
                     StartDate = b["started"]?.GetValue<DateTime>() ?? DateTime.MinValue,
                     BaseWebUrl = baseWebUrl,

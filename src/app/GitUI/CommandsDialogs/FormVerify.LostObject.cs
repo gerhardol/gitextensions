@@ -75,7 +75,7 @@ partial class FormVerify
             // TODO use enum for RawType
             ObjectType = objectType;
             RawType = rawType;
-            ObjectId = objectId ?? throw new ArgumentNullException(nameof(objectId));
+            ObjectId = objectId;
         }
 
         /// <summary>

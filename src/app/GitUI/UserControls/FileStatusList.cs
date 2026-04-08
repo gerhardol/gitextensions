@@ -316,7 +316,7 @@ public sealed partial class FileStatusList : GitModuleControl
         }
     }
 
-    public void Bind(Action refreshArtificial, bool canAutoRefresh = false, Func<ObjectId?, string>? describeRevision = null, Func<GitRevision, GitRevision>? getActualRevision = null, bool isFileTreeMode = false)
+    public void Bind(Action refreshArtificial, bool canAutoRefresh = false, Func<ObjectId, string>? describeRevision = null, Func<GitRevision, GitRevision>? getActualRevision = null, bool isFileTreeMode = false)
     {
         btnRefresh.Click += (s, e) => refreshArtificial();
         btnRefresh.Visible = true;
@@ -432,7 +432,7 @@ public sealed partial class FileStatusList : GitModuleControl
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     [Browsable(false)]
-    public Func<ObjectId?, string>? DescribeRevision { get; set; }
+    public Func<ObjectId, string>? DescribeRevision { get; set; }
 
     public bool FilterFilesByNameRegexFocused => cboFilterComboBox.Focused;
     public bool FindInCommitFilesGitGrepActive => !string.IsNullOrEmpty(cboFindInCommitFilesGitGrep.Text);
@@ -933,11 +933,11 @@ public sealed partial class FileStatusList : GitModuleControl
     }
 
     private string? GetDescriptionForRevision(ObjectId? objectId)
-        => DescribeRevision is not null ? DescribeRevision(objectId)
+        => DescribeRevision is not null && objectId is not null ? DescribeRevision(objectId.Value)
             : objectId is null ? ""
             : objectId == ObjectId.WorkTreeId ? ResourceManager.TranslatedStrings.Workspace
             : objectId == ObjectId.IndexId ? ResourceManager.TranslatedStrings.Index
-            : objectId.ToShortString();
+            : objectId.Value.ToShortString();
 
     public void SetNoFilesText(string text)
     {

@@ -856,7 +856,7 @@ public sealed partial class RevisionDataGridView : DataGridView
 
     public int? TryGetRevisionIndex(ObjectId? objectId)
     {
-        return objectId is not null && _revisionGraph.TryGetRowIndex(objectId, out int index) ? index : null;
+        return objectId is not null && _revisionGraph.TryGetRowIndex(objectId.Value, out int index) ? index : null;
     }
 
     public IReadOnlyList<ObjectId> GetRevisionChildren(ObjectId objectId)

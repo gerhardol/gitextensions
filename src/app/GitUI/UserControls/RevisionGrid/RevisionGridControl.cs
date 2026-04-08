@@ -258,7 +258,7 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
         {
             if (!SetSelectedRevision(commitId))
             {
-                MessageBoxes.RevisionFilteredInGrid(this, commitId!);
+                MessageBoxes.RevisionFilteredInGrid(this, commitId!.Value);
             }
         });
         _authorHighlighting = new AuthorRevisionHighlighting();
@@ -646,11 +646,11 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
             return false;
         }
 
-        Validates.NotNull(commitId);
+        DebugHelpers.Assert(commitId.HasValue, "commitId must have a value");
         SetSelectedIndex(_gridView, index, toggleSelection);
         if (updateNavigationHistory)
         {
-            _navigationHistory.Push(commitId);
+            _navigationHistory.Push(commitId.Value);
         }
 
         return true;
@@ -1045,7 +1045,7 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
                     }
                     else
                     {
-                        currentlySelectedObjectIds = new List<ObjectId> { CurrentCheckout };
+                        currentlySelectedObjectIds = new List<ObjectId> { CurrentCheckout.Value };
                     }
                 }
 
@@ -1053,14 +1053,15 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
                 refsByObjectId = (showStashes
                     ? getUnfilteredRefs.Value.Where(r => r.CompleteName != GitRefName.RefsStashPrefix)
                     : getUnfilteredRefs.Value)
-                    .ToLookup(gitRef => gitRef.ObjectId)!;
+                    .Where(gitRef => gitRef.ObjectId.HasValue)
+                    .ToLookup(gitRef => gitRef.ObjectId!.Value);
                 cancellationToken.ThrowIfCancellationRequested();
                 ResetNavigationHistory();
                 UpdateSelectedRef(capturedModule, getUnfilteredRefs.Value, headRef.Value);
                 _gridView.ToBeSelectedObjectIds = GetToBeSelectedRevisions(CurrentCheckout, currentlySelectedObjectIds)!;
 
                 _gridView._revisionGraph.OnlyFirstParent = _filterInfo.ShowOnlyFirstParent;
-                _gridView._revisionGraph.HeadId = CurrentCheckout!;
+                _gridView._revisionGraph.HeadId = CurrentCheckout ?? default;
 
                 // Allow add revisions to the grid
                 semaphoreUpdateGrid.Release();
@@ -1101,8 +1102,9 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
                             return;
                         }
 
-                        // "stash" commits to insert (before regular commits)
-                        stashesByParentId = getStashRevs.Value.ToLookup(r => r.FirstParentId!);
+                        stashesByParentId = getStashRevs.Value
+                            .Where(r => r.FirstParentId.HasValue)
+                            .ToLookup(r => r.FirstParentId!.Value);
 
                         // "untracked" commits to insert (parent to "stash" commits)
                         Dictionary<ObjectId, ObjectId> untrackedIdByStashId = getStashRevs.Value
@@ -1122,8 +1124,8 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
                         foreach (GitRevision stash in getStashRevs.Value)
                         {
                             stash.ParentIds = untrackedByStashId!.ContainsKey(stash.ObjectId)
-                                ? [stash.FirstParentId!, stash.ParentIds![2]]
-                                : [stash.FirstParentId!];
+                                ? [stash.FirstParentId!.Value, stash.ParentIds![2]]
+                                : [stash.FirstParentId!.Value];
                         }
                     }
                     catch
@@ -1393,7 +1395,7 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
                 CommitUnixTime = 0,
                 CommitterEmail = userEmail,
                 Subject = ResourceManager.TranslatedStrings.Index,
-                ParentIds = CurrentCheckout is null ? null : new[] { CurrentCheckout },
+                ParentIds = CurrentCheckout is null ? null : new ObjectId[] { CurrentCheckout.Value },
                 Notes = ""
             };
 
@@ -1465,7 +1467,7 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
                     if (CurrentCheckout is not null)
                     {
                         // Not found, so search for its parents
-                        headParents = TryGetParents(Module, _filterInfo, CurrentCheckout).ToList();
+                        headParents = TryGetParents(Module, _filterInfo, CurrentCheckout.Value).ToList();
                     }
 
                     // HEAD where to insert the artificial was not found
@@ -1550,7 +1552,7 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
             {
                 spi.Refs = refs
                     .Where(a => a.Value is not null && a.Value.ObjectId is not null)
-                    .GroupBy(a => a.Value!.ObjectId!)
+                    .GroupBy(a => a.Value!.ObjectId!.Value)
                     .ToDictionary(gr => gr.Key, gr => gr.Select(a => a.Key).AsReadOnlyList());
             }
 
@@ -1573,12 +1575,12 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
                 IReadOnlyList<ObjectId>? toBeSelectedObjectIds;
                 if (FirstId is not null)
                 {
-                    toBeSelectedObjectIds = new ObjectId[] { FirstId, SelectedId };
+                    toBeSelectedObjectIds = new ObjectId[] { FirstId.Value, SelectedId.Value };
                     FirstId = null;
                 }
                 else
                 {
-                    toBeSelectedObjectIds = new ObjectId[] { SelectedId };
+                    toBeSelectedObjectIds = new ObjectId[] { SelectedId.Value };
                 }
 
                 SelectedId = null;
@@ -1589,7 +1591,7 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
                 ? currentlySelectedObjectIds
                 : currentCheckout is null
                     ? []
-                    : new ObjectId[] { currentCheckout };
+                    : new ObjectId[] { currentCheckout.Value };
         }
 
         static IEnumerable<ObjectId> TryGetParents(IGitModule module, FilterInfo filterInfo, ObjectId objectId)
@@ -1605,7 +1607,7 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
             ExecutionResult result = module.GitExecutable.Execute(args, throwOnErrorExit: false);
             foreach (string line in result.StandardOutput.LazySplit('\n'))
             {
-                if (ObjectId.TryParse(line, out ObjectId? parentId))
+                if (ObjectId.TryParse(line, out ObjectId parentId))
                 {
                     yield return parentId;
                 }
@@ -1626,7 +1628,7 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
             return null;
         }
 
-        if (FilePathByObjectId?.TryGetValue(objectId, out string? fileName) is true)
+        if (FilePathByObjectId?.TryGetValue(objectId.Value, out string? fileName) is true)
         {
             return fileName;
         }
@@ -1639,7 +1641,7 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
             "--follow",
             "--diff-merges=separate",
             FindRenamesAndCopiesOpts(),
-            objectId.ToString(),
+            objectId.Value.ToString(),
             "--max-count=1",
             "--",
             path.QuoteIfNotQuotedAndNE(),
@@ -1671,8 +1673,12 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
 
             if (line.StartsWith(_objectIdPrefix))
             {
-                if (line.Length < ObjectId.Sha1CharCount + _objectIdPrefix.Length
-                    || !ObjectId.TryParse(line, offset: _objectIdPrefix.Length, out currentObjectId))
+                if (line.Length >= ObjectId.Sha1CharCount + _objectIdPrefix.Length
+                    && ObjectId.TryParse(line, offset: _objectIdPrefix.Length, out ObjectId parsedId))
+                {
+                    currentObjectId = parsedId;
+                }
+                else
                 {
                     // Parse error, ignore
                     currentObjectId = null;
@@ -1689,7 +1695,7 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
 
             // Add only the first file to the dictionary
             cancellationToken.ThrowIfCancellationRequested();
-            FilePathByObjectId?.TryAdd(currentObjectId, line);
+            FilePathByObjectId?.TryAdd(currentObjectId.Value, line);
 
             yield return line;
         }
@@ -2841,15 +2847,18 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
             for (int i = 0; i < 3; ++i)
             {
                 idToSelect = GetNextIdToSelect(idToSelect);
-                if (idToSelect is null
-
-                    // WorkTree and Index are skipped if and only if we do retrieve the ChangeCount info (only for artificial) and HasChanges returns false.
-                    || (AppSettings.ShowGitStatusForArtificialCommits && (GetChangeCount(idToSelect)?.HasChanges is false)))
+                if (idToSelect is null)
                 {
                     continue;
                 }
 
-                if (idToSelect == CurrentCheckout && AppSettings.RevisionGraphShowArtificialCommits && _gridView.GetRevision(idToSelect) is null)
+                // WorkTree and Index are skipped if and only if we do retrieve the ChangeCount info (only for artificial) and HasChanges returns false.
+                if (AppSettings.ShowGitStatusForArtificialCommits && (GetChangeCount(idToSelect.Value)?.HasChanges is false))
+                {
+                    continue;
+                }
+
+                if (idToSelect == CurrentCheckout && AppSettings.RevisionGraphShowArtificialCommits && _gridView.GetRevision(idToSelect.Value) is null)
                 {
                     // HEAD is not in revision grid (filtered)
                     return ObjectId.WorkTreeId;
@@ -3001,12 +3010,12 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
         GitRevision revision = revisions[^1];
         while (revision!.IsArtificial)
         {
-            revision = GetRevision(revision.FirstParentId!)!;
+            revision = GetRevision(revision.FirstParentId!.Value)!;
         }
 
         do
         {
-            GitRevision? prevRev = GetRevision(revision.FirstParentId!);
+            GitRevision? prevRev = GetRevision(revision.FirstParentId!.Value);
             if (prevRev == null)
             {
                 break;
@@ -3105,7 +3114,7 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
         {
             if (!SetSelectedRevision(commitId, toggleSelection) && showNoRevisionMsg)
             {
-                MessageBoxes.RevisionFilteredInGrid(this, commitId);
+                MessageBoxes.RevisionFilteredInGrid(this, commitId.Value);
             }
         }
         else if (showNoRevisionMsg)
@@ -3165,7 +3174,7 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
                 return;
             }
 
-            ShowFormDiff(baseCommit, headCommit.ObjectId, form.BranchName, headCommit.Subject);
+            ShowFormDiff(baseCommit.Value, headCommit.ObjectId, form.BranchName, headCommit.Subject);
         }
     }
 
@@ -3183,7 +3192,7 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
             return;
         }
 
-        ShowFormDiff(baseCommit.ObjectId, CurrentCheckout, baseCommit.Subject, CurrentBranch.Value);
+        ShowFormDiff(baseCommit.ObjectId, CurrentCheckout.Value, baseCommit.Subject, CurrentBranch.Value);
     }
 
     private void selectAsBaseToolStripMenuItem_Click(object sender, EventArgs e)
@@ -3232,8 +3241,8 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
 
         if (selected is not null && firstId is not null)
         {
-            string firstSubject = GetRevision(firstId)?.Subject ?? "";
-            ShowFormDiff(firstId, selected.ObjectId, firstSubject, selected.Subject);
+            string firstSubject = GetRevision(firstId.Value)?.Subject ?? "";
+            ShowFormDiff(firstId.Value, selected.ObjectId, firstSubject, selected.Subject);
         }
         else
         {
@@ -3411,7 +3420,10 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
             case Command.SelectCurrentRevision:
                 if (!SetSelectedRevision(CurrentCheckout))
                 {
-                    MessageBoxes.RevisionFilteredInGrid(this, CurrentCheckout!);
+                    if (CurrentCheckout.HasValue)
+                    {
+                        MessageBoxes.RevisionFilteredInGrid(this, CurrentCheckout.Value);
+                    }
                 }
 
                 break;

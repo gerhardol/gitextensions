@@ -26,11 +26,11 @@ public sealed partial class FormMergeSubmodule : GitModuleForm
     {
         ConflictData item = ThreadHelper.JoinableTaskFactory.Run(() => Module.GetConflictAsync(_filename));
 
-        tbBase.Text = item.Base.ObjectId?.ToString() ?? _deleted.Text;
-        tbLocal.Text = item.Local.ObjectId?.ToString() ?? _deleted.Text;
-        tbRemote.Text = item.Remote.ObjectId?.ToString() ?? _deleted.Text;
+        tbBase.Text = item.Base.ObjectId.IsZero ? _deleted.Text : item.Base.ObjectId.ToString();
+        tbLocal.Text = item.Local.ObjectId.IsZero ? _deleted.Text : item.Local.ObjectId.ToString();
+        tbRemote.Text = item.Remote.ObjectId.IsZero ? _deleted.Text : item.Remote.ObjectId.ToString();
         tbCurrent.Text = Module.GetSubmodule(_filename).GetCurrentCheckout()?.ToString() ?? "";
-        btCheckoutBranch.Enabled = item.Base.ObjectId is not null && item.Remote.ObjectId is not null;
+        btCheckoutBranch.Enabled = !item.Base.ObjectId.IsZero && !item.Remote.ObjectId.IsZero;
     }
 
     private void btRefresh_Click(object sender, EventArgs e)

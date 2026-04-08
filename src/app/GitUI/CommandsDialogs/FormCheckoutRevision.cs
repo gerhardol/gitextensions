@@ -48,7 +48,7 @@ public partial class FormCheckoutRevision : GitExtensionsDialog
                 return;
             }
 
-            string command = Commands.Checkout(selectedObjectId.ToString(), Force.Checked ? LocalChangesAction.Reset : 0);
+            string command = Commands.Checkout(selectedObjectId.Value.ToString(), Force.Checked ? LocalChangesAction.Reset : 0);
             success = FormProcess.ShowDialog(this, UICommands, arguments: command, Module.WorkingDir, input: null, useDialogSettings: true);
             if (success)
             {

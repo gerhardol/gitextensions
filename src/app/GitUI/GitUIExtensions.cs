@@ -76,7 +76,7 @@ public static partial class GitUIExtensions
             await fileViewer.ViewTextAsync(fileName: null, $"git range-diff {range} -- {additionalCommandInfo}", cancellationToken: cancellationToken);
 
             ExecutionResult result = await fileViewer.Module.GetRangeDiffAsync(
-                    firstId!,
+                    firstId!.Value,
                     item.SecondRevision.ObjectId,
                     item.BaseA,
                     item.BaseB,
@@ -174,7 +174,7 @@ public static partial class GitUIExtensions
 
         if (AppSettings.DiffDisplayAppearance.Value == GitCommands.Settings.DiffDisplayAppearance.Difftastic && fileViewer.IsDifftasticEnabled.Value)
         {
-            bool isTracked = item.Item.IsTracked || (item.Item.TreeGuid is not null && item.SecondRevision.ObjectId is not null);
+            bool isTracked = item.Item.IsTracked || (item.Item.TreeGuid is not null && !item.SecondRevision.ObjectId.IsZero);
             (ArgumentString diffArgs, string extraCacheKey) = fileViewer.GetDifftasticArguments();
 
             // set file name as null to not change the restore lineno
@@ -200,7 +200,7 @@ public static partial class GitUIExtensions
         }
 
         // diff of text file
-        string selectedPatch = (await GetSelectedPatchAsync(fileViewer, firstId!, item.SecondRevision.ObjectId, item.Item, cancellationToken))
+        string selectedPatch = (await GetSelectedPatchAsync(fileViewer, firstId!.Value, item.SecondRevision.ObjectId, item.Item, cancellationToken))
             ?? defaultText;
 
         await fileViewer.ViewPatchAsync(item, text: selectedPatch, line: line, openWithDifftool: openWithDiffTool, cancellationToken: cancellationToken);

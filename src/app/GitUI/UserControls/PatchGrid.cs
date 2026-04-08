@@ -136,7 +136,7 @@ public partial class PatchGrid : GitModuleControl
             }
             else
             {
-                if (!ObjectId.TryParse(parts[1], out ObjectId? parsedId))
+                if (!ObjectId.TryParse(parts[1], out ObjectId parsedId))
                 {
                     Trace.Write($"PatchGrid: GetInteractiveRebasePatchFiles: Unable to parse commit hash '{parts[1]}' from '{todoCommits}'. Skipping this entry.");
                     continue;
@@ -399,10 +399,10 @@ public partial class PatchGrid : GitModuleControl
 
         PatchFile? patchFile = (PatchFile?)Patches.SelectedRows[0].DataBoundItem;
 
-        if (patchFile?.ObjectId?.IsArtificial is false)
+        if (patchFile?.ObjectId is { IsArtificial: false } patchObjectId)
         {
             // Normal commit selected
-            UICommands.StartFormCommitDiff(patchFile.ObjectId);
+            UICommands.StartFormCommitDiff(patchObjectId);
             return;
         }
 

@@ -50,7 +50,7 @@ public partial class CommitPickerSmallControl : GitModuleControl
         }
         else
         {
-            textBoxCommitHash.Text = SelectedObjectId.ToShortString();
+            textBoxCommitHash.Text = SelectedObjectId.Value.ToShortString();
             ThreadHelper.FileAndForget(async () =>
                 {
                     ObjectId? currentCheckout = Module.GetCurrentCheckout();
@@ -60,8 +60,8 @@ public partial class CommitPickerSmallControl : GitModuleControl
                         return;
                     }
 
-                    string toRef = SelectedObjectId.IsArtificial ? "HEAD" : SelectedObjectId.ToString();
-                    string text = Module.GetCommitCountString(currentCheckout, toRef);
+                    string toRef = SelectedObjectId.Value.IsArtificial ? "HEAD" : SelectedObjectId.Value.ToString();
+                    string text = Module.GetCommitCountString(currentCheckout.Value, toRef);
 
                     await this.SwitchToMainThreadAsync();
 

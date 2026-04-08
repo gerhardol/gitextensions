@@ -529,7 +529,7 @@ internal class RevisionGridMenuCommands : MenuCommandsBase
         {
             if (!_revisionGrid.SetSelectedRevision(commitId))
             {
-                MessageBoxes.RevisionFilteredInGrid(_revisionGrid, commitId);
+                MessageBoxes.RevisionFilteredInGrid(_revisionGrid, commitId.Value);
             }
         }
         else

@@ -34,9 +34,9 @@ public sealed class GitSubmoduleStatus
 
     // Get CommitData without Notes (will cache contents)
     public CommitData? CommitData
-        => GetCommitData is not null && Commit is not null ? GetCommitData(Commit.ToString()) : null;
+        => GetCommitData is not null && Commit is not null ? GetCommitData(Commit.Value.ToString()) : null;
     public CommitData? OldCommitData
-        => GetCommitData is not null && OldCommit is not null ? GetCommitData(OldCommit.ToString()) : null;
+        => GetCommitData is not null && OldCommit is not null ? GetCommitData(OldCommit.Value.ToString()) : null;
 
     public GitSubmoduleStatus(string name, string? oldName, bool isDirty, ObjectId? commit, ObjectId? oldCommit, int? addedCommits, int? removedCommits, Func<string, CommitData?>? getCommitData, Func<GitSubmoduleStatus, SubmoduleStatus> getSubmoduleStatus)
     {

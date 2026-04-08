@@ -149,7 +149,7 @@ public interface IGitModule
     /// <returns>The path in Windows format with native file separators.</returns>
     public string GetWindowsPath(string path);
 
-    bool TryResolvePartialCommitId(string objectIdPrefix, [NotNullWhen(returnValue: true)] out ObjectId? objectId);
+    public bool TryResolvePartialCommitId(string objectIdPrefix, out ObjectId objectId);
 
     string GetSubmoduleFullPath(string localPath);
 
