@@ -47,9 +47,9 @@ public class ColorTransformationTests
         transformed.Should().BeApproximately(expected, 0.001);
     }
 
-    [TestCase("#000000", 0.5f)]
-    [TestCase("#777777", 0.5f)]
-    [TestCase("#999999", 0.6f)] // the threshold has been increased to still write in black on a darker color
+    [TestCase("#000000", 0.18f)]
+    [TestCase("#777777", 0.19f)]
+    [TestCase("#999999", 0.25f)] // the threshold has been increased to still write in black on a darker color
     public void Should_return_white_when_color_is_dark(string backgroundColor, float luminanceThreshold)
     {
         Color correspondingForeColor = ColorHelper.TestAccessor.GetContrastColor(ColorTranslator.FromHtml(backgroundColor), luminanceThreshold);
@@ -57,9 +57,9 @@ public class ColorTransformationTests
         correspondingForeColor.Should().Be(Color.White);
     }
 
-    [TestCase("#FFFFFF", 0.5f)]
-    [TestCase("#999999", 0.5f)]
-    [TestCase("#777777", 0.4f)] // the threshold has been lower to still write in white on a lighter color
+    [TestCase("#FFFFFF", 0.18f)]
+    [TestCase("#999999", 0.18f)]
+    [TestCase("#777777", 0.15f)] // the threshold has been lower to still write in white on a lighter color
     public void Should_return_black_when_color_is_light(string backgroundColor, float luminanceThreshold)
     {
         Color correspondingForeColor = ColorHelper.TestAccessor.GetContrastColor(ColorTranslator.FromHtml(backgroundColor), luminanceThreshold);
