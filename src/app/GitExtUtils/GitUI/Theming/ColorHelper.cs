@@ -26,6 +26,12 @@ public static class ColorHelper
         return Color.FromArgb(color.A, r, g, b);
     }
 
+    /// <summary>
+    /// Dim the color if dark mode is enabled.
+    /// </summary>
+    public static Color DimDarkModeColor(this Color color)
+        => Application.IsDarkModeEnabled ? color.DimColor() : color;
+
     public static void SetForeColorForBackColor(this Control control) =>
         control.ForeColor = GetForeColorForBackColor(control.BackColor);
 
@@ -145,7 +151,7 @@ public static class ColorHelper
     }
 
     /// <remarks>0.05 is subtle. 0.3 is quite strong.</remarks>
-    public static Color MakeBackgroundDarkerBy(this Color color, double amount) =>
+    public static Color MakeDarkerBy(this Color color, double amount) =>
         color.TransformHsl(l: l => l - amount);
 
     public static void AdaptImageLightness(this ToolStripItem item) =>
