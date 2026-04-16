@@ -7,13 +7,18 @@ internal static class HighlightingExtension
 {
     public static HighlightColor Transform(this HighlightColor original)
     {
-        Color backReplacement = Adapt(original.BackgroundColor, isForeground: false);
-        Color replacement = Adapt(original.Color, isForeground: true);
-        return new HighlightColor(original, replacement, backReplacement);
+        Color originalBackColor = original.BackgroundColor;
+        bool hasNoBackground = originalBackColor.IsEmpty || originalBackColor.A == 0;
+        Color effectiveBackColor = hasNoBackground
+            ? ColorHelper.AdaptBackColor(SystemColors.Window)
+            : originalBackColor;
+        Color backColor = !original.Adaptable || originalBackColor.IsSystemColor || hasNoBackground
+            ? originalBackColor
+            : ColorHelper.AdaptBackColor(originalBackColor);
+        Color foreColor = !original.Adaptable || original.Color.IsSystemColor
+            ? original.Color
+            : original.Color.AdaptForeColor(hasNoBackground ? effectiveBackColor : backColor);
 
-        Color Adapt(Color c, bool isForeground) =>
-            !original.Adaptable || c.IsSystemColor
-                ? c
-                : ColorHelper.AdaptColor(c, isForeground);
+        return new HighlightColor(original, foreColor, backColor);
     }
 }

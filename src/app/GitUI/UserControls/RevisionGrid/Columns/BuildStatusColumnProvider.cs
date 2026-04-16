@@ -119,7 +119,7 @@ internal sealed class BuildStatusColumnProvider : ColumnProvider
                     break;
             }
 
-            return customColor.AdaptTextColor();
+            return customColor.AdaptForeColor(_gridView.Rows[e.RowIndex].Cells[e.ColumnIndex].Style.BackColor);
         }
     }
 
