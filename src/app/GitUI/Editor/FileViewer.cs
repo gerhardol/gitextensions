@@ -697,10 +697,10 @@ public partial class FileViewer : GitModuleControl
     }
 
     /// <summary>
-    /// View the git item with the TreeGuid.
+    /// View the git item with the TreeId.
     /// </summary>
-    /// <param name="file">GitItem file, with TreeGuid.</param>
-    /// <param name="objectId">Revision to present. Can be null if file.TreeGuid is set.</param>
+    /// <param name="file">GitItem file, with TreeId.</param>
+    /// <param name="objectId">Revision to present. Can be null if file.TreeId is set.</param>
     /// <param name="item">Metadata for line patching and presentation.</param>
     /// <param name="line">The line to display.</param>
     /// <param name="openWithDifftool">difftool command</param>
@@ -713,7 +713,7 @@ public partial class FileViewer : GitModuleControl
         CancellationToken cancellationToken = default)
     {
         // set fields possibly not set from git-diff (etc); treeGuid and IsSubmodule.
-        // (git-status does not report submodule, IsSubmodule is not set if not TreeGuid is)
+        // (git-status does not report submodule, IsSubmodule is not set if not TreeId is)
         // treeId (blobId) is only recalculated if required.
         ObjectId? blobId = GetUpdateTreeId(file, objectId, cancellationToken);
 
@@ -786,7 +786,7 @@ public partial class FileViewer : GitModuleControl
         // Especially, if GE is invoked as git-config core.editor when rebasing,
         // another Git command must not be called (will fail the rebase).
         if (!isSubmodule
-            && (item is null || item.Item.TreeGuid.IsZero)
+            && (item is null || item.Item.TreeId.IsZero)
             && (fileName.EndsWith('/') || Directory.Exists(fullPath)))
         {
             if (!GitModule.IsValidGitWorkingDir(fullPath))
@@ -1608,13 +1608,13 @@ public partial class FileViewer : GitModuleControl
         ObjectId? commitId,
         CancellationToken cancellationToken = default)
     {
-        if (!file.TreeGuid.IsZero && commitId?.IsArtificial is false)
+        if (!file.TreeId.IsZero && commitId?.IsArtificial is false)
         {
             // current value is immutable (and IsSubmodule should have been set)
-            return file.TreeGuid;
+            return file.TreeId;
         }
 
-        if (commitId == ObjectId.WorkTreeId && (!file.TreeGuid.IsZero || file.IsSubmodule))
+        if (commitId == ObjectId.WorkTreeId && (!file.TreeId.IsZero || file.IsSubmodule))
         {
             // treeId already calculated, no point in doing it again.
             // (if treeId is set, it means that IsSubmodule is set).
@@ -1627,8 +1627,8 @@ public partial class FileViewer : GitModuleControl
         {
             IObjectGitItem gitItem = items[0];
             file.IsSubmodule = gitItem.ObjectType == GitObjectType.Commit;
-            file.TreeGuid = gitItem.ObjectId;
-            return commitId == ObjectId.WorkTreeId ? null : file.TreeGuid;
+            file.TreeId = gitItem.ObjectId;
+            return commitId == ObjectId.WorkTreeId ? null : file.TreeId;
         }
 
         return null;

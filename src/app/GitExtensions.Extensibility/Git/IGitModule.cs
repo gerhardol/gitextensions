@@ -356,7 +356,7 @@ public interface IGitModule
     ObjectId GetMergeBase(ObjectId a, ObjectId b);
     (int? First, int? Second) GetCommitRangeDiffCount(ObjectId firstId, ObjectId secondId);
     IReadOnlyList<GitItemStatus> GetCombinedDiffFileList(ObjectId mergeCommitObjectId);
-    IReadOnlyList<GitItemStatus> GetTreeFiles(ObjectId treeGuid, bool full, CancellationToken cancellationToken = default);
+    IReadOnlyList<GitItemStatus> GetTreeFiles(ObjectId treeId, bool full, CancellationToken cancellationToken = default);
     IReadOnlyList<string> GetFullTree(string id);
 
     /// <summary>

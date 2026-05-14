@@ -206,8 +206,8 @@ public sealed partial class FormGoToCommit : GitModuleForm
             return;
         }
 
-        ObjectId guid = Module.RevParse(text);
-        if (!guid.IsZero)
+        ObjectId objectId = Module.RevParse(text);
+        if (!objectId.IsZero)
         {
             textboxCommitExpression.Text = text;
             textboxCommitExpression.SelectAll();

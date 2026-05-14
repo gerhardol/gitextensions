@@ -116,13 +116,13 @@ public sealed partial class FileStatusDiffCalculator
                     firstRev: null,
                     secondRev: selectedRev,
                     summary: GetDescriptionForRevision(selectedRev.ObjectId),
-                    statuses: selectedRev.TreeGuid.IsZero
+                    statuses: selectedRev.TreeId.IsZero
 
                         // likely index commit without HEAD
                         ? module.GetDiffFilesWithSubmodulesStatus(firstId: default, selectedRev.ObjectId, parentToSecond: default, cancellationToken: cancellationToken)
 
                         // No parent for the initial commit, show files and explicitly set IsNew
-                        : module.GetTreeFiles(selectedRev.TreeGuid, full: true, cancellationToken)
+                        : module.GetTreeFiles(selectedRev.TreeId, full: true, cancellationToken)
                             .Select(i =>
                             {
                                 i.IsNew = true;

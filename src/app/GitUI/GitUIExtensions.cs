@@ -174,7 +174,7 @@ public static partial class GitUIExtensions
 
         if (AppSettings.DiffDisplayAppearance.Value == GitCommands.Settings.DiffDisplayAppearance.Difftastic && fileViewer.IsDifftasticEnabled.Value)
         {
-            bool isTracked = item.Item.IsTracked || (!item.Item.TreeGuid.IsZero && !item.SecondRevision.ObjectId.IsZero);
+            bool isTracked = item.Item.IsTracked || (!item.Item.TreeId.IsZero && !item.SecondRevision.ObjectId.IsZero);
             (ArgumentString diffArgs, string extraCacheKey) = fileViewer.GetDifftasticArguments();
 
             // set file name as null to not change the restore lineno
@@ -269,7 +269,7 @@ public static partial class GitUIExtensions
                 CancellationToken cancellationToken)
             {
                 // Files with tree guid should be presented with normal diff
-                bool isTracked = file.IsTracked || (!file.TreeGuid.IsZero && !secondId.IsZero);
+                bool isTracked = file.IsTracked || (!file.TreeId.IsZero && !secondId.IsZero);
 
                 return await module.GetSingleDiffAsync(firstId, secondId, file.Name, file.OldName, diffArgs, encoding, true, isTracked,
                     useGitColoring,

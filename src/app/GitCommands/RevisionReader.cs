@@ -538,7 +538,7 @@ public sealed class RevisionReader
         revision = new GitRevision(objectId)
         {
             ParentIds = parentIds,
-            TreeGuid = treeId,
+            TreeId = treeId,
 
             Author = GetNextLine(bufferSpan),
             AuthorEmail = GetNextLine(bufferSpan),

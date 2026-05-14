@@ -61,7 +61,7 @@ public sealed partial class GitRevision : IGitItem, INotifyPropertyChanged
     /// </remarks>
     public IReadOnlyList<ObjectId>? ParentIds { get; set; }
 
-    public ObjectId TreeGuid { get; set; }
+    public ObjectId TreeId { get; set; }
 
     public string? Author { get; set; }
     public string? AuthorEmail { get; set; }

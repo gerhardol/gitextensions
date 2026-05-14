@@ -2651,14 +2651,14 @@ public sealed partial class GitModule : IGitModule
             {
                 // IsTracked is always true, only tracked are reported
                 // (all with TreeId are tracked)
-                // TreeGuid for worktree reflects Index, just for reference
+                // TreeId for worktree reflects Index, just for reference
                 // New/Changed/Deleted are are just set
                 IsTracked = true,
                 IsNew = false,
                 IsChanged = false,
                 IsDeleted = false,
                 Staged = StagedStatus.Unset,
-                TreeGuid = file.ObjectId,
+                TreeId = file.ObjectId,
                 IsSubmodule = file.ObjectType == GitObjectType.Commit
             })
             .ToList();
