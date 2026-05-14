@@ -22,7 +22,7 @@ public sealed partial class ObjectIdTests
     public void TryParse_handles_valid_hashes(string sha1)
     {
         ObjectId.TryParse(sha1, out ObjectId id).Should().BeTrue();
-        id!.ToString().Should().Be(sha1.ToLower());
+        id.ToString().Should().Be(sha1.ToLower());
     }
 
     [TestCase("00000000000000000000000000000000000000")]
@@ -45,7 +45,7 @@ public sealed partial class ObjectIdTests
     public void TryParse_with_offset_handles_valid_hashes(string sha1, int offset)
     {
         ObjectId.TryParse(sha1, offset, out ObjectId id).Should().BeTrue();
-        id!.ToString().Should().Be(sha1.Substring(offset, 40));
+        id.ToString().Should().Be(sha1.Substring(offset, 40));
     }
 
     [TestCase("0000000000000000000000000000000000000000")]

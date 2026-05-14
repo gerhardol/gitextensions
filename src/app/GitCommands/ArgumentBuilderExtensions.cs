@@ -240,7 +240,7 @@ public static class ArgumentBuilderExtensions
         {
             if (objectId.IsZero)
             {
-                return;
+                throw new ArgumentException("Unexpected zero object ID in Git command.");
             }
 
             throw new ArgumentException("Unexpected artificial commit in Git command: " + objectId);
@@ -262,7 +262,7 @@ public static class ArgumentBuilderExtensions
     /// <exception cref="ArgumentException"><paramref name="objectId"/> represents an artificial commit.</exception>
     public static void Add(this ArgumentBuilder builder, ObjectId? objectId)
     {
-        if (objectId is null)
+        if (objectId is null || objectId.Value.IsZero)
         {
             return;
         }

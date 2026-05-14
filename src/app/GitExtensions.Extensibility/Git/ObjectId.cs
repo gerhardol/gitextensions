@@ -28,8 +28,6 @@ public readonly struct ObjectId : IEquatable<ObjectId>, IComparable<ObjectId>, I
     /// </remarks>
     private static readonly SearchValues<char> _hexChars = SearchValues.Create("0123456789abcdef");
 
-    private static readonly Random _random = new();
-
     /// <summary>
     /// Gets the artificial ObjectId used to represent working directory tree (unstaged) changes.
     /// </summary>
@@ -52,7 +50,7 @@ public readonly struct ObjectId : IEquatable<ObjectId>, IComparable<ObjectId>, I
     public static ObjectId Random()
     {
         Sha1 data = default;
-        _random.NextBytes((Span<byte>)data);
+        System.Random.Shared.NextBytes((Span<byte>)data);
         return new ObjectId(data);
     }
 

@@ -3382,7 +3382,7 @@ public sealed partial class GitModule : IGitModule
                 string text = ReEncodeStringFromLossless(line[1..], encoding);
 
                 // objectId is guaranteed to be set by the preceding git blame header line
-                ObjectId oid = objectId ?? default;
+                ObjectId oid = objectId ?? throw new InvalidOperationException("Invalid git blame output: missing object ID header before content line.");
 
                 GitBlameCommit commit;
                 if (hasCommitHeader)

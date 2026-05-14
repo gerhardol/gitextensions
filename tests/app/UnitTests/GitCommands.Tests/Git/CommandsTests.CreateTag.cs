@@ -1,8 +1,7 @@
-﻿using GitCommands;
+using GitCommands;
 using GitCommands.Git;
 using GitCommands.Git.Tag;
 using GitExtensions.Extensibility.Git;
-using NUnit.Framework.Legacy;
 
 namespace GitCommandsTests_Git;
 
