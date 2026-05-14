@@ -262,12 +262,18 @@ public static class ArgumentBuilderExtensions
     /// <exception cref="ArgumentException"><paramref name="objectId"/> represents an artificial commit.</exception>
     public static void Add(this ArgumentBuilder builder, ObjectId? objectId)
     {
-        if (objectId is null || objectId.Value.IsZero)
+        if (objectId is null)
         {
             return;
         }
 
-        builder.Add(objectId.Value);
+        ObjectId nonNullObjectId = objectId.Value;
+        if (nonNullObjectId.IsZero)
+        {
+            return;
+        }
+
+        builder.Add(nonNullObjectId);
     }
 
     /// <summary>
