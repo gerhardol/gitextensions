@@ -1,4 +1,4 @@
-using GitCommands;
+﻿using GitCommands;
 using GitCommands.Git;
 using GitExtensions.Extensibility.Git;
 using GitUI.Properties;
@@ -30,7 +30,7 @@ public sealed partial class FileStatusDiffCalculator
 
     public void SetDiff(
         IReadOnlyList<GitRevision> revisions,
-        ObjectId? headId,
+        ObjectId headId,
         bool allowMultiDiff,
         bool showSkipWorktreeFiles = false,
         bool showUntrackedFiles = true)
@@ -81,7 +81,7 @@ public sealed partial class FileStatusDiffCalculator
     private List<FileStatusWithDescription> CalculateDiffs(
         IReadOnlyList<GitRevision> revisions,
         GitRevision selectedRev,
-        ObjectId? headId,
+        ObjectId headId,
         bool allowMultiDiff,
         bool showSkipWorktreeFiles,
         UntrackedFilesMode untrackedFilesMode,
@@ -116,13 +116,13 @@ public sealed partial class FileStatusDiffCalculator
                     firstRev: null,
                     secondRev: selectedRev,
                     summary: GetDescriptionForRevision(selectedRev.ObjectId),
-                    statuses: selectedRev.TreeGuid is null
+                    statuses: selectedRev.TreeGuid.IsZero
 
                         // likely index commit without HEAD
                         ? module.GetDiffFilesWithSubmodulesStatus(firstId: default, selectedRev.ObjectId, parentToSecond: default, cancellationToken: cancellationToken)
 
                         // No parent for the initial commit, show files and explicitly set IsNew
-                        : module.GetTreeFiles(selectedRev.TreeGuid.Value, full: true, cancellationToken)
+                        : module.GetTreeFiles(selectedRev.TreeGuid, full: true, cancellationToken)
                             .Select(i =>
                             {
                                 i.IsNew = true;
@@ -160,7 +160,7 @@ public sealed partial class FileStatusDiffCalculator
             firstRev: firstRev,
             secondRev: selectedRev,
             summary: TranslatedStrings.DiffWithParent + GetDescriptionForRevision(firstRev.ObjectId),
-            statuses: module.GetDiffFilesWithSubmodulesStatus(firstRev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId ?? default, cancellationToken: cancellationToken)));
+            statuses: module.GetDiffFilesWithSubmodulesStatus(firstRev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId.IsZero ? default : selectedRev.FirstParentId, cancellationToken: cancellationToken)));
 
         if (!AppSettings.ShowDiffForAllParents || revisions.Count > maxMultiCompare || !allowMultiDiff)
         {
@@ -168,9 +168,9 @@ public sealed partial class FileStatusDiffCalculator
         }
 
         // Get merge base commit, use HEAD for artificial
-        ObjectId firstRevHead = GetRevisionOrHead(firstRev, headId!.Value);
-        ObjectId selectedRevHead = GetRevisionOrHead(selectedRev, headId!.Value);
-        ObjectId? baseRevId = null;
+        ObjectId firstRevHead = GetRevisionOrHead(firstRev, headId);
+        ObjectId selectedRevHead = GetRevisionOrHead(selectedRev, headId);
+        ObjectId baseRevId = default;
         if (revisions.Count != 3)
         {
             baseRevId = GetMergeBase(firstRevHead, selectedRevHead);
@@ -189,44 +189,44 @@ public sealed partial class FileStatusDiffCalculator
         }
 
         // If four selected: check if two ranges are selected
-        ObjectId? baseA = null;
-        ObjectId? baseB = null;
+        ObjectId baseA = default;
+        ObjectId baseB = default;
 
         // Check for separate branches (note that artificial commits both have HEAD as BASE)
-        if (baseRevId is not null)
+        if (!baseRevId.IsZero)
         {
             // Two/Three: Check that the selections are in separate branches
             if (revisions.Count < 4)
             {
                 if (baseRevId == firstRevHead || baseRevId == selectedRevHead)
                 {
-                    baseRevId = null;
+                    baseRevId = default;
                 }
             }
 
             // Four: Two ranges must be selected
             else
             {
-                baseA = GetMergeBase(GetRevisionOrHead(revisions[3], headId!.Value), firstRevHead);
+                baseA = GetMergeBase(GetRevisionOrHead(revisions[3], headId), firstRevHead);
                 if (baseA == revisions[3].ObjectId)
                 {
-                    baseB = GetMergeBase(GetRevisionOrHead(revisions[1], headId!.Value), selectedRevHead);
+                    baseB = GetMergeBase(GetRevisionOrHead(revisions[1], headId), selectedRevHead);
                     if (baseB != revisions[1].ObjectId)
                     {
-                        baseB = null;
+                        baseB = default;
                     }
                 }
 
-                if (baseB is null)
+                if (baseB.IsZero)
                 {
                     // baseA/baseB were not ranges, this is no merge base
-                    baseRevId = null;
-                    baseA = null;
+                    baseRevId = default;
+                    baseA = default;
                 }
             }
         }
 
-        if (baseRevId is null)
+        if (baseRevId.IsZero)
         {
             // No variant of range diff, show multi diff
             fileStatusDescs.AddRange(
@@ -236,14 +236,14 @@ public sealed partial class FileStatusDiffCalculator
                         firstRev: rev,
                         secondRev: selectedRev,
                         summary: TranslatedStrings.DiffWithParent + GetDescriptionForRevision(rev.ObjectId),
-                        statuses: module.GetDiffFilesWithSubmodulesStatus(rev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId ?? default, cancellationToken: cancellationToken))));
+                        statuses: module.GetDiffFilesWithSubmodulesStatus(rev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId.IsZero ? default : selectedRev.FirstParentId, cancellationToken: cancellationToken))));
 
             return fileStatusDescs;
         }
 
         IReadOnlyList<GitItemStatus> allAToB = fileStatusDescs[0].Statuses;
-        IReadOnlyList<GitItemStatus> allBaseToB = module.GetDiffFilesWithSubmodulesStatus(baseRevId!.Value, selectedRev.ObjectId, selectedRev.FirstParentId ?? default, cancellationToken: cancellationToken);
-        IReadOnlyList<GitItemStatus> allBaseToA = module.GetDiffFilesWithSubmodulesStatus(baseRevId!.Value, firstRev.ObjectId, firstRev.FirstParentId ?? default, cancellationToken: cancellationToken);
+        IReadOnlyList<GitItemStatus> allBaseToB = module.GetDiffFilesWithSubmodulesStatus(baseRevId, selectedRev.ObjectId, selectedRev.FirstParentId.IsZero ? default : selectedRev.FirstParentId, cancellationToken: cancellationToken);
+        IReadOnlyList<GitItemStatus> allBaseToA = module.GetDiffFilesWithSubmodulesStatus(baseRevId, firstRev.ObjectId, firstRev.FirstParentId.IsZero ? default : firstRev.FirstParentId, cancellationToken: cancellationToken);
 
         GitItemStatusNameEqualityComparer comparer = new();
         GitItemStatus[] allAToBExceptExactRenameCopy = [.. allAToB.Where(i => !((i.IsRenamed || i.IsCopied) && i.RenameCopyPercentage == "100"))];
@@ -270,7 +270,7 @@ public sealed partial class FileStatusDiffCalculator
                 : DiffBranchStatus.UnequalChange;
         }
 
-        GitRevision revBase = new(baseRevId!.Value);
+        GitRevision revBase = new(baseRevId);
         fileStatusDescs.Add(new FileStatusWithDescription(
             firstRev: revBase,
             secondRev: selectedRev,
@@ -296,7 +296,7 @@ public sealed partial class FileStatusDiffCalculator
 
         // first and selected has a common merge base and count must be available
         // Only a printout, so no Validates
-        string desc = $"{TranslatedStrings.DiffRange} {baseToFirstCount ?? -1}? {baseToSecondCount ?? -1}? BASE {GetDescriptionForRevision(baseRevId!.Value)}";
+        string desc = $"{TranslatedStrings.DiffRange} {baseToFirstCount ?? -1}? {baseToSecondCount ?? -1}? BASE {GetDescriptionForRevision(baseRevId)}";
         fileStatusDescs.Insert(index: 1, new FileStatusWithDescription(
             firstRev: firstRev,
             secondRev: selectedRev,
@@ -306,15 +306,15 @@ public sealed partial class FileStatusDiffCalculator
 
         return fileStatusDescs;
 
-        ObjectId? GetMergeBase(ObjectId? a, ObjectId? b)
+        ObjectId GetMergeBase(ObjectId a, ObjectId b)
         {
-            if (a is null || b is null || a == b)
+            if (a.IsZero || b.IsZero || a == b)
             {
-                return null;
+                return default;
             }
 
-            ObjectId result = module.GetMergeBase(a.Value, b.Value);
-            return result.IsZero ? null : result;
+            ObjectId result = module.GetMergeBase(a, b);
+            return result.IsZero ? default : result;
         }
 
         static ObjectId GetRevisionOrHead(GitRevision rev, ObjectId headId)

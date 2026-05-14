@@ -231,7 +231,7 @@ public static partial class Commands
     }
 
     /// <summary>Create a new orphan branch from <paramref name="startPoint"/> and switch to it.</summary>
-    public static ArgumentString CreateOrphan(string newBranchName, ObjectId? startPoint = null)
+    public static ArgumentString CreateOrphan(string newBranchName, ObjectId startPoint = default)
     {
         return new GitArgumentBuilder("checkout")
         {

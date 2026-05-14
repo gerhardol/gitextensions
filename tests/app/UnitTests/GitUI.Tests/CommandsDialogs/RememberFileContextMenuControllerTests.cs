@@ -176,7 +176,7 @@ public class RememberFileContextMenuControllerTests
         FileStatusItem item = new(
             firstRev: rev,
             secondRev: index,
-            item: new GitItemStatus(name) { TreeGuid = null });
+            item: new GitItemStatus(name) { TreeGuid = default });
         _rememberFileContextMenuController.GetGitCommit(GetFileBlobHash, item, true).Should().Be(ObjectId.IndexId.ToString());
     }
 

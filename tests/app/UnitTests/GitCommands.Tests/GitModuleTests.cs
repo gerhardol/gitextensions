@@ -214,16 +214,16 @@ public sealed partial class GitModuleTests
     [TestCase(null)]
     [TestCase("")]
     [TestCase("\t")]
-    public void RevParse_should_return_null_if_invalid(string? revisionExpression)
+    public void RevParse_should_return_zero_if_invalid(string? revisionExpression)
     {
-        _gitModule.RevParse(revisionExpression).Should().BeNull();
+        _gitModule.RevParse(revisionExpression).IsZero.Should().BeTrue();
     }
 
     [Test]
-    public void RevParse_should_return_null_if_revisionExpression_exceeds_260_symbols()
+    public void RevParse_should_return_zero_if_revisionExpression_exceeds_260_symbols()
     {
         string revisionExpression = new('a', 261);
-        _gitModule.RevParse(revisionExpression).Should().BeNull();
+        _gitModule.RevParse(revisionExpression).IsZero.Should().BeTrue();
     }
 
     [Test]
@@ -244,12 +244,12 @@ public sealed partial class GitModuleTests
     }
 
     [Test]
-    public void RevParse_should_query_git_and_return_null_if_invalid_response()
+    public void RevParse_should_query_git_and_return_zero_if_invalid_response()
     {
         string revisionExpression = "11111";
         using (_executable.StageOutput($"rev-parse --quiet --verify \"{revisionExpression}~0\"", "foo bar", 0))
         {
-            _gitModule.RevParse(revisionExpression).Should().BeNull();
+            _gitModule.RevParse(revisionExpression).IsZero.Should().BeTrue();
         }
     }
 
@@ -257,11 +257,11 @@ public sealed partial class GitModuleTests
     [TestCase("error: something went wrong")]
     [TestCase("HEAD")]
     [TestCase("master")]
-    public void GetCurrentCheckout_should_query_git_and_return_null_if_response_is_not_sha(string msg)
+    public void GetCurrentCheckout_should_query_git_and_return_zero_if_response_is_not_sha(string msg)
     {
         using (_executable.StageOutput($"rev-parse HEAD", msg, 0))
         {
-            _gitModule.GetCurrentCheckout().Should().BeNull();
+            _gitModule.GetCurrentCheckout().IsZero.Should().BeTrue();
         }
     }
 

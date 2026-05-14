@@ -10,12 +10,12 @@ internal sealed class ParentChildNavigationHistory
         Child
     }
 
-    private readonly Action<ObjectId?> _setSelectedRevision;
+    private readonly Action<ObjectId> _setSelectedRevision;
     private NavigationDirection? _direction;
     private readonly Stack<ObjectId> _childHistory = new();
     private readonly Stack<ObjectId> _parentHistory = new();
 
-    public ParentChildNavigationHistory(Action<ObjectId?> setSelectedRevision)
+    public ParentChildNavigationHistory(Action<ObjectId> setSelectedRevision)
     {
         _setSelectedRevision = setSelectedRevision;
     }
@@ -35,17 +35,17 @@ internal sealed class ParentChildNavigationHistory
         Navigate(current, child, NavigationDirection.Child);
     }
 
-    public void NavigateToChild(ObjectId current, ObjectId? child)
+    public void NavigateToChild(ObjectId current, ObjectId child)
     {
         Navigate(current, child, NavigationDirection.Child);
     }
 
-    public void NavigateToParent(ObjectId current, ObjectId? parent)
+    public void NavigateToParent(ObjectId current, ObjectId parent)
     {
         Navigate(current, parent, NavigationDirection.Parent);
     }
 
-    private void Navigate(ObjectId current, ObjectId? to, NavigationDirection direction)
+    private void Navigate(ObjectId current, ObjectId to, NavigationDirection direction)
     {
         _direction = direction;
         if (direction == NavigationDirection.Child)

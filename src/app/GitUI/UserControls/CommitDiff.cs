@@ -41,12 +41,12 @@ public partial class CommitDiff : GitModuleControl
         DiffText.ScrollToTop();
     }
 
-    public void SetRevision(ObjectId? objectId, string? fileToSelect)
+    public void SetRevision(ObjectId objectId, string? fileToSelect)
     {
         // We cannot use the GitRevision from revision grid. When a filtered commit list
         // is shown (file history/normal filter) the parent guids are not the 'real' parents,
         // but the parents in the filtered list.
-        GitRevision revision = Module.GetRevision(objectId ?? default);
+        GitRevision revision = Module.GetRevision(objectId);
 
         if (revision is not null)
         {

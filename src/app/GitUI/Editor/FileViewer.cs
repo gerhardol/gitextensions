@@ -786,7 +786,7 @@ public partial class FileViewer : GitModuleControl
         // Especially, if GE is invoked as git-config core.editor when rebasing,
         // another Git command must not be called (will fail the rebase).
         if (!isSubmodule
-            && (item is null || item.Item.TreeGuid is null)
+            && (item is null || item.Item.TreeGuid.IsZero)
             && (fileName.EndsWith('/') || Directory.Exists(fullPath)))
         {
             if (!GitModule.IsValidGitWorkingDir(fullPath))
@@ -1608,13 +1608,13 @@ public partial class FileViewer : GitModuleControl
         ObjectId? commitId,
         CancellationToken cancellationToken = default)
     {
-        if (file.TreeGuid is not null && commitId?.IsArtificial is false)
+        if (!file.TreeGuid.IsZero && commitId?.IsArtificial is false)
         {
             // current value is immutable (and IsSubmodule should have been set)
             return file.TreeGuid;
         }
 
-        if (commitId == ObjectId.WorkTreeId && (file.TreeGuid is not null || file.IsSubmodule))
+        if (commitId == ObjectId.WorkTreeId && (!file.TreeGuid.IsZero || file.IsSubmodule))
         {
             // treeId already calculated, no point in doing it again.
             // (if treeId is set, it means that IsSubmodule is set).

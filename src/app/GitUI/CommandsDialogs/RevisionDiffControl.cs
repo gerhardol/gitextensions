@@ -339,7 +339,7 @@ public partial class RevisionDiffControl : GitModuleControl, IRevisionGridFileUp
             filterFileInGrid: FilterFileInGrid,
             openInFileTreeTab_AsBlame: OpenInFileTreeTab,
             refreshParent: RequestRefresh,
-            getCurrentRevision: () => _revisionGridInfo?.GetRevision(_revisionGridInfo.CurrentCheckout!.Value)!,
+            getCurrentRevision: () => _revisionGridInfo?.GetRevision(_revisionGridInfo.CurrentCheckout)!,
             getLineNumber: () => BlameControl.Visible ? BlameControl.CurrentFileLine : DiffText.CurrentFileLine,
             getSelectedText: DiffText.GetSelectedText,
             getSupportLinePatching: () => DiffText.SupportLinePatching);
@@ -451,7 +451,7 @@ public partial class RevisionDiffControl : GitModuleControl, IRevisionGridFileUp
         }
 
         GitRevision? rev = DiffFiles.SelectedItem.SecondRevision.IsArtificial
-            ? _revisionGridInfo!.GetActualRevision(_revisionGridInfo.CurrentCheckout!.Value)
+            ? _revisionGridInfo!.GetActualRevision(_revisionGridInfo.CurrentCheckout)
             : DiffFiles.SelectedItem.SecondRevision;
         await BlameControl.LoadBlameAsync(rev!, children: null, DiffFiles.SelectedItem.Item.Name, _revisionGridInfo, revisionGridFileUpdate: this,
             controlToMask: null, DiffText.Encoding, line, cancellationTokenSequence: _viewChangesSequence);

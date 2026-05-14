@@ -54,12 +54,12 @@ internal abstract class BaseRevisionTree : Tree
             foreach (BaseRevisionNode node in Nodes.DepthEnumerator<BaseRevisionNode>())
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                if (node.ObjectId is null)
+                if (node.ObjectId.IsZero)
                 {
                     continue;
                 }
 
-                bool isVisible = _refsSource.Contains(node.ObjectId.Value);
+                bool isVisible = _refsSource.Contains(node.ObjectId);
                 if (node.Visible != isVisible)
                 {
                     node.Visible = isVisible;

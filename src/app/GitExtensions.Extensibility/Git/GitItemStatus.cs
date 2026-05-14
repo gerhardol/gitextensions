@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using Microsoft;
 using Microsoft.VisualStudio.Threading;
 
@@ -95,7 +95,7 @@ public sealed class GitItemStatus
     public string? OldName { get; set; }
     public RelativePath Path { get; private set; }
     public string? ErrorMessage { get; set; }
-    public ObjectId? TreeGuid { get; set; }
+    public ObjectId TreeGuid { get; set; }
     public string? RenameCopyPercentage { get; set; }
 
     public StagedStatus Staged { get; set; }

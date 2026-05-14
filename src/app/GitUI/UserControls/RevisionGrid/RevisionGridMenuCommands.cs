@@ -523,13 +523,13 @@ internal class RevisionGridMenuCommands : MenuCommandsBase
             return;
         }
 
-        ObjectId? commitId = formGoToCommit.ValidateAndGetSelectedRevision();
+        ObjectId commitId = formGoToCommit.ValidateAndGetSelectedRevision();
 
-        if (commitId is not null)
+        if (!commitId.IsZero)
         {
             if (!_revisionGrid.SetSelectedRevision(commitId))
             {
-                MessageBoxes.RevisionFilteredInGrid(_revisionGrid, commitId.Value);
+                MessageBoxes.RevisionFilteredInGrid(_revisionGrid, commitId);
             }
         }
         else

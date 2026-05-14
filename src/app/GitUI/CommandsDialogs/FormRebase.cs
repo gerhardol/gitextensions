@@ -405,8 +405,8 @@ public partial class FormRebase : GitExtensionsDialog
         try
         {
             AppSettings.ShowStashes = false;
-            ObjectId? firstParent = UICommands.Module.RevParse("HEAD~");
-            string preSelectedCommit = !string.IsNullOrWhiteSpace(txtFrom.Text) ? txtFrom.Text : firstParent?.ToString() ?? string.Empty;
+            ObjectId firstParent = UICommands.Module.RevParse("HEAD~");
+            string preSelectedCommit = !string.IsNullOrWhiteSpace(txtFrom.Text) ? txtFrom.Text : firstParent.IsZero ? string.Empty : firstParent.ToString();
 
             string? mergeBaseCommitId = null;
 

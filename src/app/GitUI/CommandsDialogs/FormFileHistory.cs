@@ -78,7 +78,7 @@ public sealed partial class FormFileHistory : GitModuleForm, IRevisionGridFileUp
 
         Blame.ConfigureRepositoryHostPlugin(PluginRegistry.TryGetGitHosterForModule(Module));
 
-        RevisionGrid.SelectedId = revision?.ObjectId;
+        RevisionGrid.SelectedId = revision is null ? default : revision.ObjectId;
         RevisionGrid.ShowBuildServerInfo = true;
         RevisionGrid.FilePathByObjectId = [];
 
@@ -229,7 +229,7 @@ public sealed partial class FormFileHistory : GitModuleForm, IRevisionGridFileUp
             return null;
         }
 
-        ObjectId? objectId = rev.IsArtificial ? RevisionGrid.CurrentCheckout : rev.ObjectId;
+        ObjectId objectId = rev.IsArtificial ? RevisionGrid.CurrentCheckout : rev.ObjectId;
 
         return RevisionGrid.GetRevisionFileName(FileName, objectId);
     }

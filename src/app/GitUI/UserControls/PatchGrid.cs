@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Net.Mail;
 using System.Text.RegularExpressions;
@@ -129,20 +129,18 @@ public partial class PatchGrid : GitModuleControl
             bool isApplying = currentCommitShortHash is not null && commitHash.StartsWith(currentCommitShortHash);
             isCurrentFound |= isApplying;
 
-            ObjectId? objectId;
+            ObjectId objectId;
             if (data is not null)
             {
                 objectId = data.ObjectId;
             }
             else
             {
-                if (!ObjectId.TryParse(parts[1], out ObjectId parsedId))
+                if (!ObjectId.TryParse(parts[1], out objectId))
                 {
                     Trace.Write($"PatchGrid: GetInteractiveRebasePatchFiles: Unable to parse commit hash '{parts[1]}' from '{todoCommits}'. Skipping this entry.");
                     continue;
                 }
-
-                objectId = parsedId;
             }
 
             patchFiles.Add(new PatchFile

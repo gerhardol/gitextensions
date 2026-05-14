@@ -60,7 +60,7 @@ public interface IGitUICommands : IServiceProvider
     bool StartCommandLineProcessDialog(IWin32Window? owner, string? command, ArgumentString arguments);
     bool StartCommitDialog(IWin32Window? owner, string? commitMessage = null, bool showOnlyWhenChanges = false);
     bool StartCompareRevisionsDialog(IWin32Window? owner = null);
-    bool StartCreateBranchDialog(IWin32Window? owner = null, ObjectId? objectId = null, string? newBranchNamePrefix = null);
+    bool StartCreateBranchDialog(IWin32Window? owner = null, ObjectId objectId = default, string? newBranchNamePrefix = null);
     bool StartCreateBranchDialog(IWin32Window? owner, string? branch);
     void StartCreatePullRequest(IWin32Window? owner);
     void StartCreatePullRequest(IWin32Window? owner, IRepositoryHostPlugin gitHoster, string? chooseRemote = null, string? chooseBranch = null);

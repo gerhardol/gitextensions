@@ -50,7 +50,7 @@ internal abstract class BaseRevisionNode : Node
     /// <summary>
     /// ObjectId for nodes with a revision.
     /// </summary>
-    public ObjectId? ObjectId { get; init; }
+    public ObjectId ObjectId { get; init; }
 
     public override void ApplyStyle()
     {

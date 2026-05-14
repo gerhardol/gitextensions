@@ -13,7 +13,7 @@ public partial class BranchSelector : GitModuleControl
     private IReadOnlyList<ObjectId>? _containRevisions;
     private string[]? _localBranches;
     private string[]? _remoteBranches;
-    public ObjectId? CommitToCompare;
+    public ObjectId CommitToCompare;
 
     public BranchSelector()
     {
@@ -115,9 +115,9 @@ public partial class BranchSelector : GitModuleControl
         else
         {
             string branchName = SelectedBranchName;
-            ObjectId? currentCheckout = CommitToCompare ?? Module.GetCurrentCheckout();
+            ObjectId currentCheckout = CommitToCompare.IsZero ? Module.GetCurrentCheckout() : CommitToCompare;
 
-            if (currentCheckout is null)
+            if (currentCheckout.IsZero)
             {
                 lbChanges.Text = "";
                 return;
@@ -125,7 +125,7 @@ public partial class BranchSelector : GitModuleControl
 
             ThreadHelper.FileAndForget(async () =>
             {
-                string text = Module.GetCommitCountString(currentCheckout.Value, branchName);
+                string text = Module.GetCommitCountString(currentCheckout, branchName);
                 await this.SwitchToMainThreadAsync();
                 lbChanges.Text = text;
             });

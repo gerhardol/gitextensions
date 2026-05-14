@@ -1223,7 +1223,7 @@ public sealed partial class FormCommit : GitModuleForm
                 }
                 else if (result == btnCreate)
                 {
-                    if (!UICommands.StartCreateBranchDialog(this, _editedCommit?.ObjectId))
+                    if (!UICommands.StartCreateBranchDialog(this, _editedCommit?.ObjectId ?? default))
                     {
                         return;
                     }
@@ -1733,11 +1733,11 @@ public sealed partial class FormCommit : GitModuleForm
     {
         GitRevision? headRev;
         GitRevision indexRev;
-        ObjectId? headId = Module.RevParse("HEAD");
-        if (headId is not null)
+        ObjectId headId = Module.RevParse("HEAD");
+        if (!headId.IsZero)
         {
-            headRev = new GitRevision(headId.Value);
-            indexRev = new GitRevision(ObjectId.IndexId) { ParentIds = new ObjectId[] { headId.Value } };
+            headRev = new GitRevision(headId);
+            indexRev = new GitRevision(ObjectId.IndexId) { ParentIds = new ObjectId[] { headId } };
         }
         else
         {

@@ -61,7 +61,7 @@ public sealed partial class GitRevision : IGitItem, INotifyPropertyChanged
     /// </remarks>
     public IReadOnlyList<ObjectId>? ParentIds { get; set; }
 
-    public ObjectId? TreeGuid { get; set; }
+    public ObjectId TreeGuid { get; set; }
 
     public string? Author { get; set; }
     public string? AuthorEmail { get; set; }
@@ -139,7 +139,7 @@ public sealed partial class GitRevision : IGitItem, INotifyPropertyChanged
 
     public bool HasParent => ParentIds?.Count > 0;
 
-    public ObjectId? FirstParentId => HasParent ? ParentIds?[0] : null;
+    public ObjectId FirstParentId => HasParent && ParentIds?.Count > 0 ? ParentIds[0] : default;
 
     #region INotifyPropertyChanged
 

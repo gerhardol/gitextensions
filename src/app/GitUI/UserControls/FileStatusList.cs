@@ -832,11 +832,11 @@ public sealed partial class FileStatusList : GitModuleControl
         FileStatusListLoading();
         UpdateToolbar(revisions);
         _enableDisablingShowDiffForAllParents = true;
-        _diffCalculator.SetDiff(revisions, headId: null, allowMultiDiff: false);
+        _diffCalculator.SetDiff(revisions, headId: default(ObjectId), allowMultiDiff: false);
         UpdateFileStatusListView(_diffCalculator.Calculate(prevList: [], refreshDiff: true, refreshGrep: false, cancellationToken), cancellationToken: cancellationToken);
     }
 
-    public async Task SetDiffsAsync(IReadOnlyList<GitRevision> revisions, ObjectId? headId, CancellationToken cancellationToken)
+    public async Task SetDiffsAsync(IReadOnlyList<GitRevision> revisions, ObjectId headId, CancellationToken cancellationToken)
     {
         FileStatusListLoading();
         UpdateToolbar(revisions);
@@ -921,7 +921,7 @@ public sealed partial class FileStatusList : GitModuleControl
             new(
                 firstRev: firstRev,
                 secondRev: secondRev,
-                summary: TranslatedStrings.DiffWithParent + GetDescriptionForRevision(firstRev?.ObjectId),
+                summary: TranslatedStrings.DiffWithParent + GetDescriptionForRevision(firstRev?.ObjectId ?? default(ObjectId)),
                 statuses: items)
         });
     }
@@ -932,12 +932,12 @@ public sealed partial class FileStatusList : GitModuleControl
         UpdateFileStatusListView([]);
     }
 
-    private string? GetDescriptionForRevision(ObjectId? objectId)
-        => DescribeRevision is not null && objectId is not null ? DescribeRevision(objectId.Value)
-            : objectId is null ? ""
+    private string? GetDescriptionForRevision(ObjectId objectId)
+        => DescribeRevision is not null && !objectId.IsZero ? DescribeRevision(objectId)
+            : objectId.IsZero ? ""
             : objectId == ObjectId.WorkTreeId ? ResourceManager.TranslatedStrings.Workspace
             : objectId == ObjectId.IndexId ? ResourceManager.TranslatedStrings.Index
-            : objectId.Value.ToShortString();
+            : objectId.ToShortString();
 
     public void SetNoFilesText(string text)
     {
@@ -1040,10 +1040,10 @@ public sealed partial class FileStatusList : GitModuleControl
             ? await task.ConfigureAwait(false)
             : null;
 
-        ObjectId? selectedId = SelectedItem.SecondRevision?.ObjectId == ObjectId.WorkTreeId
+        ObjectId selectedId = SelectedItem.SecondRevision?.ObjectId == ObjectId.WorkTreeId
             ? ObjectId.WorkTreeId
-            : status?.Commit;
-        ObjectId? firstId = status?.OldCommit;
+            : status?.Commit ?? default;
+        ObjectId firstId = status?.OldCommit ?? default;
 
         string path = _fullPathResolver.Resolve(submoduleName.EnsureTrailingPathSeparator()) ?? "";
         if (!Directory.Exists(path))

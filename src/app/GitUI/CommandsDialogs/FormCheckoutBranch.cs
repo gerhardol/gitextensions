@@ -346,7 +346,7 @@ public partial class FormCheckoutBranch : GitExtensionsDialog
             }
         }
 
-        ObjectId? originalId = Module.GetCurrentCheckout();
+        ObjectId originalId = Module.GetCurrentCheckout();
 
         bool success = ScriptsRunner.RunEventScripts(ScriptEvent.BeforeCheckout, this);
         if (!success)
@@ -388,7 +388,7 @@ public partial class FormCheckoutBranch : GitExtensionsDialog
                 }
             }
 
-            ObjectId? currentId = Module.GetCurrentCheckout();
+            ObjectId currentId = Module.GetCurrentCheckout();
 
             if (originalId != currentId)
             {
@@ -482,10 +482,10 @@ public partial class FormCheckoutBranch : GitExtensionsDialog
                 // not applicable if there is no checkout yet
                 string aheadBehindInfo = "";
 
-                ObjectId? currentCheckout = Module.GetCurrentCheckout();
-                if (currentCheckout is not null)
+                ObjectId currentCheckout = Module.GetCurrentCheckout();
+                if (!currentCheckout.IsZero)
                 {
-                    aheadBehindInfo = Module.GetCommitCountString(currentCheckout.Value, branch);
+                    aheadBehindInfo = Module.GetCommitCountString(currentCheckout, branch);
                 }
 
                 await this.SwitchToMainThreadAsync();

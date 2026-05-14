@@ -246,22 +246,22 @@ public sealed partial class FormStash : GitModuleForm
         {
             // FileStatusList has no interface for both worktree<-index, index<-HEAD at the same time
             // Must be handled when displaying
-            ObjectId? headId = Module.RevParse("HEAD");
+            ObjectId headId = Module.RevParse("HEAD");
             GitRevision workTreeRev = new(ObjectId.WorkTreeId)
             {
                 ParentIds = new[] { ObjectId.IndexId }
             };
-            if (headId is null)
+            if (headId.IsZero)
             {
                 // Likely a detached head
                 Stashed.SetDiffs(null, workTreeRev, gitItemStatuses);
             }
             else
             {
-                GitRevision headRev = new(headId.Value);
+                GitRevision headRev = new(headId);
                 GitRevision indexRev = new(ObjectId.IndexId)
                 {
-                    ParentIds = new ObjectId[] { headId.Value }
+                    ParentIds = new ObjectId[] { headId }
                 };
                 List<GitItemStatus> indexItems = [.. gitItemStatuses.Where(item => item.Staged == StagedStatus.Index)];
                 List<GitItemStatus> workTreeItems = [.. gitItemStatuses.Where(item => item.Staged != StagedStatus.Index)];
@@ -270,19 +270,19 @@ public sealed partial class FormStash : GitModuleForm
         }
         else
         {
-            ObjectId? firstId = Module.RevParse(gitStash.Name + "^");
-            GitRevision? firstRev = firstId is null ? null : new(firstId.Value);
+            ObjectId firstId = Module.RevParse(gitStash.Name + "^");
+            GitRevision? firstRev = firstId.IsZero ? null : new(firstId);
 
-            ObjectId? selectedId = Module.RevParse(gitStash.Name);
-            if (selectedId is null)
+            ObjectId selectedId = Module.RevParse(gitStash.Name);
+            if (selectedId.IsZero)
             {
-                throw new InvalidOperationException("selectedId must not be null");
+                throw new InvalidOperationException("selectedId must not be zero");
             }
 
-            GitRevision secondRev = new(selectedId.Value);
-            if (firstId is not null)
+            GitRevision secondRev = new(selectedId);
+            if (!firstId.IsZero)
             {
-                secondRev.ParentIds = new ObjectId[] { firstId.Value };
+                secondRev.ParentIds = new ObjectId[] { firstId };
             }
 
             Stashed.SetDiffs(firstRev, secondRev, gitItemStatuses);

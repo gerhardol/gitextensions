@@ -54,7 +54,7 @@ partial class FormVerify
         /// <summary>
         /// Id (SHA-1 hash) of parent commit to the lost object.
         /// </summary>
-        public ObjectId? Parent { get; private set; }
+        public ObjectId Parent { get; private set; }
 
         /// <summary>
         /// Diagnostics and object type.

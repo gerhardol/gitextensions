@@ -23,7 +23,7 @@ public sealed partial class FormCreateBranch : GitExtensionsDialog
     public bool UserAbleToChangeRevision { get; set; } = true;
     public bool CouldBeOrphan { get; set; } = true;
 
-    public FormCreateBranch(IGitUICommands commands, ObjectId? objectId, string? newBranchNamePrefix = null)
+    public FormCreateBranch(IGitUICommands commands, ObjectId objectId, string? newBranchNamePrefix = null)
         : base(commands, enablePositionRestore: false)
     {
         InitializeComponent();
@@ -36,22 +36,26 @@ public sealed partial class FormCreateBranch : GitExtensionsDialog
 
         grpOrphan.AutoSize = true;
 
-        if (objectId?.IsArtificial is true)
+        if (objectId.IsArtificial)
         {
-            objectId = null;
+            objectId = default;
         }
 
         commitSummaryUserControl1.Revision = null;
 
         ObjectId currentCheckout = Module.GetCurrentCheckout();
-        objectId ??= currentCheckout.IsZero ? null : currentCheckout;
-        if (objectId is not null)
+        if (objectId.IsZero)
+        {
+            objectId = currentCheckout;
+        }
+
+        if (!objectId.IsZero)
         {
             commitPicker.SetSelectedCommitHash(objectId.ToString());
 
             if (string.IsNullOrWhiteSpace(newBranchNamePrefix))
             {
-                GitRevision revision = Module.GetRevision(objectId!.Value, shortFormat: true, loadRefs: true);
+                GitRevision revision = Module.GetRevision(objectId, shortFormat: true, loadRefs: true);
                 IGitRef? firstRef = revision.Refs.FirstOrDefault(r => !r.IsTag) ?? revision.Refs.FirstOrDefault(r => r.IsTag);
                 newBranchNamePrefix = firstRef?.LocalName;
 
@@ -121,12 +125,12 @@ public sealed partial class FormCreateBranch : GitExtensionsDialog
         // if the user hits [Enter] at any point, we need to trigger BranchNameTextBox Leave event
         cmdOk.Focus();
 
-        ObjectId? objectId = null;
+        ObjectId objectId = default;
 
         if (!chkCreateOrphan.Checked)
         {
             objectId = commitPicker.SelectedObjectId;
-            if (objectId is null)
+            if (objectId.IsZero)
             {
                 MessageBoxes.Show(this, _noRevisionSelected.Text, Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 DialogResult = DialogResult.None;
@@ -151,7 +155,7 @@ public sealed partial class FormCreateBranch : GitExtensionsDialog
 
         try
         {
-            ObjectId? originalHash = Module.GetCurrentCheckout();
+            ObjectId originalHash = Module.GetCurrentCheckout();
 
             ArgumentString command;
             if (chkCreateOrphan.Checked)
@@ -160,12 +164,12 @@ public sealed partial class FormCreateBranch : GitExtensionsDialog
             }
             else
             {
-                if (objectId is null)
+                if (objectId.IsZero)
                 {
                     throw new InvalidOperationException("objectId must be set for non-orphan branch creation");
                 }
 
-                command = Commands.Branch(branchName, objectId.Value.ToString(), chkCheckoutAfterCreate.Checked);
+                command = Commands.Branch(branchName, objectId.ToString(), chkCheckoutAfterCreate.Checked);
             }
 
             bool success = FormProcess.ShowDialog(this, UICommands, arguments: command, Module.WorkingDir, input: null, useDialogSettings: true);
@@ -204,7 +208,7 @@ public sealed partial class FormCreateBranch : GitExtensionsDialog
 
     private void commitPicker_SelectedObjectIdChanged(object sender, EventArgs e)
     {
-        GitRevision revision = Module.GetRevision(commitPicker.SelectedObjectId ?? default, shortFormat: true, loadRefs: true);
+        GitRevision revision = Module.GetRevision(commitPicker.SelectedObjectId, shortFormat: true, loadRefs: true);
         commitSummaryUserControl1.Revision = revision;
     }
 }

@@ -549,8 +549,8 @@ public sealed class GitUICommands : IGitUICommands
 
     public bool StartCreateBranchDialog(IWin32Window? owner, string? branch)
     {
-        ObjectId? objectId = Module.RevParse(branch!);
-        if (objectId is null)
+        ObjectId objectId = Module.RevParse(branch!);
+        if (objectId.IsZero)
         {
             MessageBoxes.Show($"Branch \"{branch}\" could not be resolved.", TranslatedStrings.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
             return false;
@@ -559,9 +559,9 @@ public sealed class GitUICommands : IGitUICommands
         return StartCreateBranchDialog(owner, objectId);
     }
 
-    public bool StartCreateBranchDialog(IWin32Window? owner = null, ObjectId? objectId = null, string? newBranchNamePrefix = null)
+    public bool StartCreateBranchDialog(IWin32Window? owner = null, ObjectId objectId = default, string? newBranchNamePrefix = null)
     {
-        if (Module.IsBareRepository() || objectId?.IsArtificial is true)
+        if (Module.IsBareRepository() || objectId.IsArtificial)
         {
             return false;
         }
@@ -1013,7 +1013,7 @@ public sealed class GitUICommands : IGitUICommands
 
         bool Action()
         {
-            using FormCreateTag form = new(this, revision?.ObjectId);
+            using FormCreateTag form = new(this, revision?.ObjectId ?? default);
             return form.ShowDialog(owner) == DialogResult.OK;
         }
 
@@ -1723,7 +1723,7 @@ public sealed class GitUICommands : IGitUICommands
                 });
         }
 
-        if (TryGetObjectIds(arg, Module, out ObjectId? selectedId, out ObjectId? firstId))
+        if (TryGetObjectIds(arg, Module, out ObjectId selectedId, out ObjectId firstId))
         {
             return StartBrowseDialog(owner: null,
                 new BrowseArguments
@@ -1739,10 +1739,10 @@ public sealed class GitUICommands : IGitUICommands
         Console.Error.WriteLine($"No commit found matching: {arg}");
         return false;
 
-        static bool TryGetObjectIds(string arg, IGitModule module, out ObjectId? selectedId, out ObjectId? firstId)
+        static bool TryGetObjectIds(string arg, IGitModule module, out ObjectId selectedId, out ObjectId firstId)
         {
-            selectedId = null;
-            firstId = null;
+            selectedId = default;
+            firstId = default;
             foreach (string part in arg.LazySplit(','))
             {
                 if (!module.TryResolvePartialCommitId(part, out ObjectId objectId))
@@ -1750,11 +1750,11 @@ public sealed class GitUICommands : IGitUICommands
                     return false;
                 }
 
-                if (selectedId is null)
+                if (selectedId.IsZero)
                 {
                     selectedId = objectId;
                 }
-                else if (firstId is null)
+                else if (firstId.IsZero)
                 {
                     firstId = objectId;
 
@@ -1882,7 +1882,7 @@ public sealed class GitUICommands : IGitUICommands
                              {
                                  RevFilter = filterByRevision ? revision?.ObjectId.ToString() : null,
                                  PathFilter = fileHistoryFileName,
-                                 SelectedId = revision?.ObjectId,
+                                 SelectedId = revision?.ObjectId ?? default,
                                  IsFileHistoryMode = true
                              }));
         }
