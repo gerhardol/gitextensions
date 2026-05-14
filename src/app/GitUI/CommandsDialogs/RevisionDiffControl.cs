@@ -382,9 +382,9 @@ public partial class RevisionDiffControl : GitModuleControl, IRevisionGridFileUp
         base.Dispose(disposing);
     }
 
-    private string DescribeRevision(ObjectId? objectId, int maxLength = 0)
+    private string DescribeRevision(ObjectId objectId, int maxLength = 0)
     {
-        if (objectId is null)
+        if (objectId.IsZero)
         {
             // No parent at all, present as working directory
             return ResourceManager.TranslatedStrings.Workspace;
@@ -392,11 +392,11 @@ public partial class RevisionDiffControl : GitModuleControl, IRevisionGridFileUp
 
         Validates.NotNull(_revisionGridInfo);
 
-        GitRevision revision = _revisionGridInfo.GetRevision(objectId.Value);
+        GitRevision revision = _revisionGridInfo.GetRevision(objectId);
 
         if (revision is null)
         {
-            return objectId.Value.ToShortString();
+            return objectId.ToShortString();
         }
 
         return _revisionGridInfo.DescribeRevision(revision, maxLength);

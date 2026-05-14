@@ -706,7 +706,7 @@ public partial class FileViewer : GitModuleControl
     /// <param name="openWithDifftool">difftool command</param>
     /// <returns>Task to view the item</returns>
     private Task ViewGitItemAsync(GitItemStatus file,
-        ObjectId? objectId,
+        ObjectId objectId,
         FileStatusItem? item,
         int? line,
         Action? openWithDifftool,
@@ -715,16 +715,16 @@ public partial class FileViewer : GitModuleControl
         // set fields possibly not set from git-diff (etc); treeGuid and IsSubmodule.
         // (git-status does not report submodule, IsSubmodule is not set if not TreeId is)
         // treeId (blobId) is only recalculated if required.
-        ObjectId? blobId = GetUpdateTreeId(file, objectId, cancellationToken);
+        ObjectId blobId = GetUpdateTreeId(file, objectId, cancellationToken);
 
-        return blobId is null
+        return blobId.IsZero
             ? ViewFileAsync(file.Name, file.IsSubmodule, item, line, openWithDifftool, cancellationToken)
             : ViewItemAsync(
                 file.Name,
                 file.IsSubmodule,
                 getImage: () => ThreadHelper.JoinableTaskFactory.Run(GetImageAsync),
                 getFileText: GetFileText,
-                getSubmoduleText: () => SubmoduleResources.GetSubmoduleText(Module, file.Name.TrimEnd('/'), blobId.Value.ToString()),
+                getSubmoduleText: () => SubmoduleResources.GetSubmoduleText(Module, file.Name.TrimEnd('/'), blobId.ToString()),
                 item: item,
                 line: line,
                 openWithDifftool: openWithDifftool,
@@ -738,14 +738,14 @@ public partial class FileViewer : GitModuleControl
                 || (!file.Name.EndsWith(".diff", StringComparison.OrdinalIgnoreCase)
                    && !file.Name.EndsWith(".patch", StringComparison.OrdinalIgnoreCase));
             FilePreamble = [];
-            return Module.GetFileText(blobId.Value, Encoding, stripAnsiEscapeCodes) ?? "";
+            return Module.GetFileText(blobId, Encoding, stripAnsiEscapeCodes) ?? "";
         }
 
         async Task<Image?> GetImageAsync()
         {
             try
             {
-                using MemoryStream? stream = await Module.GetFileStreamAsync(blobId.Value.ToString(), cancellationToken: default);
+                using MemoryStream? stream = await Module.GetFileStreamAsync(blobId.ToString(), cancellationToken: default);
                 if (stream is not null)
                 {
                     return CreateImage(file.Name, stream);
@@ -1604,11 +1604,11 @@ public partial class FileViewer : GitModuleControl
     /// <param fileName="cancellationToken">The cancellation token.</param>
     /// <returns>the current TreeId (normally blob id, could be commit id) to be used.
     /// For worktree null is always returned also if there is a treeid (that really applies to the index)</returns>
-    public ObjectId? GetUpdateTreeId(GitItemStatus file,
-        ObjectId? commitId,
+    public ObjectId GetUpdateTreeId(GitItemStatus file,
+        ObjectId commitId,
         CancellationToken cancellationToken = default)
     {
-        if (!file.TreeId.IsZero && commitId?.IsArtificial is false)
+        if (!file.TreeId.IsZero && !commitId.IsZeroOrArtificial)
         {
             // current value is immutable (and IsSubmodule should have been set)
             return file.TreeId;
@@ -1618,20 +1618,20 @@ public partial class FileViewer : GitModuleControl
         {
             // treeId already calculated, no point in doing it again.
             // (if treeId is set, it means that IsSubmodule is set).
-            return null;
+            return default;
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        IObjectGitItem[] items = [.. Module.GetTree(commitId ?? default, full: true, file.Name, cancellationToken)];
+        IObjectGitItem[] items = [.. Module.GetTree(commitId, full: true, file.Name, cancellationToken)];
         if (items.Length == 1)
         {
             IObjectGitItem gitItem = items[0];
             file.IsSubmodule = gitItem.ObjectType == GitObjectType.Commit;
             file.TreeId = gitItem.ObjectId;
-            return commitId == ObjectId.WorkTreeId ? null : file.TreeId;
+            return commitId == ObjectId.WorkTreeId ? default : file.TreeId;
         }
 
-        return null;
+        return default;
     }
 
     /// <summary>
@@ -1702,7 +1702,7 @@ public partial class FileViewer : GitModuleControl
         {
             Validates.NotNull(FilePreamble);
 
-            ObjectId? itemBlobId = GetUpdateTreeId(_viewItem.Item, _viewItem.SecondRevision.ObjectId);
+            ObjectId itemBlobId = GetUpdateTreeId(_viewItem.Item, _viewItem.SecondRevision.ObjectId);
             patch = PatchManager.GetSelectedLinesAsNewPatch(
                 Module,
                 _viewItem.Item.Name,
@@ -1712,7 +1712,7 @@ public partial class FileViewer : GitModuleControl
                 Encoding,
                 reset: false,
                 FilePreamble,
-                itemBlobId?.ToString());
+                itemBlobId.ToString());
         }
         else
         {
@@ -1765,7 +1765,7 @@ public partial class FileViewer : GitModuleControl
         {
             Validates.NotNull(FilePreamble);
 
-            ObjectId? itemBlobId = GetUpdateTreeId(_viewItem.Item, _viewItem.SecondRevision.ObjectId);
+            ObjectId itemBlobId = GetUpdateTreeId(_viewItem.Item, _viewItem.SecondRevision.ObjectId);
             patch = PatchManager.GetSelectedLinesAsNewPatch(
                 Module,
                 _viewItem.Item.Name,
@@ -1775,7 +1775,7 @@ public partial class FileViewer : GitModuleControl
                 Encoding,
                 reset: true,
                 FilePreamble,
-                itemBlobId?.ToString());
+                itemBlobId.ToString());
         }
         else if (currentItemStaged)
         {
@@ -1839,7 +1839,7 @@ public partial class FileViewer : GitModuleControl
         {
             Validates.NotNull(FilePreamble);
 
-            ObjectId? itemBlobId = reverse ? GetUpdateTreeId(_viewItem.Item, _viewItem.SecondRevision.ObjectId) : null;
+            ObjectId itemBlobId = reverse ? GetUpdateTreeId(_viewItem.Item, _viewItem.SecondRevision.ObjectId) : default;
             patch = PatchManager.GetSelectedLinesAsNewPatch(
                 Module,
                 _viewItem.Item.Name,
@@ -1849,7 +1849,7 @@ public partial class FileViewer : GitModuleControl
                 Encoding,
                 reset: reverse,
                 FilePreamble,
-                itemBlobId?.ToString());
+                itemBlobId.ToString());
         }
         else if (!reverse)
         {

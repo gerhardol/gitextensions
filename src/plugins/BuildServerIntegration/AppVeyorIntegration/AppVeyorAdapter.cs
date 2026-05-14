@@ -137,15 +137,15 @@ internal sealed class AppVeyorAdapter : IBuildServerAdapter
             List<AppVeyorBuildInfo> filteredBuilds = [];
             foreach (AppVeyorBuildInfo build in allBuilds.OrderByDescending(b => b.StartDate))
             {
-                if (build.CommitId is not { } commitId)
+                if (build.CommitId.IsZero)
                 {
                     continue;
                 }
 
-                if (!_fetchBuilds.Contains(commitId))
+                if (!_fetchBuilds.Contains(build.CommitId))
                 {
                     filteredBuilds.Add(build);
-                    _fetchBuilds.Add(commitId);
+                    _fetchBuilds.Add(build.CommitId);
                 }
             }
 

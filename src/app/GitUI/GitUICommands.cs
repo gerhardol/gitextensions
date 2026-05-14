@@ -498,7 +498,7 @@ public sealed class GitUICommands : IGitUICommands
     /// <param name="workingDir">The working directory for the new process.</param>
     /// <param name="selectedId">The optional commit to be selected.</param>
     /// <param name="firstId">The first commit to be selected, the first commit in a diff.</param>
-    internal static void LaunchBrowse(string workingDir = "", ObjectId? selectedId = null, ObjectId? firstId = null)
+    internal static void LaunchBrowse(string workingDir = "", ObjectId selectedId = default, ObjectId firstId = default)
     {
         if (!Directory.Exists(workingDir))
         {
@@ -508,16 +508,16 @@ public sealed class GitUICommands : IGitUICommands
 
         StringBuilder arguments = new("browse");
 
-        if (selectedId is null)
+        if (selectedId.IsZero)
         {
             selectedId = firstId;
-            firstId = null;
+            firstId = default;
         }
 
-        if (selectedId is not null)
+        if (!selectedId.IsZero)
         {
             arguments.Append(" -commit=").Append(selectedId);
-            if (firstId is not null)
+            if (!firstId.IsZero)
             {
                 arguments.Append(',').Append(firstId);
             }

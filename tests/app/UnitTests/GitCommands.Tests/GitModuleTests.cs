@@ -268,7 +268,7 @@ public sealed partial class GitModuleTests
     [Test]
     public void GetCurrentCheckout_should_query_git_and_return_sha_for_HEAD()
     {
-        ObjectId? objectId;
+        ObjectId objectId;
         string headId = "69a7c7a40230346778e7eebed809773a6bc45268";
 
         using (_executable.StageOutput("rev-parse HEAD", headId))
@@ -276,7 +276,7 @@ public sealed partial class GitModuleTests
             objectId = _gitModule.GetCurrentCheckout();
         }
 
-        objectId?.ToString().Should().Be(headId);
+        objectId.ToString().Should().Be(headId);
     }
 
     [Test]
@@ -340,9 +340,9 @@ public sealed partial class GitModuleTests
     }
 
     [Test, TestCaseSource(nameof(StagedStatuses))]
-    public void GetStagedStatus(ObjectId? firstRevision, ObjectId? secondRevision, ObjectId? parentToSecond, StagedStatus status)
+    public void GetStagedStatus(ObjectId firstRevision, ObjectId secondRevision, ObjectId parentToSecond, StagedStatus status)
     {
-        StagedStatus stagedStatus = _gitModule.GetTestAccessor().GetStagedStatus(firstRevision ?? default, secondRevision ?? default, parentToSecond ?? default);
+        StagedStatus stagedStatus = _gitModule.GetTestAccessor().GetStagedStatus(firstRevision, secondRevision, parentToSecond);
         stagedStatus.Should().Be(status);
     }
 
@@ -427,9 +427,9 @@ public sealed partial class GitModuleTests
         await moduleTestHelperSuper.Module.GitExecutable.GetOutputAsync(@"add ""sub repo""");
         await moduleTestHelperSuper.Module.GitExecutable.GetOutputAsync(@"commit -am ""Update submodule ref""");
 
-        (char code, ObjectId? commitId) = await moduleSub.GetSuperprojectCurrentCheckoutAsync();
+        (char code, ObjectId commitId) = await moduleSub.GetSuperprojectCurrentCheckoutAsync();
         code.Should().Be(' ');
-        commitId?.ToString().Should().Be(commitRef);
+        commitId.ToString().Should().Be(commitRef);
     }
 
     [TestCase(false, @"stash list")]
