@@ -261,7 +261,7 @@ public sealed partial class FormStash : GitModuleForm
                 GitRevision headRev = new(headId);
                 GitRevision indexRev = new(ObjectId.IndexId)
                 {
-                    ParentIds = new ObjectId[] { headId }
+                    ParentIds = new[] { headId }
                 };
                 List<GitItemStatus> indexItems = [.. gitItemStatuses.Where(item => item.Staged == StagedStatus.Index)];
                 List<GitItemStatus> workTreeItems = [.. gitItemStatuses.Where(item => item.Staged != StagedStatus.Index)];
@@ -282,7 +282,7 @@ public sealed partial class FormStash : GitModuleForm
             GitRevision secondRev = new(selectedId);
             if (!firstId.IsZero)
             {
-                secondRev.ParentIds = new ObjectId[] { firstId };
+                secondRev.ParentIds = new[] { firstId };
             }
 
             Stashed.SetDiffs(firstRev, secondRev, gitItemStatuses);

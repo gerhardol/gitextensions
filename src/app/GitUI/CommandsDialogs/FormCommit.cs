@@ -1737,7 +1737,7 @@ public sealed partial class FormCommit : GitModuleForm
         if (!headId.IsZero)
         {
             headRev = new GitRevision(headId);
-            indexRev = new GitRevision(ObjectId.IndexId) { ParentIds = new ObjectId[] { headId } };
+            indexRev = new GitRevision(ObjectId.IndexId) { ParentIds = new[] { headId } };
         }
         else
         {
@@ -1745,7 +1745,7 @@ public sealed partial class FormCommit : GitModuleForm
             indexRev = new GitRevision(ObjectId.IndexId);
         }
 
-        GitRevision workTreeRev = new(ObjectId.WorkTreeId) { ParentIds = new[] { ObjectId.IndexId } };
+        GitRevision workTreeRev = new(ObjectId.WorkTreeId) { ParentIds = [ObjectId.IndexId] };
         return (headRev, indexRev, workTreeRev);
     }
 

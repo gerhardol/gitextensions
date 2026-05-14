@@ -160,7 +160,7 @@ public sealed partial class FileStatusDiffCalculator
             firstRev: firstRev,
             secondRev: selectedRev,
             summary: TranslatedStrings.DiffWithParent + GetDescriptionForRevision(firstRev.ObjectId),
-            statuses: module.GetDiffFilesWithSubmodulesStatus(firstRev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId.IsZero ? default : selectedRev.FirstParentId, cancellationToken: cancellationToken)));
+            statuses: module.GetDiffFilesWithSubmodulesStatus(firstRev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId, cancellationToken: cancellationToken)));
 
         if (!AppSettings.ShowDiffForAllParents || revisions.Count > maxMultiCompare || !allowMultiDiff)
         {
@@ -236,14 +236,14 @@ public sealed partial class FileStatusDiffCalculator
                         firstRev: rev,
                         secondRev: selectedRev,
                         summary: TranslatedStrings.DiffWithParent + GetDescriptionForRevision(rev.ObjectId),
-                        statuses: module.GetDiffFilesWithSubmodulesStatus(rev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId.IsZero ? default : selectedRev.FirstParentId, cancellationToken: cancellationToken))));
+                        statuses: module.GetDiffFilesWithSubmodulesStatus(rev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId, cancellationToken: cancellationToken))));
 
             return fileStatusDescs;
         }
 
         IReadOnlyList<GitItemStatus> allAToB = fileStatusDescs[0].Statuses;
-        IReadOnlyList<GitItemStatus> allBaseToB = module.GetDiffFilesWithSubmodulesStatus(baseRevId, selectedRev.ObjectId, selectedRev.FirstParentId.IsZero ? default : selectedRev.FirstParentId, cancellationToken: cancellationToken);
-        IReadOnlyList<GitItemStatus> allBaseToA = module.GetDiffFilesWithSubmodulesStatus(baseRevId, firstRev.ObjectId, firstRev.FirstParentId.IsZero ? default : firstRev.FirstParentId, cancellationToken: cancellationToken);
+        IReadOnlyList<GitItemStatus> allBaseToB = module.GetDiffFilesWithSubmodulesStatus(baseRevId, selectedRev.ObjectId, selectedRev.FirstParentId, cancellationToken: cancellationToken);
+        IReadOnlyList<GitItemStatus> allBaseToA = module.GetDiffFilesWithSubmodulesStatus(baseRevId, firstRev.ObjectId, firstRev.FirstParentId, cancellationToken: cancellationToken);
 
         GitItemStatusNameEqualityComparer comparer = new();
         GitItemStatus[] allAToBExceptExactRenameCopy = [.. allAToB.Where(i => !((i.IsRenamed || i.IsCopied) && i.RenameCopyPercentage == "100"))];

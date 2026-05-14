@@ -72,13 +72,13 @@ public static partial class Commands
         };
     }
 
-    public static ArgumentString Branch(string branchName, string revision, bool checkout)
+    public static ArgumentString Branch(string branchName, ObjectId objectId, bool checkout)
     {
         return new GitArgumentBuilder(checkout ? "checkout" : "branch")
         {
             { checkout, "-b" },
             branchName.Trim().Quote(),
-            revision?.Trim().QuoteNE()
+            objectId
         };
     }
 

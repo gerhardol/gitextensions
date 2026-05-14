@@ -269,7 +269,6 @@ public readonly struct ObjectId : IEquatable<ObjectId>, IComparable<ObjectId>, I
 
     #region IComparable<ObjectId>
 
-    /// <inheritdoc />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int CompareTo(ObjectId other)
     {
@@ -341,10 +340,8 @@ public readonly struct ObjectId : IEquatable<ObjectId>, IComparable<ObjectId>, I
 
     #region ISpanFormattable
 
-    /// <inheritdoc />
     string IFormattable.ToString(string? format, IFormatProvider? formatProvider) => ToString();
 
-    /// <inheritdoc />
     bool ISpanFormattable.TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
     {
         if (destination.Length < Sha1CharCount)
@@ -361,17 +358,14 @@ public readonly struct ObjectId : IEquatable<ObjectId>, IComparable<ObjectId>, I
 
     #region Equality and hashing
 
-    /// <inheritdoc />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Equals(ObjectId other)
     {
         return ((ReadOnlySpan<byte>)_data).SequenceEqual(other._data);
     }
 
-    /// <inheritdoc />
     public override bool Equals(object? obj) => obj is ObjectId id && Equals(id);
 
-    /// <inheritdoc />
     public override int GetHashCode()
     {
         return Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetReference((ReadOnlySpan<byte>)_data));

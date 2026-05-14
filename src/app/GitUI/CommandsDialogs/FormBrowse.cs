@@ -2432,13 +2432,13 @@ public sealed partial class FormBrowse : GitModuleForm, IBrowseRepo
         {
             case "gotocommit":
                 Validates.NotNull(e.Data);
-                if (!Module.TryResolvePartialCommitId(e.Data, out ObjectId commitId))
+                if (!Module.TryResolvePartialCommitId(e.Data, out ObjectId commitId) || !RevisionGrid.SetSelectedRevision(commitId))
                 {
-                    return;
-                }
+                    if (commitId.IsZero)
+                    {
+                        return;
+                    }
 
-                if (!RevisionGrid.SetSelectedRevision(commitId))
-                {
                     // This may occur at various filters, like AppSettings.ShowOnlyFirstParent
                     // will hide other than the first parent.
                     MessageBoxes.RevisionFilteredInGrid(this, commitId);

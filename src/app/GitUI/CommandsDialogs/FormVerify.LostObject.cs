@@ -75,6 +75,11 @@ partial class FormVerify
             // TODO use enum for RawType
             ObjectType = objectType;
             RawType = rawType;
+            if (objectId.IsZero)
+            {
+                throw new ArgumentNullException(nameof(objectId));
+            }
+
             ObjectId = objectId;
         }
 

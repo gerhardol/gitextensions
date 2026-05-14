@@ -210,7 +210,7 @@ partial class FileStatusList
     /// </summary>
     /// <param name="resetId">The selected commit id.</param>
     /// <returns><see langword="true"/> if it is possible to reset to first id.</returns>
-    private static bool CanResetToSecond(ObjectId resetId) => !resetId.IsZero && !resetId.IsArtificial;
+    private static bool CanResetToSecond(ObjectId resetId) => !resetId.IsZeroOrArtificial;
 
     private void CherryPickChanges_Click(object sender, EventArgs e)
     {

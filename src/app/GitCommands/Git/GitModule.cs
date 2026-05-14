@@ -1344,7 +1344,7 @@ public sealed partial class GitModule : IGitModule
     /// <returns><see langword="true"/> if successfully executed</returns>
     public bool ResetChanges(ObjectId resetId, IReadOnlyList<GitItemStatus> selectedItems, bool resetAndDelete, IFullPathResolver fullPathResolver, out StringBuilder output, Action<BatchProgressEventArgs>? progressAction = null)
     {
-        if (!resetId.IsZero && resetId.IsArtificial && resetId != ObjectId.IndexId)
+        if (resetId.IsArtificial && resetId != ObjectId.IndexId)
         {
             throw new InvalidOperationException(nameof(resetId));
         }
@@ -1493,7 +1493,7 @@ public sealed partial class GitModule : IGitModule
 
     public string CheckoutFiles(IReadOnlyList<string> files, ObjectId revision, bool force)
     {
-        if (files.Count == 0 || (!revision.IsZero && revision.IsArtificial && revision != ObjectId.IndexId))
+        if (files.Count == 0 || (revision.IsArtificial && revision != ObjectId.IndexId))
         {
             return "";
         }
@@ -2364,7 +2364,7 @@ public sealed partial class GitModule : IGitModule
         string first = firstId.IsArtificial ? "HEAD" : firstId.ToString();
         string second = secondId.IsArtificial ? "HEAD" : secondId.ToString();
 
-        if ((!firstBase.IsZero && firstBase.IsArtificial) || (!secondBase.IsZero && secondBase.IsArtificial))
+        if (firstBase.IsArtificial || secondBase.IsArtificial)
         {
             throw new ArgumentException($"Cannot get range diff for artificial commit base of A: {firstBase} or base of B: {secondBase}.");
         }
@@ -2558,8 +2558,7 @@ public sealed partial class GitModule : IGitModule
         {
             staged = StagedStatus.Index;
         }
-        else if (!firstId.IsZero && !firstId.IsArtificial &&
-                 !secondId.IsZero && !secondId.IsArtificial)
+        else if (!firstId.IsZeroOrArtificial && !secondId.IsZeroOrArtificial)
         {
             // This cannot be a worktree/index file
             staged = StagedStatus.None;
@@ -3204,7 +3203,7 @@ public sealed partial class GitModule : IGitModule
 
     public IEnumerable<IObjectGitItem> GetTree(ObjectId commitId, bool full, string fileName = "", CancellationToken cancellationToken = default)
     {
-        bool isArtificial = !commitId.IsZero && commitId.IsArtificial;
+        bool isArtificial = commitId.IsArtificial;
         if (isArtificial && !full)
         {
             throw new ArgumentOutOfRangeException(nameof(full), "Artificial commit requires 'full'.");

@@ -1608,7 +1608,7 @@ public partial class FileViewer : GitModuleControl
         ObjectId commitId,
         CancellationToken cancellationToken = default)
     {
-        if (!file.TreeId.IsZero && !commitId.IsZeroOrArtificial)
+        if (!file.TreeId.IsZero && !commitId.IsArtificial)
         {
             // current value is immutable (and IsSubmodule should have been set)
             return file.TreeId;

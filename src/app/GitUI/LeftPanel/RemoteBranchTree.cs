@@ -37,7 +37,7 @@ internal sealed class RemoteBranchTree : BaseRefTree
 
             if (branch.ObjectId.IsZero)
             {
-                continue;
+                throw new InvalidOperationException($"Branch '{branch.Name}' has no ObjectId.");
             }
 
             string remoteName = branch.Name.SubstringUntil('/');

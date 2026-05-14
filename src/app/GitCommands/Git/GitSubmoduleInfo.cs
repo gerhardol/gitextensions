@@ -17,6 +17,11 @@ public sealed class GitSubmoduleInfo : IGitSubmoduleInfo
         Name = name ?? throw new ArgumentNullException(nameof(name));
         LocalPath = localPath ?? throw new ArgumentNullException(nameof(localPath));
         RemotePath = remotePath ?? throw new ArgumentNullException(nameof(remotePath));
+        if (currentCommitId.IsZero)
+        {
+            throw new ArgumentNullException(nameof(currentCommitId));
+        }
+
         CurrentCommitId = currentCommitId;
         Branch = branch ?? throw new ArgumentNullException(nameof(branch));
         IsInitialized = isInitialized;

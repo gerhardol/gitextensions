@@ -61,7 +61,7 @@ internal sealed class LocalBranchTree : BaseRefTree
 
             if (branch.ObjectId.IsZero)
             {
-                continue;
+                throw new InvalidOperationException($"Branch '{branch.Name}' has no ObjectId.");
             }
 
             LocalBranchNode localBranchNode = new(this, branch.ObjectId, branch.Name, branch.Name == currentBranch, visible: true);

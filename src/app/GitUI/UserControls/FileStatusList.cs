@@ -933,8 +933,7 @@ public sealed partial class FileStatusList : GitModuleControl
     }
 
     private string? GetDescriptionForRevision(ObjectId objectId)
-        => DescribeRevision is not null && !objectId.IsZero ? DescribeRevision(objectId)
-            : objectId.IsZero ? ""
+        => DescribeRevision is not null ? DescribeRevision(objectId)
             : objectId == ObjectId.WorkTreeId ? ResourceManager.TranslatedStrings.Workspace
             : objectId == ObjectId.IndexId ? ResourceManager.TranslatedStrings.Index
             : objectId.ToShortString();

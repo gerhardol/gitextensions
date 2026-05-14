@@ -236,13 +236,13 @@ public static class ArgumentBuilderExtensions
     /// <exception cref="ArgumentException"><paramref name="objectId"/> does not represent a real git object.</exception>
     public static void Add(this ArgumentBuilder builder, ObjectId objectId)
     {
-        if (objectId.IsZeroOrArtificial)
+        if (objectId.IsZero)
         {
-            if (objectId.IsZero)
-            {
-                throw new ArgumentException("Unexpected zero object ID in Git command.");
-            }
+            return;
+        }
 
+        if (objectId.IsArtificial)
+        {
             throw new ArgumentException("Unexpected artificial commit in Git command: " + objectId);
         }
 

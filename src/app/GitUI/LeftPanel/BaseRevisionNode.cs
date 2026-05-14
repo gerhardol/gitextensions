@@ -111,9 +111,9 @@ internal abstract class BaseRevisionNode : Node
 
     protected virtual void SelectRevision()
     {
-        if (ObjectId is { } objectId)
+        if (!ObjectId.IsZero)
         {
-            GoToRevision(objectId.ToString());
+            GoToRevision(ObjectId.ToString());
         }
     }
 }
