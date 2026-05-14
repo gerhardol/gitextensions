@@ -640,15 +640,15 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
     /// <returns><c>true</c> if the required revision was found and selected, otherwise <c>false</c>.</returns>
     public bool SetSelectedRevision(ObjectId commitId, bool toggleSelection = false, bool updateNavigationHistory = true)
     {
-        if (commitId.IsZero)
-        {
-            throw new ArgumentException("Value cannot be a zero ObjectId.", nameof(commitId));
-        }
-
         _gridView.ClearToBeSelected();
         if (_gridView.TryGetRevisionIndex(commitId) is not int index || index < 0 || index >= _gridView.RowCount)
         {
             return false;
+        }
+
+        if (commitId.IsZero)
+        {
+            throw new ArgumentException("Value cannot be a zero ObjectId.", nameof(commitId));
         }
 
         SetSelectedIndex(_gridView, index, toggleSelection);
@@ -3418,7 +3418,7 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
             case Command.ShowFirstParent: ToggleShowOnlyFirstParent(); break;
             case Command.ToggleBetweenArtificialAndHeadCommits: ToggleBetweenArtificialAndHeadCommits(); break;
             case Command.SelectCurrentRevision:
-                if (!SetSelectedRevision(CurrentCheckout) && !CurrentCheckout.IsZero)
+                if (!SetSelectedRevision(CurrentCheckout))
                 {
                     MessageBoxes.RevisionFilteredInGrid(this, CurrentCheckout);
                 }

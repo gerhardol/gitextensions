@@ -558,7 +558,10 @@ public sealed partial class BlameControl : GitModuleControl
     private void contextMenu_Opened(object sender, EventArgs e)
     {
         Validates.NotNull(_fileName);
-        DebugHelpers.Assert(!_blameId.IsZero, "_blameId must not be zero");
+        if (_blameId.IsZero)
+        {
+            throw new InvalidOperationException("_blameId must not be zero");
+        }
 
         contextMenu.Tag = new GitBlameContext(_fileName, _lineIndex, GetBlameLine(), _blameId);
 

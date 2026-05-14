@@ -1499,7 +1499,25 @@ public sealed partial class GitModule : IGitModule
         }
 
         // Reset to index has no objectId string
-        string revStr = objectId == ObjectId.IndexId ? "" : objectId.IsZero ? RevParse("HEAD").ToString() : objectId.ToString();
+        string revStr;
+        if (objectId == ObjectId.IndexId)
+        {
+            revStr = "";
+        }
+        else if (objectId.IsZero)
+        {
+            ObjectId headObjectId = RevParse("HEAD");
+            if (headObjectId.IsZero)
+            {
+                throw new InvalidOperationException("Cannot checkout files because HEAD could not be resolved.");
+            }
+
+            revStr = headObjectId.ToString();
+        }
+        else
+        {
+            revStr = objectId.ToString();
+        }
 
         // Run batch arguments to work around max command line length on Windows. Fix #6593
         // 3: double quotes + ' '
