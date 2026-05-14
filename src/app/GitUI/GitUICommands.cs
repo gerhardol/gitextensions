@@ -178,8 +178,8 @@ public sealed class GitUICommands : IGitUICommands
 
     public bool StartResetCurrentBranchDialog(IWin32Window? owner, string branch)
     {
-        ObjectId? objectId = Module.RevParse(branch);
-        if (objectId is null)
+        ObjectId objectId = Module.RevParse(branch);
+        if (objectId.IsZero)
         {
             MessageBoxes.Show($"Branch \"{branch}\" could not be resolved.", TranslatedStrings.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
             return false;
@@ -901,7 +901,7 @@ public sealed class GitUICommands : IGitUICommands
                 return false;
             }
 
-            Module.ResetChanges(resetId: null, selectedItems, resetAndDelete: resetType == FormResetChanges.ActionEnum.ResetAndDelete, _fullPathResolver, out StringBuilder output, progressAction: null);
+            Module.ResetChanges(resetId: default, selectedItems, resetAndDelete: resetType == FormResetChanges.ActionEnum.ResetAndDelete, _fullPathResolver, out StringBuilder output, progressAction: null);
             if (output.Length > 0)
             {
                 MessageBoxes.Show(owner: null, output.ToString(), TranslatedStrings.ResetChangesCaption, MessageBoxButtons.OK, MessageBoxIcon.Error);

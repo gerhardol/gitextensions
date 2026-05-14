@@ -29,13 +29,13 @@ public sealed partial class FormMergeSubmodule : GitModuleForm
         tbBase.Text = item.Base.ObjectId.IsZero ? _deleted.Text : item.Base.ObjectId.ToString();
         tbLocal.Text = item.Local.ObjectId.IsZero ? _deleted.Text : item.Local.ObjectId.ToString();
         tbRemote.Text = item.Remote.ObjectId.IsZero ? _deleted.Text : item.Remote.ObjectId.ToString();
-        tbCurrent.Text = Module.GetSubmodule(_filename).GetCurrentCheckout()?.ToString() ?? "";
+        tbCurrent.Text = Module.GetSubmodule(_filename).GetCurrentCheckout() is { IsZero: false } id ? id.ToString() : "";
         btCheckoutBranch.Enabled = !item.Base.ObjectId.IsZero && !item.Remote.ObjectId.IsZero;
     }
 
     private void btRefresh_Click(object sender, EventArgs e)
     {
-        tbCurrent.Text = Module.GetSubmodule(_filename).GetCurrentCheckout()?.ToString() ?? "";
+        tbCurrent.Text = Module.GetSubmodule(_filename).GetCurrentCheckout() is { IsZero: false } id ? id.ToString() : "";
     }
 
     private void StageSubmodule()

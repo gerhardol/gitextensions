@@ -59,12 +59,12 @@ internal sealed class LocalBranchTree : BaseRefTree
         {
             token.ThrowIfCancellationRequested();
 
-            if (!branch.ObjectId.HasValue)
+            if (branch.ObjectId.IsZero)
             {
                 continue;
             }
 
-            LocalBranchNode localBranchNode = new(this, branch.ObjectId.Value, branch.Name, branch.Name == currentBranch, visible: true);
+            LocalBranchNode localBranchNode = new(this, branch.ObjectId, branch.Name, branch.Name == currentBranch, visible: true);
 
             if (aheadBehindData?.TryGetValue(localBranchNode.FullPath, out AheadBehindData aheadBehind) is true)
             {

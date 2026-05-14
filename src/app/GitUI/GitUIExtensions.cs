@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.RegularExpressions;
 using GitCommands;
 using GitCommands.Git;
@@ -76,10 +76,10 @@ public static partial class GitUIExtensions
             await fileViewer.ViewTextAsync(fileName: null, $"git range-diff {range} -- {additionalCommandInfo}", cancellationToken: cancellationToken);
 
             ExecutionResult result = await fileViewer.Module.GetRangeDiffAsync(
-                    firstId!.Value,
+                    firstId.GetValueOrDefault(),
                     item.SecondRevision.ObjectId,
-                    item.BaseA,
-                    item.BaseB,
+                    item.BaseA.GetValueOrDefault(),
+                    item.BaseB.GetValueOrDefault(),
                     fileViewer.GetExtraDiffArguments(isRangeDiff: true),
                     additionalCommandInfo,
                     useGitColoring: true,
@@ -180,7 +180,7 @@ public static partial class GitUIExtensions
             // set file name as null to not change the restore lineno
             await fileViewer.ViewTextAsync(fileName: null, $"git difftool {diffArgs} -- {item.Item.Name}", cancellationToken: cancellationToken);
 
-            ExecutionResult result = await fileViewer.Module.GetSingleDifftoolAsync(firstId, item.SecondRevision.ObjectId, item.Item.Name, item.Item.OldName,
+            ExecutionResult result = await fileViewer.Module.GetSingleDifftoolAsync(firstId.GetValueOrDefault(), item.SecondRevision.ObjectId, item.Item.Name, item.Item.OldName,
                 diffArgs,
                 cacheResult: true,
                 extraCacheKey,
@@ -271,7 +271,7 @@ public static partial class GitUIExtensions
                 // Files with tree guid should be presented with normal diff
                 bool isTracked = file.IsTracked || (file.TreeGuid is not null && secondId is not null);
 
-                return await module.GetSingleDiffAsync(firstId, secondId, file.Name, file.OldName, diffArgs, encoding, true, isTracked,
+                return await module.GetSingleDiffAsync(firstId.GetValueOrDefault(), secondId.GetValueOrDefault(), file.Name, file.OldName, diffArgs, encoding, true, isTracked,
                     useGitColoring,
                     PatchHighlightService.GetGitCommandConfiguration(module, useGitColoring),
                     cancellationToken);

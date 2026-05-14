@@ -14,7 +14,7 @@ public static partial class SubmoduleHelpers
 
     public static async Task<GitSubmoduleStatus?> GetSubmoduleDiffChangesAsync(IGitModule module, string? fileName, string? oldFileName, ObjectId? firstId, ObjectId? secondId, CancellationToken cancellationToken)
     {
-        (Patch? patch, string? errorMessage) = await module.GetSingleDiffAsync(firstId, secondId, fileName, oldFileName, "", GitModule.SystemEncoding, cacheResult: true, isTracked: true, useGitColoring: false, commandConfiguration: null!, cancellationToken: cancellationToken).ConfigureAwait(false);
+        (Patch? patch, string? errorMessage) = await module.GetSingleDiffAsync(firstId ?? default, secondId ?? default, fileName, oldFileName, "", GitModule.SystemEncoding, cacheResult: true, isTracked: true, useGitColoring: false, commandConfiguration: null!, cancellationToken: cancellationToken).ConfigureAwait(false);
         return GetSubmoduleChanges(patch, errorMessage, module, fileName);
     }
 

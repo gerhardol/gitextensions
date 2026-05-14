@@ -47,11 +47,6 @@ public sealed partial class GitRevision : IGitItem, INotifyPropertyChanged
 
     public ObjectId ObjectId { get; }
 
-    /// <summary>
-    /// Explicit interface implementation to satisfy the nullable <see cref="IGitItem.ObjectId"/> contract.
-    /// </summary>
-    ObjectId? IGitItem.ObjectId => ObjectId;
-
     public string Guid => ObjectId.ToString();
 
     // TODO this should probably be null when not yet populated, similar to how ParentIds works

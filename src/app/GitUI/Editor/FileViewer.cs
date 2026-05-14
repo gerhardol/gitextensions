@@ -959,9 +959,9 @@ public partial class FileViewer : GitModuleControl
         StagedStatus stagedStatus = _viewItem?.Item?.Staged ?? StagedStatus.Unknown;
         if (stagedStatus == StagedStatus.Unknown)
         {
-            stagedStatus = GitModule.GetStagedStatus(_viewItem?.FirstRevision?.ObjectId,
-                _viewItem?.SecondRevision?.ObjectId,
-                _viewItem?.SecondRevision?.FirstParentId);
+            stagedStatus = GitModule.GetStagedStatus(_viewItem?.FirstRevision?.ObjectId ?? default,
+                _viewItem?.SecondRevision?.ObjectId ?? default,
+                _viewItem?.SecondRevision?.FirstParentId ?? default);
             if (_viewItem?.Item is not null)
             {
                 _viewItem.Item.Staged = stagedStatus;
@@ -1622,7 +1622,7 @@ public partial class FileViewer : GitModuleControl
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        IObjectGitItem[] items = [.. Module.GetTree(commitId, full: true, file.Name, cancellationToken)];
+        IObjectGitItem[] items = [.. Module.GetTree(commitId ?? default, full: true, file.Name, cancellationToken)];
         if (items.Length == 1)
         {
             IObjectGitItem gitItem = items[0];

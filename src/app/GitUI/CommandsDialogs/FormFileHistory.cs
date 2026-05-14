@@ -270,7 +270,7 @@ public sealed partial class FormFileHistory : GitModuleForm, IRevisionGridFileUp
         bool isFolder = fileName.EndsWith('/');
         bool fileAvailable
             = !isFolder && (revision.IsArtificial ? File.Exists(fileName)
-            : Module.GetFileBlobHash(fileName, revision.ObjectId) is not null);
+            : !Module.GetFileBlobHash(fileName, revision.ObjectId).IsZero);
 
         SetTitle(alternativeFileName: fileName);
 

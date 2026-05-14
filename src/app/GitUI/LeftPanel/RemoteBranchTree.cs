@@ -35,7 +35,7 @@ internal sealed class RemoteBranchTree : BaseRefTree
         {
             token.ThrowIfCancellationRequested();
 
-            if (!branch.ObjectId.HasValue)
+            if (branch.ObjectId.IsZero)
             {
                 continue;
             }
@@ -43,7 +43,7 @@ internal sealed class RemoteBranchTree : BaseRefTree
             string remoteName = branch.Name.SubstringUntil('/');
             if (remoteByName.TryGetValue(remoteName, out Remote remote))
             {
-                RemoteBranchNode remoteBranchNode = new(this, branch.ObjectId.Value, branch.Name, visible: true);
+                RemoteBranchNode remoteBranchNode = new(this, branch.ObjectId, branch.Name, visible: true);
                 if (aheadBehindData?.TryGetValue(branch.CompleteName, out AheadBehindData aheadBehind) is true)
                 {
                     remoteBranchNode.UpdateAheadBehind(aheadBehind.ToDisplay(), $"{GitRefName.RefsHeadsPrefix}{aheadBehind.Branch}");

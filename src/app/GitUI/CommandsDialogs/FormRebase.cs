@@ -1,4 +1,4 @@
-using GitCommands;
+﻿using GitCommands;
 using GitCommands.Git;
 using GitExtensions.Extensibility;
 using GitExtensions.Extensibility.Git;
@@ -414,9 +414,10 @@ public partial class FormRebase : GitExtensionsDialog
             {
                 try
                 {
-                    ObjectId? commit1 = UICommands.Module.RevParse(cboBranches.Text);
-                    ObjectId? commit2 = UICommands.Module.RevParse("HEAD");
-                    mergeBaseCommitId = UICommands.Module.GetMergeBase(commit1!.Value, commit2!.Value)?.ToString();
+                    ObjectId commit1 = UICommands.Module.RevParse(cboBranches.Text);
+                    ObjectId commit2 = UICommands.Module.RevParse("HEAD");
+                    ObjectId mergeBase = UICommands.Module.GetMergeBase(commit1, commit2);
+                    mergeBaseCommitId = mergeBase.IsZero ? null : mergeBase.ToString();
                 }
                 catch (Exception)
                 {

@@ -1053,8 +1053,8 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
                 refsByObjectId = (showStashes
                     ? getUnfilteredRefs.Value.Where(r => r.CompleteName != GitRefName.RefsStashPrefix)
                     : getUnfilteredRefs.Value)
-                    .Where(gitRef => gitRef.ObjectId.HasValue)
-                    .ToLookup(gitRef => gitRef.ObjectId!.Value);
+                    .Where(gitRef => !gitRef.ObjectId.IsZero)
+                    .ToLookup(gitRef => gitRef.ObjectId);
                 cancellationToken.ThrowIfCancellationRequested();
                 ResetNavigationHistory();
                 UpdateSelectedRef(capturedModule, getUnfilteredRefs.Value, headRef.Value);
@@ -1551,8 +1551,8 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
             if (refs is not null)
             {
                 spi.Refs = refs
-                    .Where(a => a.Value is not null && a.Value.ObjectId is not null)
-                    .GroupBy(a => a.Value!.ObjectId!.Value)
+                    .Where(a => a.Value is not null && !a.Value.ObjectId.IsZero)
+                    .GroupBy(a => a.Value!.ObjectId)
                     .ToDictionary(gr => gr.Key, gr => gr.Select(a => a.Key).AsReadOnlyList());
             }
 
@@ -3418,12 +3418,9 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
             case Command.ShowFirstParent: ToggleShowOnlyFirstParent(); break;
             case Command.ToggleBetweenArtificialAndHeadCommits: ToggleBetweenArtificialAndHeadCommits(); break;
             case Command.SelectCurrentRevision:
-                if (!SetSelectedRevision(CurrentCheckout))
+                if (!SetSelectedRevision(CurrentCheckout) && CurrentCheckout.HasValue)
                 {
-                    if (CurrentCheckout.HasValue)
-                    {
-                        MessageBoxes.RevisionFilteredInGrid(this, CurrentCheckout.Value);
-                    }
+                    MessageBoxes.RevisionFilteredInGrid(this, CurrentCheckout.Value);
                 }
 
                 break;

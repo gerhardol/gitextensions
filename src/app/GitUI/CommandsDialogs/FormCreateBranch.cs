@@ -43,14 +43,15 @@ public sealed partial class FormCreateBranch : GitExtensionsDialog
 
         commitSummaryUserControl1.Revision = null;
 
-        objectId ??= Module.GetCurrentCheckout();
+        ObjectId currentCheckout = Module.GetCurrentCheckout();
+        objectId ??= currentCheckout.IsZero ? null : currentCheckout;
         if (objectId is not null)
         {
             commitPicker.SetSelectedCommitHash(objectId.ToString());
 
             if (string.IsNullOrWhiteSpace(newBranchNamePrefix))
             {
-                GitRevision revision = Module.GetRevision(objectId, shortFormat: true, loadRefs: true);
+                GitRevision revision = Module.GetRevision(objectId!.Value, shortFormat: true, loadRefs: true);
                 IGitRef? firstRef = revision.Refs.FirstOrDefault(r => !r.IsTag) ?? revision.Refs.FirstOrDefault(r => r.IsTag);
                 newBranchNamePrefix = firstRef?.LocalName;
 
@@ -203,7 +204,7 @@ public sealed partial class FormCreateBranch : GitExtensionsDialog
 
     private void commitPicker_SelectedObjectIdChanged(object sender, EventArgs e)
     {
-        GitRevision revision = Module.GetRevision(commitPicker.SelectedObjectId, shortFormat: true, loadRefs: true);
+        GitRevision revision = Module.GetRevision(commitPicker.SelectedObjectId ?? default, shortFormat: true, loadRefs: true);
         commitSummaryUserControl1.Revision = revision;
     }
 }

@@ -1,4 +1,4 @@
-﻿using GitCommands;
+using GitCommands;
 using GitCommands.Git;
 using GitExtensions.Extensibility.Git;
 using GitUI.Properties;
@@ -104,11 +104,11 @@ public sealed partial class FileStatusDiffCalculator
                     .Take(multipleParents)
                     .Where(parentId => !(multipleParents == 3 && DescribeRevision?.Invoke(parentId).Contains(": untracked files on ") is true))
                     .Select(parentId =>
-                        new FileStatusWithDescription(
-                            firstRev: new GitRevision(parentId),
-                            secondRev: selectedRev,
-                            summary: TranslatedStrings.DiffWithParent + GetDescriptionForRevision(parentId),
-                            statuses: module.GetDiffFilesWithSubmodulesStatus(parentId, selectedRev.ObjectId, actualRev.ParentIds[0], !showSkipWorktreeFiles, untrackedFilesMode, cancellationToken))));
+                                new FileStatusWithDescription(
+                                    firstRev: new GitRevision(parentId),
+                                    secondRev: selectedRev,
+                                    summary: TranslatedStrings.DiffWithParent + GetDescriptionForRevision(parentId),
+                                    statuses: module.GetDiffFilesWithSubmodulesStatus(parentId, selectedRev.ObjectId, actualRev.ParentIds[0], !showSkipWorktreeFiles, untrackedFilesMode, cancellationToken))));
             }
             else
             {
@@ -119,7 +119,7 @@ public sealed partial class FileStatusDiffCalculator
                     statuses: selectedRev.TreeGuid is null
 
                         // likely index commit without HEAD
-                        ? module.GetDiffFilesWithSubmodulesStatus(firstId: null, selectedRev.ObjectId, parentToSecond: null, cancellationToken: cancellationToken)
+                        ? module.GetDiffFilesWithSubmodulesStatus(firstId: default, selectedRev.ObjectId, parentToSecond: default, cancellationToken: cancellationToken)
 
                         // No parent for the initial commit, show files and explicitly set IsNew
                         : module.GetTreeFiles(selectedRev.TreeGuid.Value, full: true, cancellationToken)
@@ -160,7 +160,7 @@ public sealed partial class FileStatusDiffCalculator
             firstRev: firstRev,
             secondRev: selectedRev,
             summary: TranslatedStrings.DiffWithParent + GetDescriptionForRevision(firstRev.ObjectId),
-            statuses: module.GetDiffFilesWithSubmodulesStatus(firstRev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId, cancellationToken: cancellationToken)));
+            statuses: module.GetDiffFilesWithSubmodulesStatus(firstRev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId ?? default, cancellationToken: cancellationToken)));
 
         if (!AppSettings.ShowDiffForAllParents || revisions.Count > maxMultiCompare || !allowMultiDiff)
         {
@@ -236,14 +236,14 @@ public sealed partial class FileStatusDiffCalculator
                         firstRev: rev,
                         secondRev: selectedRev,
                         summary: TranslatedStrings.DiffWithParent + GetDescriptionForRevision(rev.ObjectId),
-                        statuses: module.GetDiffFilesWithSubmodulesStatus(rev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId, cancellationToken: cancellationToken))));
+                        statuses: module.GetDiffFilesWithSubmodulesStatus(rev.ObjectId, selectedRev.ObjectId, selectedRev.FirstParentId ?? default, cancellationToken: cancellationToken))));
 
             return fileStatusDescs;
         }
 
         IReadOnlyList<GitItemStatus> allAToB = fileStatusDescs[0].Statuses;
-        IReadOnlyList<GitItemStatus> allBaseToB = module.GetDiffFilesWithSubmodulesStatus(baseRevId, selectedRev.ObjectId, selectedRev.FirstParentId, cancellationToken: cancellationToken);
-        IReadOnlyList<GitItemStatus> allBaseToA = module.GetDiffFilesWithSubmodulesStatus(baseRevId, firstRev.ObjectId, firstRev.FirstParentId, cancellationToken: cancellationToken);
+        IReadOnlyList<GitItemStatus> allBaseToB = module.GetDiffFilesWithSubmodulesStatus(baseRevId!.Value, selectedRev.ObjectId, selectedRev.FirstParentId ?? default, cancellationToken: cancellationToken);
+        IReadOnlyList<GitItemStatus> allBaseToA = module.GetDiffFilesWithSubmodulesStatus(baseRevId!.Value, firstRev.ObjectId, firstRev.FirstParentId ?? default, cancellationToken: cancellationToken);
 
         GitItemStatusNameEqualityComparer comparer = new();
         GitItemStatus[] allAToBExceptExactRenameCopy = [.. allAToB.Where(i => !((i.IsRenamed || i.IsCopied) && i.RenameCopyPercentage == "100"))];
@@ -270,7 +270,7 @@ public sealed partial class FileStatusDiffCalculator
                 : DiffBranchStatus.UnequalChange;
         }
 
-        GitRevision revBase = new(baseRevId.Value);
+        GitRevision revBase = new(baseRevId!.Value);
         fileStatusDescs.Add(new FileStatusWithDescription(
             firstRev: revBase,
             secondRev: selectedRev,
@@ -296,7 +296,7 @@ public sealed partial class FileStatusDiffCalculator
 
         // first and selected has a common merge base and count must be available
         // Only a printout, so no Validates
-        string desc = $"{TranslatedStrings.DiffRange} {baseToFirstCount ?? -1}↓ {baseToSecondCount ?? -1}↑ BASE {GetDescriptionForRevision(baseRevId.Value)}";
+        string desc = $"{TranslatedStrings.DiffRange} {baseToFirstCount ?? -1}? {baseToSecondCount ?? -1}? BASE {GetDescriptionForRevision(baseRevId!.Value)}";
         fileStatusDescs.Insert(index: 1, new FileStatusWithDescription(
             firstRev: firstRev,
             secondRev: selectedRev,
@@ -313,7 +313,8 @@ public sealed partial class FileStatusDiffCalculator
                 return null;
             }
 
-            return module.GetMergeBase(a.Value, b.Value);
+            ObjectId result = module.GetMergeBase(a.Value, b.Value);
+            return result.IsZero ? null : result;
         }
 
         static ObjectId GetRevisionOrHead(GitRevision rev, ObjectId headId)

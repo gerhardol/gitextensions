@@ -1829,12 +1829,12 @@ public sealed partial class FormBrowse : GitModuleForm, IBrowseRepo
         {
             foreach (IGitRef branch in GetBranches())
             {
-                if (!branch.ObjectId.HasValue)
+                if (branch.ObjectId.IsZero)
                 {
                     throw new InvalidOperationException($"Branch '{branch.Name}' has no ObjectId.");
                 }
 
-                bool isBranchVisible = ((ICheckRefs)RevisionGridControl).Contains(branch.ObjectId.Value);
+                bool isBranchVisible = ((ICheckRefs)RevisionGridControl).Contains(branch.ObjectId);
 
                 ToolStripItem toolStripItem = branchSelect.DropDownItems.Add(branch.Name);
                 Color effectiveBackColor = toolStripItem.BackColor.IsEmpty

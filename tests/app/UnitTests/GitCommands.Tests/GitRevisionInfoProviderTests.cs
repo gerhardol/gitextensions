@@ -23,11 +23,11 @@ public class GitRevisionInfoProviderTests
     }
 
     [Test]
-    public void LoadChildren_should_throw_if_ObjectId_is_null()
+    public void LoadChildren_should_throw_if_ObjectId_is_zero()
     {
         IGitItem item = Substitute.For<IGitItem>();
 
-        item.ObjectId.Returns((ObjectId?)null);
+        item.ObjectId.Returns(default(ObjectId));
 
         ((Action)(() => _provider.LoadChildren(item))).Should().Throw<ArgumentException>();
     }

@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using GitCommands;
 using GitCommands.Git;
 using GitCommands.Git.Extended;
@@ -1089,16 +1089,16 @@ partial class FileStatusList
 
         ThreadHelper.FileAndForget(async () =>
         {
-            ObjectId? blob = Module.GetFileBlobHash(item.Item.Name, item.SecondRevision.ObjectId);
+            ObjectId blob = Module.GetFileBlobHash(item.Item.Name, item.SecondRevision.ObjectId);
 
-            if (blob is null)
+            if (blob.IsZero)
             {
                 return;
             }
 
             string fileName = PathUtil.GetFileName(item.Item.Name);
             fileName = (Path.GetTempPath() + fileName).ToNativePath();
-            await Module.SaveBlobAsAsync(fileName, blob.Value.ToString());
+            await Module.SaveBlobAsAsync(fileName, blob.ToString());
 
             onSaved(fileName);
         });

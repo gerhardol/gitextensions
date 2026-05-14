@@ -213,10 +213,11 @@ public sealed partial class ObjectIdTests
     }
 
     [TestCase(NonHexAscii, 0, null)]
-    public void TryParse_bytes_throws_with_illegal_input(string source, int offset, [CanBeNull] string? expected)
+    public void TryParse_returns_false_zero_with_illegal_input(string source, int offset, [CanBeNull] string? expected)
     {
         byte[] sourceBytes = Encoding.ASCII.GetBytes(source);
-        ObjectId.TryParse(sourceBytes.AsSpan(offset, 40), out ObjectId id).Should().Be(expected is not null);
+        ObjectId.TryParse(sourceBytes.AsSpan(offset, 40), out ObjectId objectId).Should().Be(expected is not null);
+        objectId.IsZero.Should().BeTrue();
     }
 
     [Test]

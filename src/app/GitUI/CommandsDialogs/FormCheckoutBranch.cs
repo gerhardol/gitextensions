@@ -290,16 +290,16 @@ public partial class FormCheckoutBranch : GitExtensionsDialog
             {
                 IGitRef localBranchRef = GetLocalBranchRef(_localBranchName);
                 IGitRef remoteBranchRef = GetRemoteBranchRef(branchName);
-                if (localBranchRef is not null && remoteBranchRef is not null && localBranchRef.ObjectId is not null && remoteBranchRef.ObjectId is not null)
+                if (localBranchRef is not null && remoteBranchRef is not null && !localBranchRef.ObjectId.IsZero && !remoteBranchRef.ObjectId.IsZero)
                 {
-                    ObjectId? mergeBaseGuid = Module.GetMergeBase(localBranchRef.ObjectId.Value, remoteBranchRef.ObjectId.Value);
+                    ObjectId mergeBaseGuid = Module.GetMergeBase(localBranchRef.ObjectId, remoteBranchRef.ObjectId);
                     bool isResetFastForward = localBranchRef.ObjectId == mergeBaseGuid;
 
                     if (!isResetFastForward)
                     {
-                        string mergeBaseText = mergeBaseGuid is null
+                        string mergeBaseText = mergeBaseGuid.IsZero
                             ? "merge base"
-                            : mergeBaseGuid.Value.ToShortString();
+                            : mergeBaseGuid.ToShortString();
 
                         string warningMessage = string.Format(_resetNonFastForwardBranch.Text, _localBranchName, mergeBaseText);
 

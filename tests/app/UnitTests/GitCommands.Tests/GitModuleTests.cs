@@ -342,7 +342,7 @@ public sealed partial class GitModuleTests
     [Test, TestCaseSource(nameof(StagedStatuses))]
     public void GetStagedStatus(ObjectId? firstRevision, ObjectId? secondRevision, ObjectId? parentToSecond, StagedStatus status)
     {
-        StagedStatus stagedStatus = _gitModule.GetTestAccessor().GetStagedStatus(firstRevision, secondRevision, parentToSecond);
+        StagedStatus stagedStatus = _gitModule.GetTestAccessor().GetStagedStatus(firstRevision ?? default, secondRevision ?? default, parentToSecond ?? default);
         stagedStatus.Should().Be(status);
     }
 
