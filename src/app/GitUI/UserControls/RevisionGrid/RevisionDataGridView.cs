@@ -897,10 +897,10 @@ public sealed partial class RevisionDataGridView : DataGridView
 
                 break;
             case Keys.Control | Keys.C:
-                IReadOnlyList<ObjectId>? selectedRevisions = SelectedObjectIds;
-                if (selectedRevisions?.Count is > 0)
+                IReadOnlyList<ObjectId>? selectedObjectIds = SelectedObjectIds;
+                if (selectedObjectIds?.Count is > 0)
                 {
-                    ClipboardUtil.TrySetText(string.Join(Environment.NewLine, selectedRevisions));
+                    ClipboardUtil.TrySetText(string.Join(Environment.NewLine, selectedObjectIds));
                 }
 
                 break;

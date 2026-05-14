@@ -211,12 +211,12 @@ public static partial class Commands
         };
     }
 
-    public static ArgumentString ContinueBisect(GitBisectOption bisectOption, params ObjectId[] revisions)
+    public static ArgumentString ContinueBisect(GitBisectOption bisectOption, params ObjectId[] objectIds)
     {
         return new GitArgumentBuilder("bisect")
         {
             bisectOption,
-            revisions
+            objectIds
         };
     }
 

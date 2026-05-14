@@ -1491,15 +1491,15 @@ public sealed partial class GitModule : IGitModule
             });
     }
 
-    public string CheckoutFiles(IReadOnlyList<string> files, ObjectId revision, bool force)
+    public string CheckoutFiles(IReadOnlyList<string> files, ObjectId objectId, bool force)
     {
-        if (files.Count == 0 || (revision.IsArtificial && revision != ObjectId.IndexId))
+        if (files.Count == 0 || (objectId.IsArtificial && objectId != ObjectId.IndexId))
         {
             return "";
         }
 
-        // Reset to index has no revision string
-        string revStr = revision == ObjectId.IndexId ? "" : revision.IsZero ? RevParse("HEAD").ToString() : revision.ToString();
+        // Reset to index has no objectId string
+        string revStr = objectId == ObjectId.IndexId ? "" : objectId.IsZero ? RevParse("HEAD").ToString() : objectId.ToString();
 
         // Run batch arguments to work around max command line length on Windows. Fix #6593
         // 3: double quotes + ' '
@@ -2543,9 +2543,9 @@ public sealed partial class GitModule : IGitModule
     /// <summary>
     /// If possible, find if files in a diff are index or worktree.
     /// </summary>
-    /// <param name="firstId">from revision string.</param>
-    /// <param name="secondId">to revision.</param>
-    /// <param name="parentToSecond">The parent for the second revision.</param>
+    /// <param name="firstId">from objectId string.</param>
+    /// <param name="secondId">to objectId.</param>
+    /// <param name="parentToSecond">The parent for the second objectId.</param>
     /// <remarks>Git revisions are required to determine if <see cref="StagedStatus"/> allows stage/unstage.</remarks>
     public static StagedStatus GetStagedStatus(ObjectId firstId, ObjectId secondId, ObjectId parentToSecond)
     {
@@ -2600,7 +2600,7 @@ public sealed partial class GitModule : IGitModule
                 ((x.Staged == StagedStatus.WorkTree && x.IsNew) || x.IsStatusOnly))];
             if (firstRevision == GitRevision.WorkTreeGuid)
             {
-                // The file is seen as "deleted" in 'to' revision
+                // The file is seen as "deleted" in 'to' objectId
                 foreach (GitItemStatus item in files)
                 {
                     item.IsNew = false;
@@ -3922,7 +3922,7 @@ public sealed partial class GitModule : IGitModule
     }
 
     public bool GetCombinedDiffContent(
-        ObjectId revisionOfMergeCommit,
+        ObjectId objectIdOfMergeCommit,
         string filePath,
         string extraArgs,
         Encoding encoding,
@@ -3938,7 +3938,7 @@ public sealed partial class GitModule : IGitModule
             { AppSettings.UseHistogramDiffAlgorithm, "--histogram" },
             { useGitColoring, "--color=always" },
             extraArgs,
-            revisionOfMergeCommit,
+            objectIdOfMergeCommit,
             "--",
             filePath.ToPosixPath().Quote()
         };

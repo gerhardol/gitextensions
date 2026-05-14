@@ -523,7 +523,7 @@ internal class RevisionGridMenuCommands : MenuCommandsBase
             return;
         }
 
-        ObjectId commitId = formGoToCommit.ValidateAndGetSelectedRevision();
+        ObjectId commitId = formGoToCommit.ValidateAndGetSelectedObjectId();
 
         if (!commitId.IsZero)
         {

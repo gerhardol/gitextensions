@@ -434,9 +434,9 @@ public interface IGitModule
     /// Performs <c>git-checkout</c> for the given files.
     /// </summary>
     /// <param name="files">The list of files to checkout.</param>
-    /// <param name="revision">The revision to checkout; the default (zero) <see cref="ObjectId"/> is handled as <c>HEAD</c>.</param>
+    /// <param name="objectId">The objectId to checkout; the default (zero) <see cref="ObjectId"/> is handled as <c>HEAD</c>.</param>
     /// <param name="force">Indicates whether to perform a forced checkout.</param>
-    string CheckoutFiles(IReadOnlyList<string> files, ObjectId revision, bool force);
+    string CheckoutFiles(IReadOnlyList<string> files, ObjectId objectId, bool force);
 
     void DeleteTag(string tagName);
 
@@ -486,7 +486,7 @@ public interface IGitModule
     IGitVersion GitVersion { get; }
 
     bool GetCombinedDiffContent(
-            ObjectId revisionOfMergeCommit,
+            ObjectId objectIdOfMergeCommit,
             string filePath,
             string extraArgs,
             Encoding encoding,

@@ -28,7 +28,7 @@ public partial class FormCheckoutBranch : GitExtensionsDialog
     private readonly TranslationString _resetCaption = new("Reset branch");
     #endregion
 
-    private readonly IReadOnlyList<ObjectId>? _containRevisions;
+    private readonly IReadOnlyList<ObjectId>? _containObjectIds;
     private readonly bool _isLoading;
     private readonly string _rbResetBranchDefaultText;
     private TranslationString _invalidBranchName = new("An existing branch must be selected.");
@@ -43,7 +43,7 @@ public partial class FormCheckoutBranch : GitExtensionsDialog
     private IReadOnlyList<IGitRef>? _localBranches;
     private IReadOnlyList<IGitRef>? _remoteBranches;
 
-    public FormCheckoutBranch(IGitUICommands commands, string branch, bool remote, IReadOnlyList<ObjectId>? containRevisions = null)
+    public FormCheckoutBranch(IGitUICommands commands, string branch, bool remote, IReadOnlyList<ObjectId>? containObjectIds = null)
         : base(commands, true)
     {
         _branchNameNormaliser = commands.GetRequiredService<IGitBranchNameNormaliser>();
@@ -57,7 +57,7 @@ public partial class FormCheckoutBranch : GitExtensionsDialog
 
         try
         {
-            _containRevisions = containRevisions;
+            _containObjectIds = containObjectIds;
 
             LocalBranch.Checked = !remote;
             Remotebranch.Checked = remote;
@@ -71,7 +71,7 @@ public partial class FormCheckoutBranch : GitExtensionsDialog
                 Branches.SelectedItem = branch;
             }
 
-            if (containRevisions is not null)
+            if (_containObjectIds is not null)
             {
                 if (Branches.Items.Count == 0)
                 {
@@ -193,7 +193,7 @@ public partial class FormCheckoutBranch : GitExtensionsDialog
 
         IEnumerable<string> branchNames;
 
-        if (_containRevisions is null)
+        if (_containObjectIds is null)
         {
             IEnumerable<IGitRef> branches = LocalBranch.Checked ? GetLocalBranches() : GetRemoteBranches();
 
@@ -201,12 +201,12 @@ public partial class FormCheckoutBranch : GitExtensionsDialog
         }
         else
         {
-            branchNames = GetContainsRevisionBranches();
+            branchNames = GetContainsObjectIdBranches();
         }
 
         Branches.Items.AddRange([.. branchNames.Where(name => !string.IsNullOrWhiteSpace(name))]);
 
-        if (_containRevisions is not null && Branches.Items.Count == 1)
+        if (_containObjectIds is not null && Branches.Items.Count == 1)
         {
             Branches.SelectedIndex = 0;
         }
@@ -215,12 +215,12 @@ public partial class FormCheckoutBranch : GitExtensionsDialog
             Branches.Text = null;
         }
 
-        IReadOnlyList<string> GetContainsRevisionBranches()
+        IReadOnlyList<string> GetContainsObjectIdBranches()
         {
             HashSet<string> result = [];
-            if (_containRevisions.Count > 0)
+            if (_containObjectIds.Count > 0)
             {
-                IEnumerable<string> branches = Module.GetAllBranchesWhichContainGivenCommit(_containRevisions[0],
+                IEnumerable<string> branches = Module.GetAllBranchesWhichContainGivenCommit(_containObjectIds[0],
                                                                                             getLocal: LocalBranch.Checked,
                                                                                             getRemote: !LocalBranch.Checked,
                                                                                             cancellationToken: default)
@@ -229,11 +229,11 @@ public partial class FormCheckoutBranch : GitExtensionsDialog
                 result.UnionWith(branches);
             }
 
-            for (int index = 1; index < _containRevisions.Count; index++)
+            for (int index = 1; index < _containObjectIds.Count; index++)
             {
-                ObjectId containRevision = _containRevisions[index];
+                ObjectId containObjectId = _containObjectIds[index];
                 IEnumerable<string> branches =
-                    Module.GetAllBranchesWhichContainGivenCommit(containRevision,
+                    Module.GetAllBranchesWhichContainGivenCommit(containObjectId,
                                                                  getLocal: LocalBranch.Checked,
                                                                  getRemote: !LocalBranch.Checked,
                                                                  cancellationToken: default)

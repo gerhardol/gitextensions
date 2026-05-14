@@ -462,18 +462,18 @@ public sealed class GitUICommands : IGitUICommands
 
     #region Checkout
 
-    public bool StartCheckoutBranch(IWin32Window? owner, string branch = "", bool remote = false, IReadOnlyList<ObjectId>? containRevisions = null)
+    public bool StartCheckoutBranch(IWin32Window? owner, string branch = "", bool remote = false, IReadOnlyList<ObjectId>? containObjectIds = null)
     {
         return DoActionOnRepo(owner, action: () =>
         {
-            using FormCheckoutBranch form = new(this, branch, remote, containRevisions);
+            using FormCheckoutBranch form = new(this, branch, remote, containObjectIds);
             return form.DoDefaultActionOrShow(owner) != DialogResult.Cancel;
         }, preEvent: PreCheckoutBranch, postEvent: PostCheckoutBranch);
     }
 
-    public bool StartCheckoutBranch(IWin32Window? owner, IReadOnlyList<ObjectId>? containRevisions)
+    public bool StartCheckoutBranch(IWin32Window? owner, IReadOnlyList<ObjectId>? containObjectIds)
     {
-        return StartCheckoutBranch(owner, "", false, containRevisions);
+        return StartCheckoutBranch(owner, "", false, containObjectIds);
     }
 
     public bool StartCheckoutRemoteBranch(IWin32Window? owner, string branch)

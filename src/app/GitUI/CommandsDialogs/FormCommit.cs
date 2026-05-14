@@ -1215,8 +1215,8 @@ public sealed partial class FormCommit : GitModuleForm
 
                 if (result == btnCheckout)
                 {
-                    ObjectId[]? revisions = _editedCommit is not null ? [_editedCommit.ObjectId] : null;
-                    if (!UICommands.StartCheckoutBranch(this, revisions))
+                    ObjectId[]? objectIds = _editedCommit is not null ? [_editedCommit.ObjectId] : null;
+                    if (!UICommands.StartCheckoutBranch(this, objectIds))
                     {
                         return;
                     }

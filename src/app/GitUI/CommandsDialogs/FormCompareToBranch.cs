@@ -13,7 +13,7 @@ public partial class FormCompareToBranch : GitModuleForm
         InitializeComponent();
         InitializeComplete();
 
-        branchSelector.Initialize(remote: true, containRevisions: null);
+        branchSelector.Initialize(remote: true, containObjectIds: null);
         branchSelector.CommitToCompare = selectedCommit;
         Activated += OnActivated;
     }

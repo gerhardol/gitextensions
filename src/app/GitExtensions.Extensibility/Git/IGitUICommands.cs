@@ -46,8 +46,8 @@ public interface IGitUICommands : IServiceProvider
     bool StartArchiveDialog(IWin32Window? owner = null, GitRevision? revision = null, GitRevision? revision2 = null, string? path = null);
     void StartBatchFileProcessDialog(string batchFile);
     bool StartBrowseDialog(IWin32Window? owner, BrowseArguments? args = null);
-    bool StartCheckoutBranch(IWin32Window? owner, IReadOnlyList<ObjectId>? containRevisions);
-    bool StartCheckoutBranch(IWin32Window? owner, string branch = "", bool remote = false, IReadOnlyList<ObjectId>? containRevisions = null);
+    bool StartCheckoutBranch(IWin32Window? owner, IReadOnlyList<ObjectId>? containObjectIds);
+    bool StartCheckoutBranch(IWin32Window? owner, string branch = "", bool remote = false, IReadOnlyList<ObjectId>? containObjectIds = null);
     bool StartCheckoutRemoteBranch(IWin32Window? owner, string branch);
     bool StartCheckoutRevisionDialog(IWin32Window? owner, string? revision = null);
     bool StartCherryPickDialog(IWin32Window? owner = null, GitRevision? revision = null);

@@ -10,14 +10,14 @@ internal sealed class ParentChildNavigationHistory
         Child
     }
 
-    private readonly Action<ObjectId> _setSelectedRevision;
+    private readonly Action<ObjectId> _setSelectedObjectId;
     private NavigationDirection? _direction;
     private readonly Stack<ObjectId> _childHistory = new();
     private readonly Stack<ObjectId> _parentHistory = new();
 
-    public ParentChildNavigationHistory(Action<ObjectId> setSelectedRevision)
+    public ParentChildNavigationHistory(Action<ObjectId> setSelectedObjectId)
     {
-        _setSelectedRevision = setSelectedRevision;
+        _setSelectedObjectId = setSelectedObjectId;
     }
 
     public bool HasPreviousChild => _childHistory.Count > 0;
@@ -57,7 +57,7 @@ internal sealed class ParentChildNavigationHistory
             _childHistory.Push(current);
         }
 
-        _setSelectedRevision(to);
+        _setSelectedObjectId(to);
         _direction = null;
     }
 
