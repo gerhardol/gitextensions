@@ -296,7 +296,7 @@ public sealed partial class FileStatusDiffCalculator
 
         // first and selected has a common merge base and count must be available
         // Only a printout, so no Validates
-        string desc = $"{TranslatedStrings.DiffRange} {baseToFirstCount ?? -1}? {baseToSecondCount ?? -1}? BASE {GetDescriptionForRevision(baseRevId)}";
+        string desc = $"{TranslatedStrings.DiffRange} {baseToFirstCount ?? -1}↑ {baseToSecondCount ?? -1}↓ BASE {GetDescriptionForRevision(baseRevId)}";
         fileStatusDescs.Insert(index: 1, new FileStatusWithDescription(
             firstRev: firstRev,
             secondRev: selectedRev,

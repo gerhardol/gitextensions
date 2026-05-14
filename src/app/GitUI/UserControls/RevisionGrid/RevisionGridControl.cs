@@ -642,7 +642,7 @@ public sealed partial class RevisionGridControl : GitModuleControl, ICheckRefs, 
     {
         if (commitId.IsZero)
         {
-            throw new ArgumentNullException(nameof(commitId));
+            throw new ArgumentException("Value cannot be a zero ObjectId.", nameof(commitId));
         }
 
         _gridView.ClearToBeSelected();

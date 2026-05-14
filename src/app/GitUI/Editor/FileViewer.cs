@@ -700,7 +700,7 @@ public partial class FileViewer : GitModuleControl
     /// View the git item with the TreeId.
     /// </summary>
     /// <param name="file">GitItem file, with TreeId.</param>
-    /// <param name="objectId">Revision to present. Can be null if file.TreeId is set.</param>
+    /// <param name="objectId">Revision to present. Can be the zero <see cref="ObjectId"/> if file.TreeId is set.</param>
     /// <param name="item">Metadata for line patching and presentation.</param>
     /// <param name="line">The line to display.</param>
     /// <param name="openWithDifftool">difftool command</param>
